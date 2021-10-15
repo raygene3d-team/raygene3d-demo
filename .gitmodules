@@ -1,0 +1,6 @@
+[submodule "raygene3d-core"]
+	path = raygene3d-core
+	url = https://github.com/raygene3d-team/raygene3d-core.git
+[submodule "raygene3d-util"]
+	path = raygene3d-util
+	url = https://github.com/raygene3d-team/raygene3d-util.git
