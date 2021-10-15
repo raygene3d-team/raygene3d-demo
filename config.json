@@ -1,0 +1,15 @@
+{
+  "file_path": "asset/sponza/",
+  "file_name": "config.json",
+
+  "fov_x": 60.0,
+  "fov_y": 60.0,
+  "n_plane": 0.1,
+  "f_plane": 100.0,
+
+  "device_ordinal": 0,
+  "device_debug": false,
+
+  "size_x": 1280,
+  "size_y": 720
+}
