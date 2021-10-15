@@ -28,8 +28,8 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../blast3d-core/core.h"
-#include "../blast3d-util/property.h"
+#include "../raygene3d-core/core.h"
+#include "../raygene3d-util/property.h"
 
 namespace RayGene3D
 {
