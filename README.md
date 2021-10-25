@@ -26,7 +26,7 @@ Make the project root directory as current
     cd raygene3d-demo
 ```
 
-Note, that there are some pre-built dependencies we distribute. It imposes some software and hardware restrictions. Don't worry, we are working on it. Currently you need x86 architecture to build and run the demo. Software restrictions will be described below.
+Please note, that there are pre-built binaries for 64-bit x86 architectures only. These dependencies are distributed with zipped archive and can be found in the 3rdparty directory.
 
 ### Windows
 
