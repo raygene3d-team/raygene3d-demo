@@ -1,8 +1,8 @@
 <img src="https://github.com/raygene3d-team/raygene3d-demo/blob/main/preview.jpg" width="120" height="120">
 
-# RayGene Demo
+# RayGene3D Demo
 
-Demo is powered by RayGene and utilizes its most common rendering features. It presents Crytek Sponza scene including one point light with omni-shadowing and ImGUI wrapper.
+Demo is powered by RayGene3D and utilizes its most common rendering features. It presents Crytek Sponza scene including one point light with omni-shadowing and ImGUI wrapper.
 
 Demo shows how to use:
 - direct/indirect drawing
@@ -10,9 +10,9 @@ Demo shows how to use:
 - static/dynamic GPU resource management
 - depth-only and forward passes
 
-## About RayGene
+## About RayGene3D
 
-RayGene is a developer-oriented graphics framework written in portable C++17. It unifies dealing with a variety of graphics APIs and speeds up engineering of render systems.
+RayGene3D is a developer-oriented graphics framework written in portable C++17. It unifies dealing with a variety of graphics APIs and speeds up engineering of render systems.
 
 The framework currently supports Vulkan and DirectX11 APIs and runs on Windows, Linux and MacOS platforms. DirectX12 and Metal support will be available later.
 
@@ -83,4 +83,4 @@ And run from the root directory
 
 ## License
 
-RayGene is licensed under the [MIT license](https://github.com/raygene3d-team/raygene3d-demo/blob/main/LICENSE)
+RayGene3D is licensed under the [MIT license](https://github.com/raygene3d-team/raygene3d-demo/blob/main/LICENSE)
