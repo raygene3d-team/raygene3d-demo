@@ -6,7 +6,7 @@ Demo is powered by RayGene and utilizes its most common rendering features. It p
 
 ## About RayGene
 
-RayGene is a developer-oriented cross-API graphics framework written in portable C++17. Its goal is to make development of render systems easier and faster.
+RayGene is a developer-oriented cross-API graphics framework written in portable C++17. RayGene decouples developers from dealing with a variety of different APIs and makes engineering of render systems faster.
 
 The framework currently supports Vulkan and DirectX11 APIs and runs on Windows, Linux and MacOS platforms. DirectX12 and Metal support will be available later.
 
@@ -34,7 +34,7 @@ Note, that there are some pre-built dependencies we distribute. It imposes some 
 2. Run CMake GUI
 3. Specify the source code field as root directory of the cloned repo, specify the output directory (pick root directory as cmake output) and press the Configure button.
 4. Then select your Visual Studio version and configure the project.
-5. Generate VS Project file and open it. As we said before we have some pre-build dependencies and you must use v142 toolset.
+5. Generate VS Project file and open it. As we said before we have some pre-built dependencies and you must use v142 toolset.
 6. Compile and run the project
 
 ### Linux and MacOS
