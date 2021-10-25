@@ -2,16 +2,26 @@
 
 # RayGene Demo
 
-RayGene is a developer-oriented cross GPU API framework written in portable C++17. Our goal is to make development of render systems more easily and faster. The framework can be started under Windows, Linux and MacOS platforms. Currently Vulkan and DirectX11 are supported. We are working on DirectX12 and Metal support.
+Demo is powered by RayGene and utilizes its most common rendering features. It presents Crytek Sponza scene including one point light with omni-shadowing and ImGUI wrapper.
 
-This project allows you to try the framework on a simple scene with different scenarios: indirect drawing, compute pipeline and depth-only rendering. Please follow the instructions to build and run the project.
+Demo shows how to use:
+- direct/indirect drawing
+- compute/raster pipelines
+- static/dynamic GPU resource management
+- depth-only and forward passes
+
+## About RayGene
+
+RayGene is a developer-oriented graphics framework written in portable C++17. It unifies dealing with a variety of graphics APIs and speeds up engineering of render systems.
+
+The framework currently supports Vulkan and DirectX11 APIs and runs on Windows, Linux and MacOS platforms. DirectX12 and Metal support will be available later.
 
 ## Requirements
 
 - [Vulkan SDK](https://vulkan.lunarg.com/)
 - [CMake 3.4](https://cmake.org/download/)
 
-## Compiling and starting RayGene Demo
+## Compiling and Running
 
 To build and run the project, clone this repository
 ```
@@ -22,15 +32,15 @@ Make the project root directory as current
     cd raygene3d-demo
 ```
 
-Note, that there are some pre-built dependencies we distribute. It imposes some software and hardware restrictions. Don't worry, we are working on it. Currently you need x86 architecture to build and run the demo. Software restrictions will be described below.
+Please note, that there are pre-built binaries for 64-bit x86 architectures only. These dependencies are distributed with zipped archive and can be found in the 3rdparty directory.
 
 ### Windows
 
 1. Go to 3rdparty directory and unzip 3rdparty.zip to the directory
 2. Run CMake GUI
-3. Specify the source code field as root directory of the cloned repo, specify the output directory (you can use the same path) and press the Configure button.
+3. Specify the source code field as root directory of the cloned repo, specify the output directory (pick root directory as cmake output) and press the Configure button.
 4. Then select your Visual Studio version and configure the project.
-5. Generate VS Project file and open it. As we said before we have some pre-build dependencies and you must use v142 toolset.
+5. Generate VS Project file and open it. As we said before we have some pre-built dependencies and you must use v142 toolset.
 6. Compile and run the project
 
 ### Linux and MacOS
@@ -59,7 +69,8 @@ And run from the root directory
 | Key | |
 | :--: | :-- |
 | **WASD+RF** | Camera movement |
-| **F2** | Enable/disable shadows |
+| **F1** | Enable/Disable ImGUI |
+| **F2** | Enable/Disable shadows |
 
 ## Third party headers and libs
 
@@ -72,4 +83,4 @@ And run from the root directory
 
 ## License
 
-RayGene is licensed under the `MIT license <https://github.com/raygene3d-team/raygene3d-demo/blob/main/LICENSE>`__.
+RayGene is licensed under the [MIT license](https://github.com/raygene3d-team/raygene3d-demo/blob/main/LICENSE)
