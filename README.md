@@ -1,4 +1,4 @@
-<img src="https://github.com/raygene3d-team/raygene3d-demo/blob/readme/preview.jpg" width="120" height="120">
+<img src="https://github.com/raygene3d-team/raygene3d-demo/blob/main/preview.jpg" width="120" height="120">
 
 # RayGene Demo
 
