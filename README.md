@@ -6,7 +6,7 @@ Demo is powered by RayGene and utilizes its most common rendering features. It p
 
 ## About RayGene
 
-RayGene is a developer-oriented cross-API graphics framework written in portable C++17. It simplifies dealing with a variety of different APIs and speeds up engineering of render systems.
+RayGene is a developer-oriented graphics framework written in portable C++17. It unifies dealing with a variety of graphics APIs and speeds up engineering of render systems.
 
 The framework currently supports Vulkan and DirectX11 APIs and runs on Windows, Linux and MacOS platforms. DirectX12 and Metal support will be available later.
 
