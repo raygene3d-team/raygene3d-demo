@@ -3,6 +3,7 @@
 # RayGene Demo
 
 Demo is powered by RayGene and utilizes its most common rendering features. It presents Crytek Sponza scene including one point light with omni-shadowing and ImGUI wrapper.
+
 Demo shows how to use:
 - direct/indirect drawing
 - compute/raster pipelines
