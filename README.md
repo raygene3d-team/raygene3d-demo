@@ -2,18 +2,20 @@
 
 # RayGene Demo
 
-RayGene is a developer-oriented cross GPU API framework written in portable C++17. Our goal is to make development of render systems more easily and faster.
+Demo is powered by RayGene and utilizes its most common rendering features. It presents Crytek Sponza scene including one point light with omni-shadowing and ImGUI wrapper. Demo shows how to use direct/indirect drawing, compute/raster pipeline, static/dynamic GPU resource management, depth-only and forward rendering.
+
+## About RayGene
+
+RayGene is a developer-oriented cross-API graphics framework written in portable C++17. Its goal is to make development of render systems easier and faster.
 
 The framework currently supports Vulkan and DirectX11 APIs and runs on Windows, Linux and MacOS platforms. DirectX12 and Metal support will be available later.
-
-This project allows you to try the framework on a simple scene with different scenarios: indirect drawing, compute pipeline and depth-only rendering. Please follow the instructions to build and run the project.
 
 ## Requirements
 
 - [Vulkan SDK](https://vulkan.lunarg.com/)
 - [CMake 3.4](https://cmake.org/download/)
 
-## Compiling and starting RayGene Demo
+## Compiling and Running
 
 To build and run the project, clone this repository
 ```
@@ -61,7 +63,8 @@ And run from the root directory
 | Key | |
 | :--: | :-- |
 | **WASD+RF** | Camera movement |
-| **F2** | Enable/disable shadows |
+| **F1** | Enable/Disable ImGUI |
+| **F2** | Enable/Disable shadows |
 
 ## Third party headers and libs
 
