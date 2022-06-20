@@ -203,7 +203,7 @@ namespace RayGene3D
       {
         const auto textures = scene->GetObjectItem("textures0");
         const auto layers = textures->GetArraySize();
-        const auto format = FORMAT_R8G8B8A8_UNORM;
+        const auto format = FORMAT_R8G8B8A8_SRGB;
         const auto bpp = 4u;
 
         auto mipmaps = 1u;
@@ -259,7 +259,7 @@ namespace RayGene3D
       {
         const auto textures = scene->GetObjectItem("textures2");
         const auto layers = textures->GetArraySize();
-        const auto format = FORMAT_R8G8B8A8_UNORM;
+        const auto format = FORMAT_R8G8B8A8_SRGB;
         const auto bpp = 4u;
 
         auto mipmaps = 1u;
