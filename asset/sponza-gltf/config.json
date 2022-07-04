@@ -1,0 +1,17 @@
+{
+  "scene":  {
+  	"file": "Sponza.gltf",
+  	"scale": 0.01,
+  	"quality": 11
+  },
+  "environment": {
+  	"file": "asset/environment/skylight-day.exr",
+  	"exposure": 1.0,
+  	"quality": 10
+  },
+  "camera": {
+    "eye": [8.2, 5.9, 0.1],
+    "lookat": [8.0, 5.9, 0.1],
+    "up": [0.0, 1.0, 0.0]
+  }
+}

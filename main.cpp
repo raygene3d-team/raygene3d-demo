@@ -173,7 +173,17 @@ std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, con
     }
     catch (std::exception e)
     {
-      scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_scale, scene_quality);
+      const auto extension = ExtractExtension(scene_file);
+
+      if (std::strcmp(extension.c_str(), "obm") == 0)
+      {
+        scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_scale, scene_quality);
+      }
+      else if (std::strcmp(extension.c_str(), "gltf") == 0)
+      {
+        scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_scale, scene_quality);
+      }
+
       RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
     }
 
