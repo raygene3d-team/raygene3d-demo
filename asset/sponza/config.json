@@ -1,6 +1,7 @@
 {
   "scene":  {
   	"file": "sponza.obm",
+  	"flip": false,
   	"scale": 0.01,
   	"quality": 11
   },

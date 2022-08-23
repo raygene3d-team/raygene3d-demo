@@ -55,10 +55,10 @@ namespace RayGene3D
 
     std::shared_ptr<Resource> frame_output;
 
-    std::array<Camera, 6> point_light;
+    std::shared_ptr<Resource> screen_data;
 
-    std::shared_ptr<Resource> shadow_data;
     std::shared_ptr<Resource> camera_data;
+    std::shared_ptr<Resource> shadow_data;
 
     std::shared_ptr<Resource> instance_items;
     std::shared_ptr<Resource> triangle_items;
@@ -98,6 +98,9 @@ namespace RayGene3D
     //std::shared_ptr<Resource> environment_arguments;
 
   protected:
+    glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
+
+  protected:
     std::shared_ptr<Pass> present_pass;
     std::shared_ptr<Layout> present_layout;
     std::shared_ptr<Config> present_shader;
@@ -117,6 +120,14 @@ namespace RayGene3D
 
     std::shared_ptr<Property> prop_counter;
 
+    std::shared_ptr<Property> prop_instances;
+    std::shared_ptr<Property> prop_triangles;
+    std::shared_ptr<Property> prop_vertices;
+
+    std::shared_ptr<Property> prop_textures0;
+    std::shared_ptr<Property> prop_textures1;
+    std::shared_ptr<Property> prop_textures2;
+    std::shared_ptr<Property> prop_textures3;
 
   protected:
     uint32_t shadow_map_size { 1024 };

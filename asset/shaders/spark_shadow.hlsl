@@ -8,15 +8,10 @@
 
 VK_BINDING(0) cbuffer constant0 : register(b0)
 {
-  uint cam_size_x       : packoffset(c0.x);
-  uint cam_size_y       : packoffset(c0.y);
-  uint cam_base         : packoffset(c0.z);
-  uint cam_seed         : packoffset(c0.w);
-  float4x3 cam_view     : packoffset(c1.x);
-  float4x4 cam_proj     : packoffset(c4.x);
-  float4x3 cam_view_inv : packoffset(c8.x);
-  float4x4 cam_proj_inv : packoffset(c11.x);
-  uint4 cam_padding     : packoffset(c15.x);
+  float4x4 shadow_view     : packoffset(c0.x);
+  float4x4 shadow_proj     : packoffset(c4.x);
+  float4x4 shadow_view_inv : packoffset(c8.x);
+  float4x4 shadow_proj_inv : packoffset(c12.x);
 }
 
 struct VSInput
@@ -37,7 +32,6 @@ struct VSOutput
 VSOutput vs_main(VSInput input)
 {
   VSOutput output;
-  float4x4 view = float4x4(transpose(cam_view), float4(0.0, 0.0, 0.0, 1.0));
-  output.pos = mul(cam_proj, mul(view, float4(input.pos, 1.0)));
+  output.pos = mul(shadow_proj, mul(shadow_view, float4(input.pos, 1.0)));
   return output;
 }

@@ -1,6 +1,7 @@
 {
   "scene":  {
   	"file": "DamagedHelmet.gltf",
+    "flip": true,
   	"scale": 1.0,
   	"quality": 12
   },
@@ -10,8 +11,8 @@
   	"quality": 10
   },
   "camera": {
-    "eye": [3.2, 0.9, 0.1],
-    "lookat": [3.0, 0.9, 0.1],
+    "eye": [0.0, 0.0, 3.0],
+    "lookat": [0.0, 0.0, 0.0],
     "up": [0.0, 1.0, 0.0]
   }
 }

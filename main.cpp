@@ -135,7 +135,40 @@ std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, con
   input >> json;
   input.close();
 
-  const auto scene_json_propertry = RayGene3D::ParseJSON(json, nullptr);
+  const auto scene_json_propertry = RayGene3D::ParseJSON(json);
+
+  {
+    const auto scene_json_property = scene_json_propertry->GetObjectItem("scene");
+
+    const auto scene_file = scene_json_property->GetObjectItem("file")->GetString();
+    const auto scene_flip = scene_json_property->GetObjectItem("flip")->GetBool();
+    const auto scene_scale = scene_json_property->GetObjectItem("scale")->GetReal();
+    const auto scene_quality = scene_json_property->GetObjectItem("quality")->GetUint();
+
+    const auto directory = std::string("cache/");
+    std::shared_ptr<RayGene3D::Property> scene_prop;
+    try
+    {
+      scene_prop = RayGene3D::LoadProperty(directory, ExtractName(scene_file));
+    }
+    catch (std::exception e)
+    {
+      const auto extension = ExtractExtension(scene_file);
+
+      if (std::strcmp(extension.c_str(), "obm") == 0)
+      {
+        scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_flip, scene_scale, scene_quality);
+      }
+      else if (std::strcmp(extension.c_str(), "gltf") == 0)
+      {
+        scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_flip, scene_scale, scene_quality);
+      }
+
+      RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
+    }
+
+    property->SetObjectItem("scene", scene_prop);
+  }
 
   {
     const auto camera_json_property = scene_json_propertry->GetObjectItem("camera");
@@ -156,38 +189,6 @@ std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, con
     camera_property->SetObjectItem("counter", prop_counter);
 
     property->SetObjectItem("camera", camera_property);
-  }
-
-  {
-    const auto scene_json_property = scene_json_propertry->GetObjectItem("scene");
-
-    const auto scene_file = scene_json_property->GetObjectItem("file")->GetString();
-    const auto scene_scale = scene_json_property->GetObjectItem("scale")->GetReal();
-    const auto scene_quality = scene_json_property->GetObjectItem("quality")->GetUint();
-
-    const auto directory = std::string("cache/");
-    std::shared_ptr<RayGene3D::Property> scene_prop;
-    try
-    {
-      scene_prop = RayGene3D::LoadProperty(directory, ExtractName(scene_file));
-    }
-    catch (std::exception e)
-    {
-      const auto extension = ExtractExtension(scene_file);
-
-      if (std::strcmp(extension.c_str(), "obm") == 0)
-      {
-        scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_scale, scene_quality);
-      }
-      else if (std::strcmp(extension.c_str(), "gltf") == 0)
-      {
-        scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_scale, scene_quality);
-      }
-
-      RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
-    }
-
-    property->SetObjectItem("scene", scene_prop);
   }
 
   {
@@ -615,7 +616,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_VLK));
+      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_D11));
     }
     ~GLFWWrapper()
     {

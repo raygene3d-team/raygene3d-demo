@@ -12,18 +12,21 @@ VK_BINDING(0) sampler sampler0 : register(s0);
 
 VK_BINDING(1) cbuffer constant0 : register(b0)
 {
-  uint cam_size_x       : packoffset(c0.x);
-  uint cam_size_y       : packoffset(c0.y);
-  uint cam_base         : packoffset(c0.z);
-  uint cam_seed         : packoffset(c0.w);
-  float4x3 cam_view     : packoffset(c1.x);
-  float4x4 cam_proj     : packoffset(c4.x);
-  float4x3 cam_view_inv : packoffset(c8.x);
-  float4x4 cam_proj_inv : packoffset(c11.x);
-  uint4 cam_padding     : packoffset(c15.x);
+  uint extent_x       : packoffset(c0.x);
+  uint extent_y       : packoffset(c0.y);
+  uint rnd_base       : packoffset(c0.z);
+  uint rnd_seed       : packoffset(c0.w);
 }
 
-VK_BINDING(2) Texture2D<float4> environment_texture : register(t0);
+VK_BINDING(2) cbuffer constant1 : register(b1)
+{
+  float4x4 camera_view     : packoffset(c0.x);
+  float4x4 camera_proj     : packoffset(c4.x);
+  float4x4 camera_view_inv : packoffset(c8.x);
+  float4x4 camera_proj_inv : packoffset(c12.x);
+}
+
+VK_BINDING(3) Texture2D<float4> environment_texture : register(t0);
 
 struct VSInput
 {
@@ -40,7 +43,7 @@ struct VSOutput
 VSOutput vs_main(VSInput input)
 {
   VSOutput output;
-  float4x4 view = float4x4(transpose(cam_view), float4(0.0, 0.0, 0.0, 1.0));
+  //float4x4 view = float4x4(transpose(cam_view), float4(0.0, 0.0, 0.0, 1.0));
   output.pos = float4(input.pos, 1.0, 1.0); //mul(cam_proj, mul(view, float4(input.pos, 0.5, 1.0)));
   output.uv = input.uv;
   return output;
@@ -61,11 +64,11 @@ PSOutput ps_main(PSInput input)
 {
   PSOutput output;
  
-  const float rx = 2.0 * (input.pos.x / cam_size_x) - 1.0; 
-  const float ry = 2.0 * (input.pos.y / cam_size_y) - 1.0;
+  const float rx = 2.0 * (input.pos.x / extent_x) - 1.0; 
+  const float ry = 2.0 * (input.pos.y / extent_y) - 1.0;
  
-  const float3 camera_dir = normalize(mul(cam_proj_inv, float4(rx, -ry, 1.0, 1.0)).xyz);
-  const float3 view_dir = mul((float3x3)cam_view, camera_dir);
+  const float3 camera_dir = normalize(mul(camera_proj_inv, float4(rx, -ry, 1.0, 1.0)).xyz);
+  const float3 view_dir = mul((float3x3)camera_view, camera_dir);
   
 
   const float env_s = 0.5 * atan2(view_dir.x, view_dir.z) / PI + 0.5;
