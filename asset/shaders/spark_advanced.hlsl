@@ -232,23 +232,23 @@ PSOutput ps_main(PSInput input)
 
   const float3 surface_pos = input.w_pos_d.xyz;
 
-  const float3 view_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
-  const float view_dst = length(view_pos - surface_pos);
-  const float3 view_dir = (view_pos - surface_pos) / view_dst;
+  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
+  const float camera_dst = length(camera_pos - surface_pos);
+  const float3 camera_dir = (camera_pos - surface_pos) / camera_dst;
 
-  const float3 light_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
-  const float light_dst = length(light_pos - surface_pos);
-  const float3 light_dir = (light_pos - surface_pos) / light_dst;
+  const float3 shadow_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
+  const float shadow_dst = length(shadow_pos - surface_pos);
+  const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
+  
+  const float3 wo = mul(tbn, camera_dir);
+  const float3 lo = mul(tbn, shadow_dir);
+  const float attenuation = 10.0 * 1.0 / (shadow_dst * shadow_dst) * Shadow(surface_pos);
+  
+  const float3 ambient = 0.025 * surface.Kd;
+  const float3 diffuse = max(0.0, lo.z) * surface.Kd;
+  const float3 specular = pow(max(0.0, normalize(lo + wo).z), surface.r) * surface.Ks;
 
-  const float3 lo = mul(tbn, light_dir);
-  const float3 wo = mul(tbn, view_dir);
-
-  const float ambient = 0.025;
-  const float shadow = Shadow(surface_pos);
-  const float diffuse = max(0.0, lo.z) / (light_dst * light_dst) * 10.0;
-  const float specular = pow(max(0.0, normalize(lo + wo).z), surface.r) / (light_dst * light_dst) * 10.0;
-
-  const float3 color = (ambient + shadow * diffuse) * surface.Kd + shadow * surface.Ks * specular;
+  const float3 color = ambient + diffuse * attenuation + specular * attenuation;
 
   PSOutput output;
   output.target_0 = float4(color, 0.0);
