@@ -17,11 +17,6 @@ VK_BINDING(0) cbuffer constant0 : register(b0)
 struct VSInput
 {
   VK_LOCATION(0) float3 pos : register0;
-  VK_LOCATION(1) float  u : register1;
-  VK_LOCATION(2) float3 nrm : register2;
-  VK_LOCATION(3) float  v : register3;
-  VK_LOCATION(4) float3 tgn : register4;
-  VK_LOCATION(5) float  sign : register5;
 };
 
 struct VSOutput

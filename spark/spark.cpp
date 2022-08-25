@@ -289,11 +289,10 @@ namespace RayGene3D
   void Spark::InitializeShadow()
   {
     const auto core = &this->GetCore();
+    const auto device = core->AccessDevice();
+
     const auto extent_x = shadow_map_size;
     const auto extent_y = shadow_map_size;
-
-    const auto device = core->AccessDevice();
-    //const auto scene = property->GetObjectItem("scene");
 
     const auto shadow_instance_items = instance_items->CreateView("shadow_instance_items");
     {
@@ -331,11 +330,6 @@ namespace RayGene3D
 
       const Config::Attribute attributes[] = {
         { 0,  0, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 48, FORMAT_R32_FLOAT, false },
-        { 0, 16, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 28, 48, FORMAT_R32_FLOAT, false },
-        { 0, 32, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 44, 48, FORMAT_R32_FLOAT, false },
       };
       shadow_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
@@ -484,66 +478,47 @@ namespace RayGene3D
     const auto raster_texture0_items = texture0_items->CreateView("raster_texture0_view");
     {
       raster_texture0_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture0_items->SetLayerOffset(0);
-      //raster_texture0_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture1_items = texture1_items->CreateView("raster_texture1_view");
     {
       raster_texture1_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture1_items->SetLayerOffset(0);
-      //raster_texture1_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture2_items = texture2_items->CreateView("raster_texture2_view");
     {
       raster_texture2_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture2_items->SetLayerOffset(0);
-      //raster_texture2_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture3_items = texture3_items->CreateView("raster_texture3_view");
     {
       raster_texture3_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture3_items->SetLayerOffset(0);
-      //raster_texture3_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_environment_item = environment_item->CreateView("raster_environment_view");
     {
       raster_environment_item->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_environment_item->SetLayerOffset(0);
-      //raster_environment_item->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_render_target = render_target->CreateView("raster_render_target");
     {
       raster_render_target->SetBind(View::BIND_RENDER_TARGET);
-      //raster_render_target->SetLayerOffset(0);
-      //raster_render_target->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_depth_stencil = depth_stencil->CreateView("raster_depth_stencil");
     {
       raster_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
-      //raster_depth_stencil->SetLayerOffset(0);
-      //raster_depth_stencil->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_vertex_items = vertex_items->CreateView("raster_vertex_items");
     {
       raster_vertex_items->SetBind(View::BIND_VERTEX_ARRAY);
-      //raster_vertex_items->SetByteOffset(0);
-      //raster_vertex_items->SetByteCount(uint32_t(-1));
     }
 
     const auto raster_index_items = triangle_items->CreateView("raster_index_items");
     {
       raster_index_items->SetBind(View::BIND_INDEX_ARRAY);
-      //raster_index_items->SetByteOffset(0);
-      //raster_index_items->SetByteCount(uint32_t(-1));
     }
-
 
     no_shadow_raster_shader = device->CreateShader("no_shadow_raster_shader");
     {
@@ -566,11 +541,6 @@ namespace RayGene3D
         { 0, 44, 48, FORMAT_R32_FLOAT, false },
       };
       no_shadow_raster_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-      //const uint32_t strides[] = {
-      //  48,
-      //};
-      //no_shadow_raster_shader->UpdateStrides({ strides, uint32_t(std::size(strides)) });
 
       no_shadow_raster_shader->SetFillMode(Config::FILL_SOLID);
       no_shadow_raster_shader->SetCullMode(Config::CULL_BACK);
@@ -727,65 +697,47 @@ namespace RayGene3D
     const auto raster_texture0_items = texture0_items->CreateView("raster_texture0_view");
     {
       raster_texture0_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture0_items->SetLayerOffset(0);
-      //raster_texture0_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture1_items = texture1_items->CreateView("raster_texture1_view");
     {
       raster_texture1_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture1_items->SetLayerOffset(0);
-      //raster_texture1_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture2_items = texture2_items->CreateView("raster_texture2_view");
     {
       raster_texture2_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture2_items->SetLayerOffset(0);
-      //raster_texture2_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture3_items = texture3_items->CreateView("raster_texture3_view");
     {
       raster_texture3_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture3_items->SetLayerOffset(0);
-      //raster_texture3_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_shadow_map = shadow_map->CreateView("raster_shadow_map");
     {
       raster_shadow_map->SetBind(View::BIND_SHADER_RESOURCE);
       raster_shadow_map->SetUsage(View::USAGE_CUBEMAP_LAYER);
-      //raster_shadow_map->SetLayerOffset(0);
-      //raster_shadow_map->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_render_target = render_target->CreateView("raster_render_target");
     {
       raster_render_target->SetBind(View::BIND_RENDER_TARGET);
-      //raster_render_target->SetLayerOffset(0);
-      //raster_render_target->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_depth_stencil = depth_stencil->CreateView("raster_depth_stencil");
     {
       raster_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
-      //raster_depth_stencil->SetLayerOffset(0);
-      //raster_depth_stencil->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_vertex_items = vertex_items->CreateView("raster_vertex_items");
     {
       raster_vertex_items->SetBind(View::BIND_VERTEX_ARRAY);
-      //raster_vertex_items->SetByteOffset(0);
-      //raster_vertex_items->SetByteCount(uint32_t(-1));
     }
 
     const auto raster_index_items = triangle_items->CreateView("raster_index_items");
     {
       raster_index_items->SetBind(View::BIND_INDEX_ARRAY);
-      //raster_index_items->SetByteOffset(0);
-      //raster_index_items->SetByteCount(uint32_t(-1));
     }
 
 
@@ -810,11 +762,6 @@ namespace RayGene3D
         { 0, 44, 48, FORMAT_R32_FLOAT, false },
       };
       shadow_map_raster_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-      //const uint32_t strides[] = {
-      //  48,
-      //};
-      //shadow_map_raster_shader->UpdateStrides({ strides, uint32_t(std::size(strides)) });
 
       shadow_map_raster_shader->SetFillMode(Config::FILL_SOLID);
       shadow_map_raster_shader->SetCullMode(Config::CULL_BACK);
@@ -942,13 +889,6 @@ namespace RayGene3D
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
 
-    environment_vtx = {
-      glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
-      glm::f32vec4( 1.0f, 1.0f, 1.0f, 0.0f),
-      glm::f32vec4(-1.0f,-1.0f, 0.0f, 1.0f),
-      glm::f32vec4( 1.0f,-1.0f, 1.0f, 1.0f),
-    };
-
     environment_vtx_data = device->CreateResource("environment_vtx_data");
     {
       environment_vtx_data->SetType(Resource::TYPE_BUFFER);
@@ -957,11 +897,6 @@ namespace RayGene3D
       environment_vtx_data->SetInteropCount(1);
       environment_vtx_data->SetInteropItem(0, std::pair(environment_vtx.data(), uint32_t(environment_vtx.size() * sizeof(glm::f32vec4))));
     }
-
-    environment_idx = {
-      glm::u32vec3(0u, 1u, 2u),
-      glm::u32vec3(3u, 2u, 1u),
-    };
 
     environment_idx_data = device->CreateResource("environment_idx_data");
     {
@@ -975,68 +910,37 @@ namespace RayGene3D
     const auto environment_render_target = render_target->CreateView("environment_render_target");
     {
       environment_render_target->SetBind(View::BIND_RENDER_TARGET);
-      //raster_render_target->SetLayerOffset(0);
-      //raster_render_target->SetLayerCount(uint32_t(-1));
     }
 
     const auto environment_depth_stencil = depth_stencil->CreateView("environment_depth_stencil");
     {
       environment_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
-      //raster_depth_stencil->SetLayerOffset(0);
-      //raster_depth_stencil->SetLayerCount(uint32_t(-1));
     }
 
-    const auto environment_screen_data = camera_data->CreateView("environment_screen_data");
+    const auto environment_screen_data = screen_data->CreateView("environment_screen_data");
     {
       environment_screen_data->SetBind(View::BIND_CONSTANT_DATA);
-      //raster_camera_data->SetByteOffset(0);
-      //raster_camera_data->SetByteCount(uint32_t(-1));
     }
 
     const auto environment_camera_data = camera_data->CreateView("environment_camera_data");
     {
       environment_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      //raster_camera_data->SetByteOffset(0);
-      //raster_camera_data->SetByteCount(uint32_t(-1));
     }
 
     const auto environment_item_view = environment_item->CreateView("environment_item_view");
     {
       environment_item_view->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_environment_item->SetLayerOffset(0);
-      //raster_environment_item->SetLayerCount(uint32_t(-1));
     }
 
     const auto environment_vtx_items = environment_vtx_data->CreateView("environment_vtx_items");
     {
       environment_vtx_items->SetBind(View::BIND_VERTEX_ARRAY);
-      //raster_vertex_items->SetByteOffset(0);
-      //raster_vertex_items->SetByteCount(uint32_t(-1));
     }
 
     const auto environment_idx_items = environment_idx_data->CreateView("environment_idx_items");
     {
       environment_idx_items->SetBind(View::BIND_INDEX_ARRAY);
-      //raster_index_items->SetByteOffset(0);
-      //raster_index_items->SetByteCount(uint32_t(-1));
     }
-
-    
-
-    //environment_arguments = device->CreateResource("environment_arguments");
-    //{
-    //  environment_arguments->SetType(Resource::TYPE_BUFFER);
-    //  environment_arguments->SetStride(uint32_t(sizeof(Pass::Graphic)));
-    //  environment_arguments->SetCount(1);
-    //  environment_arguments->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-    //}
-
-    //auto arguments_view = environment_arguments->CreateView("arguments_view");
-    //{
-    //  arguments_view->SetBind(View::BIND_COMMAND_INDIRECT);
-    //  //arguments_view->SetByteOffset(0);
-    //  //arguments_view->SetByteCount(uint32_t(-1));
-    //}
 
     environment_shader = device->CreateShader("environment_shader");
     {
@@ -1057,11 +961,6 @@ namespace RayGene3D
       };
       environment_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
-      //const uint32_t strides[] = {
-      //  16,
-      //};
-      //environment_shader->UpdateStrides({ strides, uint32_t(std::size(strides)) });
-
       environment_shader->SetFillMode(Config::FILL_SOLID);
       environment_shader->SetCullMode(Config::CULL_NONE);
       environment_shader->SetClipEnabled(false);
@@ -1073,7 +972,7 @@ namespace RayGene3D
       environment_shader->SetATCEnabled(false);
 
       environment_shader->SetDepthEnabled(true);
-      environment_shader->SetDepthWrite(true);
+      environment_shader->SetDepthWrite(false);
       environment_shader->SetDepthComparison(Config::COMPARISON_EQUAL);
 
       const Config::Viewport viewports[] = {

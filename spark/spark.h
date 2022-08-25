@@ -69,9 +69,18 @@ namespace RayGene3D
     std::shared_ptr<Resource> texture2_items;
     std::shared_ptr<Resource> texture3_items;
 
-    std::array<glm::f32vec4, 4> environment_vtx;
+    std::array<glm::f32vec4, 4> environment_vtx = {
+      glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
+      glm::f32vec4( 1.0f, 1.0f, 1.0f, 0.0f),
+      glm::f32vec4(-1.0f,-1.0f, 0.0f, 1.0f),
+      glm::f32vec4( 1.0f,-1.0f, 1.0f, 1.0f),
+    };
+    std::array<glm::u32vec3, 2> environment_idx = {
+      glm::u32vec3(0u, 1u, 2u),
+      glm::u32vec3(3u, 2u, 1u),
+    };
+
     std::shared_ptr<Resource> environment_vtx_data;
-    std::array<glm::u32vec3, 2> environment_idx;
     std::shared_ptr<Resource> environment_idx_data;
     std::shared_ptr<Resource> environment_item;
 

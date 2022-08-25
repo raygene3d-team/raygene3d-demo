@@ -276,8 +276,8 @@ namespace RayGene3D
       if (glfwGetMouseButton(glfw, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
       {
         auto direction = glm::fvec3{ 0.0f, 0.0f, 0.0f };
-        direction[0] = -1.0 * delta_xpos;
-        direction[1] = -1.0 * delta_ypos;
+        direction[0] =-1.0 * delta_xpos;
+        direction[1] = 1.0 * delta_ypos;
 
         if (glm::any(glm::notEqual(direction, glm::zero<glm::fvec3>())))
         {
@@ -334,7 +334,7 @@ namespace RayGene3D
 
         if (rotation_sign != 0.0f)
         {
-          up = glm::rotate(up, camera_roll_speed_ * rotation_sign * float(delta_time), lookat);
+          up = glm::rotate(up, camera_roll_speed_ * rotation_sign * float(delta_time), cam_z);
 
           counter = 0;
         }
@@ -541,25 +541,6 @@ namespace RayGene3D
           UpdateCamera();
         }
 
-        //if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
-        //{
-        //  auto shading = raygene->GetShading();
-        //  if (shading == Raygene::SHADING_CHECKER) { shading = Raygene::SHADING_TRACER; }
-        //  else
-        //    if (shading == Raygene::SHADING_TRACER) { shading = Raygene::SHADING_CHECKER; }
-        //  raygene->SetShading(shading);
-        //  change_raygene = false;
-
-        //  auto counter = prop_counter->GetUint();
-        //  counter = 1;
-        //  prop_counter->SetUint(counter);
-        //}
-
-        //if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_PRESS && !change_raygene)
-        //{
-        //  change_raygene = true;
-        //}
-
         if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
         {
           auto shadow_type = spark->GetShadowType();
@@ -616,7 +597,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_D11));
+      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_VLK));
     }
     ~GLFWWrapper()
     {
