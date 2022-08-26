@@ -135,7 +135,40 @@ std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, con
   input >> json;
   input.close();
 
-  const auto scene_json_propertry = RayGene3D::ParseJSON(json, nullptr);
+  const auto scene_json_propertry = RayGene3D::ParseJSON(json);
+
+  {
+    const auto scene_json_property = scene_json_propertry->GetObjectItem("scene");
+
+    const auto scene_file = scene_json_property->GetObjectItem("file")->GetString();
+    const auto scene_flip = scene_json_property->GetObjectItem("flip")->GetBool();
+    const auto scene_scale = scene_json_property->GetObjectItem("scale")->GetReal();
+    const auto scene_quality = scene_json_property->GetObjectItem("quality")->GetUint();
+
+    const auto directory = std::string("cache/");
+    std::shared_ptr<RayGene3D::Property> scene_prop;
+    try
+    {
+      scene_prop = RayGene3D::LoadProperty(directory, ExtractName(scene_file));
+    }
+    catch (std::exception e)
+    {
+      const auto extension = ExtractExtension(scene_file);
+
+      if (std::strcmp(extension.c_str(), "obm") == 0)
+      {
+        scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_flip, scene_scale, scene_quality);
+      }
+      else if (std::strcmp(extension.c_str(), "gltf") == 0)
+      {
+        scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_flip, scene_scale, scene_quality);
+      }
+
+      RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
+    }
+
+    property->SetObjectItem("scene", scene_prop);
+  }
 
   {
     const auto camera_json_property = scene_json_propertry->GetObjectItem("camera");
@@ -156,38 +189,6 @@ std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, con
     camera_property->SetObjectItem("counter", prop_counter);
 
     property->SetObjectItem("camera", camera_property);
-  }
-
-  {
-    const auto scene_json_property = scene_json_propertry->GetObjectItem("scene");
-
-    const auto scene_file = scene_json_property->GetObjectItem("file")->GetString();
-    const auto scene_scale = scene_json_property->GetObjectItem("scale")->GetReal();
-    const auto scene_quality = scene_json_property->GetObjectItem("quality")->GetUint();
-
-    const auto directory = std::string("cache/");
-    std::shared_ptr<RayGene3D::Property> scene_prop;
-    try
-    {
-      scene_prop = RayGene3D::LoadProperty(directory, ExtractName(scene_file));
-    }
-    catch (std::exception e)
-    {
-      const auto extension = ExtractExtension(scene_file);
-
-      if (std::strcmp(extension.c_str(), "obm") == 0)
-      {
-        scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_scale, scene_quality);
-      }
-      else if (std::strcmp(extension.c_str(), "gltf") == 0)
-      {
-        scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_scale, scene_quality);
-      }
-
-      RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
-    }
-
-    property->SetObjectItem("scene", scene_prop);
   }
 
   {
@@ -275,8 +276,8 @@ namespace RayGene3D
       if (glfwGetMouseButton(glfw, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
       {
         auto direction = glm::fvec3{ 0.0f, 0.0f, 0.0f };
-        direction[0] = -1.0 * delta_xpos;
-        direction[1] = -1.0 * delta_ypos;
+        direction[0] =-1.0 * delta_xpos;
+        direction[1] = 1.0 * delta_ypos;
 
         if (glm::any(glm::notEqual(direction, glm::zero<glm::fvec3>())))
         {
@@ -333,7 +334,7 @@ namespace RayGene3D
 
         if (rotation_sign != 0.0f)
         {
-          up = glm::rotate(up, camera_roll_speed_ * rotation_sign * float(delta_time), lookat);
+          up = glm::rotate(up, camera_roll_speed_ * rotation_sign * float(delta_time), cam_z);
 
           counter = 0;
         }
@@ -539,25 +540,6 @@ namespace RayGene3D
         {
           UpdateCamera();
         }
-
-        //if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
-        //{
-        //  auto shading = raygene->GetShading();
-        //  if (shading == Raygene::SHADING_CHECKER) { shading = Raygene::SHADING_TRACER; }
-        //  else
-        //    if (shading == Raygene::SHADING_TRACER) { shading = Raygene::SHADING_CHECKER; }
-        //  raygene->SetShading(shading);
-        //  change_raygene = false;
-
-        //  auto counter = prop_counter->GetUint();
-        //  counter = 1;
-        //  prop_counter->SetUint(counter);
-        //}
-
-        //if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_PRESS && !change_raygene)
-        //{
-        //  change_raygene = true;
-        //}
 
         if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
         {

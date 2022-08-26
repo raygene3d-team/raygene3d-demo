@@ -34,24 +34,11 @@ namespace RayGene3D
   void Spark::InitializeResources()
   {
     const auto core = &this->GetCore();
-
-    const auto extent_x = property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
-
-    const auto scene = property->GetObjectItem("scene");
-    //{
-    //  BLAST_ASSERT(scene->CheckObjectItem("instances"));
-    //  BLAST_ASSERT(scene->CheckObjectItem("triangles"));
-    //  BLAST_ASSERT(scene->CheckObjectItem("vertices"));
-
-    //  BLAST_ASSERT(scene->CheckObjectItem("textures0"));
-    //  BLAST_ASSERT(scene->CheckObjectItem("textures1"));
-    //  BLAST_ASSERT(scene->CheckObjectItem("textures2"));
-    //  BLAST_ASSERT(scene->CheckObjectItem("textures3"));
-    //}
-
-
     const auto device = core->AccessDevice();
+
+    const auto extent_x = prop_extent_x->GetUint();
+    const auto extent_y = prop_extent_y->GetUint();
+
     {
       shadow_map = device->CreateResource("shadow_map");
       {
@@ -84,58 +71,28 @@ namespace RayGene3D
         depth_stencil->SetFormat(FORMAT_D32_FLOAT);
       }
 
-      camera_data = device->CreateResource("camera_constants");
+      screen_data = device->CreateResource("screen_data");
+      {
+        screen_data->SetType(Resource::TYPE_BUFFER);
+        screen_data->SetStride(uint32_t(sizeof(Screen)));
+        screen_data->SetCount(1);
+        screen_data->SetHint(Resource::HINT_DYNAMIC_BUFFER);
+      }
+
+      camera_data = device->CreateResource("camera_data");
       {
         camera_data->SetType(Resource::TYPE_BUFFER);
-        camera_data->SetStride(sizeof(Camera));
+        camera_data->SetStride(uint32_t(sizeof(Frustum)));
         camera_data->SetCount(1);
         camera_data->SetHint(Resource::HINT_DYNAMIC_BUFFER);
       }
 
-      shadow_data = device->CreateResource("shadow_camera_constants");
+      shadow_data = device->CreateResource("shadow_data");
       {
-        const auto eye = glm::f32vec3{ -0.605f, 3.515f, 0.387f };
-        const auto proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.01f, 100.0f);
-        const auto proj_inv = glm::inverse(proj);
-
-        const auto x = glm::f32vec3{ 1.0f, 0.0f, 0.0f };
-        const auto y = glm::f32vec3{ 0.0f, 1.0f, 0.0f };
-        const auto z = glm::f32vec3{ 0.0f, 0.0f, 1.0f };
-
-        for (uint32_t i = 0; i < 6; ++i)
-        {
-          auto& light = point_light[i];
-          auto view = glm::f32mat4x4(1.0);
-
-          switch (i)
-          {
-          case 0:
-            view = glm::lookAt(eye, eye + x, y); break;
-          case 1:
-            view = glm::lookAt(eye, eye - x, y); break;
-          case 2:
-            view = glm::lookAt(eye, eye + y,-z); break;
-          case 3:
-            view = glm::lookAt(eye, eye - y, z); break;
-          case 4:
-            view = glm::lookAt(eye, eye + z, y); break;
-          case 5:
-            view = glm::lookAt(eye, eye - z, y); break;
-          };
-
-          const auto view_inv = glm::inverse(view);
-
-          light.view = glm::f32mat3x4(glm::transpose(view)[0], glm::transpose(view)[1], glm::transpose(view)[2]);
-          light.view_inv = glm::f32mat3x4(glm::transpose(view_inv)[0], glm::transpose(view_inv)[1], glm::transpose(view_inv)[2]);
-          light.proj = proj;
-          light.proj_inv = proj_inv;
-        }
-
         shadow_data->SetType(Resource::TYPE_BUFFER);
-        shadow_data->SetStride(uint32_t(sizeof(Camera)));
-        shadow_data->SetCount(uint32_t(point_light.size()));
-        shadow_data->SetInteropCount(1);
-        shadow_data->SetInteropItem(0, std::pair(point_light.data(), uint32_t(point_light.size() * sizeof(Camera))));
+        shadow_data->SetStride(uint32_t(sizeof(Frustum)));
+        shadow_data->SetCount(6);
+        shadow_data->SetHint(Resource::HINT_DYNAMIC_BUFFER);
       }
 
       frame_output = device->ShareResource("screen_backbuffer");
@@ -150,59 +107,50 @@ namespace RayGene3D
 
       instance_items = device->CreateResource("instance_items");
       {
-        const auto bytes = scene->GetObjectItem("instances");
-        const auto stride = uint32_t(sizeof(Instance));
-        const auto count = bytes->GetRawBytes(0).second / stride;
+        const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
         instance_items->SetType(Resource::TYPE_BUFFER);
-        instance_items->SetStride(stride);
+        instance_items->SetStride(uint32_t(sizeof(Instance)));
         instance_items->SetCount(count);
         instance_items->SetInteropCount(1);
-        instance_items->SetInteropItem(0, bytes->GetRawBytes(0));
+        instance_items->SetInteropItem(0, prop_instances->GetRawBytes(0));
       }
 
       triangle_items = device->CreateResource("triangle_items");
       {
-        const auto bytes = scene->GetObjectItem("triangles");
-        const auto stride = uint32_t(sizeof(Triangle));
-        const auto count = bytes->GetRawBytes(0).second / stride;
+        const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
 
         triangle_items->SetType(Resource::TYPE_BUFFER);
-        triangle_items->SetStride(stride);
+        triangle_items->SetStride(uint32_t(sizeof(Triangle)));
         triangle_items->SetCount(count);
         triangle_items->SetInteropCount(1);
-        triangle_items->SetInteropItem(0, bytes->GetRawBytes(0));
+        triangle_items->SetInteropItem(0, prop_triangles->GetRawBytes(0));
       }
 
       vertex_items = device->CreateResource("vertex_items");
       {
-        const auto bytes = scene->GetObjectItem("vertices");
-        const auto stride = uint32_t(sizeof(Vertex));
-        const auto count = bytes->GetRawBytes(0).second / stride;
+        const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
 
         vertex_items->SetType(Resource::TYPE_BUFFER);
-        vertex_items->SetStride(stride);
+        vertex_items->SetStride(uint32_t(sizeof(Vertex)));
         vertex_items->SetCount(count);
         vertex_items->SetInteropCount(1);
-        vertex_items->SetInteropItem(0, bytes->GetRawBytes(0));
+        vertex_items->SetInteropItem(0, prop_vertices->GetRawBytes(0));
       }
 
       raster_arguments = device->CreateResource("raster_arguments");
       {
-        const auto instance_bytes = scene->GetObjectItem("instances");
-        const auto instance_stride = uint32_t(sizeof(Instance));
-        const auto instance_count = instance_bytes->GetRawBytes(0).second / instance_stride;
+        const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
         raster_arguments->SetType(Resource::TYPE_BUFFER);
         raster_arguments->SetStride(uint32_t(sizeof(Pass::Graphic)));
-        raster_arguments->SetCount(uint32_t(instance_count));
+        raster_arguments->SetCount(uint32_t(count));
         raster_arguments->SetHint(Resource::HINT_DYNAMIC_BUFFER);
       }
 
       texture0_items = device->CreateResource("texture0_items");
       {
-        const auto textures = scene->GetObjectItem("textures0");
-        const auto layers = textures->GetArraySize();
+        const auto layers = prop_textures0->GetArraySize();
         const auto format = FORMAT_R8G8B8A8_SRGB;
         const auto bpp = 4u;
 
@@ -210,7 +158,7 @@ namespace RayGene3D
         auto size_x = 1u;
         auto size_y = 1u;
         auto size = 0u;
-        while ((size += size_x * size_y * bpp) != textures->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+        while ((size += size_x * size_y * bpp) != prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
 
         texture0_items->SetType(Resource::TYPE_IMAGE2D);
         texture0_items->SetExtentX(size_x);
@@ -223,14 +171,13 @@ namespace RayGene3D
         texture0_items->SetInteropCount(layers);
         for (uint32_t i = 0; i < layers; ++i)
         { 
-          texture0_items->SetInteropItem(i, textures->GetArrayItem(i)->GetRawBytes(0));
+          texture0_items->SetInteropItem(i, prop_textures0->GetArrayItem(i)->GetRawBytes(0));
         }
       }
 
       texture1_items = device->CreateResource("texture1_items");
       {
-        const auto textures = scene->GetObjectItem("textures1");
-        const auto layers = textures->GetArraySize();
+        const auto layers = prop_textures1->GetArraySize();
         const auto format = FORMAT_R8G8B8A8_UNORM;
         const auto bpp = 4u;
 
@@ -238,7 +185,7 @@ namespace RayGene3D
         auto size_x = 1u;
         auto size_y = 1u;
         auto size = 0u;
-        while ((size += size_x * size_y * bpp) != textures->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+        while ((size += size_x * size_y * bpp) != prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
 
         texture1_items->SetType(Resource::TYPE_IMAGE2D);
         texture1_items->SetExtentX(size_x);
@@ -251,14 +198,13 @@ namespace RayGene3D
         texture1_items->SetInteropCount(layers);
         for (uint32_t i = 0; i < layers; ++i)
         {
-          texture1_items->SetInteropItem(i, textures->GetArrayItem(i)->GetRawBytes(0));
+          texture1_items->SetInteropItem(i, prop_textures1->GetArrayItem(i)->GetRawBytes(0));
         }
       }
 
       texture2_items = device->CreateResource("texture2_items");
       {
-        const auto textures = scene->GetObjectItem("textures2");
-        const auto layers = textures->GetArraySize();
+        const auto layers = prop_textures2->GetArraySize();
         const auto format = FORMAT_R8G8B8A8_SRGB;
         const auto bpp = 4u;
 
@@ -266,7 +212,7 @@ namespace RayGene3D
         auto size_x = 1u;
         auto size_y = 1u;
         auto size = 0u;
-        while ((size += size_x * size_y * bpp) != textures->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+        while ((size += size_x * size_y * bpp) != prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
 
         texture2_items->SetType(Resource::TYPE_IMAGE2D);
         texture2_items->SetExtentX(size_x);
@@ -279,14 +225,13 @@ namespace RayGene3D
         texture2_items->SetInteropCount(layers);
         for (uint32_t i = 0; i < layers; ++i)
         {
-          texture2_items->SetInteropItem(i, textures->GetArrayItem(i)->GetRawBytes(0));
+          texture2_items->SetInteropItem(i, prop_textures2->GetArrayItem(i)->GetRawBytes(0));
         }
       }
 
       texture3_items = device->CreateResource("texture3_items");
       {
-        const auto textures = scene->GetObjectItem("textures3");
-        const auto layers = textures->GetArraySize();
+        const auto layers = prop_textures3->GetArraySize();
         const auto format = FORMAT_R8G8B8A8_UNORM;
         const auto bpp = 4u;
 
@@ -294,7 +239,7 @@ namespace RayGene3D
         auto size_x = 1u;
         auto size_y = 1u;
         auto size = 0u;
-        while ((size += size_x * size_y * bpp) != textures->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+        while ((size += size_x * size_y * bpp) != prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
 
         texture3_items->SetType(Resource::TYPE_IMAGE2D);
         texture3_items->SetExtentX(size_x);
@@ -307,7 +252,7 @@ namespace RayGene3D
         texture3_items->SetInteropCount(layers);
         for (uint32_t i = 0; i < layers; ++i)
         {
-          texture3_items->SetInteropItem(i, textures->GetArrayItem(i)->GetRawBytes(0));
+          texture3_items->SetInteropItem(i, prop_textures3->GetArrayItem(i)->GetRawBytes(0));
         }
       }
 
@@ -344,17 +289,16 @@ namespace RayGene3D
   void Spark::InitializeShadow()
   {
     const auto core = &this->GetCore();
+    const auto device = core->AccessDevice();
+
     const auto extent_x = shadow_map_size;
     const auto extent_y = shadow_map_size;
 
-    const auto device = core->AccessDevice();
-    const auto scene = property->GetObjectItem("scene");
-
-    const auto shadow_intstance_items = instance_items->CreateView("shadow_instance_items");
+    const auto shadow_instance_items = instance_items->CreateView("shadow_instance_items");
     {
-      shadow_intstance_items->SetBind(View::BIND_CONSTANT_DATA);
-      shadow_intstance_items->SetByteOffset(0);
-      shadow_intstance_items->SetByteCount(sizeof(Instance));
+      shadow_instance_items->SetBind(View::BIND_CONSTANT_DATA);
+      shadow_instance_items->SetByteOffset(0);
+      shadow_instance_items->SetByteCount(sizeof(Instance));
     }
 
     const auto shadow_vertex_items = vertex_items->CreateView("shadow_vertex_items");
@@ -386,11 +330,6 @@ namespace RayGene3D
 
       const Config::Attribute attributes[] = {
         { 0,  0, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 48, FORMAT_R32_FLOAT, false },
-        { 0, 16, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 28, 48, FORMAT_R32_FLOAT, false },
-        { 0, 32, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 44, 48, FORMAT_R32_FLOAT, false },
       };
       shadow_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
@@ -414,10 +353,7 @@ namespace RayGene3D
       shadow_shader->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
     }
 
-    const auto instance_bytes = scene->GetObjectItem("instances");
-    const auto instance_stride = uint32_t(sizeof(Instance));
-    const auto instance_count = instance_bytes->GetRawBytes(0).second / instance_stride;
-
+    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
     std::vector<std::shared_ptr<View>> arguments_views(instance_count);
     for (uint32_t i = 0; i < uint32_t(arguments_views.size()); ++i)
     {
@@ -434,11 +370,11 @@ namespace RayGene3D
 
     shadow_layout = device->CreateLayout("shadow_layout");
     {
-      const auto shadow_camera_data = shadow_data->CreateView("shadow_camera_data");
+      const auto shadow_camera_data = shadow_data->CreateView("shadow_data");
       {
         shadow_camera_data->SetBind(View::BIND_CONSTANT_DATA);
         shadow_camera_data->SetByteOffset(0);
-        shadow_camera_data->SetByteCount(sizeof(Camera));
+        shadow_camera_data->SetByteCount(sizeof(Frustum));
       }
 
       const std::shared_ptr<View> sb_views[] = {
@@ -486,7 +422,7 @@ namespace RayGene3D
           shadow_pass->UpdateSubpassIAViews(j, { ia_views, uint32_t(std::size(ia_views)) });
 
           const uint32_t ue_offsets[] = {
-            i * uint32_t(sizeof(Camera)),
+            i * uint32_t(sizeof(Frustum)),
           };
           shadow_pass->UpdateSubpassSBOffsets(j, { ue_offsets, uint32_t(std::size(ue_offsets)) });
 
@@ -506,11 +442,17 @@ namespace RayGene3D
   void Spark::InitializeSimple()
   {
     const auto core = &this->GetCore();
-    const auto extent_x = property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
-
     const auto device = core->AccessDevice();
-    const auto scene = property->GetObjectItem("scene");
+
+    const auto extent_x = prop_extent_x->GetUint();
+    const auto extent_y = prop_extent_y->GetUint();
+
+    const auto raster_screen_data = screen_data->CreateView("raster_screen_data");
+    {
+      raster_screen_data->SetBind(View::BIND_CONSTANT_DATA);
+      raster_screen_data->SetByteOffset(0);
+      raster_screen_data->SetByteCount(uint32_t(-1));
+    }
 
     const auto raster_camera_data = camera_data->CreateView("raster_camera_data");
     {
@@ -519,11 +461,11 @@ namespace RayGene3D
       raster_camera_data->SetByteCount(uint32_t(-1));
     }
 
-    const auto shadow_camera_data = shadow_data->CreateView("shadow_light_data");
+    const auto raster_shadow_data = shadow_data->CreateView("raster_shadow_data");
     {
-      shadow_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadow_camera_data->SetByteOffset(0);
-      shadow_camera_data->SetByteCount(sizeof(Camera));
+      raster_shadow_data->SetBind(View::BIND_CONSTANT_DATA);
+      raster_shadow_data->SetByteOffset(0);
+      raster_shadow_data->SetByteCount(sizeof(Frustum));
     }
 
     const auto raster_intstance_items = instance_items->CreateView("raster_instance_items");
@@ -536,66 +478,47 @@ namespace RayGene3D
     const auto raster_texture0_items = texture0_items->CreateView("raster_texture0_view");
     {
       raster_texture0_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture0_items->SetLayerOffset(0);
-      //raster_texture0_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture1_items = texture1_items->CreateView("raster_texture1_view");
     {
       raster_texture1_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture1_items->SetLayerOffset(0);
-      //raster_texture1_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture2_items = texture2_items->CreateView("raster_texture2_view");
     {
       raster_texture2_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture2_items->SetLayerOffset(0);
-      //raster_texture2_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture3_items = texture3_items->CreateView("raster_texture3_view");
     {
       raster_texture3_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture3_items->SetLayerOffset(0);
-      //raster_texture3_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_environment_item = environment_item->CreateView("raster_environment_view");
     {
       raster_environment_item->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_environment_item->SetLayerOffset(0);
-      //raster_environment_item->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_render_target = render_target->CreateView("raster_render_target");
     {
       raster_render_target->SetBind(View::BIND_RENDER_TARGET);
-      //raster_render_target->SetLayerOffset(0);
-      //raster_render_target->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_depth_stencil = depth_stencil->CreateView("raster_depth_stencil");
     {
       raster_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
-      //raster_depth_stencil->SetLayerOffset(0);
-      //raster_depth_stencil->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_vertex_items = vertex_items->CreateView("raster_vertex_items");
     {
       raster_vertex_items->SetBind(View::BIND_VERTEX_ARRAY);
-      //raster_vertex_items->SetByteOffset(0);
-      //raster_vertex_items->SetByteCount(uint32_t(-1));
     }
 
     const auto raster_index_items = triangle_items->CreateView("raster_index_items");
     {
       raster_index_items->SetBind(View::BIND_INDEX_ARRAY);
-      //raster_index_items->SetByteOffset(0);
-      //raster_index_items->SetByteCount(uint32_t(-1));
     }
-
 
     no_shadow_raster_shader = device->CreateShader("no_shadow_raster_shader");
     {
@@ -618,11 +541,6 @@ namespace RayGene3D
         { 0, 44, 48, FORMAT_R32_FLOAT, false },
       };
       no_shadow_raster_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-      //const uint32_t strides[] = {
-      //  48,
-      //};
-      //no_shadow_raster_shader->UpdateStrides({ strides, uint32_t(std::size(strides)) });
 
       no_shadow_raster_shader->SetFillMode(Config::FILL_SOLID);
       no_shadow_raster_shader->SetCullMode(Config::CULL_BACK);
@@ -652,8 +570,9 @@ namespace RayGene3D
       no_shadow_raster_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
 
       const std::shared_ptr<View> ub_views[] = {
+        raster_screen_data,
         raster_camera_data,
-        shadow_camera_data,
+        raster_shadow_data,
       };
       no_shadow_raster_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
@@ -671,10 +590,7 @@ namespace RayGene3D
       no_shadow_raster_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
     }
 
-    const auto instance_bytes = scene->GetObjectItem("instances");
-    const auto instance_stride = uint32_t(sizeof(Instance));
-    const auto instance_count = instance_bytes->GetRawBytes(0).second / instance_stride;
-
+    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
     std::vector<std::shared_ptr<View>> arguments_views(instance_count);
     for (uint32_t i = 0; i < uint32_t(arguments_views.size()); ++i)
     {
@@ -726,7 +642,7 @@ namespace RayGene3D
         no_shadow_raster_pass->UpdateSubpassIAViews(i, { ia_views, uint32_t(std::size(ia_views)) });
 
         const uint32_t ue_offsets[] = {
-          i * uint32_t(sizeof(Camera)),
+          i * uint32_t(sizeof(Frustum)),
         };
         no_shadow_raster_pass->UpdateSubpassSBOffsets(i, { ue_offsets, uint32_t(std::size(ue_offsets)) });
 
@@ -745,11 +661,17 @@ namespace RayGene3D
   void Spark::InitializeAdvanced()
   {
     const auto core = &this->GetCore();
-    const auto extent_x = property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
-
     const auto device = core->AccessDevice();
-    const auto scene = property->GetObjectItem("scene");
+
+    const auto extent_x = prop_extent_x->GetUint();
+    const auto extent_y = prop_extent_y->GetUint();
+
+    const auto raster_screen_data = screen_data->CreateView("raster_screen_data");
+    {
+      raster_screen_data->SetBind(View::BIND_CONSTANT_DATA);
+      raster_screen_data->SetByteOffset(0);
+      raster_screen_data->SetByteCount(uint32_t(-1));
+    }
 
     const auto raster_camera_data = camera_data->CreateView("raster_camera_data");
     {
@@ -758,11 +680,11 @@ namespace RayGene3D
       raster_camera_data->SetByteCount(uint32_t(-1));
     }
 
-    const auto shadow_camera_data = shadow_data->CreateView("shadow_light_data");
+    const auto raster_shadow_data = shadow_data->CreateView("raster_shadow_data");
     {
-      shadow_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadow_camera_data->SetByteOffset(0);
-      shadow_camera_data->SetByteCount(sizeof(Camera));
+      raster_shadow_data->SetBind(View::BIND_CONSTANT_DATA);
+      raster_shadow_data->SetByteOffset(0);
+      raster_shadow_data->SetByteCount(sizeof(Frustum));
     }
 
     const auto raster_intstance_items = instance_items->CreateView("raster_instance_items");
@@ -775,65 +697,47 @@ namespace RayGene3D
     const auto raster_texture0_items = texture0_items->CreateView("raster_texture0_view");
     {
       raster_texture0_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture0_items->SetLayerOffset(0);
-      //raster_texture0_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture1_items = texture1_items->CreateView("raster_texture1_view");
     {
       raster_texture1_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture1_items->SetLayerOffset(0);
-      //raster_texture1_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture2_items = texture2_items->CreateView("raster_texture2_view");
     {
       raster_texture2_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture2_items->SetLayerOffset(0);
-      //raster_texture2_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_texture3_items = texture3_items->CreateView("raster_texture3_view");
     {
       raster_texture3_items->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_texture3_items->SetLayerOffset(0);
-      //raster_texture3_items->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_shadow_map = shadow_map->CreateView("raster_shadow_map");
     {
       raster_shadow_map->SetBind(View::BIND_SHADER_RESOURCE);
       raster_shadow_map->SetUsage(View::USAGE_CUBEMAP_LAYER);
-      //raster_shadow_map->SetLayerOffset(0);
-      //raster_shadow_map->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_render_target = render_target->CreateView("raster_render_target");
     {
       raster_render_target->SetBind(View::BIND_RENDER_TARGET);
-      //raster_render_target->SetLayerOffset(0);
-      //raster_render_target->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_depth_stencil = depth_stencil->CreateView("raster_depth_stencil");
     {
       raster_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
-      //raster_depth_stencil->SetLayerOffset(0);
-      //raster_depth_stencil->SetLayerCount(uint32_t(-1));
     }
 
     const auto raster_vertex_items = vertex_items->CreateView("raster_vertex_items");
     {
       raster_vertex_items->SetBind(View::BIND_VERTEX_ARRAY);
-      //raster_vertex_items->SetByteOffset(0);
-      //raster_vertex_items->SetByteCount(uint32_t(-1));
     }
 
     const auto raster_index_items = triangle_items->CreateView("raster_index_items");
     {
       raster_index_items->SetBind(View::BIND_INDEX_ARRAY);
-      //raster_index_items->SetByteOffset(0);
-      //raster_index_items->SetByteCount(uint32_t(-1));
     }
 
 
@@ -858,11 +762,6 @@ namespace RayGene3D
         { 0, 44, 48, FORMAT_R32_FLOAT, false },
       };
       shadow_map_raster_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-      //const uint32_t strides[] = {
-      //  48,
-      //};
-      //shadow_map_raster_shader->UpdateStrides({ strides, uint32_t(std::size(strides)) });
 
       shadow_map_raster_shader->SetFillMode(Config::FILL_SOLID);
       shadow_map_raster_shader->SetCullMode(Config::CULL_BACK);
@@ -893,8 +792,9 @@ namespace RayGene3D
       shadow_map_raster_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
 
       const std::shared_ptr<View> ub_views[] = {
+        raster_screen_data,
         raster_camera_data,
-        shadow_camera_data,
+        raster_shadow_data,
       };
       shadow_map_raster_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
@@ -913,10 +813,7 @@ namespace RayGene3D
       shadow_map_raster_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
     }
 
-    const auto instance_bytes = scene->GetObjectItem("instances");
-    const auto instance_stride = uint32_t(sizeof(Instance));
-    const auto instance_count = instance_bytes->GetRawBytes(0).second / instance_stride;
-
+    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
     std::vector<std::shared_ptr<View>> arguments_views(instance_count);
     for (uint32_t i = 0; i < uint32_t(arguments_views.size()); ++i)
     {
@@ -968,7 +865,7 @@ namespace RayGene3D
         shadow_map_raster_pass->UpdateSubpassIAViews(i, { ia_views, uint32_t(std::size(ia_views)) });
 
         const uint32_t ue_offsets[] = {
-          i * uint32_t(sizeof(Camera)),
+          i * uint32_t(sizeof(Frustum)),
         };
         shadow_map_raster_pass->UpdateSubpassSBOffsets(i, { ue_offsets, uint32_t(std::size(ue_offsets)) });
 
@@ -987,18 +884,10 @@ namespace RayGene3D
   void Spark::InitializeEnvironment()
   {
     const auto core = &this->GetCore();
-    const auto extent_x = property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
-
     const auto device = core->AccessDevice();
 
-
-    environment_vtx = {
-      glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
-      glm::f32vec4( 1.0f, 1.0f, 1.0f, 0.0f),
-      glm::f32vec4(-1.0f,-1.0f, 0.0f, 1.0f),
-      glm::f32vec4( 1.0f,-1.0f, 1.0f, 1.0f),
-    };
+    const auto extent_x = prop_extent_x->GetUint();
+    const auto extent_y = prop_extent_y->GetUint();
 
     environment_vtx_data = device->CreateResource("environment_vtx_data");
     {
@@ -1008,11 +897,6 @@ namespace RayGene3D
       environment_vtx_data->SetInteropCount(1);
       environment_vtx_data->SetInteropItem(0, std::pair(environment_vtx.data(), uint32_t(environment_vtx.size() * sizeof(glm::f32vec4))));
     }
-
-    environment_idx = {
-      glm::u32vec3(0u, 1u, 2u),
-      glm::u32vec3(3u, 2u, 1u),
-    };
 
     environment_idx_data = device->CreateResource("environment_idx_data");
     {
@@ -1026,61 +910,37 @@ namespace RayGene3D
     const auto environment_render_target = render_target->CreateView("environment_render_target");
     {
       environment_render_target->SetBind(View::BIND_RENDER_TARGET);
-      //raster_render_target->SetLayerOffset(0);
-      //raster_render_target->SetLayerCount(uint32_t(-1));
     }
 
     const auto environment_depth_stencil = depth_stencil->CreateView("environment_depth_stencil");
     {
       environment_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
-      //raster_depth_stencil->SetLayerOffset(0);
-      //raster_depth_stencil->SetLayerCount(uint32_t(-1));
+    }
+
+    const auto environment_screen_data = screen_data->CreateView("environment_screen_data");
+    {
+      environment_screen_data->SetBind(View::BIND_CONSTANT_DATA);
     }
 
     const auto environment_camera_data = camera_data->CreateView("environment_camera_data");
     {
       environment_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      //raster_camera_data->SetByteOffset(0);
-      //raster_camera_data->SetByteCount(uint32_t(-1));
     }
 
     const auto environment_item_view = environment_item->CreateView("environment_item_view");
     {
       environment_item_view->SetBind(View::BIND_SHADER_RESOURCE);
-      //raster_environment_item->SetLayerOffset(0);
-      //raster_environment_item->SetLayerCount(uint32_t(-1));
     }
 
     const auto environment_vtx_items = environment_vtx_data->CreateView("environment_vtx_items");
     {
       environment_vtx_items->SetBind(View::BIND_VERTEX_ARRAY);
-      //raster_vertex_items->SetByteOffset(0);
-      //raster_vertex_items->SetByteCount(uint32_t(-1));
     }
 
     const auto environment_idx_items = environment_idx_data->CreateView("environment_idx_items");
     {
       environment_idx_items->SetBind(View::BIND_INDEX_ARRAY);
-      //raster_index_items->SetByteOffset(0);
-      //raster_index_items->SetByteCount(uint32_t(-1));
     }
-
-    
-
-    //environment_arguments = device->CreateResource("environment_arguments");
-    //{
-    //  environment_arguments->SetType(Resource::TYPE_BUFFER);
-    //  environment_arguments->SetStride(uint32_t(sizeof(Pass::Graphic)));
-    //  environment_arguments->SetCount(1);
-    //  environment_arguments->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-    //}
-
-    //auto arguments_view = environment_arguments->CreateView("arguments_view");
-    //{
-    //  arguments_view->SetBind(View::BIND_COMMAND_INDIRECT);
-    //  //arguments_view->SetByteOffset(0);
-    //  //arguments_view->SetByteCount(uint32_t(-1));
-    //}
 
     environment_shader = device->CreateShader("environment_shader");
     {
@@ -1101,11 +961,6 @@ namespace RayGene3D
       };
       environment_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
-      //const uint32_t strides[] = {
-      //  16,
-      //};
-      //environment_shader->UpdateStrides({ strides, uint32_t(std::size(strides)) });
-
       environment_shader->SetFillMode(Config::FILL_SOLID);
       environment_shader->SetCullMode(Config::CULL_NONE);
       environment_shader->SetClipEnabled(false);
@@ -1117,7 +972,7 @@ namespace RayGene3D
       environment_shader->SetATCEnabled(false);
 
       environment_shader->SetDepthEnabled(true);
-      environment_shader->SetDepthWrite(true);
+      environment_shader->SetDepthWrite(false);
       environment_shader->SetDepthComparison(Config::COMPARISON_EQUAL);
 
       const Config::Viewport viewports[] = {
@@ -1134,6 +989,7 @@ namespace RayGene3D
       environment_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
 
       const std::shared_ptr<View> ub_views[] = {
+        environment_screen_data,
         environment_camera_data,
       };
       environment_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
@@ -1313,7 +1169,14 @@ namespace RayGene3D
     prop_f_plane = prop_camera->GetObjectItem("f_plane");
     prop_counter = prop_camera->GetObjectItem("counter");
 
-    const auto scene = property->GetObjectItem("scene");
+    const auto prop_scene = property->GetObjectItem("scene");
+    prop_instances = prop_scene->GetObjectItem("instances");
+    prop_triangles = prop_scene->GetObjectItem("triangles");
+    prop_vertices = prop_scene->GetObjectItem("vertices");
+    prop_textures0 = prop_scene->GetObjectItem("textures0");
+    prop_textures1 = prop_scene->GetObjectItem("textures1");
+    prop_textures2 = prop_scene->GetObjectItem("textures2");
+    prop_textures3 = prop_scene->GetObjectItem("textures3");
 
     InitializeResources();
 
@@ -1378,28 +1241,17 @@ namespace RayGene3D
     }
     }
 
-    const auto core = &this->GetCore();
-
-    const auto extent_x = property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
-
-    const auto scene = property->GetObjectItem("scene");
 
     {
-      const auto instance_bytes = scene->GetObjectItem("instances");
-      const auto instance_stride = uint32_t(sizeof(Instance));
-      const auto instance_count = instance_bytes->GetRawBytes(0).second / instance_stride;
-
-
       auto graphic_arg = reinterpret_cast<Pass::Graphic*>(raster_arguments->Map());
+
+      const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
       {
-        const auto& instance = reinterpret_cast<const Instance*>(instance_bytes->GetRawBytes(0).first)[i];
-
-        graphic_arg[i].idx_count = instance.prim_count * 3;
+        graphic_arg[i].idx_count = instance_data[i].prim_count * 3;
         graphic_arg[i].ins_count = 1;
-        graphic_arg[i].idx_offset = instance.prim_offset * 3;
-        graphic_arg[i].vtx_offset = instance.vert_offset * 1;
+        graphic_arg[i].idx_offset = instance_data[i].prim_offset * 3;
+        graphic_arg[i].vtx_offset = instance_data[i].vert_offset * 1;
         graphic_arg[i].ins_offset = 0;
       }
       raster_arguments->Unmap();
@@ -1417,6 +1269,9 @@ namespace RayGene3D
     //environment_arguments->Unmap();
 
     {
+      const auto extent_x = prop_extent_x->GetUint();
+      const auto extent_y = prop_extent_y->GetUint();
+
       auto compute_arg = reinterpret_cast<Pass::Compute*>(present_arguments->Map());
       {
         compute_arg->grid_x = extent_x / 8;
@@ -1426,52 +1281,102 @@ namespace RayGene3D
       present_arguments->Unmap();
     }
 
+    {
+      const auto extent_x = prop_extent_x->GetUint();
+      const auto extent_y = prop_extent_y->GetUint();
+
+      const auto counter = prop_counter->GetUint();
+
+      Screen screen;
+      screen.extent_x = extent_x;
+      screen.extent_y = extent_y;
+      screen.rnd_base = counter;
+      screen.rnd_seed = rand();
+
+      auto screen_mapped = screen_data->Map();
+      memcpy(screen_mapped, &screen, sizeof(Screen));
+      screen_data->Unmap();
+    }
 
     {
-      auto eye = glm::f32vec3{
+      const auto eye = glm::f32vec3{
         prop_eye->GetArrayItem(0)->GetReal(),
         prop_eye->GetArrayItem(1)->GetReal(),
         prop_eye->GetArrayItem(2)->GetReal()
       };
 
-      auto lookat = glm::f32vec3{
+      const auto lookat = glm::f32vec3{
         prop_lookat->GetArrayItem(0)->GetReal(),
         prop_lookat->GetArrayItem(1)->GetReal(),
         prop_lookat->GetArrayItem(2)->GetReal()
       };
 
-      auto up = glm::f32vec3{
+      const auto up = glm::f32vec3{
         prop_up->GetArrayItem(0)->GetReal(),
         prop_up->GetArrayItem(1)->GetReal(),
         prop_up->GetArrayItem(2)->GetReal()
       };
 
-      auto fov_x = prop_fov_x->GetReal();
-      auto fov_y = prop_fov_y->GetReal();
-      auto extent_x = prop_extent_x->GetUint();
-      auto extent_y = prop_extent_y->GetUint();
-      auto n_plane = prop_n_plane->GetReal();
-      auto f_plane = prop_f_plane->GetReal();
+      const auto fov_x = prop_fov_x->GetReal();
+      const auto fov_y = prop_fov_y->GetReal();
 
-      auto counter = prop_counter->GetUint();
+      const auto n_plane = prop_n_plane->GetReal();
+      const auto f_plane = prop_f_plane->GetReal();
 
-      Camera camera;
-      camera.base = counter;
-      camera.seed = rand();
-      camera.size_x = extent_x;
-      camera.size_y = extent_y;
-      camera.proj = glm::perspective(double(glm::radians(fov_y)), double(extent_x) / double(extent_y), double(n_plane), double(f_plane));
-      camera.proj_inv = glm::inverse(camera.proj);
+      const auto extent_x = prop_extent_x->GetUint();
+      const auto extent_y = prop_extent_y->GetUint();
 
-      const auto view = glm::lookAt(glm::f64vec3(eye), glm::f64vec3(lookat), glm::f64vec3(up));
-      const auto view_inv = glm::inverse(view);
- 
-      camera.view = glm::f32mat3x4(glm::transpose(view)[0], glm::transpose(view)[1], glm::transpose(view)[2]);
-      camera.view_inv = glm::f32mat3x4(glm::transpose(view_inv)[0], glm::transpose(view_inv)[1], glm::transpose(view_inv)[2]);
+      Frustum camera_frustum;
+      camera_frustum.proj = glm::perspective(glm::radians(fov_y), float(extent_x) / float(extent_y), n_plane, f_plane);
+      camera_frustum.proj_inv = glm::inverse(camera_frustum.proj);
+      camera_frustum.view = glm::lookAt(eye, lookat, up);
+      camera_frustum.view_inv = glm::inverse(camera_frustum.view);
 
-      auto mapped = camera_data->Map();
-      memcpy(mapped, &camera, sizeof(camera));
+      auto camera_mapped = camera_data->Map();
+      memcpy(camera_mapped, &camera_frustum, sizeof(Frustum));
       camera_data->Unmap();
+    }
+
+    {
+      const auto proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.01f, 100.0f);
+      const auto proj_inv = glm::inverse(proj);
+
+      const auto x = glm::f32vec3{ 1.0f, 0.0f, 0.0f };
+      const auto y = glm::f32vec3{ 0.0f, 1.0f, 0.0f };
+      const auto z = glm::f32vec3{ 0.0f, 0.0f, 1.0f };
+
+      Frustum shadow_frustums[6];
+      for (uint32_t i = 0; i < 6; ++i)
+      {
+        auto view = glm::f32mat4x4(1.0);
+
+        switch (i)
+        {
+        case 0:
+          view = glm::lookAt(light_position, light_position + x, y); break;
+        case 1:
+          view = glm::lookAt(light_position, light_position - x, y); break;
+        case 2:
+          view = glm::lookAt(light_position, light_position + y, -z); break;
+        case 3:
+          view = glm::lookAt(light_position, light_position - y, z); break;
+        case 4:
+          view = glm::lookAt(light_position, light_position + z, y); break;
+        case 5:
+          view = glm::lookAt(light_position, light_position - z, y); break;
+        };
+
+        const auto view_inv = glm::inverse(view);
+
+        shadow_frustums[i].view = view;
+        shadow_frustums[i].view_inv = view_inv;
+        shadow_frustums[i].proj = proj;
+        shadow_frustums[i].proj_inv = proj_inv;
+      }
+
+      auto shadow_mapped = shadow_data->Map();
+      memcpy(shadow_mapped, &shadow_frustums, sizeof(Frustum) * 6);
+      shadow_data->Unmap();
     }
   }
 

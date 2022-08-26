@@ -1,6 +1,7 @@
 {
   "scene":  {
   	"file": "Sponza.gltf",
+  	"flip": false,
   	"scale": 0.01,
   	"quality": 11
   },

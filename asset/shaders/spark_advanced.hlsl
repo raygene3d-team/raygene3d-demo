@@ -23,31 +23,29 @@ VK_BINDING(1) sampler sampler1 : register(s1);
 
 VK_BINDING(2) cbuffer constant0 : register(b0)
 {
-  uint cam_size_x       : packoffset(c0.x);
-  uint cam_size_y       : packoffset(c0.y);
-  uint cam_base         : packoffset(c0.z);
-  uint cam_seed         : packoffset(c0.w);
-  float4x3 cam_view     : packoffset(c1.x);
-  float4x4 cam_proj     : packoffset(c4.x);
-  float4x3 cam_view_inv : packoffset(c8.x);
-  float4x4 cam_proj_inv : packoffset(c11.x);
-  uint4 cam_padding     : packoffset(c15.x);
+  uint extent_x       : packoffset(c0.x);
+  uint extent_y       : packoffset(c0.y);
+  uint rnd_base       : packoffset(c0.z);
+  uint rnd_seed       : packoffset(c0.w);
 }
 
 VK_BINDING(3) cbuffer constant1 : register(b1)
 {
-  uint light_size_x       : packoffset(c0.x);
-  uint light_size_y       : packoffset(c0.y);
-  uint light_base         : packoffset(c0.z);
-  uint light_seed         : packoffset(c0.w);
-  float4x3 light_view     : packoffset(c1.x);
-  float4x4 light_proj     : packoffset(c4.x);
-  float4x3 light_view_inv : packoffset(c8.x);
-  float4x4 light_proj_inv : packoffset(c11.x);
-  uint4 light_padding     : packoffset(c15.x);
+  float4x4 camera_view     : packoffset(c0.x);
+  float4x4 camera_proj     : packoffset(c4.x);
+  float4x4 camera_view_inv : packoffset(c8.x);
+  float4x4 camera_proj_inv : packoffset(c12.x);
 }
 
 VK_BINDING(4) cbuffer constant2 : register(b2)
+{
+  float4x4 shadow_view     : packoffset(c0.x);
+  float4x4 shadow_proj     : packoffset(c4.x);
+  float4x4 shadow_view_inv : packoffset(c8.x);
+  float4x4 shadow_proj_inv : packoffset(c12.x);
+}
+
+VK_BINDING(5) cbuffer constant3 : register(b3)
 {
   float4x3 transform  : packoffset(c0.x);
 
@@ -76,11 +74,11 @@ VK_BINDING(4) cbuffer constant2 : register(b2)
   uint4 padding[6]    : packoffset(c10.x);
 };
 
-VK_BINDING(5) Texture2DArray<float4> texture0_items : register(t0);
-VK_BINDING(6) Texture2DArray<float4> texture1_items : register(t1);
-VK_BINDING(7) Texture2DArray<float4> texture2_items : register(t2);
-VK_BINDING(8) Texture2DArray<float4> texture3_items : register(t3);
-VK_BINDING(9) TextureCube<float> shadow_map        : register(t4);
+VK_BINDING(6) Texture2DArray<float4> texture0_items : register(t0);
+VK_BINDING(7) Texture2DArray<float4> texture1_items : register(t1);
+VK_BINDING(8) Texture2DArray<float4> texture2_items : register(t2);
+VK_BINDING(9) Texture2DArray<float4> texture3_items : register(t3);
+VK_BINDING(10) TextureCube<float> shadow_map        : register(t4);
 
 #define USE_NORMAL_MAP
 #define USE_ALPHA_CLIP
@@ -116,8 +114,7 @@ VSOutput vs_main(VSInput input)
 {
   VSOutput output;
 
-  float4x4 view = float4x4(transpose(cam_view), float4(0.0, 0.0, 0.0, 1.0));
-  output.pos = mul(cam_proj, mul(view, float4(input.pos, 1.0)));
+  output.pos = mul(camera_proj, mul(camera_view, float4(input.pos, 1.0)));
   output.w_pos_d = float4(input.pos, input.sign);
   output.w_nrm_u = float4(input.nrm, input.u);
   output.w_tng_v = float4(input.tgn, input.v);
@@ -138,12 +135,12 @@ struct PSOutput
 
 float Shadow(const float3 w_pos)
 {
-  const float3 light_pos = float3(light_view_inv[3][0], light_view_inv[3][1], light_view_inv[3][2]);
-  const float3 view_pos = float3(cam_view_inv[3][0], cam_view_inv[3][1], cam_view_inv[3][2]);
+  const float3 light_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
+  const float3 view_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
   const float3 tc = w_pos - light_pos;
 
-  const float m22 = light_proj[2][2];
-  const float m23 = light_proj[2][3];
+  const float m22 = shadow_proj[2][2];
+  const float m23 = shadow_proj[2][3];
 
   const float near = -m23 / m22;
   const float far = near / (m22 - 1.0);  
@@ -235,23 +232,23 @@ PSOutput ps_main(PSInput input)
 
   const float3 surface_pos = input.w_pos_d.xyz;
 
-  const float3 view_pos = float3(cam_view_inv[3][0], cam_view_inv[3][1], cam_view_inv[3][2]);
-  const float view_dst = length(view_pos - surface_pos);
-  const float3 view_dir = (view_pos - surface_pos) / view_dst;
+  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
+  const float camera_dst = length(camera_pos - surface_pos);
+  const float3 camera_dir = (camera_pos - surface_pos) / camera_dst;
 
-  const float3 light_pos = float3(light_view_inv[3][0], light_view_inv[3][1], light_view_inv[3][2]);
-  const float light_dst = length(light_pos - surface_pos);
-  const float3 light_dir = (light_pos - surface_pos) / light_dst;
+  const float3 shadow_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
+  const float shadow_dst = length(shadow_pos - surface_pos);
+  const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
+  
+  const float3 wo = mul(tbn, camera_dir);
+  const float3 lo = mul(tbn, shadow_dir);
+  const float attenuation = 10.0 * 1.0 / (shadow_dst * shadow_dst) * Shadow(surface_pos);
+  
+  const float3 ambient = 0.025 * surface.Kd;
+  const float3 diffuse = max(0.0, lo.z) * surface.Kd;
+  const float3 specular = pow(max(0.0, normalize(lo + wo).z), surface.r) * surface.Ks;
 
-  const float3 lo = mul(tbn, light_dir);
-  const float3 wo = mul(tbn, view_dir);
-
-  const float ambient = 0.025;
-  const float shadow = Shadow(surface_pos);
-  const float diffuse = max(0.0, lo.z) / (light_dst * light_dst) * 10.0;
-  const float specular = pow(max(0.0, normalize(lo + wo).z), surface.r) / (light_dst * light_dst) * 10.0;
-
-  const float3 color = (ambient + shadow * diffuse) * surface.Kd + shadow * surface.Ks * specular;
+  const float3 color = ambient + diffuse * attenuation + specular * attenuation;
 
   PSOutput output;
   output.target_0 = float4(color, 0.0);
