@@ -6,17 +6,7 @@
 #define VK_LOCATION(x)
 #endif
 
-struct Surface
-{
-  float3 Ke;
-  float p;
-  float3 Kd;
-  float m;
-  float3 Ks;
-  float r;
-  float3 Kt;
-  float i;
-};
+#include "common.hlsl"
 
 VK_BINDING(0) sampler sampler0 : register(s0);
 VK_BINDING(1) sampler sampler1 : register(s1);

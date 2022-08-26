@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "spark/spark.h"
 #include "imgui/imgui.h"
 
-constexpr char app_name[] = { "Spark Demo" };
+constexpr char app_name[] = { "Raygene3D Demo" };
 
 constexpr uint32_t def_extent_x{ 16u * 80 };
 constexpr uint32_t def_extent_y{  9u * 80 };
@@ -423,7 +423,8 @@ namespace RayGene3D
       const auto device_debug = config_property->GetObjectItem("device_debug")->GetBool();
       const auto device_ordinal = config_property->GetObjectItem("device_ordinal")->GetUint();
       device->SetWindow(window_handle);
-      device->SetDispaly(display_handle);
+      device->SetDisplay(display_handle);
+      device->SetPath("./asset/shaders/");
       device->SetExtentX(extent_x);
       device->SetExtentY(extent_y);
       device->SetOrdinal(device_ordinal);
@@ -597,7 +598,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_VLK));
+      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_D11));
     }
     ~GLFWWrapper()
     {
