@@ -6,17 +6,7 @@
 #define VK_LOCATION(x)
 #endif
 
-struct Surface
-{
-  float3 Ke;
-  float p;
-  float3 Kd;
-  float m;
-  float3 Ks;
-  float r;
-  float3 Kt;
-  float i;
-};
+#include "common.hlsl"
 
 VK_BINDING(0) sampler sampler0 : register(s0);
 
@@ -204,6 +194,10 @@ PSOutput ps_main(PSInput input)
 
   PSOutput output;
   output.target_0 = float4(color, 0.0);
+
+  #ifdef TEST
+  output.target_0 = float4(0.7, 0.5, 0.3, 1.0);
+  #endif
 
   return output;
 };
