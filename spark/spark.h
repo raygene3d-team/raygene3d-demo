@@ -61,8 +61,13 @@ namespace RayGene3D
     std::shared_ptr<Resource> shadow_data;
 
     std::shared_ptr<Resource> instance_items;
+  
     std::shared_ptr<Resource> triangle_items;
-    std::shared_ptr<Resource> vertex_items;
+
+    std::shared_ptr<Resource> vertex0_items;
+    std::shared_ptr<Resource> vertex1_items;
+    std::shared_ptr<Resource> vertex2_items;
+    std::shared_ptr<Resource> vertex3_items;
 
     std::shared_ptr<Resource> texture0_items;
     std::shared_ptr<Resource> texture1_items;
@@ -124,8 +129,10 @@ namespace RayGene3D
 
     std::shared_ptr<Property> prop_fov_x;
     std::shared_ptr<Property> prop_fov_y;
+
     std::shared_ptr<Property> prop_extent_x;
     std::shared_ptr<Property> prop_extent_y;
+
     std::shared_ptr<Property> prop_n_plane;
     std::shared_ptr<Property> prop_f_plane;
 
@@ -133,7 +140,11 @@ namespace RayGene3D
 
     std::shared_ptr<Property> prop_instances;
     std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
+
+    std::shared_ptr<Property> prop_vertices0;
+    std::shared_ptr<Property> prop_vertices1;
+    std::shared_ptr<Property> prop_vertices2;
+    std::shared_ptr<Property> prop_vertices3;
 
     std::shared_ptr<Property> prop_textures0;
     std::shared_ptr<Property> prop_textures1;

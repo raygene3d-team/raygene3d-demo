@@ -127,15 +127,48 @@ namespace RayGene3D
         triangle_items->SetInteropItem(0, prop_triangles->GetRawBytes(0));
       }
 
-      vertex_items = device->CreateResource("vertex_items");
+      vertex0_items = device->CreateResource("vertex0_items");
       {
-        const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
+        const auto [data, count] = prop_vertices0->GetTypedBytes<Vertex0>(0);
 
-        vertex_items->SetType(Resource::TYPE_BUFFER);
-        vertex_items->SetStride(uint32_t(sizeof(Vertex)));
-        vertex_items->SetCount(count);
-        vertex_items->SetInteropCount(1);
-        vertex_items->SetInteropItem(0, prop_vertices->GetRawBytes(0));
+        vertex0_items->SetType(Resource::TYPE_BUFFER);
+        vertex0_items->SetStride(uint32_t(sizeof(Vertex0)));
+        vertex0_items->SetCount(count);
+        vertex0_items->SetInteropCount(1);
+        vertex0_items->SetInteropItem(0, prop_vertices0->GetRawBytes(0));
+      }
+
+      vertex1_items = device->CreateResource("vertex1_items");
+      {
+        const auto [data, count] = prop_vertices1->GetTypedBytes<Vertex1>(0);
+
+        vertex1_items->SetType(Resource::TYPE_BUFFER);
+        vertex1_items->SetStride(uint32_t(sizeof(Vertex1)));
+        vertex1_items->SetCount(count);
+        vertex1_items->SetInteropCount(1);
+        vertex1_items->SetInteropItem(0, prop_vertices1->GetRawBytes(0));
+      }
+
+      vertex2_items = device->CreateResource("vertex2_items");
+      {
+        const auto [data, count] = prop_vertices2->GetTypedBytes<Vertex2>(0);
+
+        vertex2_items->SetType(Resource::TYPE_BUFFER);
+        vertex2_items->SetStride(uint32_t(sizeof(Vertex2)));
+        vertex2_items->SetCount(count);
+        vertex2_items->SetInteropCount(1);
+        vertex2_items->SetInteropItem(0, prop_vertices2->GetRawBytes(0));
+      }
+
+      vertex3_items = device->CreateResource("vertex3_items");
+      {
+        const auto [data, count] = prop_vertices3->GetTypedBytes<Vertex3>(0);
+
+        vertex3_items->SetType(Resource::TYPE_BUFFER);
+        vertex3_items->SetStride(uint32_t(sizeof(Vertex3)));
+        vertex3_items->SetCount(count);
+        vertex3_items->SetInteropCount(1);
+        vertex3_items->SetInteropItem(0, prop_vertices3->GetRawBytes(0));
       }
 
       raster_arguments = device->CreateResource("raster_arguments");
@@ -328,11 +361,11 @@ namespace RayGene3D
       shadow_instance_items->SetByteCount(sizeof(Instance));
     }
 
-    const auto shadow_vertex_items = vertex_items->CreateView("shadow_vertex_items");
+    const auto shadow_vertex0_items = vertex0_items->CreateView("shadow_vertex0_items");
     {
-      shadow_vertex_items->SetBind(View::BIND_VERTEX_ARRAY);
-      shadow_vertex_items->SetByteOffset(0);
-      shadow_vertex_items->SetByteCount(uint32_t(-1));
+      shadow_vertex0_items->SetBind(View::BIND_VERTEX_ARRAY);
+      shadow_vertex0_items->SetByteOffset(0);
+      shadow_vertex0_items->SetByteCount(uint32_t(-1));
     }
 
     const auto shadow_index_items = triangle_items->CreateView("shadow_index_items");
@@ -356,7 +389,7 @@ namespace RayGene3D
       shadow_shader->SetIndexer(Config::INDEXER_32_BIT);
 
       const Config::Attribute attributes[] = {
-        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
       };
       shadow_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
@@ -439,7 +472,7 @@ namespace RayGene3D
         for (uint32_t j = 0; j < arguments_views.size(); ++j)
         {
           const std::shared_ptr<View> va_views[] = {
-            shadow_vertex_items,
+            shadow_vertex0_items,
           };
           shadow_pass->UpdateSubpassVAViews(j, { va_views, uint32_t(std::size(va_views)) });
 
@@ -542,9 +575,24 @@ namespace RayGene3D
       raster_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
     }
 
-    const auto raster_vertex_items = vertex_items->CreateView("raster_vertex_items");
+    const auto raster_vertex0_items = vertex0_items->CreateView("raster_vertex0_items");
     {
-      raster_vertex_items->SetBind(View::BIND_VERTEX_ARRAY);
+      raster_vertex0_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto raster_vertex1_items = vertex1_items->CreateView("raster_vertex1_items");
+    {
+      raster_vertex1_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto raster_vertex2_items = vertex2_items->CreateView("raster_vertex2_items");
+    {
+      raster_vertex2_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto raster_vertex3_items = vertex3_items->CreateView("raster_vertex3_items");
+    {
+      raster_vertex3_items->SetBind(View::BIND_VERTEX_ARRAY);
     }
 
     const auto raster_index_items = triangle_items->CreateView("raster_index_items");
@@ -565,15 +613,25 @@ namespace RayGene3D
       no_shadow_raster_shader->SetIndexer(Config::INDEXER_32_BIT);
       no_shadow_raster_shader->SetDefineItem("TEST", "1");
 
+      //const Config::Attribute attributes[] = {
+      //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+      //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
+      //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+      //  { 0, 28, 64, FORMAT_R32_UINT, false },
+      //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+      //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
+      //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+      //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+      //};
       const Config::Attribute attributes[] = {
-        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
-        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 28, 64, FORMAT_R32_UINT, false },
-        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 44, 64, FORMAT_R32_FLOAT, false },
-        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
+        { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+        { 1, 12, 16, FORMAT_R32_UINT, false },
+        { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+        { 2, 12, 16, FORMAT_R32_FLOAT, false },
+        { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
+        { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
       };
       no_shadow_raster_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
@@ -668,7 +726,10 @@ namespace RayGene3D
       for (uint32_t i = 0; i < arguments_views.size(); ++i)
       {
         const std::shared_ptr<View> va_views[] = {
-          raster_vertex_items,
+          raster_vertex0_items,
+          raster_vertex1_items,
+          raster_vertex2_items,
+          raster_vertex3_items,
         };
         no_shadow_raster_pass->UpdateSubpassVAViews(i, { va_views, uint32_t(std::size(va_views)) });
 
@@ -766,9 +827,24 @@ namespace RayGene3D
       raster_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
     }
 
-    const auto raster_vertex_items = vertex_items->CreateView("raster_vertex_items");
+    const auto raster_vertex0_items = vertex0_items->CreateView("raster_vertex0_items");
     {
-      raster_vertex_items->SetBind(View::BIND_VERTEX_ARRAY);
+      raster_vertex0_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto raster_vertex1_items = vertex1_items->CreateView("raster_vertex1_items");
+    {
+      raster_vertex1_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto raster_vertex2_items = vertex2_items->CreateView("raster_vertex2_items");
+    {
+      raster_vertex2_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto raster_vertex3_items = vertex3_items->CreateView("raster_vertex3_items");
+    {
+      raster_vertex3_items->SetBind(View::BIND_VERTEX_ARRAY);
     }
 
     const auto raster_index_items = triangle_items->CreateView("raster_index_items");
@@ -789,15 +865,26 @@ namespace RayGene3D
       shadow_map_raster_shader->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
       shadow_map_raster_shader->SetIndexer(Config::INDEXER_32_BIT);
 
+      //const Config::Attribute attributes[] = {
+      //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+      //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
+      //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+      //  { 0, 28, 64, FORMAT_R32_UINT, false },
+      //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+      //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
+      //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+      //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+      //};
+
       const Config::Attribute attributes[] = {
-        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
-        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 28, 64, FORMAT_R32_UINT, false },
-        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 44, 64, FORMAT_R32_FLOAT, false },
-        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
+        { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+        { 1, 12, 16, FORMAT_R32_UINT, false },
+        { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+        { 2, 12, 16, FORMAT_R32_FLOAT, false },
+        { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
+        { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
       };
       shadow_map_raster_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
@@ -893,7 +980,10 @@ namespace RayGene3D
       for (uint32_t i = 0; i < arguments_views.size(); ++i)
       {
         const std::shared_ptr<View> va_views[] = {
-          raster_vertex_items,
+          raster_vertex0_items,
+          raster_vertex1_items,
+          raster_vertex2_items,
+          raster_vertex3_items,
         };
         shadow_map_raster_pass->UpdateSubpassVAViews(i, { va_views, uint32_t(std::size(va_views)) });
 
@@ -1196,26 +1286,40 @@ namespace RayGene3D
     const auto core = &this->GetCore();
 
     const auto prop_camera = property->GetObjectItem("camera");
-    prop_eye = prop_camera->GetObjectItem("eye");
-    prop_lookat = prop_camera->GetObjectItem("lookat");
-    prop_up = prop_camera->GetObjectItem("up");
-    prop_fov_x = prop_camera->GetObjectItem("fov_x");
-    prop_fov_y = prop_camera->GetObjectItem("fov_y");
-    prop_extent_x = prop_camera->GetObjectItem("extent_x");
-    prop_extent_y = prop_camera->GetObjectItem("extent_y");
-    prop_n_plane = prop_camera->GetObjectItem("n_plane");
-    prop_f_plane = prop_camera->GetObjectItem("f_plane");
-    prop_counter = prop_camera->GetObjectItem("counter");
+    {
+      prop_eye = prop_camera->GetObjectItem("eye");
+      prop_lookat = prop_camera->GetObjectItem("lookat");
+      prop_up = prop_camera->GetObjectItem("up");
+
+      prop_fov_x = prop_camera->GetObjectItem("fov_x");
+      prop_fov_y = prop_camera->GetObjectItem("fov_y");
+      
+      prop_extent_x = prop_camera->GetObjectItem("extent_x");
+      prop_extent_y = prop_camera->GetObjectItem("extent_y");
+      
+      prop_n_plane = prop_camera->GetObjectItem("n_plane");
+      prop_f_plane = prop_camera->GetObjectItem("f_plane");
+      
+      prop_counter = prop_camera->GetObjectItem("counter");
+    }
 
     const auto prop_scene = property->GetObjectItem("scene");
-    prop_instances = prop_scene->GetObjectItem("instances");
-    prop_triangles = prop_scene->GetObjectItem("triangles");
-    prop_vertices = prop_scene->GetObjectItem("vertices");
-    prop_textures0 = prop_scene->GetObjectItem("textures0");
-    prop_textures1 = prop_scene->GetObjectItem("textures1");
-    prop_textures2 = prop_scene->GetObjectItem("textures2");
-    prop_textures3 = prop_scene->GetObjectItem("textures3");
-    prop_textures4 = prop_scene->GetObjectItem("textures4");
+    {
+      prop_instances = prop_scene->GetObjectItem("instances");
+      prop_triangles = prop_scene->GetObjectItem("triangles");
+
+      prop_vertices0 = prop_scene->GetObjectItem("vertices0");
+      prop_vertices1 = prop_scene->GetObjectItem("vertices1");
+      prop_vertices2 = prop_scene->GetObjectItem("vertices2");
+      prop_vertices3 = prop_scene->GetObjectItem("vertices3");
+
+      prop_textures0 = prop_scene->GetObjectItem("textures0");
+      prop_textures1 = prop_scene->GetObjectItem("textures1");
+      prop_textures2 = prop_scene->GetObjectItem("textures2");
+      prop_textures3 = prop_scene->GetObjectItem("textures3");
+
+      prop_textures4 = prop_scene->GetObjectItem("textures4");
+    }
 
     InitializeResources();
 
