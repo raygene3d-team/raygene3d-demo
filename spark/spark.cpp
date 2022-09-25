@@ -256,6 +256,33 @@ namespace RayGene3D
         }
       }
 
+      texture4_items = device->CreateResource("texture4_items");
+      {
+        const auto layers = prop_textures4->GetArraySize();
+        const auto format = FORMAT_R8G8B8A8_SRGB;
+        const auto bpp = 4u;
+
+        auto mipmaps = 1u;
+        auto size_x = 1u;
+        auto size_y = 1u;
+        auto size = 0u;
+        while ((size += size_x * size_y * bpp) != prop_textures4->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+
+        texture4_items->SetType(Resource::TYPE_IMAGE2D);
+        texture4_items->SetExtentX(size_x);
+        texture4_items->SetExtentY(size_y);
+        texture4_items->SetExtentZ(1);
+        texture4_items->SetHint(Resource::HINT_LAYERED_IMAGE);
+        texture4_items->SetLayers(layers);
+        texture4_items->SetMipmaps(mipmaps);
+        texture4_items->SetFormat(format);
+        texture4_items->SetInteropCount(layers);
+        for (uint32_t i = 0; i < layers; ++i)
+        {
+          texture4_items->SetInteropItem(i, prop_textures4->GetArrayItem(i)->GetRawBytes(0));
+        }
+      }
+
       environment_item = device->CreateResource("environment_item");
       {
         const auto textures = property->GetObjectItem("environment");
@@ -329,7 +356,7 @@ namespace RayGene3D
       shadow_shader->SetIndexer(Config::INDEXER_32_BIT);
 
       const Config::Attribute attributes[] = {
-        { 0,  0, 48, FORMAT_R32G32B32_FLOAT, false },
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
       };
       shadow_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
@@ -495,6 +522,11 @@ namespace RayGene3D
       raster_texture3_items->SetBind(View::BIND_SHADER_RESOURCE);
     }
 
+    const auto raster_texture4_items = texture4_items->CreateView("raster_texture4_view");
+    {
+      raster_texture4_items->SetBind(View::BIND_SHADER_RESOURCE);
+    }
+
     const auto raster_environment_item = environment_item->CreateView("raster_environment_view");
     {
       raster_environment_item->SetBind(View::BIND_SHADER_RESOURCE);
@@ -531,14 +563,17 @@ namespace RayGene3D
       no_shadow_raster_shader->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
       no_shadow_raster_shader->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
       no_shadow_raster_shader->SetIndexer(Config::INDEXER_32_BIT);
+      no_shadow_raster_shader->SetDefineItem("TEST", "1");
 
       const Config::Attribute attributes[] = {
-        { 0,  0, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 48, FORMAT_R32_FLOAT, false },
-        { 0, 16, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 28, 48, FORMAT_R32_FLOAT, false },
-        { 0, 32, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 44, 48, FORMAT_R32_FLOAT, false },
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
+        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 28, 64, FORMAT_R32_UINT, false },
+        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 44, 64, FORMAT_R32_FLOAT, false },
+        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
       };
       no_shadow_raster_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
@@ -586,6 +621,7 @@ namespace RayGene3D
         raster_texture1_items,
         raster_texture2_items,
         raster_texture3_items,
+        raster_texture4_items,
       };
       no_shadow_raster_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
     }
@@ -754,12 +790,14 @@ namespace RayGene3D
       shadow_map_raster_shader->SetIndexer(Config::INDEXER_32_BIT);
 
       const Config::Attribute attributes[] = {
-        { 0,  0, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 48, FORMAT_R32_FLOAT, false },
-        { 0, 16, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 28, 48, FORMAT_R32_FLOAT, false },
-        { 0, 32, 48, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 44, 48, FORMAT_R32_FLOAT, false },
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
+        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 28, 64, FORMAT_R32_UINT, false },
+        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 44, 64, FORMAT_R32_FLOAT, false },
+        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
       };
       shadow_map_raster_shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
@@ -1177,6 +1215,7 @@ namespace RayGene3D
     prop_textures1 = prop_scene->GetObjectItem("textures1");
     prop_textures2 = prop_scene->GetObjectItem("textures2");
     prop_textures3 = prop_scene->GetObjectItem("textures3");
+    prop_textures4 = prop_scene->GetObjectItem("textures4");
 
     InitializeResources();
 

@@ -68,17 +68,21 @@ VK_BINDING(6) Texture2DArray<float4> texture1_items : register(t1);
 VK_BINDING(7) Texture2DArray<float4> texture2_items : register(t2);
 VK_BINDING(8) Texture2DArray<float4> texture3_items : register(t3);
 
+VK_BINDING(9) Texture2DArray<float4> texture4_items : register(t4);
+
 #define USE_NORMAL_MAP
 #define USE_ALPHA_CLIP
 
 struct VSInput
 {
   VK_LOCATION(0) float3 pos : register0;
-  VK_LOCATION(1) float  u : register1;
+  VK_LOCATION(1) float4 col : register1;
   VK_LOCATION(2) float3 nrm : register2;
-  VK_LOCATION(3) float  v : register3;
+  VK_LOCATION(3) uint msk 	: register3;
   VK_LOCATION(4) float3 tgn : register4;
-  VK_LOCATION(5) float  sign : register5;
+  VK_LOCATION(5) float sgn 	: register5;
+  VK_LOCATION(6) float2 tc0 : register6;
+  VK_LOCATION(7) float2 tc1 : register7;
 };
 
 struct VSOutput
@@ -86,7 +90,9 @@ struct VSOutput
   VK_LOCATION(0) float4 w_pos_d : register0;
   VK_LOCATION(1) float4 w_nrm_u : register1;
   VK_LOCATION(2) float4 w_tng_v : register2;
-  VK_LOCATION(3) float4 pos   : SV_Position;
+  VK_LOCATION(3) float2 tc1		: register3;
+  VK_LOCATION(4) uint mask 		: register4;
+  VK_LOCATION(5) float4 pos   : SV_Position;
 };
 
 VSOutput vs_main(VSInput input)
@@ -94,9 +100,11 @@ VSOutput vs_main(VSInput input)
   VSOutput output;
 
   output.pos = mul(camera_proj, mul(camera_view, float4(input.pos, 1.0)));
-  output.w_pos_d = float4(input.pos, input.sign);
-  output.w_nrm_u = float4(input.nrm, input.u);
-  output.w_tng_v = float4(input.tgn, input.v);
+  output.w_pos_d = float4(input.pos, input.sgn);
+  output.w_nrm_u = float4(input.nrm, input.tc0.x);
+  output.w_tng_v = float4(input.tgn, input.tc0.y);
+  output.tc1 = input.tc1;
+  output.mask = input.msk;
   return output;
 }
 
@@ -105,6 +113,8 @@ struct PSInput
   VK_LOCATION(0) float4 w_pos_d : register0;
   VK_LOCATION(1) float4 w_nrm_u : register1;
   VK_LOCATION(2) float4 w_tng_v : register2;
+  VK_LOCATION(3) float2 tc1		: register3;
+  VK_LOCATION(4) uint mask 		: register4;
 };
 
 struct PSOutput
@@ -196,7 +206,12 @@ PSOutput ps_main(PSInput input)
   output.target_0 = float4(color, 0.0);
 
   #ifdef TEST
-  output.target_0 = float4(0.7, 0.5, 0.3, 1.0);
+  output.target_0 = texture4_items.Sample(sampler0, float3(input.tc1, input.mask));
+
+  //float2 pattern = floor(input.tc1 * 2048.0 / 16.0);
+  //float fading = 0.5 * frac(0.5 * (pattern.x + pattern.y)) + 0.5;
+  //output.target_0.xyz *= fading;
+
   #endif
 
   return output;

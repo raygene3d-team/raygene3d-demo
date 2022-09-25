@@ -69,6 +69,8 @@ namespace RayGene3D
     std::shared_ptr<Resource> texture2_items;
     std::shared_ptr<Resource> texture3_items;
 
+    std::shared_ptr<Resource> texture4_items;
+
     std::array<glm::f32vec4, 4> environment_vtx = {
       glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
       glm::f32vec4( 1.0f, 1.0f, 1.0f, 0.0f),
@@ -137,6 +139,8 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_textures1;
     std::shared_ptr<Property> prop_textures2;
     std::shared_ptr<Property> prop_textures3;
+
+    std::shared_ptr<Property> prop_textures4;
 
   protected:
     uint32_t shadow_map_size { 1024 };
