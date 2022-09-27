@@ -85,11 +85,13 @@ static const float4x4 poisson_disk = float4x4(
 struct VSInput
 {
   VK_LOCATION(0) float3 pos : register0;
-  VK_LOCATION(1) float  u : register1;
+  VK_LOCATION(1) float4 col : register1;
   VK_LOCATION(2) float3 nrm : register2;
-  VK_LOCATION(3) float  v : register3;
+  VK_LOCATION(3) uint msk   : register3;
   VK_LOCATION(4) float3 tgn : register4;
-  VK_LOCATION(5) float  sign : register5;
+  VK_LOCATION(5) float sgn  : register5;
+  VK_LOCATION(6) float2 tc0 : register6;
+  VK_LOCATION(7) float2 tc1 : register7;
 };
 
 struct VSOutput
@@ -105,9 +107,9 @@ VSOutput vs_main(VSInput input)
   VSOutput output;
 
   output.pos = mul(camera_proj, mul(camera_view, float4(input.pos, 1.0)));
-  output.w_pos_d = float4(input.pos, input.sign);
-  output.w_nrm_u = float4(input.nrm, input.u);
-  output.w_tng_v = float4(input.tgn, input.v);
+  output.w_pos_d = float4(input.pos, input.sgn);
+  output.w_nrm_u = float4(input.nrm, input.tc0.x);
+  output.w_tng_v = float4(input.tgn, input.tc0.y);
   return output;
 }
 

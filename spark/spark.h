@@ -61,13 +61,20 @@ namespace RayGene3D
     std::shared_ptr<Resource> shadow_data;
 
     std::shared_ptr<Resource> instance_items;
+  
     std::shared_ptr<Resource> triangle_items;
-    std::shared_ptr<Resource> vertex_items;
+
+    std::shared_ptr<Resource> vertex0_items;
+    std::shared_ptr<Resource> vertex1_items;
+    std::shared_ptr<Resource> vertex2_items;
+    std::shared_ptr<Resource> vertex3_items;
 
     std::shared_ptr<Resource> texture0_items;
     std::shared_ptr<Resource> texture1_items;
     std::shared_ptr<Resource> texture2_items;
     std::shared_ptr<Resource> texture3_items;
+
+    std::shared_ptr<Resource> texture4_items;
 
     std::array<glm::f32vec4, 4> environment_vtx = {
       glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
@@ -122,8 +129,10 @@ namespace RayGene3D
 
     std::shared_ptr<Property> prop_fov_x;
     std::shared_ptr<Property> prop_fov_y;
+
     std::shared_ptr<Property> prop_extent_x;
     std::shared_ptr<Property> prop_extent_y;
+
     std::shared_ptr<Property> prop_n_plane;
     std::shared_ptr<Property> prop_f_plane;
 
@@ -131,12 +140,18 @@ namespace RayGene3D
 
     std::shared_ptr<Property> prop_instances;
     std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
+
+    std::shared_ptr<Property> prop_vertices0;
+    std::shared_ptr<Property> prop_vertices1;
+    std::shared_ptr<Property> prop_vertices2;
+    std::shared_ptr<Property> prop_vertices3;
 
     std::shared_ptr<Property> prop_textures0;
     std::shared_ptr<Property> prop_textures1;
     std::shared_ptr<Property> prop_textures2;
     std::shared_ptr<Property> prop_textures3;
+
+    std::shared_ptr<Property> prop_textures4;
 
   protected:
     uint32_t shadow_map_size { 1024 };

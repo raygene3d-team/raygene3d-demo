@@ -31,6 +31,11 @@ set(signal_source
   ${3RDPARTY_DIR}/signals/signals.h
 )
 
+set(xatlas_source
+  ${3RDPARTY_DIR}/xatlas/xatlas.cpp
+  ${3RDPARTY_DIR}/xatlas/xatlas.h
+)
+
 set(imgui_source
   ${3RDPARTY_DIR}/imgui/imconfig.h
   ${3RDPARTY_DIR}/imgui/imgui.cpp
@@ -55,6 +60,7 @@ set(SOURCE main.cpp
   spark/spark.h
   spark/spark.cpp
   ${imgui_source}
+  ${xatlas_source}
   ${mikktspace_source}
 )
 
@@ -149,8 +155,8 @@ if(UNIX)
 		target_link_libraries(${NAME}-demo PRIVATE
 			"-framework AppKit"
 			"-framework IOKit"
-		    "-framework QuartzCore"
-		    "-framework Metal"
+			"-framework QuartzCore"
+			"-framework Metal"
 		)
 	else(APPLE)
 		target_link_libraries(${NAME}-demo PRIVATE
