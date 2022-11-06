@@ -238,7 +238,7 @@ namespace RayGene3D
       texture2_items = device->CreateResource("texture2_items");
       {
         const auto layers = prop_textures2->GetArraySize();
-        const auto format = FORMAT_R8G8B8A8_SRGB;
+        const auto format = FORMAT_R8G8B8A8_UNORM;
         const auto bpp = 4u;
 
         auto mipmaps = 1u;
