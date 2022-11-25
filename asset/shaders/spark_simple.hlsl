@@ -8,6 +8,7 @@
 
 #define USE_NORMAL_MAP
 //#define USE_ALPHA_CLIP
+#define USE_SPECULAR_SETUP
 
 #include "common.hlsl"
 #include "surface.hlsl"
@@ -42,12 +43,12 @@ VK_BINDING(3) cbuffer constant2 : register(b2)
 
 VK_BINDING(4) cbuffer constant3 : register(b3)
 {
-  float4x3 transform  : packoffset(c0.x);
+  float4x3 transform2  : packoffset(c0.x);
 
-  uint prim_offset    : packoffset(c1.x);
-  uint prim_count     : packoffset(c1.y);
-  uint vert_offset    : packoffset(c1.z);
-  uint vert_count     : packoffset(c1.w);
+  uint prim_offset    : packoffset(c3.x);
+  uint prim_count     : packoffset(c3.y);
+  uint vert_offset    : packoffset(c3.z);
+  uint vert_count     : packoffset(c3.w);
 
   float3 emission     : packoffset(c4.x);
   float intensity     : packoffset(c4.w);
@@ -125,34 +126,43 @@ struct PSOutput
   float4 target_0 : SV_Target0;
 };
 
+
 PSOutput ps_main(PSInput input)
 {
-  const float3 n = normalize(input.w_nrm_u.xyz);
-  const float3 t = normalize(input.w_tng_v.xyz);
-  const float3 b = input.w_pos_d.w * cross(n, t);
-  float3x3 tbn = float3x3(t, b, n);
+  PSOutput output;
 
+  float3 n = normalize(input.w_nrm_u.xyz);
+  float3 t = normalize(input.w_tng_v.xyz);
+  float3 b = input.w_pos_d.w * cross(n, t);
+
+#ifdef USE_SPECULAR_SETUP
   const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.5, 0.5, 0.0, 0.0);
 
   const Surface surface = Initialize_OBJ(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
+#else
+  const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+  const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(0.0, 0.0, 0.0, 0.0);
+  const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+  const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.5, 0.5, 0.5, 0.0);
 
-#ifdef USE_ALPHA_CLIP
-  if (surface.alpha < 0.1) discard;
+  const Surface surface = Initialize_GLTF(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
 #endif
 
+//#ifdef USE_ALPHA_CLIP
+//  if (surface.alpha < 0.1) discard;
+//#endif
+//
 #ifdef USE_NORMAL_MAP
-  float3 tangent_n = float3(0.0, 0.0, 1.0);
-  float3 tangent_t = float3(1.0, 0.0, 0.0);
-  float3 tangent_b = float3(0.0, 1.0, 0.0);
-
-  tangent_n = normalize(float3(surface.bump, 0.25));
-  tangent_t = normalize(tangent_t - tangent_n * dot(tangent_t, tangent_n));
-  tangent_b = cross(tangent_n, tangent_t);
-  tbn = mul((float3x3(tangent_t, tangent_b, tangent_n)), tbn);
+  n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
+  t = normalize(t - n * dot(t, n));
+  b = cross(t, n);
 #endif
+
+  const float3x3 tbn = float3x3(t, b, n);
+  const float3x3 inverse_tbn = InverseTBN(tbn);
   
   const float3 surface_pos = input.w_pos_d.xyz;
 
@@ -164,29 +174,37 @@ PSOutput ps_main(PSInput input)
   const float shadow_dst = length(shadow_pos - surface_pos);
   const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
   
-  const float3 wo = mul(tbn, camera_dir);
-  const float3 lo = mul(tbn, shadow_dir);
+  const float3 wo = mul(inverse_tbn, camera_dir);
+  const float3 lo = mul(inverse_tbn, shadow_dir);
   const float attenuation = 10.0 * 1.0 / (shadow_dst * shadow_dst) * max(0.0, lo.z);
   
-  const float3 ambient = 0.025 * surface.diffuse;
+  const float3 ambient = 0.025 * surface.diffuse + surface.emission;
 
-  //const float3 diffuseColor = surface.Kd; // *(1.0 - surface.m);
-  //const float3 specularColor = surface.Kd * surface.m; // lerp(kDielectricSpec.rgb, surface.Kd, surface.m);
+  //half4 kDielectricSpec = half4(0.04, 0.04, 0.04, 1.0 - 0.04);
+  //// We'll need oneMinusReflectivity, so
+  ////   1-reflectivity = 1-lerp(dielectricSpec, 1, metallic) = lerp(1-dielectricSpec, 0, metallic)
+  //// store (1-dielectricSpec) in kDielectricSpec.a, then
+  ////   1-reflectivity = lerp(alpha, 0, metallic) = alpha + metallic*(0 - alpha) =
+  ////                  = alpha - metallic * alpha
+  //half oneMinusDielectricSpec = kDielectricSpec.a;
+  //return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
 
-  const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface), lo, wo);
+  //surface.specular = surface.diffuse * surface.metallic; // (1.0 - surface.m);
+  //surface.diffuse = surface.diffuse * (1.0 - surface.metallic); // lerp(kDielectricSpec.rgb, surface.Kd, surface.m);
+
+  const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface), lo, wo) * surface.diffuse; // *(1.0 - surface.metallic);
 
   //data_blinn_phong.color = specularColor;
   //data_blinn_phong.shininess = 2 /(surface.r * surface.r) - 2;
-  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface), lo, wo);
+  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface), lo, wo) * surface.diffuse; // *surface.metallic;
+  //const float3 specular = Evaluate_CookTorrance(Initialize_CookTorrance(surface), lo, wo) * surface.diffuse * surface.metallic;
 
   const float3 color = ambient + diffuse * attenuation + specular * attenuation;
 
-  PSOutput output;
-  output.target_0 = float4(color, 0.0);
 
   #ifdef TEST
   float4 res = texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx));
-  float temp = pow(max(0.0, (normalize(wo + lo)).z), surface.shininess);
+  float temp = pow(max(0.0, dot(n, normalize(camera_dir + shadow_dir))), surface.shininess);
   output.target_0 = float4(color, 1.0);
 
   //float2 pattern = floor(input.tc1 * 2048.0 / 16.0);

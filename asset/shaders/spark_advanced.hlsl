@@ -45,17 +45,17 @@ VK_BINDING(5) cbuffer constant3 : register(b3)
 {
   float4x3 transform  : packoffset(c0.x);
 
-  uint prim_offset    : packoffset(c1.x);
-  uint prim_count     : packoffset(c1.y);
-  uint vert_offset    : packoffset(c1.z);
-  uint vert_count     : packoffset(c1.w);
+  uint prim_offset    : packoffset(c3.x);
+  uint prim_count     : packoffset(c3.y);
+  uint vert_offset    : packoffset(c3.z);
+  uint vert_count     : packoffset(c3.w);
 
   float3 emission     : packoffset(c4.x);
-  float intensity : packoffset(c4.w);
+  float intensity     : packoffset(c4.w);
   float3 diffuse      : packoffset(c5.x);
-  float shininess : packoffset(c5.w);
+  float shininess     : packoffset(c5.w);
   float3 specular     : packoffset(c6.x);
-  float alpha : packoffset(c6.w);
+  float alpha         : packoffset(c6.w);
 
   int tex0_idx : packoffset(c7.x);
   int tex1_idx : packoffset(c7.y);
@@ -165,10 +165,9 @@ float Shadow(const float3 w_pos)
 
 PSOutput ps_main(PSInput input)
 {
-  const float3 n = normalize(input.w_nrm_u.xyz);
-  const float3 t = normalize(input.w_tng_v.xyz);
-  const float3 b = input.w_pos_d.w * cross(n, t);
-  float3x3 tbn = float3x3(t, b, n);
+  float3 n = normalize(input.w_nrm_u.xyz);
+  float3 t = normalize(input.w_tng_v.xyz);
+  float3 b = input.w_pos_d.w * cross(n, t);
 
   const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(1.0, 1.0, 1.0, 1.0);
@@ -182,15 +181,13 @@ PSOutput ps_main(PSInput input)
 #endif
 
 #ifdef USE_NORMAL_MAP
-  float3 tangent_n = float3(0.0, 0.0, 1.0);
-  float3 tangent_t = float3(1.0, 0.0, 0.0);
-  float3 tangent_b = float3(0.0, 1.0, 0.0);
-
-  tangent_n = normalize(float3(surface.bump, 0.25));
-  tangent_t = normalize(tangent_t - tangent_n * dot(tangent_t, tangent_n));
-  tangent_b = cross(tangent_n, tangent_t);
-  tbn = mul((float3x3(tangent_t, tangent_b, tangent_n)), tbn);
+  n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
+  t = normalize(t - n * dot(t, n));
+  b = cross(t, n);
 #endif
+
+  const float3x3 tbn = float3x3(t, b, n);
+  const float3x3 inverse_tbn = InverseTBN(tbn);
 
   const float3 surface_pos = input.w_pos_d.xyz;
 
@@ -211,11 +208,11 @@ PSOutput ps_main(PSInput input)
   //const float3 diffuseColor = surface.Kd; // *(1.0 - surface.m);
   //const float3 specularColor = surface.Kd * surface.m; // lerp(kDielectricSpec.rgb, surface.Kd, surface.m);
 
-  const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface), lo, wo);
+  const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface), lo, wo) * surface.diffuse;
 
   //data_blinn_phong.color = specularColor;
   //data_blinn_phong.shininess = 2 /(surface.r * surface.r) - 2;
-  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface), lo, wo);
+  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface), lo, wo) * surface.diffuse;
 
   const float3 color = ambient + diffuse * attenuation + specular * attenuation;
 
