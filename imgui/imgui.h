@@ -17,10 +17,13 @@ namespace RayGene3D
     Core& GetCore() { return core; }
 
   protected:
-    std::shared_ptr<Property> property;
+    std::shared_ptr<Property> root_property;
+
+  private:
+    std::shared_ptr<View> output_view;
 
   protected:
-    bool show_test_window_{ true };
+    bool show_test_window{ true };
 
     const uint32_t vtx_limit{ 10000 };
     const uint32_t idx_limit{ 10000 };
@@ -28,26 +31,33 @@ namespace RayGene3D
     static const uint32_t sub_limit{ 10 };
     static const uint32_t arg_limit{ 10 };
 
+    std::shared_ptr<Config> config;
+    std::shared_ptr<Layout> layout;
     std::shared_ptr<Pass> pass;
-    std::array<std::array<std::shared_ptr<View>, arg_limit>, sub_limit> views;
+
+    std::shared_ptr<Resource> proj_resource;
+    std::shared_ptr<Resource> font_resource;
+
+    //std::array<std::array<std::shared_ptr<View>, arg_limit>, sub_limit> views;
     std::array<std::shared_ptr<Resource>, sub_limit> vtx_resources;
     std::array<std::shared_ptr<Resource>, sub_limit> idx_resources;
     std::array<std::shared_ptr<Resource>, sub_limit> arg_resources;
 
-    std::shared_ptr<Resource> frame_output;
-
-    std::shared_ptr<Property> constants_property;
+    std::shared_ptr<Property> proj_property;
     std::shared_ptr<Property> font_property;
 
   protected:
     std::chrono::high_resolution_clock::time_point time;
 
   public:
-    std::shared_ptr<Property>& AccessProperty() { return property; }
+    std::shared_ptr<Property>& AccessRootProperty() { return root_property; }
 
   public:
-    void SetShowTestWindow(bool show_test_window) { show_test_window_ = show_test_window; }
-    bool GetShowTestWindow() const { return show_test_window_; }
+    std::shared_ptr<View>& AccessOutputView() { return output_view; }
+
+  public:
+    void SetShowTestWindow(bool show_test_window) { this->show_test_window = show_test_window; }
+    bool GetShowTestWindow() const { return show_test_window; }
 
   public:
     void Initialize() override;

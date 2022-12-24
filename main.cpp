@@ -400,6 +400,47 @@ namespace RayGene3D
       window_handle = (__bridge void*)layer;
 #endif
 
+      auto device = core->AccessDevice();
+      const auto device_debug = config_property->GetObjectItem("device_debug")->GetBool();
+      const auto device_ordinal = config_property->GetObjectItem("device_ordinal")->GetUint();
+      device->SetWindow(window_handle);
+      device->SetDisplay(display_handle);
+      device->SetPath("./asset/shaders/");
+      device->SetExtentX(extent_x);
+      device->SetExtentY(extent_y);
+      device->SetOrdinal(device_ordinal);
+      device->SetDebug(device_debug);
+
+      auto backbuffer_resource = device->CreateResource("backbuffer_resource");
+      {
+        std::vector<glm::u8vec4> frame_pixels(extent_x * extent_y, glm::u8vec4(0, 0, 0, 0));
+
+        const auto data = frame_pixels.data();
+        const auto stride = uint32_t(sizeof(glm::u8vec4));
+        const auto count = uint32_t(extent_x * extent_y);
+        prop_screen = CreateBufferProperty(data, stride, count);
+
+        backbuffer_resource->SetType(RayGene3D::Resource::TYPE_IMAGE2D);
+        backbuffer_resource->SetExtentX(uint32_t(extent_x));
+        backbuffer_resource->SetExtentY(uint32_t(extent_y));
+        backbuffer_resource->SetFormat(RayGene3D::FORMAT_B8G8R8A8_UNORM);
+        backbuffer_resource->SetInteropCount(1);
+        backbuffer_resource->SetInteropItem(0, prop_screen->GetRawBytes(0));
+      }
+
+      auto backbuffer_rt_view = backbuffer_resource->CreateView("backbuffer_rt_view");
+      {
+        backbuffer_rt_view->SetBind(View::BIND_RENDER_TARGET);
+      }
+
+      auto backbuffer_ua_view = backbuffer_resource->CreateView("backbuffer_ua_view");
+      {
+        backbuffer_ua_view->SetBind(View::BIND_UNORDERED_ACCESS);
+      }
+
+      core->AccessDevice()->SetScreen(backbuffer_resource);
+      core->Initialize();
+
       const auto file_path = config_property->GetObjectItem("file_path")->GetString();
       const auto file_name = config_property->GetObjectItem("file_name")->GetString();
 
@@ -417,48 +458,18 @@ namespace RayGene3D
       prop_camera->SetObjectItem("fov_y", prop_fov_y);
       prop_camera->SetObjectItem("n_plane", prop_n_plane);
       prop_camera->SetObjectItem("f_plane", prop_f_plane);
-      
-
-      auto device = core->AccessDevice();
-      const auto device_debug = config_property->GetObjectItem("device_debug")->GetBool();
-      const auto device_ordinal = config_property->GetObjectItem("device_ordinal")->GetUint();
-      device->SetWindow(window_handle);
-      device->SetDisplay(display_handle);
-      device->SetPath("./asset/shaders/");
-      device->SetExtentX(extent_x);
-      device->SetExtentY(extent_y);
-      device->SetOrdinal(device_ordinal);
-      device->SetDebug(device_debug);
-
-      auto screen_backbuffer_resource = core->AccessDevice()->CreateResource("screen_backbuffer");
-      {
-        std::vector<glm::u8vec4> frame_pixels(extent_x * extent_y, glm::u8vec4(0, 0, 0, 0));
-
-        const auto data = frame_pixels.data();
-        const auto stride = uint32_t(sizeof(glm::u8vec4));
-        const auto count = uint32_t(extent_x * extent_y);
-        prop_screen = CreateBufferProperty(data, stride, count);
-
-        screen_backbuffer_resource->SetType(RayGene3D::Resource::TYPE_IMAGE2D);
-        screen_backbuffer_resource->SetExtentX(uint32_t(extent_x));
-        screen_backbuffer_resource->SetExtentY(uint32_t(extent_y));
-        screen_backbuffer_resource->SetFormat(RayGene3D::FORMAT_B8G8R8A8_UNORM);
-        screen_backbuffer_resource->SetInteropCount(1);
-        screen_backbuffer_resource->SetInteropItem(0, prop_screen->GetRawBytes(0));
-      }
-      core->AccessDevice()->SetScreen(screen_backbuffer_resource);
 
       spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*core));
-      spark->AccessProperty() = property;
+      spark->AccessRootProperty() = property;
+      spark->AccessOutputView() = backbuffer_ua_view;
       spark->Initialize();
       spark->SetShadowType(Spark::NO_SHADOWS);
 
       imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*core));
-      imgui->AccessProperty() = property;
-      imgui->SetShowTestWindow(false);
+      imgui->AccessRootProperty() = property;
+      imgui->AccessOutputView() = backbuffer_rt_view;
       imgui->Initialize();
-
-      core->Initialize();
+      imgui->SetShowTestWindow(false);
     }
 
     void Use()
@@ -598,7 +609,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_VLK));
+      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_D11));
     }
     ~GLFWWrapper()
     {

@@ -16,44 +16,104 @@ namespace RayGene3D
     const auto core = &this->GetCore();
     const auto device = core->AccessDevice();
 
-    const auto extent_x = property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
+    const auto extent_x = root_property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
+    const auto extent_y = root_property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
 
 
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
-    frame_output = device->ShareResource("screen_backbuffer");
+
     {
-      //frame_output->SetType(Resource::TYPE_TEXTURE2D);
-      //frame_output->SetExtentX(extent_x);
-      //frame_output->SetExtentY(extent_y);
-      //frame_output->SetLayers(1);
-      //frame_output->SetMipmaps(1);
-      //frame_output->SetFormat(FORMAT_B8G8R8A8_UNORM);
+      auto proj_resource = device->CreateResource("imgui_proj_resource");
+      {
+        const float L = 0.0f;
+        const float R = static_cast<float>(extent_x);
+        const float B = static_cast<float>(extent_y);
+        const float T = 0.0f;
+        const float mvp[4][4] = {
+          { 2.0f / (R - L),     0.0f,               0.0f,       0.0f },
+          { 0.0f,               2.0f / (T - B),     0.0f,       0.0f },
+          { 0.0f,               0.0f,               0.5f,       0.0f },
+          { (R + L) / (L - R),  (T + B) / (B - T),  0.5f,       1.0f },
+        };
+        proj_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+        proj_property->RawAllocate(uint32_t(sizeof(mvp)));
+        proj_property->SetRawBytes({ &mvp[0][0], uint32_t(sizeof(mvp)) }, 0);
+
+        uint32_t constants_stride{ 4 };
+        uint32_t constants_count{ 16 };
+
+        proj_resource->SetType(Resource::TYPE_BUFFER);
+        proj_resource->SetStride(constants_stride);
+        proj_resource->SetCount(constants_count);
+        proj_resource->SetInteropCount(1);
+        proj_resource->SetInteropItem(0, proj_property->GetRawBytes(0));
+      }
+      this->proj_resource = proj_resource;
     }
 
-    auto output_view = frame_output->CreateView("output_view");
     {
-      output_view->SetBind(View::BIND_RENDER_TARGET);
-      //output_view->SetLayerOffset(0);
-      //output_view->SetRange(uint32_t(-1));
+      auto font_resource = device->CreateResource("imgui_font_resource");
+      {
+        ImGui::GetIO().Fonts->AddFontFromFileTTF("3rdparty/imgui/fonts/Roboto-Medium.ttf", 20.0f);
+
+        unsigned char* font_data{ nullptr };
+        int font_stride{ 4 };
+        int font_width{ 0 };
+        int font_height{ 0 };
+        ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&font_data, &font_width, &font_height);
+
+        font_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+        font_property->RawAllocate(font_stride * font_width * font_height);
+        font_property->SetRawBytes({ font_data, font_stride * font_width * font_height }, 0);
+        font_resource->SetInteropCount(1);
+
+        font_resource->SetType(Resource::TYPE_IMAGE2D);
+        font_resource->SetExtentX(font_width);
+        font_resource->SetExtentY(font_height);
+        font_resource->SetLayers(1);
+        font_resource->SetMipmaps(1);
+        font_resource->SetFormat(FORMAT_R8G8B8A8_UNORM);
+        font_resource->SetInteropItem(0, font_property->GetRawBytes(0));
+      }
+      this->font_resource = font_resource;
     }
 
-#ifdef USE_SPIRV
-#define VK_BINDING(x) [[vk::binding(x)]]
-#else
-#define VK_BINDING(x) /*[vk::binding(x)]]*/
-#endif
-
-
-
-
-    auto shader = device->CreateShader("imgui_shader");
     {
-      const std::string debug_source =
-        "\
+      for (uint32_t i = 0; i < sub_limit; ++i)
+      {
+        auto vtx_resource = device->CreateResource("imgui_vtx_resource_" + std::to_string(i));
+        vtx_resource->SetType(Resource::TYPE_BUFFER);
+        vtx_resource->SetStride(uint32_t(sizeof(ImDrawVert)));
+        vtx_resource->SetCount(vtx_limit);
+        vtx_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
+
+        auto idx_resource = device->CreateResource("imgui_idx_resource_" + std::to_string(i));
+        idx_resource->SetType(Resource::TYPE_BUFFER);
+        idx_resource->SetStride(uint32_t(sizeof(ImDrawIdx)));
+        idx_resource->SetCount(10000);
+        idx_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
+
+        auto arg_resource = device->CreateResource("imgui_arg_resource_" + std::to_string(i));
+        arg_resource->SetType(Resource::TYPE_BUFFER);
+        arg_resource->SetStride(uint32_t(sizeof(Pass::Graphic)));
+        arg_resource->SetCount(10);
+        arg_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
+
+        vtx_resources[i] = vtx_resource;
+        idx_resources[i] = idx_resource;
+        arg_resources[i] = arg_resource;
+      }
+    }
+
+
+    {
+      auto config = device->CreateConfig("imgui_config");
+      {
+        const std::string debug_source =
+          "\
         #ifdef USE_SPIRV\n \
         #define VK_BINDING(x) [[vk::binding(x)]]\n \
         #define VK_LOCATION(x) [[vk::location(x)]]\n \
@@ -106,8 +166,8 @@ namespace RayGene3D
           return output;\
         }";
 
-      const std::string source =
-        "\
+        const std::string source =
+          "\
         #ifdef USE_SPIRV\n \
         #define VK_BINDING(x) [[vk::binding(x)]]\n \
         #define VK_LOCATION(x) [[vk::location(x)]]\n \
@@ -161,218 +221,156 @@ namespace RayGene3D
           output.col = input.col * texture0.Sample(sampler0, input.uv); \
           return output; \
         }";
-      shader->SetSource(source);
-      shader->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
+        config->SetSource(source);
+        config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
 
-      const Config::Attribute attributes[] = {
-        { 0, 0, 20, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 20, FORMAT_R32G32_FLOAT, false },
-        { 0,16, 20, FORMAT_R8G8B8A8_UNORM, false },
-      };
-      shader->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
+        const Config::Attribute attributes[] = {
+          { 0, 0, 20, FORMAT_R32G32_FLOAT, false },
+          { 0, 8, 20, FORMAT_R32G32_FLOAT, false },
+          { 0,16, 20, FORMAT_R8G8B8A8_UNORM, false },
+        };
+        config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
-      //const uint32_t strides[] = {
-      //  20,
-      //};
-      //shader->UpdateStrides({ strides, uint32_t(std::size(strides)) });
+        config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
+        config->SetIndexer(Config::INDEXER_16_BIT);
 
-      shader->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-      shader->SetIndexer(Config::INDEXER_16_BIT);
+        config->SetFillMode(Config::FILL_SOLID);
+        config->SetCullMode(Config::CULL_NONE);
+        config->SetClipEnabled(false);
 
-      shader->SetFillMode(Config::FILL_SOLID);
-      shader->SetCullMode(Config::CULL_NONE);
-      shader->SetClipEnabled(false);
+        const Config::Blend blends[] = {
+          { true, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+        };
+        config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
+        config->SetATCEnabled(false);
 
-      const Config::Blend blends[] = {
-        { true, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-      };
-      shader->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-      shader->SetATCEnabled(false);
+        config->SetDepthEnabled(false);
+        config->SetDepthWrite(false);
+        config->SetDepthComparison(Config::COMPARISON_ALWAYS);
 
-      shader->SetDepthEnabled(false);
-      shader->SetDepthWrite(false);
-      shader->SetDepthComparison(Config::COMPARISON_ALWAYS);
-
-      const Config::Viewport viewports[] = {
-        { 0.0f, 0.0f, float(extent_x), float(extent_y), 0.0f, 1.0f },
-      };
-      shader->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
+        const Config::Viewport viewports[] = {
+          { 0.0f, 0.0f, float(extent_x), float(extent_y), 0.0f, 1.0f },
+        };
+        config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
+      }
+      this->config = config;
     }
 
 
-
-    auto constants_resource = device->CreateResource("imgui_constants");
     {
-      const float L = 0.0f;
-      const float R = static_cast<float>(extent_x);
-      const float B = static_cast<float>(extent_y);
-      const float T = 0.0f;
-      const float mvp[4][4] = {
-        { 2.0f / (R - L),     0.0f,               0.0f,       0.0f },
-        { 0.0f,               2.0f / (T - B),     0.0f,       0.0f },
-        { 0.0f,               0.0f,               0.5f,       0.0f },
-        { (R + L) / (L - R),  (T + B) / (B - T),  0.5f,       1.0f },
-      };
+      auto proj_view = proj_resource->CreateView("imgui_proj_view");
+      {
+        proj_view->SetBind(View::BIND_CONSTANT_DATA);
+      }
 
-      uint32_t constants_stride{ 4 };
-      uint32_t constants_count{ 16 };
+      auto font_view = font_resource->CreateView("imgui_font_view");
+      {
+        font_view->SetBind(View::BIND_SHADER_RESOURCE);
+      }
 
-      constants_resource->SetType(Resource::TYPE_BUFFER);
-      constants_resource->SetStride(constants_stride);
-      constants_resource->SetCount(constants_count);
+      auto layout = device->CreateLayout("imgui_layout");
+      {
+        const std::shared_ptr<View> ub_views[] = {
+          proj_view,
+        };
+        layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
-      constants_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-      constants_property->RawAllocate(uint32_t(sizeof(mvp)));
-      constants_property->SetRawBytes({ &mvp[0][0], uint32_t(sizeof(mvp)) }, 0);
-      constants_resource->SetInteropCount(1);
-      constants_resource->SetInteropItem(0, constants_property->GetRawBytes(0));
-    }
+        const std::shared_ptr<View> ri_views[] = {
+          font_view,
+        };
+        layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
-    auto constants_view = constants_resource->CreateView("constants_cd_view");
-    {
-      constants_view->SetBind(View::BIND_CONSTANT_DATA);
-      //constants_view->SetOffset(0);
-      //constants_view->SetRange(uint32_t(-1));
+        const Layout::Sampler samplers[] = {
+           { Layout::Sampler::FILTERING_LINEAR, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+        };
+        layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
+      }
+      this->layout = layout;
     }
 
 
-    auto font_resource = device->CreateResource("imgui_font");
     {
-      ImGui::GetIO().Fonts->AddFontFromFileTTF("3rdparty/imgui/fonts/Roboto-Medium.ttf", 20.0f);
+      auto pass = device->CreatePass("imgui_pass");
+      {
+        pass->SetType(Pass::TYPE_GRAPHIC);
+        pass->SetEnabled(true);
 
-      unsigned char* font_data{ nullptr };
-      int font_stride{ 4 };
-      int font_width{ 0 };
-      int font_height{ 0 };
-      ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&font_data, &font_width, &font_height);
+        const std::shared_ptr<View> rt_views[] = {
+          output_view,
+        };
+        pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
 
-      font_resource->SetType(Resource::TYPE_IMAGE2D);
-      font_resource->SetExtentX(font_width);
-      font_resource->SetExtentY(font_height);
-      font_resource->SetLayers(1);
-      font_resource->SetMipmaps(1);
-      font_resource->SetFormat(FORMAT_R8G8B8A8_UNORM);
+        //const std::shared_ptr<View> ds_views[] = {
+        //  depth_view,
+        //};
+        //pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
 
-      font_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-      font_property->RawAllocate(font_stride * font_width * font_height);
-      font_property->SetRawBytes({ font_data, font_stride * font_width * font_height }, 0);
-      font_resource->SetInteropCount(1);
-      font_resource->SetInteropItem(0, font_property->GetRawBytes(0));
+
+        const Pass::RTValue rt_values[] = {
+          {},
+        };
+        pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
+
+        //const Pass::DSValue ds_values[] = {
+        //  { 1.0f, std::nullopt },
+        //};
+        //pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
+
+
+        pass->SetSubpassCount(sub_limit);
+        for (uint32_t i = 0; i < sub_limit; ++i)
+        {
+          auto vtx_view = vtx_resources[i]->CreateView("vtx_view_" + std::to_string(i));
+          vtx_view->SetBind(View::BIND_VERTEX_ARRAY);
+          vtx_view->SetByteOffset(0);
+
+          const std::shared_ptr<View> va_views[] = {
+            vtx_view,
+          };
+          pass->UpdateSubpassVAViews(i, { va_views, uint32_t(std::size(va_views)) });
+
+          auto idx_view = idx_resources[i]->CreateView("idx_view_" + std::to_string(i));
+          idx_view->SetBind(View::BIND_INDEX_ARRAY);
+          idx_view->SetByteOffset(0);
+          idx_view->SetByteCount(2);
+
+          const std::shared_ptr<View> ia_views[] = {
+            idx_view,
+          };
+          pass->UpdateSubpassIAViews(i, { ia_views, uint32_t(std::size(ia_views)) });
+
+          std::array<std::shared_ptr<View>, arg_limit> arg_views;
+          for (uint32_t j = 0; j < arg_limit; ++j)
+          {
+            arg_views[j] = arg_resources[i]->CreateView("arg_ci_view_" + std::to_string(j));
+            arg_views[j]->SetBind(View::BIND_COMMAND_INDIRECT);
+            arg_views[j]->SetByteOffset(j * sizeof(Pass::Graphic));
+            arg_views[j]->SetByteCount(sizeof(Pass::Graphic));
+          }
+          pass->UpdateSubpassAAViews(i, { arg_views.data(), arg_limit });
+
+          pass->SetSubpassLayout(i, layout);
+          pass->SetSubpassConfig(i, config);
+        }
+      }
+      this->pass = pass;
     }
 
-    auto font_view = font_resource->CreateView("font_sr_view");
     {
-      font_view->SetBind(View::BIND_SHADER_RESOURCE);
-      //font_view->SetOffset(0);
-    }
+      proj_resource->Initialize();
+      font_resource->Initialize();
 
-    auto layout = device->CreateLayout("imgui_layout");
-    {
-      const std::shared_ptr<View> ub_views[] = {
-        constants_view,
-      };
-      layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
-
-      const std::shared_ptr<View> ri_views[] = {
-        font_view,
-      };
-      layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
-
-      const Layout::Sampler samplers[] = {
-         { Layout::Sampler::FILTERING_LINEAR, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
-      };
-      layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-    }
-
-
-    auto pass = device->CreatePass("imgui_pass");
-    {
-      pass->SetType(Pass::TYPE_GRAPHIC);
-      pass->SetEnabled(true);
-
-      const std::shared_ptr<View> rt_views[] = {
-        output_view,
-      };
-      pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-      //const std::shared_ptr<View> ds_views[] = {
-      //  depth_view,
-      //};
-      //pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-
-      const Pass::RTValue rt_values[] = {
-        {}, //std::array<float, 4>{ 0.2f, 0.2f, 0.2f, 0.0f },
-      };
-      pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-      //const Pass::DSValue ds_values[] = {
-      //  { 1.0f, std::nullopt },
-      //};
-      //pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-
-      pass->SetSubpassCount(sub_limit);
       for (uint32_t i = 0; i < sub_limit; ++i)
       {
-        auto vtx_resource = device->CreateResource("imgui_vtx_resource_" + std::to_string(i));
-        vtx_resource->SetType(Resource::TYPE_BUFFER);
-        vtx_resource->SetStride(uint32_t(sizeof(ImDrawVert)));
-        vtx_resource->SetCount(vtx_limit);
-        vtx_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-
-        auto vtx_view = vtx_resource->CreateView("vtx_va_view_" + std::to_string(i));
-        vtx_view->SetBind(View::BIND_VERTEX_ARRAY);
-        vtx_view->SetByteOffset(0);
-
-        const std::shared_ptr<View> va_views[] = {
-          vtx_view,
-        };
-        pass->UpdateSubpassVAViews(i, { va_views, uint32_t(std::size(va_views)) });
-
-
-        auto idx_resource = device->CreateResource("imgui_idx_resource_" + std::to_string(i));
-        idx_resource->SetType(Resource::TYPE_BUFFER);
-        idx_resource->SetStride(uint32_t(sizeof(ImDrawIdx)));
-        idx_resource->SetCount(10000);
-        idx_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-
-        auto idx_view = idx_resource->CreateView("idx_ia_view_" + std::to_string(i));
-        idx_view->SetBind(View::BIND_INDEX_ARRAY);
-        idx_view->SetByteOffset(0);
-        idx_view->SetByteCount(2);
-
-        const std::shared_ptr<View> ia_views[] = {
-          idx_view,
-        };
-        pass->UpdateSubpassIAViews(i, { ia_views, uint32_t(std::size(ia_views)) });
-
-
-        auto arg_resource = device->CreateResource("imgui_arg_resource_" + std::to_string(i));
-        arg_resource->SetType(Resource::TYPE_BUFFER);
-        arg_resource->SetStride(uint32_t(sizeof(Pass::Graphic)));
-        arg_resource->SetCount(10);
-        arg_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-
-        for (uint32_t j = 0; j < arg_limit; ++j)
-        {
-          auto arg_view = arg_resource->CreateView("arg_ci_view_" + std::to_string(j));
-          arg_view->SetBind(View::BIND_COMMAND_INDIRECT);
-          arg_view->SetByteOffset(j * sizeof(Pass::Graphic));
-          arg_view->SetByteCount(sizeof(Pass::Graphic));
-          views[i][j] = arg_view;
-        }
-        pass->UpdateSubpassAAViews(i, { views[i].data(), arg_limit });
-
-        pass->SetSubpassLayout(i, layout);
-        pass->SetSubpassShader(i, shader);
-
-        vtx_resources[i] = vtx_resource;
-        idx_resources[i] = idx_resource;
-        arg_resources[i] = arg_resource;
+        vtx_resources[i]->Initialize();
+        idx_resources[i]->Initialize();
+        arg_resources[i]->Initialize();
       }
+
+      config->Initialize();
+      layout->Initialize();
+      pass->Initialize();
     }
-    this->pass = pass;
 
 
     ImGuiIO& io = ImGui::GetIO(); // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
@@ -393,16 +391,13 @@ namespace RayGene3D
 
     io.RenderDrawListsFn = nullptr;  // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
     io.ImeWindowHandle = nullptr;
-
-
-
   }
 
   void Imgui::Use()
   {
     const auto core = &this->GetCore();
-    const auto extent_x = property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
+    const auto extent_x = root_property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
+    const auto extent_y = root_property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -417,9 +412,9 @@ namespace RayGene3D
 
     // Start the frame
     ImGui::NewFrame();
-    if (show_test_window_)
+    if (show_test_window)
     {
-      ImGui::ShowDemoWindow(&show_test_window_);
+      ImGui::ShowDemoWindow(&show_test_window);
     }
 
     {

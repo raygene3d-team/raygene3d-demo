@@ -4,10 +4,10 @@ struct Surface
   float intensity;
 
   float3 diffuse;
-  float shininess;
+  float alpha;
 
   float3 specular;
-  float alpha;
+  float shininess;
 
   float3 normal;
   float metallic;
@@ -19,7 +19,7 @@ struct Frame
   float3 ng;
   float3x3 tbn;
   float2 duvdx;
-  float4 duvdy;
+  float2 duvdy;
 };
 
 Surface Initialize_OBJ(float3 emission, float intensity, float3 diffuse, float shininess, float3 specular, float alpha,

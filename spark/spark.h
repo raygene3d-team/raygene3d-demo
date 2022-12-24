@@ -46,29 +46,30 @@ namespace RayGene3D
     Core& GetCore() { return core; }
 
   private:
-    std::shared_ptr<Property> property;
+    std::shared_ptr<Property> root_property;
+
+  private:
+    std::shared_ptr<View> output_view;
 
   private:
     std::shared_ptr<Resource> render_target;
     std::shared_ptr<Resource> depth_stencil;
     std::shared_ptr<Resource> shadow_map;
 
-    std::shared_ptr<Resource> frame_output;
-
+  private:
     std::shared_ptr<Resource> screen_data;
-
     std::shared_ptr<Resource> camera_data;
     std::shared_ptr<Resource> shadow_data;
 
+  private:
     std::shared_ptr<Resource> instance_items;
-  
     std::shared_ptr<Resource> triangle_items;
-
     std::shared_ptr<Resource> vertex0_items;
     std::shared_ptr<Resource> vertex1_items;
     std::shared_ptr<Resource> vertex2_items;
     std::shared_ptr<Resource> vertex3_items;
 
+  private:
     std::shared_ptr<Resource> texture0_items;
     std::shared_ptr<Resource> texture1_items;
     std::shared_ptr<Resource> texture2_items;
@@ -91,36 +92,35 @@ namespace RayGene3D
     std::shared_ptr<Resource> environment_idx_data;
     std::shared_ptr<Resource> environment_item;
 
-  protected:
+  private:
     std::shared_ptr<Resource> raster_arguments;
-
-    std::array<std::shared_ptr<Pass>, 6> shadow_passes;
-    std::shared_ptr<Layout> shadow_layout;
-    std::shared_ptr<Config> shadow_shader;
+    std::shared_ptr<Resource> compute_arguments;
 
   protected:
-    std::shared_ptr<Pass> no_shadow_raster_pass;
-    std::shared_ptr<Layout> no_shadow_raster_layout;
-    std::shared_ptr<Config> no_shadow_raster_shader;
+    std::array<std::shared_ptr<Pass>, 6> shadowmap_passes;
+    std::shared_ptr<Layout> shadowmap_layout;
+    std::shared_ptr<Config> shadowmap_config;
 
-    std::shared_ptr<Pass> shadow_map_raster_pass;
-    std::shared_ptr<Layout> shadow_map_raster_layout;
-    std::shared_ptr<Config> shadow_map_raster_shader;
+  protected:
+    std::shared_ptr<Pass> unshadowed_pass;
+    std::shared_ptr<Layout> unshadowed_layout;
+    std::shared_ptr<Config> unshadowed_config;
+
+  protected:
+    std::shared_ptr<Pass> shadowed_pass;
+    std::shared_ptr<Layout> shadowed_layout;
+    std::shared_ptr<Config> shadowed_config;
 
   protected:
     std::shared_ptr<Pass> environment_pass;
     std::shared_ptr<Layout> environment_layout;
-    std::shared_ptr<Config> environment_shader;
-    //std::shared_ptr<Resource> environment_arguments;
-
-  protected:
-    glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
+    std::shared_ptr<Config> environment_config;
 
   protected:
     std::shared_ptr<Pass> present_pass;
     std::shared_ptr<Layout> present_layout;
-    std::shared_ptr<Config> present_shader;
-    std::shared_ptr<Resource> present_arguments;
+    std::shared_ptr<Config> present_config;
+    
 
   protected:
     std::shared_ptr<Property> prop_eye;
@@ -154,7 +154,8 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_textures4;
 
   protected:
-    uint32_t shadow_map_size { 1024 };
+    uint32_t shadow_resolution { 1024 };
+    glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
 
   public:
     enum ShadowType
@@ -171,20 +172,46 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   public:
-    std::shared_ptr<Property>& AccessProperty() { return property; }
+    std::shared_ptr<Property>& AccessRootProperty() { return root_property; }
+
+  public:
+    std::shared_ptr<View>& AccessOutputView() { return output_view; }
+
 
   protected:
+    void CreateResources(const std::shared_ptr<Device>& device);
+    void CreatePasses(const std::shared_ptr<Device>& device);
     void InitializeResources();
-    void InitializeShadow();
-    void InitializeSimple();
-    void InitializeAdvanced();
-    void InitializeEnvironment();
-    void InitializePresent();
-
-    void DiscardRaster();
-    void DiscardTracer();
-    void DiscardPresent();
+    void InitializePasses();
     void DiscardResources();
+    void DiscardPasses();
+    void DestroyResources(const std::shared_ptr<Device>& device);
+    void DestroyPasses(const std::shared_ptr<Device>& device);
+
+  protected:
+    void CreateAttachments(const std::shared_ptr<Device>& device);
+    void CreateConstants(const std::shared_ptr<Device>& device);
+    void CreateGeometries(const std::shared_ptr<Device>& device);
+    void CreateTextures(const std::shared_ptr<Device>& device);
+    void CreateArguments(const std::shared_ptr<Device>& device);
+
+    void CreateShadowmap(const std::shared_ptr<Device>& device);
+    void CreateUnshadowed(const std::shared_ptr<Device>& device);
+    void CreateShadowed(const std::shared_ptr<Device>& device);
+    void CreateEnvironment(const std::shared_ptr<Device>& device);
+    void CreatePresent(const std::shared_ptr<Device>& device);
+
+
+    //void InitializeShadow();
+    //void InitializeSimple();
+    //void InitializeAdvanced();
+    //void InitializeEnvironment();
+    //void InitializePresent();
+
+    //void DiscardRaster();
+    //void DiscardTracer();
+    //void DiscardPresent();
+    //void DiscardResources();
 
   public:
     void Initialize() override;
