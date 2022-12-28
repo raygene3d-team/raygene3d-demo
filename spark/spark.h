@@ -97,7 +97,7 @@ namespace RayGene3D
     std::shared_ptr<Resource> compute_arguments;
 
   protected:
-    std::array<std::shared_ptr<Pass>, 6> shadowmap_passes;
+    std::shared_ptr<Pass> shadowmap_passes[6];
     std::shared_ptr<Layout> shadowmap_layout;
     std::shared_ptr<Config> shadowmap_config;
 
@@ -200,6 +200,22 @@ namespace RayGene3D
     void CreateShadowed(const std::shared_ptr<Device>& device);
     void CreateEnvironment(const std::shared_ptr<Device>& device);
     void CreatePresent(const std::shared_ptr<Device>& device);
+
+    std::shared_ptr<Layout> CreateShadowmapLayout(const std::shared_ptr<Device>& device);
+    std::shared_ptr<Config> CreateShadowmapConfig(const std::shared_ptr<Device>& device);
+
+    std::shared_ptr<Layout> CreateShadowedLayout(const std::shared_ptr<Device>& device);
+    std::shared_ptr<Config> CreateShadowedConfig(const std::shared_ptr<Device>& device);
+
+    std::shared_ptr<Layout> CreateUnshadowedLayout(const std::shared_ptr<Device>& device);
+    std::shared_ptr<Config> CreateUnshadowedConfig(const std::shared_ptr<Device>& device);
+
+    std::shared_ptr<Layout> CreateEnvironmentLayout(const std::shared_ptr<Device>& device);
+    std::shared_ptr<Config> CreateEnvironmentConfig(const std::shared_ptr<Device>& device);
+
+    std::shared_ptr<Layout> CreatePresentLayout(const std::shared_ptr<Device>& device);
+    std::shared_ptr<Config> CreatePresentConfig(const std::shared_ptr<Device>& device);
+
 
 
     //void InitializeShadow();

@@ -98,7 +98,7 @@ namespace RayGene3D
 
         auto arg_resource = device->CreateResource("imgui_arg_resource_" + std::to_string(i));
         arg_resource->SetType(Resource::TYPE_BUFFER);
-        arg_resource->SetStride(uint32_t(sizeof(Pass::Graphic)));
+        arg_resource->SetStride(uint32_t(sizeof(Pass::Argument)));
         arg_resource->SetCount(10);
         arg_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
 
@@ -339,15 +339,17 @@ namespace RayGene3D
           };
           pass->UpdateSubpassIAViews(i, { ia_views, uint32_t(std::size(ia_views)) });
 
-          std::array<std::shared_ptr<View>, arg_limit> arg_views;
+          std::array<Pass::Command, arg_limit> commands;
           for (uint32_t j = 0; j < arg_limit; ++j)
           {
-            arg_views[j] = arg_resources[i]->CreateView("arg_ci_view_" + std::to_string(j));
-            arg_views[j]->SetBind(View::BIND_COMMAND_INDIRECT);
-            arg_views[j]->SetByteOffset(j * sizeof(Pass::Graphic));
-            arg_views[j]->SetByteCount(sizeof(Pass::Graphic));
+            const auto argument_view = arg_resources[i]->CreateView("arg_ci_view_" + std::to_string(j));
+            argument_view->SetBind(View::BIND_COMMAND_INDIRECT);
+            argument_view->SetByteOffset(j * sizeof(Pass::Argument));
+            argument_view->SetByteCount(sizeof(Pass::Argument));
+
+            commands[j].view = argument_view;
           }
-          pass->UpdateSubpassAAViews(i, { arg_views.data(), arg_limit });
+          pass->UpdateSubpassCommands(i, { commands.data(), uint32_t(commands.size()) });
 
           pass->SetSubpassLayout(i, layout);
           pass->SetSubpassConfig(i, config);
@@ -425,7 +427,7 @@ namespace RayGene3D
         auto arg_mapped = arg_resource->Map();
         for (uint32_t j = 0; j < arg_limit; ++j)
         {
-          auto& graphic_arg = reinterpret_cast<Pass::Graphic*>(arg_mapped)[j];
+          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[j];
           graphic_arg = { 0, 0, 0, 0, 0 };
         }
         arg_resource->Unmap();
@@ -434,7 +436,6 @@ namespace RayGene3D
 
 
     {
-
       ImGui::Render();
 
       ImDrawData* draw_data = ImGui::GetDrawData();
@@ -473,7 +474,7 @@ namespace RayGene3D
         for (uint32_t j = 0; j < arg_count; ++j)
         {
           const auto& draw_data = cmd_list->CmdBuffer[j];
-          auto& graphic_arg = reinterpret_cast<Pass::Graphic*>(arg_mapped)[j];
+          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[j];
           graphic_arg = { draw_data.ElemCount, 1, draw_data.IdxOffset, draw_data.VtxOffset, 0 };
         }
         arg_resource->Unmap();

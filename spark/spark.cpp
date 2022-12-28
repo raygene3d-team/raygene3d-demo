@@ -163,7 +163,7 @@ namespace RayGene3D
         const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
         raster_arguments->SetType(Resource::TYPE_BUFFER);
-        raster_arguments->SetStride(uint32_t(sizeof(Pass::Graphic)));
+        raster_arguments->SetStride(uint32_t(sizeof(Pass::Argument)));
         raster_arguments->SetCount(uint32_t(count));
         raster_arguments->SetHint(Resource::HINT_DYNAMIC_BUFFER);
       }
@@ -171,7 +171,7 @@ namespace RayGene3D
       compute_arguments = device->CreateResource("spark_compute_arguments");
       {
         compute_arguments->SetType(Resource::TYPE_BUFFER);
-        compute_arguments->SetStride(uint32_t(sizeof(Pass::Compute)));
+        compute_arguments->SetStride(uint32_t(sizeof(Pass::Argument)));
         compute_arguments->SetCount(1);
         compute_arguments->SetHint(Resource::HINT_DYNAMIC_BUFFER);
       }
@@ -337,161 +337,429 @@ namespace RayGene3D
           environment_item->SetInteropItem(i, textures->GetArrayItem(i)->GetRawBytes(0));
         }
       }
+
+      environment_vtx_data = device->CreateResource("spark_environment_vtx_data");
+      {
+        environment_vtx_data->SetType(Resource::TYPE_BUFFER);
+        environment_vtx_data->SetStride(uint32_t(sizeof(glm::f32vec4)));
+        environment_vtx_data->SetCount(uint32_t(environment_vtx.size()));
+        environment_vtx_data->SetInteropCount(1);
+        environment_vtx_data->SetInteropItem(0, std::pair(environment_vtx.data(), uint32_t(environment_vtx.size() * sizeof(glm::f32vec4))));
+      }
+
+      environment_idx_data = device->CreateResource("spark_environment_idx_data");
+      {
+        environment_idx_data->SetType(Resource::TYPE_BUFFER);
+        environment_idx_data->SetStride(uint32_t(sizeof(glm::u32vec3)));
+        environment_idx_data->SetCount(uint32_t(environment_idx.size()));
+        environment_idx_data->SetInteropCount(1);
+        environment_idx_data->SetInteropItem(0, std::pair(environment_idx.data(), uint32_t(environment_idx.size() * sizeof(glm::u32vec3))));
+      }
     }
   }
 
 
   void Spark::CreateShadowmap(const std::shared_ptr<Device>& device)
   {
-    const auto extent_x = shadow_resolution;
-    const auto extent_y = shadow_resolution;
-
-    const auto shadowmap_instance_items = instance_items->CreateView("spark_shadowmap_instance_items");
-    {
-      shadowmap_instance_items->SetBind(View::BIND_CONSTANT_DATA);
-      shadowmap_instance_items->SetByteOffset(0);
-      shadowmap_instance_items->SetByteCount(sizeof(Instance));
-    }
-
-    const auto shadowmap_vertex0_items = vertex0_items->CreateView("spark_shadowmap_vertex0_items");
-    {
-      shadowmap_vertex0_items->SetBind(View::BIND_VERTEX_ARRAY);
-      shadowmap_vertex0_items->SetByteOffset(0);
-      shadowmap_vertex0_items->SetByteCount(uint32_t(-1));
-    }
-
-    const auto shadowmap_index_items = triangle_items->CreateView("spark_shadowmap_index_items");
-    {
-      shadowmap_index_items->SetBind(View::BIND_INDEX_ARRAY);
-      shadowmap_index_items->SetByteOffset(0);
-      shadowmap_index_items->SetByteCount(uint32_t(-1));
-    }
-
-    shadowmap_config = device->CreateConfig("spark_shadowmap_config");
-    {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_shadow.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      const std::string source = shader_ss.str();
-      shadowmap_config->SetSource(source);
-
-      shadowmap_config->SetCompilation(Config::Compilation(Config::COMPILATION_VS));
-      shadowmap_config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-      shadowmap_config->SetIndexer(Config::INDEXER_32_BIT);
-
-      const Config::Attribute attributes[] = {
-        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-      };
-      shadowmap_config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-      shadowmap_config->SetFillMode(Config::FILL_SOLID);
-      shadowmap_config->SetCullMode(Config::CULL_FRONT);
-      shadowmap_config->SetClipEnabled(false);
-
-      const Config::Blend blends[] = {
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-      };
-      shadowmap_config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-      shadowmap_config->SetATCEnabled(false);
-
-      shadowmap_config->SetDepthEnabled(true);
-      shadowmap_config->SetDepthWrite(true);
-      shadowmap_config->SetDepthComparison(Config::COMPARISON_LESS);
-
-      const Config::Viewport viewports[] = {
-        { 0.0f, 0.0f, float(extent_x), float(extent_y), 0.0f, 1.0f },
-      };
-      shadowmap_config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
-    }
-
-    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::vector<std::shared_ptr<View>> shadowmap_raster_arguments(instance_count);
-    for (uint32_t i = 0; i < uint32_t(shadowmap_raster_arguments.size()); ++i)
-    {
-      const auto stride = uint32_t(sizeof(Pass::Graphic));
-
-      shadowmap_raster_arguments[i] = raster_arguments->CreateView("spark_shadowmap_raster_arguments_" + std::to_string(i));
-      shadowmap_raster_arguments[i]->SetBind(View::BIND_COMMAND_INDIRECT);
-      shadowmap_raster_arguments[i]->SetByteOffset(i * stride);
-      shadowmap_raster_arguments[i]->SetByteCount(stride);
-    }
-
-
-    shadowmap_layout = device->CreateLayout("spark_shadowmap_layout");
-    {
-      const auto shadow_camera_data = shadow_data->CreateView("spark_shadowmap_shadow_data");
-      {
-        shadow_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-        shadow_camera_data->SetByteOffset(0);
-        shadow_camera_data->SetByteCount(sizeof(Frustum));
-      }
-
-      const std::shared_ptr<View> sb_views[] = {
-        shadow_camera_data,
-      };
-      shadowmap_layout->UpdateSBViews({ sb_views, uint32_t(std::size(sb_views)) });
-    }
+    shadowmap_config = CreateShadowmapConfig(device);
+    shadowmap_layout = CreateShadowmapLayout(device);
 
     for (uint32_t i = 0; i < 6; ++i)
     {
       shadowmap_passes[i] = device->CreatePass("spark_shadowmap_" + std::to_string(i));
-
-      const auto shadow_depth_stencil = shadow_map->CreateView("spark_shadowmap_depth_stencil_" + std::to_string(i));
-      {
-        shadow_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
-        shadow_depth_stencil->SetLayerOffset(i);
-        shadow_depth_stencil->SetLayerCount(1);
-      }
-
       shadowmap_passes[i]->SetType(Pass::TYPE_GRAPHIC);
+      shadowmap_passes[i]->SetEnabled(true);
+
+      const auto shadowmap_depth_stencil = shadow_map->CreateView("spark_shadowmap_depth_stencil_" + std::to_string(i));
+      shadowmap_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
+      shadowmap_depth_stencil->SetLayerOffset(i);
+      shadowmap_depth_stencil->SetLayerCount(1);
+
+      const std::shared_ptr<View> ds_views[] = {
+        shadowmap_depth_stencil,
+      };
+      shadowmap_passes[i]->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
+
+      const Pass::DSValue ds_values[] = {
+        { 1.0f, std::nullopt },
+      };
+      shadowmap_passes[i]->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
+
+      shadowmap_passes[i]->SetSubpassCount(1);
+
+      const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
+      std::vector<Pass::Command> commands(instance_count);
+      for (uint32_t j = 0; j < instance_count; ++j)
       {
-        shadowmap_passes[i]->SetEnabled(true);
+        const auto argument_view = raster_arguments->CreateView("spark_shadowmap_raster_argument_" + std::to_string(i) + "_" + std::to_string(j));
+        argument_view->SetBind(View::BIND_COMMAND_INDIRECT);
+        argument_view->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
+        argument_view->SetByteCount(uint32_t(sizeof(Pass::Argument)));
 
-        const std::shared_ptr<View> ds_views[] = {
-          shadow_depth_stencil,
-        };
-        shadowmap_passes[i]->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-        const Pass::DSValue ds_values[] = {
-          { 1.0f, std::nullopt },
-        };
-        shadowmap_passes[i]->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-        shadowmap_passes[i]->SetSubpassCount(shadowmap_raster_arguments.size());
-        for (uint32_t j = 0; j < shadowmap_raster_arguments.size(); ++j)
-        {
-          const std::shared_ptr<View> va_views[] = {
-            shadowmap_vertex0_items,
-          };
-          shadowmap_passes[i]->UpdateSubpassVAViews(j, { va_views, uint32_t(std::size(va_views)) });
-
-          const std::shared_ptr<View> ia_views[] = {
-            shadowmap_index_items,
-          };
-          shadowmap_passes[i]->UpdateSubpassIAViews(j, { ia_views, uint32_t(std::size(ia_views)) });
-
-          const uint32_t ue_offsets[] = {
-            i * uint32_t(sizeof(Frustum)),
-          };
-          shadowmap_passes[i]->UpdateSubpassSBOffsets(j, { ue_offsets, uint32_t(std::size(ue_offsets)) });
-
-          const std::shared_ptr<View> aa_views[] = {
-            shadowmap_raster_arguments[j]
-          };
-          shadowmap_passes[i]->UpdateSubpassAAViews(j, { aa_views, uint32_t(std::size(aa_views)) });
-
-          shadowmap_passes[i]->SetSubpassLayout(j, shadowmap_layout);
-          shadowmap_passes[i]->SetSubpassConfig(j, shadowmap_config);
-        }
+        commands[j].view = argument_view;
+        commands[j].offsets = { i * uint32_t(sizeof(Frustum)) };
       }
+      shadowmap_passes[i]->UpdateSubpassCommands(0, { commands.data(), uint32_t(commands.size()) });
+
+      const auto shadowmap_vertex0_items = vertex0_items->CreateView("spark_shadowmap_vertex0_items");
+      {
+        shadowmap_vertex0_items->SetBind(View::BIND_VERTEX_ARRAY);
+        shadowmap_vertex0_items->SetByteOffset(0);
+        shadowmap_vertex0_items->SetByteCount(uint32_t(-1));
+      }
+
+      const std::shared_ptr<View> va_views[] = {
+        shadowmap_vertex0_items,
+      };
+      shadowmap_passes[i]->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
+
+      const auto shadowmap_index_items = triangle_items->CreateView("spark_shadowmap_index_items");
+      {
+        shadowmap_index_items->SetBind(View::BIND_INDEX_ARRAY);
+        shadowmap_index_items->SetByteOffset(0);
+        shadowmap_index_items->SetByteCount(uint32_t(-1));
+      }
+
+      const std::shared_ptr<View> ia_views[] = {
+        shadowmap_index_items,
+      };
+      shadowmap_passes[i]->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
+
+      shadowmap_passes[i]->SetSubpassLayout(0, shadowmap_layout);
+      shadowmap_passes[i]->SetSubpassConfig(0, shadowmap_config);
     }
   }
 
   void Spark::CreateUnshadowed(const std::shared_ptr<Device>& device)
   {
+    unshadowed_config = CreateUnshadowedConfig(device);
+    unshadowed_layout = CreateUnshadowedLayout(device);
+
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
+
+    const auto unshadowed_render_target = render_target->CreateView("spark_unshadowed_render_target");
+    {
+      unshadowed_render_target->SetBind(View::BIND_RENDER_TARGET);
+    }
+
+    const auto unshadowed_depth_stencil = depth_stencil->CreateView("spark_unshadowed_depth_stencil");
+    {
+      unshadowed_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
+    }
+
+    unshadowed_pass = device->CreatePass("spark_unshadowed");
+    unshadowed_pass->SetType(Pass::TYPE_GRAPHIC);
+
+    const std::shared_ptr<View> rt_views[] = {
+      unshadowed_render_target,
+    };
+    unshadowed_pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
+
+    const std::shared_ptr<View> ds_views[] = {
+      unshadowed_depth_stencil,
+    };
+    unshadowed_pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
+
+    const Pass::RTValue rt_values[] = {
+      std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
+    };
+    unshadowed_pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
+
+    const Pass::DSValue ds_values[] = {
+      { 1.0f, std::nullopt },
+    };
+    unshadowed_pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
+
+    unshadowed_pass->SetSubpassCount(1);
+
+    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
+    std::vector<Pass::Command> commands(instance_count);
+    for (uint32_t j = 0; j < instance_count; ++j)
+    {
+      const auto argument_view = raster_arguments->CreateView("spark_unshadowed_raster_argument_" + std::to_string(j));
+      argument_view->SetBind(View::BIND_COMMAND_INDIRECT);
+      argument_view->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
+      argument_view->SetByteCount(uint32_t(sizeof(Pass::Argument)));
+
+      commands[j].view = argument_view;
+      commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
+    }
+
+    unshadowed_pass->UpdateSubpassCommands(0, { commands.data(), uint32_t(commands.size()) });
+
+    const auto unshadowed_vertex0_items = vertex0_items->CreateView("spark_unshadowed_vertex0_items");
+    {
+      unshadowed_vertex0_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto unshadowed_vertex1_items = vertex1_items->CreateView("spark_unshadowed_vertex1_items");
+    {
+      unshadowed_vertex1_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto unshadowed_vertex2_items = vertex2_items->CreateView("spark_unshadowed_vertex2_items");
+    {
+      unshadowed_vertex2_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const auto unshadowed_vertex3_items = vertex3_items->CreateView("spark_unshadowed_vertex3_items");
+    {
+      unshadowed_vertex3_items->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const std::shared_ptr<View> va_views[] = {
+      unshadowed_vertex0_items,
+      unshadowed_vertex1_items,
+      unshadowed_vertex2_items,
+      unshadowed_vertex3_items,
+    };
+    unshadowed_pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
+
+    const auto unshadowed_index_items = triangle_items->CreateView("spark_unshadowed_index_items");
+    {
+      unshadowed_index_items->SetBind(View::BIND_INDEX_ARRAY);
+    }
+
+    const std::shared_ptr<View> ia_views[] = {
+      unshadowed_index_items,
+    };
+    unshadowed_pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
+
+    unshadowed_pass->SetSubpassLayout(0, unshadowed_layout);
+    unshadowed_pass->SetSubpassConfig(0, unshadowed_config);
+    
+    unshadowed_pass->SetEnabled(true);
+  }
+
+  std::shared_ptr<Layout> Spark::CreateShadowmapLayout(const std::shared_ptr<Device>& device)
+  {
+    const auto layout = device->CreateLayout("spark_shadowmap_layout");
+
+    const auto shadow_camera_data = shadow_data->CreateView("spark_shadowmap_shadow_data");
+    {
+      shadow_camera_data->SetBind(View::BIND_CONSTANT_DATA);
+      shadow_camera_data->SetByteOffset(0);
+      shadow_camera_data->SetByteCount(sizeof(Frustum));
+    }
+
+    const std::shared_ptr<View> sb_views[] = {
+      shadow_camera_data,
+    };
+    layout->UpdateSBViews({ sb_views, uint32_t(std::size(sb_views)) });
+
+    return layout;
+  }
+
+  std::shared_ptr<Config> Spark::CreateShadowmapConfig(const std::shared_ptr<Device>& device)
+  {
+    const auto config = device->CreateConfig("spark_shadowmap_config");
+    
+    std::fstream shader_fs;
+    shader_fs.open("./asset/shaders/spark_shadow.hlsl", std::fstream::in);
+    std::stringstream shader_ss;
+    shader_ss << shader_fs.rdbuf();
+
+    config->SetSource(shader_ss.str());
+    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS));
+    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
+    config->SetIndexer(Config::INDEXER_32_BIT);
+
+    const Config::Attribute attributes[] = {
+      { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+    };
+    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
+
+    //const std::shared_ptr<View> va_views[] = {
+    //  shadowmap_vertex0_items,
+    //};
+    //config->SetVAViews({ va_views, uint32_t(std::size(va_views)) });
+
+    //const std::shared_ptr<View> ia_views[] = {
+    //  shadowmap_index_items,
+    //};
+    //config->SetIAViews({ia_views, uint32_t(std::size(ia_views)) });
+
+    config->SetFillMode(Config::FILL_SOLID);
+    config->SetCullMode(Config::CULL_FRONT);
+    config->SetClipEnabled(false);
+
+    const Config::Blend blends[] = {
+      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    };
+    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
+    config->SetATCEnabled(false);
+
+    config->SetDepthEnabled(true);
+    config->SetDepthWrite(true);
+    config->SetDepthComparison(Config::COMPARISON_LESS);
+
+    const Config::Viewport viewports[] = {
+      { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f },
+    };
+    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
+    
+    return config;
+  }
+
+
+
+  std::shared_ptr<Layout> Spark::CreateShadowedLayout(const std::shared_ptr<Device>& device)
+  {
+    const auto layout = device->CreateLayout("spark_shadowed_layout");
+    
+    const Layout::Sampler samplers[] = {
+    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+    };
+    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
+
+    const auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data");
+    {
+      shadowed_screen_data->SetBind(View::BIND_CONSTANT_DATA);
+      shadowed_screen_data->SetByteOffset(0);
+      shadowed_screen_data->SetByteCount(uint32_t(-1));
+    }
+
+    const auto shadowed_camera_data = camera_data->CreateView("spark_shadowed_camera_data");
+    {
+      shadowed_camera_data->SetBind(View::BIND_CONSTANT_DATA);
+      shadowed_camera_data->SetByteOffset(0);
+      shadowed_camera_data->SetByteCount(uint32_t(-1));
+    }
+
+    const auto shadowed_shadow_data = shadow_data->CreateView("spark_shadowed_shadow_data");
+    {
+      shadowed_shadow_data->SetBind(View::BIND_CONSTANT_DATA);
+      shadowed_shadow_data->SetByteOffset(0);
+      shadowed_shadow_data->SetByteCount(sizeof(Frustum));
+    }
+
+    const std::shared_ptr<View> ub_views[] = {
+      shadowed_screen_data,
+      shadowed_camera_data,
+      shadowed_shadow_data,
+    };
+    layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
+
+    const auto shadowed_instance_items = instance_items->CreateView("spark_shadowed_instance_items");
+    {
+      shadowed_instance_items->SetBind(View::BIND_CONSTANT_DATA);
+      shadowed_instance_items->SetByteOffset(0);
+      shadowed_instance_items->SetByteCount(sizeof(Instance));
+    }
+
+    const std::shared_ptr<View> ue_views[] = {
+      shadowed_instance_items
+    };
+    layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
+
+    const auto shadowed_texture0_items = texture0_items->CreateView("spark_shadowed_texture0_view");
+    {
+      shadowed_texture0_items->SetBind(View::BIND_SHADER_RESOURCE);
+    }
+
+    const auto shadowed_texture1_items = texture1_items->CreateView("spark_shadowed_texture1_view");
+    {
+      shadowed_texture1_items->SetBind(View::BIND_SHADER_RESOURCE);
+    }
+
+    const auto shadowed_texture2_items = texture2_items->CreateView("spark_shadowed_texture2_view");
+    {
+      shadowed_texture2_items->SetBind(View::BIND_SHADER_RESOURCE);
+    }
+
+    const auto shadowed_texture3_items = texture3_items->CreateView("spark_shadowed_texture3_view");
+    {
+      shadowed_texture3_items->SetBind(View::BIND_SHADER_RESOURCE);
+    }
+
+    const auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map");
+    {
+      shadowed_shadow_map->SetBind(View::BIND_SHADER_RESOURCE);
+      shadowed_shadow_map->SetUsage(View::USAGE_CUBEMAP_LAYER);
+    }
+
+    const std::shared_ptr<View> ri_views[] = {
+      shadowed_texture0_items,
+      shadowed_texture1_items,
+      shadowed_texture2_items,
+      shadowed_texture3_items,
+      shadowed_shadow_map,
+    };
+    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
+
+    return layout;
+  }
+
+
+  std::shared_ptr<Config> Spark::CreateShadowedConfig(const std::shared_ptr<Device>& device)
+  {
+    const auto config = device->CreateConfig("spark_shadowed_config");
+    
+    std::fstream shader_fs;
+    shader_fs.open("./asset/shaders/spark_advanced.hlsl", std::fstream::in);
+    std::stringstream shader_ss;
+    shader_ss << shader_fs.rdbuf();
+
+    config->SetSource(shader_ss.str());
+    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
+    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
+    config->SetIndexer(Config::INDEXER_32_BIT);
+
+    //const Config::Attribute attributes[] = {
+    //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+    //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
+    //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+    //  { 0, 28, 64, FORMAT_R32_UINT, false },
+    //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+    //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
+    //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+    //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+    //};
+
+    const Config::Attribute attributes[] = {
+      { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+      { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
+      { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+      { 1, 12, 16, FORMAT_R32_UINT, false },
+      { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+      { 2, 12, 16, FORMAT_R32_FLOAT, false },
+      { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
+      { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
+    };
+    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
+
+    config->SetFillMode(Config::FILL_SOLID);
+    config->SetCullMode(Config::CULL_BACK);
+    config->SetClipEnabled(false);
+
+    const Config::Blend blends[] = {
+      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    };
+    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
+    config->SetATCEnabled(false);
+
+    config->SetDepthEnabled(true);
+    config->SetDepthWrite(true);
+    config->SetDepthComparison(Config::COMPARISON_LESS);
+
+    const Config::Viewport viewports[] = {
+      { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
+    };
+    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
+
+    return config;
+  }
+
+  std::shared_ptr<Layout> Spark::CreateUnshadowedLayout(const std::shared_ptr<Device>& device)
+  {
+    const auto layout = device->CreateLayout("unshadowed_layout");
+
+    const Layout::Sampler samplers[] = {
+    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    };
+    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
 
     const auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data");
     {
@@ -514,12 +782,26 @@ namespace RayGene3D
       unshadowed_shadow_data->SetByteCount(sizeof(Frustum));
     }
 
+    const std::shared_ptr<View> ub_views[] = {
+      unshadowed_screen_data,
+      unshadowed_camera_data,
+      unshadowed_shadow_data,
+    };
+    layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
+
+
     const auto unshadowed_instance_items = instance_items->CreateView("spark_unshadowed_instance_items");
     {
       unshadowed_instance_items->SetBind(View::BIND_CONSTANT_DATA);
       unshadowed_instance_items->SetByteOffset(0);
       unshadowed_instance_items->SetByteCount(sizeof(Instance));
     }
+
+    const std::shared_ptr<View> ue_views[] = {
+      unshadowed_instance_items
+    };
+    layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
+
 
     const auto unshadowed_texture0_items = texture0_items->CreateView("spark_unshadowed_texture0_view");
     {
@@ -551,255 +833,221 @@ namespace RayGene3D
       unshadowed_environment_item->SetBind(View::BIND_SHADER_RESOURCE);
     }
 
-    const auto unshadowed_render_target = render_target->CreateView("spark_unshadowed_render_target");
+    const std::shared_ptr<View> ri_views[] = {
+      unshadowed_texture0_items,
+      unshadowed_texture1_items,
+      unshadowed_texture2_items,
+      unshadowed_texture3_items,
+      unshadowed_texture4_items,
+    };
+    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
+
+    return layout;
+  }
+
+  std::shared_ptr<Config> Spark::CreateUnshadowedConfig(const std::shared_ptr<Device>& device)
+  {
+    const auto config = device->CreateConfig("spark_unshadowed_config");
+    
+    std::fstream shader_fs;
+    shader_fs.open("./asset/shaders/spark_simple.hlsl", std::fstream::in);
+    std::stringstream shader_ss;
+    shader_ss << shader_fs.rdbuf();
+
+    config->SetSource(shader_ss.str());
+    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
+    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
+    config->SetIndexer(Config::INDEXER_32_BIT);
+    config->SetDefineItem("TEST", "1");
+
+    //const Config::Attribute attributes[] = {
+    //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+    //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
+    //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+    //  { 0, 28, 64, FORMAT_R32_UINT, false },
+    //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+    //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
+    //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+    //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+    //};
+    const Config::Attribute attributes[] = {
+      { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+      { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
+      { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+      { 1, 12, 16, FORMAT_R32_UINT, false },
+      { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+      { 2, 12, 16, FORMAT_R32_FLOAT, false },
+      { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
+      { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
+    };
+    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
+
+    config->SetFillMode(Config::FILL_SOLID);
+    config->SetCullMode(Config::CULL_BACK);
+    config->SetClipEnabled(false);
+
+    const Config::Blend blends[] = {
+      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    };
+    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
+    config->SetATCEnabled(false);
+
+    config->SetDepthEnabled(true);
+    config->SetDepthWrite(true);
+    config->SetDepthComparison(Config::COMPARISON_LESS);
+
+    const Config::Viewport viewports[] = {
+      { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
+    };
+    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
+    
+    return config;
+  }
+
+  std::shared_ptr<Layout> Spark::CreateEnvironmentLayout(const std::shared_ptr<Device>& device)
+  {
+    const auto layout = device->CreateLayout("spark_environment_layout");
+    
+    const Layout::Sampler samplers[] = {
+    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    };
+    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
+
+
+    const auto environment_screen_data = screen_data->CreateView("spark_environment_screen_data");
     {
-      unshadowed_render_target->SetBind(View::BIND_RENDER_TARGET);
+      environment_screen_data->SetBind(View::BIND_CONSTANT_DATA);
     }
 
-    const auto unshadowed_depth_stencil = depth_stencil->CreateView("spark_unshadowed_depth_stencil");
+    const auto environment_camera_data = camera_data->CreateView("spark_environment_camera_data");
     {
-      unshadowed_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
+      environment_camera_data->SetBind(View::BIND_CONSTANT_DATA);
     }
 
-    const auto unshadowed_vertex0_items = vertex0_items->CreateView("spark_unshadowed_vertex0_items");
+    const std::shared_ptr<View> ub_views[] = {
+      environment_screen_data,
+      environment_camera_data,
+    };
+    layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
+
+
+    const auto environment_item_view = environment_item->CreateView("spark_environment_item_view");
     {
-      unshadowed_vertex0_items->SetBind(View::BIND_VERTEX_ARRAY);
+      environment_item_view->SetBind(View::BIND_SHADER_RESOURCE);
     }
 
-    const auto unshadowed_vertex1_items = vertex1_items->CreateView("spark_unshadowed_vertex1_items");
+    const std::shared_ptr<View> ri_views[] = {
+      environment_item_view,
+    };
+    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
+
+    return layout;
+  }
+
+  std::shared_ptr<Config> Spark::CreateEnvironmentConfig(const std::shared_ptr<Device>& device)
+  {
+    const auto config = device->CreateConfig("spark_environment_config");
+    
+    std::fstream shader_fs;
+    shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
+    std::stringstream shader_ss;
+    shader_ss << shader_fs.rdbuf();
+
+    config->SetSource(shader_ss.str());
+    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
+    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
+    config->SetIndexer(Config::INDEXER_32_BIT);
+
+    const Config::Attribute attributes[] = {
+      { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
+      { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+    };
+    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
+
+    config->SetFillMode(Config::FILL_SOLID);
+    config->SetCullMode(Config::CULL_NONE);
+    config->SetClipEnabled(false);
+
+    const Config::Blend blends[] = {
+      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    };
+    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
+    config->SetATCEnabled(false);
+
+    config->SetDepthEnabled(true);
+    config->SetDepthWrite(false);
+    config->SetDepthComparison(Config::COMPARISON_EQUAL);
+
+    const Config::Viewport viewports[] = {
+      { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
+    };
+    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
+
+    return config;
+  }
+
+  std::shared_ptr<Layout> Spark::CreatePresentLayout(const std::shared_ptr<Device>& device)
+  {
+    const auto layout = device->CreateLayout("spark_present_layout");
+
+    auto present_camera_data = camera_data->CreateView("spark_present_camera_data");
     {
-      unshadowed_vertex1_items->SetBind(View::BIND_VERTEX_ARRAY);
+      present_camera_data->SetBind(View::BIND_CONSTANT_DATA);
+      present_camera_data->SetByteOffset(0);
+      present_camera_data->SetByteCount(uint32_t(-1));
+    }
+    
+    const std::shared_ptr<View> ub_views[] = {
+      present_camera_data,
+    };
+    layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
+
+    layout->UpdateRBViews({});
+
+    layout->UpdateWBViews({});
+
+    auto present_render_target = render_target->CreateView("spark_present_render_target");
+    {
+      present_render_target->SetBind(View::BIND_SHADER_RESOURCE);
+      present_render_target->SetLayerOffset(0);
+      present_render_target->SetLayerCount(uint32_t(-1));
     }
 
-    const auto unshadowed_vertex2_items = vertex2_items->CreateView("spark_unshadowed_vertex2_items");
-    {
-      unshadowed_vertex2_items->SetBind(View::BIND_VERTEX_ARRAY);
-    }
+    const std::shared_ptr<View> ri_views[] = {
+      present_render_target,
+    };
+    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
-    const auto unshadowed_vertex3_items = vertex3_items->CreateView("spark_unshadowed_vertex3_items");
-    {
-      unshadowed_vertex3_items->SetBind(View::BIND_VERTEX_ARRAY);
-    }
+    const std::shared_ptr<View> wi_views[] = {
+      output_view,
+    };
+    layout->UpdateWIViews({ wi_views, uint32_t(std::size(wi_views)) });
 
-    const auto unshadowed_index_items = triangle_items->CreateView("spark_unshadowed_index_items");
-    {
-      unshadowed_index_items->SetBind(View::BIND_INDEX_ARRAY);
-    }
+    return layout;
+  }
 
-    unshadowed_config = device->CreateConfig("spark_unshadowed_config");
-    {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_simple.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      const std::string source = shader_ss.str();
-      unshadowed_config->SetSource(source);
-      unshadowed_config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
-      unshadowed_config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-      unshadowed_config->SetIndexer(Config::INDEXER_32_BIT);
-      unshadowed_config->SetDefineItem("TEST", "1");
+  std::shared_ptr<Config> Spark::CreatePresentConfig(const std::shared_ptr<Device>& device)
+  {
+    const auto config = device->CreateConfig("spark_present_config");
 
-      //const Config::Attribute attributes[] = {
-      //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-      //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
-      //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-      //  { 0, 28, 64, FORMAT_R32_UINT, false },
-      //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-      //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
-      //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-      //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
-      //};
-      const Config::Attribute attributes[] = {
-        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
-        { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 1, 12, 16, FORMAT_R32_UINT, false },
-        { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 2, 12, 16, FORMAT_R32_FLOAT, false },
-        { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
-        { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
-      };
-      unshadowed_config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
+    std::fstream shader_fs;
+    shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
+    std::stringstream shader_ss;
+    shader_ss << shader_fs.rdbuf();
 
-      unshadowed_config->SetFillMode(Config::FILL_SOLID);
-      unshadowed_config->SetCullMode(Config::CULL_BACK);
-      unshadowed_config->SetClipEnabled(false);
+    config->SetSource(shader_ss.str());
+    config->SetCompilation(Config::COMPILATION_CS);
 
-      const Config::Blend blends[] = {
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-      };
-      unshadowed_config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-      unshadowed_config->SetATCEnabled(false);
-
-      unshadowed_config->SetDepthEnabled(true);
-      unshadowed_config->SetDepthWrite(true);
-      unshadowed_config->SetDepthComparison(Config::COMPARISON_LESS);
-
-      const Config::Viewport viewports[] = {
-        { 0.0f, 0.0f, float(extent_x), float(extent_y), 0.0f, 1.0f },
-      };
-      unshadowed_config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
-    }
-
-    unshadowed_layout = device->CreateLayout("unshadowed_layout");
-    {
-      const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-      };
-      unshadowed_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-
-      const std::shared_ptr<View> ub_views[] = {
-        unshadowed_screen_data,
-        unshadowed_camera_data,
-        unshadowed_shadow_data,
-      };
-      unshadowed_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
-
-      const std::shared_ptr<View> ue_views[] = {
-        unshadowed_instance_items
-      };
-      unshadowed_layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
-
-      const std::shared_ptr<View> ri_views[] = {
-        unshadowed_texture0_items,
-        unshadowed_texture1_items,
-        unshadowed_texture2_items,
-        unshadowed_texture3_items,
-        unshadowed_texture4_items,
-      };
-      unshadowed_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
-    }
-
-    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::vector<std::shared_ptr<View>> arguments_views(instance_count);
-    for (uint32_t i = 0; i < uint32_t(arguments_views.size()); ++i)
-    {
-      const auto stride = uint32_t(sizeof(Pass::Graphic));
-
-      auto arguments_view = raster_arguments->CreateView("shadow_map_raster_arguments_" + std::to_string(i));
-      arguments_view->SetBind(View::BIND_COMMAND_INDIRECT);
-      arguments_view->SetByteOffset(i * stride);
-      arguments_view->SetByteCount(stride);
-
-      arguments_views[i] = arguments_view;
-    }
-
-    unshadowed_pass = device->CreatePass("spark_unshadowed");
-    unshadowed_pass->SetType(Pass::TYPE_GRAPHIC);
-    {
-      unshadowed_pass->SetEnabled(true);
-
-      const std::shared_ptr<View> rt_views[] = {
-        unshadowed_render_target,
-      };
-      unshadowed_pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-      const std::shared_ptr<View> ds_views[] = {
-        unshadowed_depth_stencil,
-      };
-      unshadowed_pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-      const Pass::RTValue rt_values[] = {
-        std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
-      };
-      unshadowed_pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-      const Pass::DSValue ds_values[] = {
-        { 1.0f, std::nullopt },
-      };
-      unshadowed_pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-      unshadowed_pass->SetSubpassCount(arguments_views.size());
-      for (uint32_t i = 0; i < arguments_views.size(); ++i)
-      {
-        const std::shared_ptr<View> va_views[] = {
-          unshadowed_vertex0_items,
-          unshadowed_vertex1_items,
-          unshadowed_vertex2_items,
-          unshadowed_vertex3_items,
-        };
-        unshadowed_pass->UpdateSubpassVAViews(i, { va_views, uint32_t(std::size(va_views)) });
-
-        const std::shared_ptr<View> ia_views[] = {
-          unshadowed_index_items,
-        };
-        unshadowed_pass->UpdateSubpassIAViews(i, { ia_views, uint32_t(std::size(ia_views)) });
-
-        const uint32_t ue_offsets[] = {
-          i * uint32_t(sizeof(Frustum)),
-        };
-        unshadowed_pass->UpdateSubpassSBOffsets(i, { ue_offsets, uint32_t(std::size(ue_offsets)) });
-
-        const std::shared_ptr<View> aa_views[] = {
-          arguments_views[i]
-        };
-        unshadowed_pass->UpdateSubpassAAViews(i, { aa_views, uint32_t(std::size(aa_views)) });
-
-        unshadowed_pass->SetSubpassLayout(i, unshadowed_layout);
-        unshadowed_pass->SetSubpassConfig(i, unshadowed_config);
-
-      }
-    }
+    return config;
   }
 
   void Spark::CreateShadowed(const std::shared_ptr<Device>& device)
   {
+    shadowed_config = CreateShadowedConfig(device);
+    shadowed_layout = CreateShadowedLayout(device);
+
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
-
-    const auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data");
-    {
-      shadowed_screen_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadowed_screen_data->SetByteOffset(0);
-      shadowed_screen_data->SetByteCount(uint32_t(-1));
-    }
-
-    const auto shadowed_camera_data = camera_data->CreateView("spark_shadowed_camera_data");
-    {
-      shadowed_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadowed_camera_data->SetByteOffset(0);
-      shadowed_camera_data->SetByteCount(uint32_t(-1));
-    }
-
-    const auto shadowed_shadow_data = shadow_data->CreateView("spark_shadowed_shadow_data");
-    {
-      shadowed_shadow_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadowed_shadow_data->SetByteOffset(0);
-      shadowed_shadow_data->SetByteCount(sizeof(Frustum));
-    }
-
-    const auto shadowed_instance_items = instance_items->CreateView("spark_shadowed_instance_items");
-    {
-      shadowed_instance_items->SetBind(View::BIND_CONSTANT_DATA);
-      shadowed_instance_items->SetByteOffset(0);
-      shadowed_instance_items->SetByteCount(sizeof(Instance));
-    }
-
-    const auto shadowed_texture0_items = texture0_items->CreateView("spark_shadowed_texture0_view");
-    {
-      shadowed_texture0_items->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto shadowed_texture1_items = texture1_items->CreateView("spark_shadowed_texture1_view");
-    {
-      shadowed_texture1_items->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto shadowed_texture2_items = texture2_items->CreateView("spark_shadowed_texture2_view");
-    {
-      shadowed_texture2_items->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto shadowed_texture3_items = texture3_items->CreateView("spark_shadowed_texture3_view");
-    {
-      shadowed_texture3_items->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map");
-    {
-      shadowed_shadow_map->SetBind(View::BIND_SHADER_RESOURCE);
-      shadowed_shadow_map->SetUsage(View::USAGE_CUBEMAP_LAYER);
-    }
 
     const auto shadowed_render_target = render_target->CreateView("spark_shadowed_render_target");
     {
@@ -810,6 +1058,47 @@ namespace RayGene3D
     {
       shadowed_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
     }
+
+
+    shadowed_pass = device->CreatePass("spark_shadowed");
+    shadowed_pass->SetType(Pass::TYPE_GRAPHIC);
+
+    const std::shared_ptr<View> rt_views[] = {
+      shadowed_render_target,
+    };
+    shadowed_pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
+
+    const std::shared_ptr<View> ds_views[] = {
+      shadowed_depth_stencil,
+    };
+    shadowed_pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
+
+    const Pass::RTValue rt_values[] = {
+      std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
+    };
+    shadowed_pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
+
+    const Pass::DSValue ds_values[] = {
+      { 1.0f, std::nullopt },
+    };
+    shadowed_pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
+
+    shadowed_pass->SetSubpassCount(1);
+
+    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
+    std::vector<Pass::Command> commands(instance_count);
+    for (uint32_t j = 0; j < instance_count; ++j)
+    {
+      const auto argument_view = raster_arguments->CreateView("spark_shadowed_raster_argument_" + std::to_string(j) + "_" + std::to_string(j));
+      argument_view->SetBind(View::BIND_COMMAND_INDIRECT);
+      argument_view->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
+      argument_view->SetByteCount(uint32_t(sizeof(Pass::Argument)));
+
+      commands[j].view = argument_view;
+      commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
+    }
+
+    shadowed_pass->UpdateSubpassCommands(0, { commands.data(), uint32_t(commands.size()) });
 
     const auto shadowed_vertex0_items = vertex0_items->CreateView("spark_shadowed_vertex0_items");
     {
@@ -831,192 +1120,38 @@ namespace RayGene3D
       shadowed_vertex3_items->SetBind(View::BIND_VERTEX_ARRAY);
     }
 
+    const std::shared_ptr<View> va_views[] = {
+      shadowed_vertex0_items,
+      shadowed_vertex1_items,
+      shadowed_vertex2_items,
+      shadowed_vertex3_items,
+    };
+    shadowed_pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
+
     const auto shadowed_index_items = triangle_items->CreateView("spark_shadowed_index_items");
     {
       shadowed_index_items->SetBind(View::BIND_INDEX_ARRAY);
     }
 
+    const std::shared_ptr<View> ia_views[] = {
+      shadowed_index_items,
+    };
+    shadowed_pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
 
-    shadowed_config = device->CreateConfig("spark_shadowed_config");
-    {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_advanced.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      const std::string source = shader_ss.str();
-      shadowed_config->SetSource(source);
-      shadowed_config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
-      shadowed_config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-      shadowed_config->SetIndexer(Config::INDEXER_32_BIT);
+    shadowed_pass->SetSubpassLayout(0, shadowed_layout);
+    shadowed_pass->SetSubpassConfig(0, shadowed_config);
 
-      //const Config::Attribute attributes[] = {
-      //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-      //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
-      //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-      //  { 0, 28, 64, FORMAT_R32_UINT, false },
-      //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-      //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
-      //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-      //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
-      //};
-
-      const Config::Attribute attributes[] = {
-        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
-        { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 1, 12, 16, FORMAT_R32_UINT, false },
-        { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 2, 12, 16, FORMAT_R32_FLOAT, false },
-        { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
-        { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
-      };
-      shadowed_config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-      shadowed_config->SetFillMode(Config::FILL_SOLID);
-      shadowed_config->SetCullMode(Config::CULL_BACK);
-      shadowed_config->SetClipEnabled(false);
-
-      const Config::Blend blends[] = {
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-      };
-      shadowed_config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-      shadowed_config->SetATCEnabled(false);
-
-      shadowed_config->SetDepthEnabled(true);
-      shadowed_config->SetDepthWrite(true);
-      shadowed_config->SetDepthComparison(Config::COMPARISON_LESS);
-
-      const Config::Viewport viewports[] = {
-        { 0.0f, 0.0f, float(extent_x), float(extent_y), 0.0f, 1.0f },
-      };
-      shadowed_config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
-    }
-
-    shadowed_layout = device->CreateLayout("spark_shadowed_layout");
-    {
-      const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-      { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
-      };
-      shadowed_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-
-      const std::shared_ptr<View> ub_views[] = {
-        shadowed_screen_data,
-        shadowed_camera_data,
-        shadowed_shadow_data,
-      };
-      shadowed_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
-
-      const std::shared_ptr<View> ue_views[] = {
-        shadowed_instance_items
-      };
-      shadowed_layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
-
-      const std::shared_ptr<View> ri_views[] = {
-        shadowed_texture0_items,
-        shadowed_texture1_items,
-        shadowed_texture2_items,
-        shadowed_texture3_items,
-        shadowed_shadow_map,
-      };
-      shadowed_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
-    }
-
-    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::vector<std::shared_ptr<View>> arguments_views(instance_count);
-    for (uint32_t i = 0; i < uint32_t(arguments_views.size()); ++i)
-    {
-      const auto stride = uint32_t(sizeof(Pass::Graphic));
-
-      auto arguments_view = raster_arguments->CreateView("shadow_map_raster_arguments_" + std::to_string(i));
-      arguments_view->SetBind(View::BIND_COMMAND_INDIRECT);
-      arguments_view->SetByteOffset(i * stride);
-      arguments_view->SetByteCount(stride);
-
-      arguments_views[i] = arguments_view;
-    }
-
-
-    shadowed_pass = device->CreatePass("spark_shadowed");
-    shadowed_pass->SetType(Pass::TYPE_GRAPHIC);
-    {
-      shadowed_pass->SetEnabled(true);
-
-      const std::shared_ptr<View> rt_views[] = {
-        shadowed_render_target,
-      };
-      shadowed_pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-      const std::shared_ptr<View> ds_views[] = {
-        shadowed_depth_stencil,
-      };
-      shadowed_pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-      const Pass::RTValue rt_values[] = {
-        std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
-      };
-      shadowed_pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-      const Pass::DSValue ds_values[] = {
-        { 1.0f, std::nullopt },
-      };
-      shadowed_pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-      shadowed_pass->SetSubpassCount(arguments_views.size());
-      for (uint32_t i = 0; i < arguments_views.size(); ++i)
-      {
-        const std::shared_ptr<View> va_views[] = {
-          shadowed_vertex0_items,
-          shadowed_vertex1_items,
-          shadowed_vertex2_items,
-          shadowed_vertex3_items,
-        };
-        shadowed_pass->UpdateSubpassVAViews(i, { va_views, uint32_t(std::size(va_views)) });
-
-        const std::shared_ptr<View> ia_views[] = {
-          shadowed_index_items,
-        };
-        shadowed_pass->UpdateSubpassIAViews(i, { ia_views, uint32_t(std::size(ia_views)) });
-
-        const uint32_t ue_offsets[] = {
-          i * uint32_t(sizeof(Frustum)),
-        };
-        shadowed_pass->UpdateSubpassSBOffsets(i, { ue_offsets, uint32_t(std::size(ue_offsets)) });
-
-        const std::shared_ptr<View> aa_views[] = {
-          arguments_views[i]
-        };
-        shadowed_pass->UpdateSubpassAAViews(i, { aa_views, uint32_t(std::size(aa_views)) });
-
-        shadowed_pass->SetSubpassLayout(i, shadowed_layout);
-        shadowed_pass->SetSubpassConfig(i, shadowed_config);
-
-      }
-    }
+    shadowed_pass->SetEnabled(true);
+    
   }
 
   void Spark::CreateEnvironment(const std::shared_ptr<Device>& device)
   {
+    environment_config = CreateEnvironmentConfig(device);
+    environment_layout = CreateEnvironmentLayout(device);
+
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
-
-    environment_vtx_data = device->CreateResource("spark_environment_vtx_data");
-    {
-      environment_vtx_data->SetType(Resource::TYPE_BUFFER);
-      environment_vtx_data->SetStride(uint32_t(sizeof(glm::f32vec4)));
-      environment_vtx_data->SetCount(uint32_t(environment_vtx.size()));
-      environment_vtx_data->SetInteropCount(1);
-      environment_vtx_data->SetInteropItem(0, std::pair(environment_vtx.data(), uint32_t(environment_vtx.size() * sizeof(glm::f32vec4))));
-    }
-
-    environment_idx_data = device->CreateResource("spark_environment_idx_data");
-    {
-      environment_idx_data->SetType(Resource::TYPE_BUFFER);
-      environment_idx_data->SetStride(uint32_t(sizeof(glm::u32vec3)));
-      environment_idx_data->SetCount(uint32_t(environment_idx.size()));
-      environment_idx_data->SetInteropCount(1);
-      environment_idx_data->SetInteropItem(0, std::pair(environment_idx.data(), uint32_t(environment_idx.size() * sizeof(glm::u32vec3))));
-    }
 
     const auto environment_render_target = render_target->CreateView("spark_environment_render_target");
     {
@@ -1026,89 +1161,6 @@ namespace RayGene3D
     const auto environment_depth_stencil = depth_stencil->CreateView("spark_environment_depth_stencil");
     {
       environment_depth_stencil->SetBind(View::BIND_DEPTH_STENCIL);
-    }
-
-    const auto environment_screen_data = screen_data->CreateView("spark_environment_screen_data");
-    {
-      environment_screen_data->SetBind(View::BIND_CONSTANT_DATA);
-    }
-
-    const auto environment_camera_data = camera_data->CreateView("spark_environment_camera_data");
-    {
-      environment_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-    }
-
-    const auto environment_item_view = environment_item->CreateView("spark_environment_item_view");
-    {
-      environment_item_view->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto environment_vtx_items = environment_vtx_data->CreateView("spark_environment_vtx_items");
-    {
-      environment_vtx_items->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const auto environment_idx_items = environment_idx_data->CreateView("spark_environment_idx_items");
-    {
-      environment_idx_items->SetBind(View::BIND_INDEX_ARRAY);
-    }
-
-    environment_config = device->CreateConfig("spark_environment_config");
-    {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      const auto source = shader_ss.str();
-
-      environment_config->SetSource(source);
-      environment_config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
-      environment_config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-      environment_config->SetIndexer(Config::INDEXER_32_BIT);
-
-      const Config::Attribute attributes[] = {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
-      };
-      environment_config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-      environment_config->SetFillMode(Config::FILL_SOLID);
-      environment_config->SetCullMode(Config::CULL_NONE);
-      environment_config->SetClipEnabled(false);
-
-      const Config::Blend blends[] = {
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-      };
-      environment_config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-      environment_config->SetATCEnabled(false);
-
-      environment_config->SetDepthEnabled(true);
-      environment_config->SetDepthWrite(false);
-      environment_config->SetDepthComparison(Config::COMPARISON_EQUAL);
-
-      const Config::Viewport viewports[] = {
-        { 0.0f, 0.0f, float(extent_x), float(extent_y), 0.0f, 1.0f },
-      };
-      environment_config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
-    }
-
-    environment_layout = device->CreateLayout("spark_environment_layout");
-    {
-      const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-      };
-      environment_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-
-      const std::shared_ptr<View> ub_views[] = {
-        environment_screen_data,
-        environment_camera_data,
-      };
-      environment_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
-
-      const std::shared_ptr<View> ri_views[] = {
-        environment_item_view,
-      };
-      environment_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
     }
 
     environment_pass = device->CreatePass("spark_environment");
@@ -1137,26 +1189,32 @@ namespace RayGene3D
       };
       environment_pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
 
+      Pass::Command commands[] = {
+        {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
+      };
+
+      environment_pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
+
+      const auto environment_vtx_items = environment_vtx_data->CreateView("spark_environment_vtx_items");
+      {
+        environment_vtx_items->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
       const std::shared_ptr<View> va_views[] = {
         environment_vtx_items,
       };
       environment_pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
 
+
+      const auto environment_idx_items = environment_idx_data->CreateView("spark_environment_idx_items");
+      {
+        environment_idx_items->SetBind(View::BIND_INDEX_ARRAY);
+      }
+
       const std::shared_ptr<View> ia_views[] = {
         environment_idx_items,
       };
       environment_pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
-
-      //const std::shared_ptr<View> aa_views[] = {
-      //  arguments_view,
-      //};
-      //environment_pass->UpdateSubpassAAViews(0, { aa_views, uint32_t(std::size(aa_views)) });
-
-      Pass::Graphic environment_tasks[] = {
-        {6, 1, 0, 0, 0},
-      };
-
-      environment_pass->UpdateSubpassGraphicTasks(0, { environment_tasks, uint32_t(std::size(environment_tasks)) });
 
       environment_pass->SetSubpassLayout(0, environment_layout);
       environment_pass->SetSubpassConfig(0, environment_config);
@@ -1165,6 +1223,9 @@ namespace RayGene3D
 
   void Spark::CreatePresent(const std::shared_ptr<Device>& device)
   {
+    present_config = CreatePresentConfig(device);
+    present_layout = CreatePresentLayout(device);
+
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
 
@@ -1175,19 +1236,7 @@ namespace RayGene3D
     //  present_frame_output->SetLayerCount(uint32_t(-1));
     //}
 
-    auto present_camera_data = camera_data->CreateView("spark_present_camera_data");
-    {
-      present_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      present_camera_data->SetByteOffset(0);
-      present_camera_data->SetByteCount(uint32_t(-1));
-    }
 
-    auto present_render_target = render_target->CreateView("spark_present_render_target");
-    {
-      present_render_target->SetBind(View::BIND_SHADER_RESOURCE);
-      present_render_target->SetLayerOffset(0);
-      present_render_target->SetLayerCount(uint32_t(-1));
-    }
 
     auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments");
     {
@@ -1196,39 +1245,9 @@ namespace RayGene3D
       present_compute_arguments->SetByteCount(uint32_t(-1));
     }
 
-    present_config = device->CreateConfig("spark_present_config");
-    {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      const std::string cs_source = shader_ss.str();
 
-      present_config->SetSource(cs_source);
-      present_config->SetCompilation(Config::COMPILATION_CS);
-    }
 
-    present_layout = device->CreateLayout("spark_present_layout");
-    {
-      const std::shared_ptr<View> ub_views[] = {
-        present_camera_data,
-      };
-      present_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
-      present_layout->UpdateRBViews({});
-
-      present_layout->UpdateWBViews({});
-
-      const std::shared_ptr<View> ri_views[] = {
-        present_render_target,
-      };
-      present_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
-
-      const std::shared_ptr<View> wi_views[] = {
-        output_view,
-      };
-      present_layout->UpdateWIViews({ wi_views, uint32_t(std::size(wi_views)) });
-    }
 
     present_pass = device->CreatePass("spark_present_screen");
     {
@@ -1236,10 +1255,10 @@ namespace RayGene3D
       present_pass->SetSubpassCount(1);
       present_pass->SetEnabled(true);
 
-      const std::shared_ptr<View> aa_views[] = {
-        present_compute_arguments,
+      Pass::Command commands[] = {
+        {present_compute_arguments},
       };
-      present_pass->UpdateSubpassAAViews(0, { aa_views, uint32_t(std::size(aa_views)) });
+      present_pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
 
       present_pass->SetSubpassLayout(0, present_layout);
       present_pass->SetSubpassConfig(0, present_config);
@@ -1402,7 +1421,7 @@ namespace RayGene3D
 
 
     {
-      auto graphic_arg = reinterpret_cast<Pass::Graphic*>(raster_arguments->Map());
+      auto graphic_arg = reinterpret_cast<Pass::Argument*>(raster_arguments->Map());
 
       const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
@@ -1414,6 +1433,26 @@ namespace RayGene3D
         graphic_arg[i].ins_offset = 0;
       }
       raster_arguments->Unmap();
+
+      //for (uint32_t i = 0; i < 6; ++i)
+      //{
+      //  shadowmap_passes[i]->SetSubpassCount(1);
+      //  for (uint32_t j = 0; j < instance_count; ++j)
+      //  {
+      //    const uint32_t ue_offsets[] = {
+      //      i * uint32_t(sizeof(Frustum)),
+      //    };
+      //    shadowmap_passes[i]->UpdateSubpassSBOffsets(j, { ue_offsets, uint32_t(std::size(ue_offsets)) });
+
+      //    Pass::Graphic shadowmap_tasks[] = {
+      //      {instance_data[i].prim_count * 3, 1, instance_data[i].prim_offset * 3, instance_data[i].vert_offset * 1, 0},
+      //    };
+      //    shadowmap_passes[i]->UpdateSubpassGraphicTasks(j, { shadowmap_tasks, uint32_t(std::size(shadowmap_tasks)) });
+
+      //    shadowmap_passes[i]->SetSubpassLayout(j, shadowmap_layout);
+      //    shadowmap_passes[i]->SetSubpassConfig(j, shadowmap_config);
+      //  }
+      //}
     }
 
     //auto environment_arg = reinterpret_cast<Pass::Graphic*>(environment_arguments->Map());
@@ -1431,7 +1470,7 @@ namespace RayGene3D
       const auto extent_x = prop_extent_x->GetUint();
       const auto extent_y = prop_extent_y->GetUint();
 
-      auto compute_arg = reinterpret_cast<Pass::Compute*>(compute_arguments->Map());
+      auto compute_arg = reinterpret_cast<Pass::Argument*>(compute_arguments->Map());
       {
         compute_arg->grid_x = extent_x / 8;
         compute_arg->grid_y = extent_y / 8;
