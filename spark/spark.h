@@ -70,17 +70,6 @@ namespace RayGene3D
 
     std::shared_ptr<Resource> light_maps;
 
-    std::array<glm::f32vec4, 4> quad_vtx = {
-      glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
-      glm::f32vec4( 1.0f, 1.0f, 1.0f, 0.0f),
-      glm::f32vec4(-1.0f,-1.0f, 0.0f, 1.0f),
-      glm::f32vec4( 1.0f,-1.0f, 1.0f, 1.0f),
-    };
-    std::array<glm::u32vec3, 2> quad_idx = {
-      glm::u32vec3(0u, 1u, 2u),
-      glm::u32vec3(3u, 2u, 1u),
-    };
-
     std::shared_ptr<Resource> skybox_vertices;
     std::shared_ptr<Resource> skybox_triangles;
     std::shared_ptr<Resource> skybox_texture;
@@ -167,96 +156,54 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   protected:
-  //  void CreateResources();
-  //  void CreatePasses();
-  //  void InitializeResources();
-  //  void InitializePasses();
-  //  void DiscardResources();
-  //  void DiscardPasses();
-  //  void DestroyResources();
-  //  void DestroyPasses();
+    std::shared_ptr<Resource> RegisterColorTarget(const std::string& name);
+    std::shared_ptr<Resource> RegisterDepthTarget(const std::string& name);
+    std::shared_ptr<Resource> RegisterShadowMap(const std::string& name);
 
-  //protected:
-  //  void CreateAttachments();
-  //  void CreateConstants();
-  //  void CreateGeometries();
-  //  void CreateTextures();
-  //  void CreateArguments();
+    std::shared_ptr<Resource> RegisterScreenData(const std::string& name);
+    std::shared_ptr<Resource> RegisterCameraData(const std::string& name);
+    std::shared_ptr<Resource> RegisterShadowData(const std::string& name);
 
-    std::shared_ptr<Resource> ConfigureColorTarget(const std::string& name);
-    std::shared_ptr<Resource> ConfigureDepthTarget(const std::string& name);
-    std::shared_ptr<Resource> ConfigureShadowMap(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneInstances(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneTriangles(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneVertices0(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneVertices1(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneVertices2(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneVertices3(const std::string& name);
 
-    std::shared_ptr<Resource> ConfigureScreenData(const std::string& name);
-    std::shared_ptr<Resource> ConfigureCameraData(const std::string& name);
-    std::shared_ptr<Resource> ConfigureShadowData(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneTextures0(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneTextures1(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneTextures2(const std::string& name);
+    std::shared_ptr<Resource> RegisterSceneTextures3(const std::string& name);
 
-    std::shared_ptr<Resource> ConfigureSceneInstances(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSceneTriangles(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSceneVertices0(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSceneVertices1(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSceneVertices2(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSceneVertices3(const std::string& name);
+    std::shared_ptr<Resource> RegisterLightMaps(const std::string& name);
 
-    std::shared_ptr<Resource> ConfigureSceneTextures0(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSceneTextures1(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSceneTextures2(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSceneTextures3(const std::string& name);
+    std::shared_ptr<Resource> RegisterSkyboxVertices(const std::string& name);
+    std::shared_ptr<Resource> RegisterSkyboxTriangles(const std::string& name);
+    std::shared_ptr<Resource> RegisterSkyboxTexture(const std::string& name);
 
-    std::shared_ptr<Resource> ConfigureLightMaps(const std::string& name);
+    std::shared_ptr<Resource> RegisterGraphicArguments(const std::string& name);
+    std::shared_ptr<Resource> RegisterComputeArguments(const std::string& name);
 
-    std::shared_ptr<Resource> ConfigureSkyboxVertices(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSkyboxTriangles(const std::string& name);
-    std::shared_ptr<Resource> ConfigureSkyboxTexture(const std::string& name);
+    std::shared_ptr<Layout> RegisterShadowmapLayout(const std::string& name);
+    std::shared_ptr<Config> RegisterShadowmapConfig(const std::string& name);
+    std::shared_ptr<Pass> RegisterShadowmapPass(const std::string& name, uint32_t index);
 
-    std::shared_ptr<Resource> ConfigureGraphicArguments(const std::string& name);
-    std::shared_ptr<Resource> ConfigureComputeArguments(const std::string& name);
+    std::shared_ptr<Layout> RegisterShadowedLayout(const std::string& name);
+    std::shared_ptr<Config> RegisterShadowedConfig(const std::string& name);
+    std::shared_ptr<Pass> RegisterShadowedPass(const std::string& name);
 
-    std::shared_ptr<Layout> ConfigureShadowmapLayout(const std::string& name);
-    std::shared_ptr<Config> ConfigureShadowmapConfig(const std::string& name);
-    std::shared_ptr<Pass> ConfigureShadowmapPass(const std::string& name, uint32_t index);
+    std::shared_ptr<Layout> RegisterUnshadowedLayout(const std::string& name);
+    std::shared_ptr<Config> RegisterUnshadowedConfig(const std::string& name);
+    std::shared_ptr<Pass> RegisterUnshadowedPass(const std::string& name);
 
-    std::shared_ptr<Layout> ConfigureShadowedLayout(const std::string& name);
-    std::shared_ptr<Config> ConfigureShadowedConfig(const std::string& name);
-    std::shared_ptr<Pass> ConfigureShadowedPass(const std::string& name);
+    std::shared_ptr<Layout> RegisterSkyboxLayout(const std::string& name);
+    std::shared_ptr<Config> RegisterSkyboxConfig(const std::string& name);
+    std::shared_ptr<Pass> RegisterSkyboxPass(const std::string& name);
 
-    std::shared_ptr<Layout> ConfigureUnshadowedLayout(const std::string& name);
-    std::shared_ptr<Config> ConfigureUnshadowedConfig(const std::string& name);
-    std::shared_ptr<Pass> ConfigureUnshadowedPass(const std::string& name);
-
-    std::shared_ptr<Layout> ConfigureSkyboxLayout(const std::string& name);
-    std::shared_ptr<Config> ConfigureSkyboxConfig(const std::string& name);
-    std::shared_ptr<Pass> ConfigureSkyboxPass(const std::string& name);
-
-    std::shared_ptr<Layout> ConfigurePresentLayout(const std::string& name);
-    std::shared_ptr<Config> ConfigurePresentConfig(const std::string& name);
-    std::shared_ptr<Pass> ConfigurePresentPass(const std::string& name);
-
-    //void CreateShadowmap();
-    //void CreateUnshadowed();
-    //void CreateShadowed();
-    //void CreateEnvironment();
-    //void CreatePresent();
-
-    //void CreateResources();
-    //void CreateLayouts();
-    //void CreateConfigs();
-    //void CreatePasses();
-
-
-
-
-
-    //void InitializeShadow();
-    //void InitializeSimple();
-    //void InitializeAdvanced();
-    //void InitializeEnvironment();
-    //void InitializePresent();
-
-    //void DiscardRaster();
-    //void DiscardTracer();
-    //void DiscardPresent();
-    //void DiscardResources();
+    std::shared_ptr<Layout> RegisterPresentLayout(const std::string& name);
+    std::shared_ptr<Config> RegisterPresentConfig(const std::string& name);
+    std::shared_ptr<Pass> RegisterPresentPass(const std::string& name);
 
   public:
     void Initialize() override;
