@@ -459,9 +459,7 @@ namespace RayGene3D
       prop_camera->SetObjectItem("n_plane", prop_n_plane);
       prop_camera->SetObjectItem("f_plane", prop_f_plane);
 
-      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*core));
-      spark->AccessRootProperty() = property;
-      spark->AccessOutputView() = backbuffer_ua_view;
+      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(property, device, backbuffer_ua_view));
       spark->Initialize();
       spark->SetShadowType(Spark::NO_SHADOWS);
 
