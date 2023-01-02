@@ -43,7 +43,7 @@ VK_BINDING(3) cbuffer constant2 : register(b2)
 
 VK_BINDING(4) cbuffer constant3 : register(b3)
 {
-  float4x3 transform2  : packoffset(c0.x);
+  float4x3 transform  : packoffset(c0.x);
 
   uint prim_offset    : packoffset(c3.x);
   uint prim_count     : packoffset(c3.y);
