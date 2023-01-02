@@ -724,15 +724,15 @@ namespace RayGene3D
       unshadowed_color_target->SetBind(View::BIND_RENDER_TARGET);
     }
 
-    const auto unshadowed_depth_target = depth_target->CreateView("spark_unshadowed_depth_target");
-    {
-      unshadowed_depth_target->SetBind(View::BIND_DEPTH_STENCIL);
-    }
-
     const std::shared_ptr<View> rt_views[] = {
       unshadowed_color_target,
     };
     pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
+
+    const auto unshadowed_depth_target = depth_target->CreateView("spark_unshadowed_depth_target");
+    {
+      unshadowed_depth_target->SetBind(View::BIND_DEPTH_STENCIL);
+    }
 
     const std::shared_ptr<View> ds_views[] = {
       unshadowed_depth_target,
@@ -749,63 +749,95 @@ namespace RayGene3D
     };
     pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
 
-    pass->SetSubpassCount(1);
+    pass->SetSubpassCount(ShadingSubpass::SUBPASS_MAX_COUNT);
 
-    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::vector<Pass::Command> commands(instance_count);
-    for (uint32_t j = 0; j < instance_count; ++j)
     {
-      const auto unshadowed_graphic_argument = graphic_arguments->CreateView("spark_unshadowed_graphic_argument_" + std::to_string(j));
-      unshadowed_graphic_argument->SetBind(View::BIND_COMMAND_INDIRECT);
-      unshadowed_graphic_argument->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
-      unshadowed_graphic_argument->SetByteCount(uint32_t(sizeof(Pass::Argument)));
+      const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
+      std::vector<Pass::Command> commands(instance_count);
+      for (uint32_t j = 0; j < instance_count; ++j)
+      {
+        const auto unshadowed_graphic_argument = graphic_arguments->CreateView("spark_unshadowed_graphic_argument_" + std::to_string(j));
+        unshadowed_graphic_argument->SetBind(View::BIND_COMMAND_INDIRECT);
+        unshadowed_graphic_argument->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
+        unshadowed_graphic_argument->SetByteCount(uint32_t(sizeof(Pass::Argument)));
 
-      commands[j].view = unshadowed_graphic_argument;
-      commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
+        commands[j].view = unshadowed_graphic_argument;
+        commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
+      }
+
+      pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_OPAQUE, { commands.data(), uint32_t(commands.size()) });
+
+      const auto unshadowed_scene_vertices0 = scene_vertices0->CreateView("spark_unshadowed_scene_vertices0");
+      {
+        unshadowed_scene_vertices0->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const auto unshadowed_scene_vertices1 = scene_vertices1->CreateView("spark_unshadowed_scene_vertices1");
+      {
+        unshadowed_scene_vertices1->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const auto unshadowed_scene_vertices2 = scene_vertices2->CreateView("spark_unshadowed_scene_vertices2");
+      {
+        unshadowed_scene_vertices2->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const auto unshadowed_scene_vertices3 = scene_vertices3->CreateView("spark_unshadowed_scene_vertices3");
+      {
+        unshadowed_scene_vertices3->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const std::shared_ptr<View> va_views[] = {
+        unshadowed_scene_vertices0,
+        unshadowed_scene_vertices1,
+        unshadowed_scene_vertices2,
+        unshadowed_scene_vertices3,
+      };
+      pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_OPAQUE, { va_views, uint32_t(std::size(va_views)) });
+
+      const auto unshadowed_scene_triangles = scene_triangles->CreateView("spark_unshadowed_scene_triangles");
+      {
+        unshadowed_scene_triangles->SetBind(View::BIND_INDEX_ARRAY);
+      }
+
+      const std::shared_ptr<View> ia_views[] = {
+        unshadowed_scene_triangles,
+      };
+      pass->UpdateSubpassIAViews(ShadingSubpass::SUBPASS_OPAQUE, { ia_views, uint32_t(std::size(ia_views)) });
+
+      pass->SetSubpassLayout(ShadingSubpass::SUBPASS_OPAQUE, unshadowed_layout);
+      pass->SetSubpassConfig(ShadingSubpass::SUBPASS_OPAQUE, unshadowed_config);
     }
 
-    pass->UpdateSubpassCommands(0, { commands.data(), uint32_t(commands.size()) });
-
-    const auto unshadowed_scene_vertices0 = scene_vertices0->CreateView("spark_unshadowed_scene_vertices0");
     {
-      unshadowed_scene_vertices0->SetBind(View::BIND_VERTEX_ARRAY);
+      Pass::Command commands[] = {
+        {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
+      };
+      pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_SKYBOX, { commands, uint32_t(std::size(commands)) });
+
+      const auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices");
+      {
+        skybox_skybox_vertices->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const std::shared_ptr<View> va_views[] = {
+        skybox_skybox_vertices,
+      };
+      pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_SKYBOX, { va_views, uint32_t(std::size(va_views)) });
+
+      const auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles");
+      {
+        skybox_skybox_triangles->SetBind(View::BIND_INDEX_ARRAY);
+      }
+
+      const std::shared_ptr<View> ia_views[] = {
+        skybox_skybox_triangles,
+      };
+      pass->UpdateSubpassIAViews(ShadingSubpass::SUBPASS_SKYBOX, { ia_views, uint32_t(std::size(ia_views)) });
+
+      pass->SetSubpassLayout(ShadingSubpass::SUBPASS_SKYBOX, skybox_layout);
+      pass->SetSubpassConfig(ShadingSubpass::SUBPASS_SKYBOX, skybox_config);
     }
-
-    const auto unshadowed_scene_vertices1 = scene_vertices1->CreateView("spark_unshadowed_scene_vertices1");
-    {
-      unshadowed_scene_vertices1->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const auto unshadowed_scene_vertices2 = scene_vertices2->CreateView("spark_unshadowed_scene_vertices2");
-    {
-      unshadowed_scene_vertices2->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const auto unshadowed_scene_vertices3 = scene_vertices3->CreateView("spark_unshadowed_scene_vertices3");
-    {
-      unshadowed_scene_vertices3->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const std::shared_ptr<View> va_views[] = {
-      unshadowed_scene_vertices0,
-      unshadowed_scene_vertices1,
-      unshadowed_scene_vertices2,
-      unshadowed_scene_vertices3,
-    };
-    pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
-
-    const auto unshadowed_scene_triangles = scene_triangles->CreateView("spark_unshadowed_scene_triangles");
-    {
-      unshadowed_scene_triangles->SetBind(View::BIND_INDEX_ARRAY);
-    }
-
-    const std::shared_ptr<View> ia_views[] = {
-      unshadowed_scene_triangles,
-    };
-    pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
-
-    pass->SetSubpassLayout(0, unshadowed_layout);
-    pass->SetSubpassConfig(0, unshadowed_config);
 
     return pass;
   }
@@ -996,63 +1028,95 @@ namespace RayGene3D
     };
     pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
 
-    pass->SetSubpassCount(1);
+    pass->SetSubpassCount(ShadingSubpass::SUBPASS_MAX_COUNT);
 
-    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::vector<Pass::Command> commands(instance_count);
-    for (uint32_t j = 0; j < instance_count; ++j)
     {
-      const auto shadowed_graphic_arguments = graphic_arguments->CreateView("spark_shadowed_graphic_arguments_" + std::to_string(j));
-      shadowed_graphic_arguments->SetBind(View::BIND_COMMAND_INDIRECT);
-      shadowed_graphic_arguments->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
-      shadowed_graphic_arguments->SetByteCount(uint32_t(sizeof(Pass::Argument)));
+      const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
+      std::vector<Pass::Command> commands(instance_count);
+      for (uint32_t j = 0; j < instance_count; ++j)
+      {
+        const auto shadowed_graphic_arguments = graphic_arguments->CreateView("spark_shadowed_graphic_arguments_" + std::to_string(j));
+        shadowed_graphic_arguments->SetBind(View::BIND_COMMAND_INDIRECT);
+        shadowed_graphic_arguments->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
+        shadowed_graphic_arguments->SetByteCount(uint32_t(sizeof(Pass::Argument)));
 
-      commands[j].view = shadowed_graphic_arguments;
-      commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
+        commands[j].view = shadowed_graphic_arguments;
+        commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
+      }
+
+      pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_OPAQUE, { commands.data(), uint32_t(commands.size()) });
+
+      const auto shadowed_scene_vertices0 = scene_vertices0->CreateView("spark_shadowed_scene_vertices0");
+      {
+        shadowed_scene_vertices0->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const auto shadowed_scene_vertices1 = scene_vertices1->CreateView("spark_shadowed_scene_vertices1");
+      {
+        shadowed_scene_vertices1->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const auto shadowed_scene_vertices2 = scene_vertices2->CreateView("spark_shadowed_scene_vertices2");
+      {
+        shadowed_scene_vertices2->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const auto shadowed_scene_vertices3 = scene_vertices3->CreateView("spark_shadowed_scene_vertices3");
+      {
+        shadowed_scene_vertices3->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const std::shared_ptr<View> va_views[] = {
+        shadowed_scene_vertices0,
+        shadowed_scene_vertices1,
+        shadowed_scene_vertices2,
+        shadowed_scene_vertices3,
+      };
+      pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_OPAQUE, { va_views, uint32_t(std::size(va_views)) });
+
+      const auto shadowed_scene_triangles = scene_triangles->CreateView("spark_shadowed_scene_triangles");
+      {
+        shadowed_scene_triangles->SetBind(View::BIND_INDEX_ARRAY);
+      }
+
+      const std::shared_ptr<View> ia_views[] = {
+        shadowed_scene_triangles,
+      };
+      pass->UpdateSubpassIAViews(ShadingSubpass::SUBPASS_OPAQUE, { ia_views, uint32_t(std::size(ia_views)) });
+
+      pass->SetSubpassLayout(ShadingSubpass::SUBPASS_OPAQUE, shadowed_layout);
+      pass->SetSubpassConfig(ShadingSubpass::SUBPASS_OPAQUE, shadowed_config);
     }
 
-    pass->UpdateSubpassCommands(0, { commands.data(), uint32_t(commands.size()) });
-
-    const auto shadowed_scene_vertices0 = scene_vertices0->CreateView("spark_shadowed_scene_vertices0");
     {
-      shadowed_scene_vertices0->SetBind(View::BIND_VERTEX_ARRAY);
+      Pass::Command commands[] = {
+        {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
+      };
+      pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_SKYBOX, { commands, uint32_t(std::size(commands)) });
+
+      const auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices");
+      {
+        skybox_skybox_vertices->SetBind(View::BIND_VERTEX_ARRAY);
+      }
+
+      const std::shared_ptr<View> va_views[] = {
+        skybox_skybox_vertices,
+      };
+      pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_SKYBOX, { va_views, uint32_t(std::size(va_views)) });
+
+      const auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles");
+      {
+        skybox_skybox_triangles->SetBind(View::BIND_INDEX_ARRAY);
+      }
+
+      const std::shared_ptr<View> ia_views[] = {
+        skybox_skybox_triangles,
+      };
+      pass->UpdateSubpassIAViews(ShadingSubpass::SUBPASS_SKYBOX, { ia_views, uint32_t(std::size(ia_views)) });
+
+      pass->SetSubpassLayout(ShadingSubpass::SUBPASS_SKYBOX, skybox_layout);
+      pass->SetSubpassConfig(ShadingSubpass::SUBPASS_SKYBOX, skybox_config);
     }
-
-    const auto shadowed_scene_vertices1 = scene_vertices1->CreateView("spark_shadowed_scene_vertices1");
-    {
-      shadowed_scene_vertices1->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const auto shadowed_scene_vertices2 = scene_vertices2->CreateView("spark_shadowed_scene_vertices2");
-    {
-      shadowed_scene_vertices2->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const auto shadowed_scene_vertices3 = scene_vertices3->CreateView("spark_shadowed_scene_vertices3");
-    {
-      shadowed_scene_vertices3->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const std::shared_ptr<View> va_views[] = {
-      shadowed_scene_vertices0,
-      shadowed_scene_vertices1,
-      shadowed_scene_vertices2,
-      shadowed_scene_vertices3,
-    };
-    pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
-
-    const auto shadowed_scene_triangles = scene_triangles->CreateView("spark_shadowed_scene_triangles");
-    {
-      shadowed_scene_triangles->SetBind(View::BIND_INDEX_ARRAY);
-    }
-
-    const std::shared_ptr<View> ia_views[] = {
-      shadowed_scene_triangles,
-    };
-    pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
-
-    pass->SetSubpassLayout(0, shadowed_layout);
-    pass->SetSubpassConfig(0, shadowed_config);
 
     return pass;
   }
@@ -1176,12 +1240,11 @@ namespace RayGene3D
     };
     pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
 
+    pass->SetSubpassCount(1);
+
     Pass::Command commands[] = {
       {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
     };
-
-    pass->SetSubpassCount(1);
-
     pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
 
     const auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices");
@@ -1325,28 +1388,26 @@ namespace RayGene3D
     compute_arguments->Initialize();
 
     shadowmap_layout->Initialize();
+    unshadowed_layout->Initialize();
+    shadowed_layout->Initialize();
+    skybox_layout->Initialize();
+    present_layout->Initialize();
+
     shadowmap_config->Initialize();
+    unshadowed_config->Initialize();
+    shadowed_config->Initialize();
+    skybox_config->Initialize();
+    present_config->Initialize();
+
     shadowmap_passes[0]->Initialize();
     shadowmap_passes[1]->Initialize();
     shadowmap_passes[2]->Initialize();
     shadowmap_passes[3]->Initialize();
     shadowmap_passes[4]->Initialize();
-    shadowmap_passes[5]->Initialize();
-    
-    unshadowed_layout->Initialize();
-    unshadowed_config->Initialize();
+    shadowmap_passes[5]->Initialize();    
     unshadowed_pass->Initialize();
-    
-    shadowed_layout->Initialize();
-    shadowed_config->Initialize();
     shadowed_pass->Initialize();
-    
-    skybox_layout->Initialize();
-    skybox_config->Initialize();
-    skybox_pass->Initialize();
-    
-    present_layout->Initialize();
-    present_config->Initialize();
+    //skybox_pass->Initialize();
     present_pass->Initialize();
   }
 
@@ -1365,7 +1426,7 @@ namespace RayGene3D
       shadowmap_passes[5]->SetEnabled(false);
       unshadowed_pass->SetEnabled(true);
       shadowed_pass->SetEnabled(false);
-      skybox_pass->SetEnabled(true);
+      //skybox_pass->SetEnabled(true);
       present_pass->SetEnabled(true);
       break;
     }
@@ -1379,7 +1440,7 @@ namespace RayGene3D
       shadowmap_passes[5]->SetEnabled(true);
       unshadowed_pass->SetEnabled(false);
       shadowed_pass->SetEnabled(true);
-      skybox_pass->SetEnabled(true);
+      //skybox_pass->SetEnabled(true);
       present_pass->SetEnabled(true);
       break;
     }
@@ -1393,7 +1454,7 @@ namespace RayGene3D
       shadowmap_passes[5]->SetEnabled(false);
       unshadowed_pass->SetEnabled(false);
       shadowed_pass->SetEnabled(false);
-      skybox_pass->SetEnabled(false);
+      //skybox_pass->SetEnabled(false);
       present_pass->SetEnabled(false);
       break;
     }
@@ -1560,28 +1621,26 @@ namespace RayGene3D
     compute_arguments->Discard();
 
     shadowmap_layout->Discard();
+    unshadowed_layout->Discard();
+    shadowed_layout->Discard();
+    skybox_layout->Discard();
+    present_layout->Discard();
+
     shadowmap_config->Discard();
+    unshadowed_config->Discard();
+    shadowed_config->Discard();
+    skybox_config->Discard();
+    present_config->Discard();
+
     shadowmap_passes[0]->Discard();
     shadowmap_passes[1]->Discard();
     shadowmap_passes[2]->Discard();
     shadowmap_passes[3]->Discard();
     shadowmap_passes[4]->Discard();
     shadowmap_passes[5]->Discard();
-
-    unshadowed_layout->Discard();
-    unshadowed_config->Discard();
     unshadowed_pass->Discard();
-
-    shadowed_layout->Discard();
-    shadowed_config->Discard();
     shadowed_pass->Discard();
-
-    skybox_layout->Discard();
-    skybox_config->Discard();
-    skybox_pass->Discard();
-
-    present_layout->Discard();
-    present_config->Discard();
+    //skybox_pass->Discard();
     present_pass->Discard();
   }
 
@@ -1659,28 +1718,26 @@ namespace RayGene3D
     compute_arguments = RegisterComputeArguments("spark_compute_arguments");
 
     shadowmap_layout = RegisterShadowmapLayout("spark_shadowmap_layout");
+    shadowed_layout = RegisterShadowedLayout("spark_shadowed_layout");
+    unshadowed_layout = RegisterUnshadowedLayout("spark_unshadowed_layout");
+    skybox_layout = RegisterSkyboxLayout("spark_skybox_layout");
+    present_layout = RegisterPresentLayout("spark_present_layout");
+
     shadowmap_config = RegisterShadowmapConfig("spark_shadowmap_config");
+    shadowed_config = RegisterShadowedConfig("spark_shadowed_config");
+    unshadowed_config = RegisterUnshadowedConfig("spark_unshadowed_config");
+    skybox_config = RegisterSkyboxConfig("spark_skybox_config");
+    present_config = RegisterPresentConfig("spark_present_config");
+
     shadowmap_passes[0] = RegisterShadowmapPass("spark_shadowmap_pass", 0);
     shadowmap_passes[1] = RegisterShadowmapPass("spark_shadowmap_pass", 1);
     shadowmap_passes[2] = RegisterShadowmapPass("spark_shadowmap_pass", 2);
     shadowmap_passes[3] = RegisterShadowmapPass("spark_shadowmap_pass", 3);
     shadowmap_passes[4] = RegisterShadowmapPass("spark_shadowmap_pass", 4);
     shadowmap_passes[5] = RegisterShadowmapPass("spark_shadowmap_pass", 5);
-
-    shadowed_layout = RegisterShadowedLayout("spark_shadowed_layout");
-    shadowed_config = RegisterShadowedConfig("spark_shadowed_config");
     shadowed_pass = RegisterShadowedPass("spark_shadowed_pass");
-
-    unshadowed_layout = RegisterUnshadowedLayout("spark_unshadowed_layout");
-    unshadowed_config = RegisterUnshadowedConfig("spark_unshadowed_config");
     unshadowed_pass = RegisterUnshadowedPass("spark_unshadowed_pass");
-
-    skybox_layout = RegisterSkyboxLayout("spark_skybox_layout");
-    skybox_config = RegisterSkyboxConfig("spark_skybox_config");
-    skybox_pass = RegisterSkyboxPass("spark_skybox_pass");
-
-    present_layout = RegisterPresentLayout("spark_present_layout");
-    present_config = RegisterPresentConfig("spark_present_config");
+    //skybox_pass = RegisterSkyboxPass("spark_skybox_pass");
     present_pass = RegisterPresentPass("spark_present_pass");
   }
 

@@ -34,75 +34,13 @@ THE SOFTWARE.
 namespace RayGene3D
 {
   class Device;
-  class Output;
-  class Asset;
 
   class Spark : public Usable
   {
-  private:
+  protected:
     std::shared_ptr<Property> property;
     std::shared_ptr<Device> device;
     std::shared_ptr<View> view;
-
-  private:
-    std::shared_ptr<Resource> color_target;
-    std::shared_ptr<Resource> depth_target;
-    std::shared_ptr<Resource> shadow_map;
-
-  private:
-    std::shared_ptr<Resource> screen_data;
-    std::shared_ptr<Resource> camera_data;
-    std::shared_ptr<Resource> shadow_data;
-
-  private:
-    std::shared_ptr<Resource> scene_instances;
-    std::shared_ptr<Resource> scene_triangles;
-    std::shared_ptr<Resource> scene_vertices0;
-    std::shared_ptr<Resource> scene_vertices1;
-    std::shared_ptr<Resource> scene_vertices2;
-    std::shared_ptr<Resource> scene_vertices3;
-
-  private:
-    std::shared_ptr<Resource> scene_textures0;
-    std::shared_ptr<Resource> scene_textures1;
-    std::shared_ptr<Resource> scene_textures2;
-    std::shared_ptr<Resource> scene_textures3;
-
-    std::shared_ptr<Resource> light_maps;
-
-    std::shared_ptr<Resource> skybox_vertices;
-    std::shared_ptr<Resource> skybox_triangles;
-    std::shared_ptr<Resource> skybox_texture;
-
-  private:
-    std::shared_ptr<Resource> graphic_arguments;
-    std::shared_ptr<Resource> compute_arguments;
-
-  protected:
-    std::shared_ptr<Pass> shadowmap_passes[6];
-    std::shared_ptr<Layout> shadowmap_layout;
-    std::shared_ptr<Config> shadowmap_config;
-
-  protected:
-    std::shared_ptr<Pass> unshadowed_pass;
-    std::shared_ptr<Layout> unshadowed_layout;
-    std::shared_ptr<Config> unshadowed_config;
-
-  protected:
-    std::shared_ptr<Pass> shadowed_pass;
-    std::shared_ptr<Layout> shadowed_layout;
-    std::shared_ptr<Config> shadowed_config;
-
-  protected:
-    std::shared_ptr<Pass> skybox_pass;
-    std::shared_ptr<Layout> skybox_layout;
-    std::shared_ptr<Config> skybox_config;
-
-  protected:
-    std::shared_ptr<Pass> present_pass;
-    std::shared_ptr<Layout> present_layout;
-    std::shared_ptr<Config> present_config;
-    
 
   protected:
     std::shared_ptr<Property> prop_eye;
@@ -138,6 +76,58 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_skybox;
 
   protected:
+    std::shared_ptr<Resource> color_target;
+    std::shared_ptr<Resource> depth_target;
+    std::shared_ptr<Resource> shadow_map;
+
+    std::shared_ptr<Resource> screen_data;
+    std::shared_ptr<Resource> camera_data;
+    std::shared_ptr<Resource> shadow_data;
+
+    std::shared_ptr<Resource> scene_instances;
+    std::shared_ptr<Resource> scene_triangles;
+    std::shared_ptr<Resource> scene_vertices0;
+    std::shared_ptr<Resource> scene_vertices1;
+    std::shared_ptr<Resource> scene_vertices2;
+    std::shared_ptr<Resource> scene_vertices3;
+
+    std::shared_ptr<Resource> scene_textures0;
+    std::shared_ptr<Resource> scene_textures1;
+    std::shared_ptr<Resource> scene_textures2;
+    std::shared_ptr<Resource> scene_textures3;
+
+    std::shared_ptr<Resource> light_maps;
+
+    std::shared_ptr<Resource> skybox_vertices;
+    std::shared_ptr<Resource> skybox_triangles;
+    std::shared_ptr<Resource> skybox_texture;
+
+    std::shared_ptr<Resource> graphic_arguments;
+    std::shared_ptr<Resource> compute_arguments;
+
+  protected:
+    std::shared_ptr<Layout> shadowmap_layout;
+    std::shared_ptr<Layout> unshadowed_layout;
+    std::shared_ptr<Layout> shadowed_layout;
+    std::shared_ptr<Layout> skybox_layout;
+    std::shared_ptr<Layout> present_layout;
+
+  protected:
+    std::shared_ptr<Config> shadowmap_config;
+    std::shared_ptr<Config> unshadowed_config;
+    std::shared_ptr<Config> shadowed_config;
+    std::shared_ptr<Config> skybox_config;
+    std::shared_ptr<Config> present_config;
+
+  protected:
+    std::shared_ptr<Pass> shadowmap_passes[6];
+    std::shared_ptr<Pass> unshadowed_pass;
+    std::shared_ptr<Pass> shadowed_pass;
+    //std::shared_ptr<Pass> skybox_pass;
+    std::shared_ptr<Pass> present_pass;
+   
+
+  protected:
     uint32_t shadow_resolution { 1024 };
     glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
 
@@ -146,6 +136,13 @@ namespace RayGene3D
     {
       NO_SHADOWS = 0,
       POINT_SHADOWS = 1,
+    };
+
+    enum ShadingSubpass
+    {
+      SUBPASS_OPAQUE,
+      SUBPASS_SKYBOX,
+      SUBPASS_MAX_COUNT
     };
 
   protected:
