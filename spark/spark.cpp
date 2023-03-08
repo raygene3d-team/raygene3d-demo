@@ -31,6 +31,20 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
+  std::shared_ptr<Resource> Spark::RegisterReflectionProbe(const std::string& name)
+  {
+    const auto resource = device->CreateResource("reflection_probe");    
+    resource->SetType(Resource::TYPE_IMAGE2D);
+    resource->SetExtentX(reflection_probe_size);
+    resource->SetExtentY(reflection_probe_size);
+    resource->SetLayers(6);
+    resource->SetMipmaps(7);
+    resource->SetFormat(FORMAT_R11G11B10_FLOAT);
+    resource->SetHint(Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE));
+
+    return resource;
+  }
+
   std::shared_ptr<Resource> Spark::RegisterShadowMap(const std::string& name)
   {
     const auto resource = device->CreateResource(name);
@@ -113,6 +127,34 @@ namespace RayGene3D
     resource->SetCount(6);
     resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
    
+    return resource;
+  }
+
+  std::shared_ptr<Resource> Spark::RegisterReflectionProbeData(const std::string& name)
+  {
+    const auto resource = device->CreateResource(name);
+
+    resource->SetType(Resource::TYPE_BUFFER);
+    resource->SetStride(uint32_t(sizeof(ReflectionProbeLevel)));
+    resource->SetCount(7);
+    resource->SetInteropCount(7);
+
+    prop_reflection_probe = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
+    prop_reflection_probe->SetArraySize(uint32_t(7));
+
+    const auto level_size = uint32_t(sizeof(ReflectionProbeLevel));
+    for (uint32_t i = 0; i < 7; ++i)
+    {
+      ReflectionProbeLevel level_data{ i, reflection_probe_size >> i , 0};
+
+      const auto level_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+      level_property->RawAllocate(level_size);
+      level_property->SetRawBytes({ &level_data, level_size }, 0);
+
+      resource->SetInteropItem(i, level_property->GetRawBytes(0));
+      prop_reflection_probe->SetArrayItem(i, level_property);
+    }
+
     return resource;
   }
 
@@ -388,13 +430,17 @@ namespace RayGene3D
   {
     const auto layers = prop_skybox->GetArraySize();
     const auto format = FORMAT_R32G32B32A32_FLOAT;
+    const auto hint = layers == uint32_t(6)
+      ? Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE
+      : Resource::HINT_UNKNOWN;
     const auto bpp = 16u;
 
-    auto mipmaps = 1u;
-    auto size_x = 2u;
-    auto size_y = 1u;
+    auto mipmaps = 0u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+    while (size != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size = bpp * uint32_t(((1 << mipmaps) * (1 << mipmaps) - 1) / 3); }
+
+    auto size_x = 1 << (mipmaps - 1);
+    auto size_y = 1 << (mipmaps - 1);
 
     const auto resource = device->CreateResource(name);
 
@@ -405,6 +451,7 @@ namespace RayGene3D
     resource->SetLayers(layers);
     resource->SetMipmaps(mipmaps);
     resource->SetFormat(format);
+    resource->SetHint(Resource::Hint(hint));
     resource->SetInteropCount(layers);
     for (uint32_t i = 0; i < layers; ++i) { resource->SetInteropItem(i, prop_skybox->GetArrayItem(i)->GetRawBytes(0)); }
 
@@ -504,6 +551,9 @@ namespace RayGene3D
     pass->SetType(Pass::TYPE_GRAPHIC);
     pass->SetEnabled(true);
 
+    pass->SetExtentX(shadow_resolution);
+    pass->SetExtentY(shadow_resolution);
+
     const auto shadowmap_shadow_map = shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index));
     shadowmap_shadow_map->SetBind(View::BIND_DEPTH_STENCIL);
     shadowmap_shadow_map->SetLayerOffset(index);
@@ -565,11 +615,155 @@ namespace RayGene3D
     return pass;
   }
 
+  std::shared_ptr<Layout> Spark::RegisterReflectionLayout(const std::string& name)
+  {
+    const auto layout = device->CreateLayout(name);
+    
+    const Layout::Sampler samplers[] = {
+    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f }
+    };
+    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
+
+    const auto reflection_level_data = reflection_probe_data->CreateView("spark_reflection_level_data");
+    {
+      reflection_level_data->SetBind(View::BIND_CONSTANT_DATA);
+      reflection_level_data->SetByteOffset(0);
+      reflection_level_data->SetByteCount(sizeof(ReflectionProbeLevel));
+    }
+
+    const std::shared_ptr<View> sb_views[] = {
+      reflection_level_data,
+    };
+    layout->UpdateSBViews({ sb_views, uint32_t(std::size(sb_views)) });
+
+    const auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture");
+    {
+      skybox_skybox_texture->SetBind(View::BIND_SHADER_RESOURCE);
+      skybox_skybox_texture->SetUsage(View::USAGE_CUBEMAP_LAYER);
+    }
+
+    const std::shared_ptr<View> ri_views[] = {
+      skybox_skybox_texture
+    };
+    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
+
+    return layout;
+  }
+
+  std::shared_ptr<Config> Spark::RegisterReflectionConfig(const std::string& name, const uint32_t& mip_level)
+  {
+    const auto config = device->CreateConfig(name);
+
+    std::fstream shader_fs;
+    shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
+    std::stringstream shader_ss;
+    shader_ss << shader_fs.rdbuf();
+
+    config->SetSource(shader_ss.str());
+    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_GS | Config::COMPILATION_PS));
+    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
+    config->SetIndexer(Config::INDEXER_32_BIT);
+
+    const Config::Attribute attributes[] = {
+      { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
+      { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+    };
+    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
+
+    config->SetFillMode(Config::FILL_SOLID);
+    config->SetCullMode(Config::CULL_NONE);
+    config->SetClipEnabled(false);
+
+    const Config::Blend blends[] = {
+      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    };
+    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
+    config->SetATCEnabled(false);
+
+    config->SetDepthEnabled(false);
+    config->SetDepthWrite(false);
+
+    const auto mip_size = reflection_probe_size >> mip_level;
+
+    const Config::Viewport viewports[] = {
+      { 0.0f, 0.0f, float(mip_size), float(mip_size), 0.0f, 1.0f },
+    };
+    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
+
+    return config;
+  }
+
+  std::shared_ptr<Pass> Spark::RegisterReflectionPass(const std::string& name, const uint32_t& mip_level)
+  {
+    const auto pass = device->CreatePass(name);
+
+    pass->SetExtentX(reflection_probe_size >> mip_level);
+    pass->SetExtentY(reflection_probe_size >> mip_level);
+
+    pass->SetType(Pass::TYPE_GRAPHIC);
+    pass->SetEnabled(true);
+
+    const auto reflection_color_target = reflection_probe->CreateView("spark_reflection_color_target");
+    {
+      reflection_color_target->SetBind(View::BIND_RENDER_TARGET);
+      reflection_color_target->SetLayerOffset(0);
+      reflection_color_target->SetLayerCount(6);
+
+      reflection_color_target->SetMipmapCount(1);
+      reflection_color_target->SetMipmapOffset(mip_level);
+    }
+
+    const std::shared_ptr<View> rt_views[] = {
+      reflection_color_target,
+    };
+    pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
+
+    const Pass::RTValue rt_values[] = {
+      std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f },
+    };
+    pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
+
+    pass->SetSubpassCount(1);
+
+
+    Pass::Command commands[] = {
+      {nullptr, {6, 6, 0, 0, 0, 0, 0, 0}},
+    };
+    commands[0].offsets = { mip_level * uint32_t(sizeof(ReflectionProbeLevel)) };
+    pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
+
+    const auto reflection_probe_vertices = skybox_vertices->CreateView("spark_reflection_vertices");
+    {
+      reflection_probe_vertices->SetBind(View::BIND_VERTEX_ARRAY);
+    }
+
+    const std::shared_ptr<View> va_views[] = {
+      reflection_probe_vertices,
+    };
+    pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
+
+    const auto reflection_probe_triangles = skybox_triangles->CreateView("spark_reflection_triangles");
+    {
+      reflection_probe_triangles->SetBind(View::BIND_INDEX_ARRAY);
+    }
+
+    const std::shared_ptr<View> ia_views[] = {
+      reflection_probe_triangles,
+    };
+    pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
+
+    pass->SetSubpassLayout(0, reflection_probe_layout);
+    pass->SetSubpassConfig(0, reflection_probe_configs[mip_level]);
+
+    return pass;
+  }
+
   std::shared_ptr<Layout> Spark::RegisterUnshadowedLayout(const std::string& name)
   {
     const auto layout = device->CreateLayout(name);
 
     const Layout::Sampler samplers[] = {
+    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
     layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
@@ -641,12 +835,19 @@ namespace RayGene3D
       unshadowed_light_maps->SetBind(View::BIND_SHADER_RESOURCE);
     }
 
+    const auto reflection_probe_texture = reflection_probe->CreateView("spark_reflection_probe_texture");
+    {
+      reflection_probe_texture->SetBind(View::BIND_SHADER_RESOURCE);
+      reflection_probe_texture->SetUsage(View::USAGE_CUBEMAP_LAYER);
+    }
+
     const std::shared_ptr<View> ri_views[] = {
       unshadowed_scene_textures0,
       unshadowed_scene_textures1,
       unshadowed_scene_textures2,
       unshadowed_scene_textures3,
       unshadowed_light_maps,
+      reflection_probe_texture,
     };
     layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
@@ -716,8 +917,14 @@ namespace RayGene3D
   {
     const auto pass = device->CreatePass(name);
 
+    const auto extent_x = prop_extent_x->GetUint();
+    const auto extent_y = prop_extent_y->GetUint();
+
     pass->SetType(Pass::TYPE_GRAPHIC);
     pass->SetEnabled(true);
+
+    pass->SetExtentX(extent_x);
+    pass->SetExtentY(extent_y);
 
     const auto unshadowed_color_target = color_target->CreateView("spark_unshadowed_color_target");
     {
@@ -995,8 +1202,14 @@ namespace RayGene3D
   {
     const auto pass = device->CreatePass(name);
 
+    const auto extent_x = prop_extent_x->GetUint();
+    const auto extent_y = prop_extent_y->GetUint();
+
     pass->SetType(Pass::TYPE_GRAPHIC);
     pass->SetEnabled(true);
+
+    pass->SetExtentX(extent_x);
+    pass->SetExtentY(extent_y);
 
     const auto shadowed_color_target = color_target->CreateView("spark_shadowed_color_target");
     {
@@ -1147,10 +1360,10 @@ namespace RayGene3D
     };
     layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
-
     const auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture");
     {
       skybox_skybox_texture->SetBind(View::BIND_SHADER_RESOURCE);
+      skybox_skybox_texture->SetUsage(View::USAGE_CUBEMAP_LAYER);
     }
 
     const std::shared_ptr<View> ri_views[] = {
@@ -1164,7 +1377,7 @@ namespace RayGene3D
   std::shared_ptr<Config> Spark::RegisterSkyboxConfig(const std::string& name)
   {
     const auto config = device->CreateConfig(name);
-    
+
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
     std::stringstream shader_ss;
@@ -1207,8 +1420,14 @@ namespace RayGene3D
   {
     const auto pass = device->CreatePass(name);
 
+    const auto extent_x = prop_extent_x->GetUint();
+    const auto extent_y = prop_extent_y->GetUint();
+
     pass->SetType(Pass::TYPE_GRAPHIC);
     pass->SetEnabled(true);
+
+    pass->SetExtentX(extent_x);
+    pass->SetExtentY(extent_y);
 
     const auto skybox_color_target = color_target->CreateView("spark_skybox_color_target");
     {
@@ -1272,6 +1491,8 @@ namespace RayGene3D
 
     return pass;
   }
+
+
 
   std::shared_ptr<Layout> Spark::RegisterPresentLayout(const std::string& name)
   {
@@ -1361,10 +1582,12 @@ namespace RayGene3D
     color_target->Initialize();
     depth_target->Initialize();
     shadow_map->Initialize();
+    reflection_probe->Initialize();
 
     screen_data->Initialize();
     camera_data->Initialize();
     shadow_data->Initialize();
+    reflection_probe_data->Initialize();
     
     scene_instances->Initialize();
     scene_triangles->Initialize();
@@ -1387,18 +1610,27 @@ namespace RayGene3D
     graphic_arguments->Initialize();
     compute_arguments->Initialize();
 
+    reflection_probe_layout->Initialize();
     shadowmap_layout->Initialize();
     unshadowed_layout->Initialize();
     shadowed_layout->Initialize();
     skybox_layout->Initialize();
     present_layout->Initialize();
 
+    for (auto i = 0; i < 7; ++i)
+    {
+      reflection_probe_configs[i]->Initialize();
+    }
     shadowmap_config->Initialize();
     unshadowed_config->Initialize();
     shadowed_config->Initialize();
     skybox_config->Initialize();
     present_config->Initialize();
 
+    for (auto i = 0; i < 7; ++i)
+    {
+      reflection_probe_passes[i]->Initialize();
+    }
     shadowmap_passes[0]->Initialize();
     shadowmap_passes[1]->Initialize();
     shadowmap_passes[2]->Initialize();
@@ -1594,10 +1826,12 @@ namespace RayGene3D
     color_target->Discard();
     depth_target->Discard();
     shadow_map->Discard();
+    reflection_probe->Discard();
 
     screen_data->Discard();
     camera_data->Discard();
     shadow_data->Discard();
+    reflection_probe_data->Discard();
 
     scene_instances->Discard();
     scene_triangles->Discard();
@@ -1620,18 +1854,27 @@ namespace RayGene3D
     graphic_arguments->Discard();
     compute_arguments->Discard();
 
+    reflection_probe_layout->Discard();
     shadowmap_layout->Discard();
     unshadowed_layout->Discard();
     shadowed_layout->Discard();
     skybox_layout->Discard();
     present_layout->Discard();
 
+    for (auto i = 0; i < 7; ++i)
+    {
+      reflection_probe_configs[i]->Discard();
+    }
     shadowmap_config->Discard();
     unshadowed_config->Discard();
     shadowed_config->Discard();
     skybox_config->Discard();
     present_config->Discard();
 
+    for (auto i = 0; i < 7; ++i)
+    {
+      reflection_probe_passes[i]->Discard();
+    }
     shadowmap_passes[0]->Discard();
     shadowmap_passes[1]->Discard();
     shadowmap_passes[2]->Discard();
@@ -1688,6 +1931,8 @@ namespace RayGene3D
 
     prop_skybox = property->GetObjectItem("environment");
 
+    reflection_probe = RegisterReflectionProbe("spark_reflection_probe");
+
     shadow_map = RegisterShadowMap("spark_shadow_map");
     color_target = RegisterColorTarget("spark_color_target");
     depth_target = RegisterDepthTarget("spark_depth_target");
@@ -1695,6 +1940,7 @@ namespace RayGene3D
     screen_data = RegisterScreenData("spark_screen_data");
     camera_data = RegisterCameraData("spark_camera_data");
     shadow_data = RegisterShadowData("spark_shadow_data");
+    reflection_probe_data = RegisterReflectionProbeData("spark_reflection_probe_data");
 
     scene_instances = RegisterSceneInstances("spark_scene_instances");
     scene_triangles = RegisterSceneTriangles("spark_scene_triangles");
@@ -1717,11 +1963,17 @@ namespace RayGene3D
     graphic_arguments = RegisterGraphicArguments("spark_graphic_arguments");
     compute_arguments = RegisterComputeArguments("spark_compute_arguments");
 
+    reflection_probe_layout = RegisterReflectionLayout("spark_reflection_layout");
     shadowmap_layout = RegisterShadowmapLayout("spark_shadowmap_layout");
     shadowed_layout = RegisterShadowedLayout("spark_shadowed_layout");
     unshadowed_layout = RegisterUnshadowedLayout("spark_unshadowed_layout");
     skybox_layout = RegisterSkyboxLayout("spark_skybox_layout");
     present_layout = RegisterPresentLayout("spark_present_layout");
+
+    for (auto i = 0; i < 7; ++i)
+    {
+      reflection_probe_configs[i] = RegisterReflectionConfig("spark_reflection_probe_config", i);
+    }
 
     shadowmap_config = RegisterShadowmapConfig("spark_shadowmap_config");
     shadowed_config = RegisterShadowedConfig("spark_shadowed_config");
@@ -1729,6 +1981,10 @@ namespace RayGene3D
     skybox_config = RegisterSkyboxConfig("spark_skybox_config");
     present_config = RegisterPresentConfig("spark_present_config");
 
+    for (auto i = 0; i < 7; ++i)
+    {
+      reflection_probe_passes[i] = RegisterReflectionPass("spark_reflectoin_pass", i);
+    }
     shadowmap_passes[0] = RegisterShadowmapPass("spark_shadowmap_pass", 0);
     shadowmap_passes[1] = RegisterShadowmapPass("spark_shadowmap_pass", 1);
     shadowmap_passes[2] = RegisterShadowmapPass("spark_shadowmap_pass", 2);
