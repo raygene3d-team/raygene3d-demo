@@ -1692,6 +1692,11 @@ namespace RayGene3D
     }
     }
 
+    for (auto i = 0; i < 7; ++i)
+    {
+      reflection_probe_passes[i]->SetEnabled(false);
+    }
+
 
     {
       auto graphic_arg = reinterpret_cast<Pass::Argument*>(graphic_arguments->Map());

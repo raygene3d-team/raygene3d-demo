@@ -9,7 +9,4 @@
   #define FOUR_PI 12.56637061436
   #define INV_PI 0.31830988618
 
-  #define REAL_EPS FLT_EPS
-  #define REAL_MIN FLT_MIN
-
 #endif // RAYGENE3D_IBL_COMMON

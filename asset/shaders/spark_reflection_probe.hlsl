@@ -13,6 +13,8 @@
 #define CUBEMAP_POSITIVE_Z 4
 #define CUBEMAP_NEGATIVE_Z 5
 
+#define REFLECTION_TEXTURE_CUBE_LOD_COUNTER 6
+
 VK_BINDING(0) sampler sampler0 : register(s0);
 
 VK_BINDING(1) cbuffer constant0 : register(b0)
@@ -72,7 +74,7 @@ void gs_main(triangle VSOutput input[3], inout TriangleStream<GSOutput> outStrea
   }
 }
 
-float3 uv_to_cube(float u, float v, uint layer)
+float3 UVtoCube(float u, float v, uint layer)
 {
   float3 text_coord = float3(0.0, 0.0, 0.0);
   switch (layer)
@@ -115,35 +117,21 @@ float3 uv_to_cube(float u, float v, uint layer)
 float4 ps_main(GSOutput input) : SV_Target
 {
   float2 uv = input.pos.xy / float2(mip_size, mip_size);
-  float3 texcoord = uv_to_cube(uv.x, uv.y, input.inst_id);
+  float3 cube_texcoord = UVtoCube(uv.x, uv.y, input.inst_id);
 
-  uint cubemapWidth = 0;
-  uint cubemapHeight = 0;
-  skybox_texture.GetDimensions(cubemapWidth, cubemapHeight);
+  uint cubemap_width = 0;
+  uint cubemap_height = 0;
+  skybox_texture.GetDimensions(cubemap_width, cubemap_height);
 
-  float omegaP = FOUR_PI / (6.0 * cubemapWidth * cubemapWidth);
-  float invOmegaP = 1.0 / omegaP;
-
-  float3 N = texcoord;
+  float inv_omega_p = (6.0 * cubemap_width * cubemap_height) / FOUR_PI;
+  float3 N = cube_texcoord;
   float3 V = N;
-  bool prefilter = true;
 
-  float perceptualRoughness = MipmapLevelToPerceptualRoughness(mip_level);
-  float roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
-  uint  sampleCount = GetIBLRuntimeFilterSampleCount(mip_level);
+  float perceptual_roughness = MipmapLevelToPerceptualRoughness(mip_level, REFLECTION_TEXTURE_CUBE_LOD_COUNTER);
+  float roughness = PerceptualRoughnessToRoughness(perceptual_roughness);
+  uint  sampleCount = GetSampleCount(mip_level);
 
-  float4 color = skybox_texture.Sample(sampler0, texcoord);
-
-  if (mip_level != 0)
-  {
-    color = IntegrateLD(
-      V,
-      N,
-      roughness,
-      invOmegaP,
-      sampleCount,
-      prefilter);
-  }
+  float4 color = IntegrateReflectionProbe(V, N, roughness, inv_omega_p, sampleCount);
 
   return float4(color.xyz, 1.0);
 }

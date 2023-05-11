@@ -1,68 +1,45 @@
 #ifndef RAYGENE3D_IMAGE_BASED_LIGHTING
 #define RAYGENE3D_IMAGE_BASED_LIGHTING
 
-  void SampleGGXDir(float2   u,
-                    float3   V,
-                    float3x3 localToWorld,
-                    float    roughness,
-                out float3   L,
-                out float    NdotL,
-                out float    NdotH,
-                out float    VdotH,
-                    bool    VeqN = false)
+  void SampleGGXDir(float2 u, float3 V, float3x3 local_to_world, float roughness, out float3 L, out float NdotL, out float NdotH, out float VdotH)
   {
-      float cosTheta = sqrt(SafeDiv(1.0 - u.x, 1.0 + (roughness * roughness - 1.0) * u.x));
-      float phi      = TWO_PI * u.y;
+      float cos_theta = sqrt(SafeDiv(1.0 - u.x, 1.0 + (roughness * roughness - 1.0) * u.x));
+      float phi = TWO_PI * u.y;
 
-      float3 localH = SphericalToCartesian(phi, cosTheta);
+      float3 local_h = SphericalToCartesian(phi, cos_theta);
 
-      NdotH = cosTheta;
+      NdotH = cos_theta;
 
-      float3 localV;
+      float3 local_v = float3(0.0, 0.0, 1.0);
+      VdotH  = NdotH;
 
-      if (VeqN)
-      {
-          localV = float3(0.0, 0.0, 1.0);
-          VdotH  = NdotH;
-      }
-      else
-      {
-          localV = mul(V, transpose(localToWorld));
-          VdotH  = saturate(dot(localV, localH));
-      }
+      float3 local_l = -local_v + 2.0 * VdotH * local_h;
+      NdotL = local_l.z;
 
-      float3 localL = -localV + 2.0 * VdotH * localH;
-      NdotL = localL.z;
-
-      L = mul(localL, localToWorld);
-  }
-
-  float D_GGXNoPI(float NdotH, float roughness)
-  {
-      float a2 = Sq(roughness);
-      float s = (NdotH * a2 - NdotH) * NdotH + 1.0;
-
-      return SafeDiv(a2, s * s);
+      L = mul(local_l, local_to_world);
   }
 
   float D_GGX(float NdotH, float roughness)
   {
-      return INV_PI * D_GGXNoPI(NdotH, roughness);
+      float a2 = roughness * roughness;
+      float s = (NdotH * a2 - NdotH) * NdotH + 1.0;
+
+      return INV_PI * SafeDiv(a2, s * s);
   }
 
   float GetSmithJointGGXPartLambdaV(float NdotV, float roughness)
   {
-    float a2 = Sq(roughness);
+    float a2 = roughness * roughness;
     return sqrt((-NdotV * a2 + NdotV) * NdotV + a2);
   }
 
-  float V_SmithJointGGX(float NdotL, float NdotV, float roughness, float partLambdaV)
+  float V_SmithJointGGX(float NdotL, float NdotV, float roughness, float part_lambda_v)
   {
-    float a2 = Sq(roughness);
-    float lambdaV = NdotL * partLambdaV;
-    float lambdaL = NdotV * sqrt((-NdotL * a2 + NdotL) * NdotL + a2);
+    float a2 = roughness * roughness;
+    float lambda_v = NdotL * part_lambda_v;
+    float lambda_l = NdotV * sqrt((-NdotL * a2 + NdotL) * NdotL + a2);
 
-    return 0.5 / max(lambdaV + lambdaL, REAL_MIN);
+    return 0.5 / max(lambda_v + lambda_l, FLT_MIN);
   }
 
 #endif // RAYGENE3D_IMAGE_BASED_LIGHTING

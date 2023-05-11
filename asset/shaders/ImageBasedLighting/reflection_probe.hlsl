@@ -1,96 +1,61 @@
 #include "ImageBasedLighting/common.hlsl"
 #include "ImageBasedLighting/utils.hlsl"
-#include "ImageBasedLighting/fibonacci.hlsl"
 #include "ImageBasedLighting/image_based_lighting.hlsl"
 
-#define REFLECTION_SPECCUBE_LOD_STEPS 6
 //#define USE_KARIS_APPROXIMATION
 
-float radicalInverse_VdC(uint bits) {
-  bits = (bits << 16u) | (bits >> 16u);
-  bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
-  bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
-  bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
-  bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
-  return float(bits) * 2.3283064365386963e-10; // / 0x100000000
-}
-
-float2 hammersley2d(uint i, uint N)
+float4 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_omega_p, uint sample_count)
 {
-  return float2(float(i) / float(N), radicalInverse_VdC(i));
-}
-
-float4 IntegrateLD(
-  float3 V,
-  float3 N,
-  float roughness,
-  float invOmegaP,
-  uint sampleCount, // Must be a Fibonacci number
-  bool prefilter)
-{
-  float3x3 localToWorld = GetLocalFrame(N);
+  float3x3 local_to_world = GetLocalFrame(N);
 
 #ifndef USE_KARIS_APPROXIMATION
   float NdotV = 1; // N == V
-  float partLambdaV = GetSmithJointGGXPartLambdaV(NdotV, roughness);
+  float part_lambda_v = GetSmithJointGGXPartLambdaV(NdotV, roughness);
 #endif
 
-  float3 lightInt = float3(0.0, 0.0, 0.0);
-  float  cbsdfInt = 0.0;
+  float3 light_int = float3(0.0, 0.0, 0.0);
+  float  cbsdf_int = 0.0;
 
-  for (uint i = 0; i < sampleCount; ++i)
+  if (sample_count == 1) return skybox_texture.SampleLevel(sampler0, N, 0);
+
+  for (uint i = 0; i < sample_count; ++i)
   {
     float3 L;
     float  NdotL, NdotH, LdotH;
 
     {
-      float2 u = Fibonacci2d(i, sampleCount);
-      //float2 u = hammersley2d(i, sampleCount);
-
-      SampleGGXDir(u, V, localToWorld, roughness, L, NdotL, NdotH, LdotH, true);
+      float2 uv = Hammersley2d(i, sample_count);
+      SampleGGXDir(uv, V, local_to_world, roughness, L, NdotL, NdotH, LdotH);
 
       if (NdotL <= 0) continue;
     }
 
-    float mipLevel;
+    float pdf = 0.25 * D_GGX(NdotH, roughness);
+    float omega_s = rcp(sample_count) * rcp(pdf);
 
-    if (!prefilter)
-    {
-      mipLevel = 0;
-    }
-    else
-    {
-      float omegaS;
+    const float mip_bias = roughness;
+    float mip_level = 0.5 * log2(omega_s * inv_omega_p) + mip_bias;
 
-      {
-        float pdf = 0.25 * D_GGX(NdotH, roughness);
-        omegaS = rcp(sampleCount) * rcp(pdf);
-      }
-
-      const float mipBias = roughness;
-      mipLevel = 0.5 * log2(omegaS * invOmegaP) + mipBias;
-    }
-
-    float3 val = skybox_texture.SampleLevel(sampler0, L, mipLevel).rgb;
+    float3 val = skybox_texture.SampleLevel(sampler0, L, mip_level).rgb;
 
 #ifndef USE_KARIS_APPROXIMATION
-    float F = 1; // F_Schlick(F0, LdotH);
-    float G = V_SmithJointGGX(NdotL, NdotV, roughness, partLambdaV) * NdotL * NdotV;
+    float F = 1;
+    float G = V_SmithJointGGX(NdotL, NdotV, roughness, part_lambda_v) * NdotL * NdotV;
 
-    lightInt += F * G * val;
-    cbsdfInt += F * G;
+    light_int += F * G * val;
+    cbsdf_int += F * G;
 #else
-    lightInt += NdotL * val;
-    cbsdfInt += NdotL;
+    light_int += NdotL * val;
+    cbsdf_int += NdotL;
 #endif
   }
 
-  return float4(lightInt / cbsdfInt, 1.0);
+  return float4(light_int / cbsdf_int, 1.0);
 }
 
-float PerceptualRoughnessToRoughness(float perceptualRoughness)
+float PerceptualRoughnessToRoughness(float perceptual_roughness)
 {
-  return perceptualRoughness * perceptualRoughness;
+  return perceptual_roughness * perceptual_roughness;
 }
 
 float RoughnessToPerceptualRoughness(float roughness)
@@ -99,38 +64,34 @@ float RoughnessToPerceptualRoughness(float roughness)
 }
 
 
-float PerceptualRoughnessToMipmapLevel(float perceptualRoughness, uint maxMipLevel)
+float PerceptualRoughnessToMipmapLevel(float perceptual_roughness, uint mipmap_levels_counter)
 {
-  perceptualRoughness = perceptualRoughness * (1.7 - 0.7 * perceptualRoughness);
+  perceptual_roughness = perceptual_roughness * (1.7 - 0.7 * perceptual_roughness);
 
-  return perceptualRoughness * maxMipLevel;
+  return perceptual_roughness * mipmap_levels_counter;
 }
 
-float PerceptualRoughnessToMipmapLevel(float perceptualRoughness)
+float MipmapLevelToPerceptualRoughness(float mipmap_level, float mipmap_levels_counter)
 {
-  return PerceptualRoughnessToMipmapLevel(perceptualRoughness, REFLECTION_SPECCUBE_LOD_STEPS);
+  float perceptual_roughness = saturate(mipmap_level / mipmap_levels_counter);
+
+  return saturate(1.7 / 1.4 - sqrt(2.89 / 1.96 - (2.8 / 1.96) * perceptual_roughness));
 }
 
-float MipmapLevelToPerceptualRoughness(float mipmapLevel)
+uint GetSampleCount(uint mip_level)
 {
-  float perceptualRoughness = saturate(mipmapLevel / REFLECTION_SPECCUBE_LOD_STEPS);
+  uint sample_count = 1;
 
-  return saturate(1.7 / 1.4 - sqrt(2.89 / 1.96 - (2.8 / 1.96) * perceptualRoughness));
-}
-
-uint GetIBLRuntimeFilterSampleCount(uint mipLevel)
-{
-  uint sampleCount = 1;
-
-  switch (mipLevel)
+  switch (mip_level)
   {
-  case 1: sampleCount = 21; break;
-  case 2: sampleCount = 34; break;
-  case 3: sampleCount = 55; break;
-  case 4: sampleCount = 89; break;
-  case 5: sampleCount = 89; break;
-  case 6: sampleCount = 89; break;
+    case 0: sample_count = 1; break;
+    case 1: sample_count = 20; break;
+    case 2: sample_count = 40; break;
+    case 3: sample_count = 60; break;
+    case 4: sample_count = 80; break;
+    case 5: sample_count = 100; break;
+    case 6: sample_count = 120; break;
   }
 
-  return sampleCount;
+  return sample_count;
 }
