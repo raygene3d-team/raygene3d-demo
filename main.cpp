@@ -607,7 +607,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::API_VLK));
+      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::ACCELERATION_VLK, RayGene3D::Core::STORAGE_LOCAL));
     }
     ~GLFWWrapper()
     {
