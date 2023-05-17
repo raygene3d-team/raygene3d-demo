@@ -198,7 +198,7 @@ std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, con
     const auto environment_exposure = environment_json_property->GetObjectItem("exposure")->GetReal();
     const auto environment_quality = environment_json_property->GetObjectItem("quality")->GetUint();
 
-    const auto environment_prop = RayGene3D::ImportEXR(file_path, environment_file, environment_exposure, environment_quality);
+    const auto environment_prop = RayGene3D::ImportAsCubeMapEXR(file_path, environment_file, environment_exposure, environment_quality);
 
     property->SetObjectItem("environment", environment_prop);
   }

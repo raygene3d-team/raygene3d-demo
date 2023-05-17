@@ -292,8 +292,14 @@ namespace RayGene3D
     {
       auto pass = device->CreatePass("imgui_pass");
       {
+        const auto extent_x = root_property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
+        const auto extent_y = root_property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
+
         pass->SetType(Pass::TYPE_GRAPHIC);
         pass->SetEnabled(true);
+
+        pass->SetExtentX(extent_x);
+        pass->SetExtentY(extent_y);
 
         const std::shared_ptr<View> rt_views[] = {
           output_view,

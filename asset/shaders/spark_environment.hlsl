@@ -26,7 +26,7 @@ VK_BINDING(2) cbuffer constant1 : register(b1)
   float4x4 camera_proj_inv : packoffset(c12.x);
 }
 
-VK_BINDING(3) Texture2D<float4> environment_texture : register(t0);
+VK_BINDING(3) TextureCube<float4> environment_texture : register(t0);
 
 struct VSInput
 {
@@ -69,10 +69,7 @@ PSOutput ps_main(PSInput input)
   const float3 screen_dir = normalize(mul(camera_proj_inv, float4(rx, -ry, 1.0, 1.0)).xyz);
   const float3 camera_dir = mul(transpose((float3x3)camera_view), screen_dir);
   
-
-  const float env_s = 0.5 * atan2(camera_dir.x, camera_dir.z) / PI + 0.5;
-  const float env_t = -asin(camera_dir.y) / PI + 0.5;
-  const float4 env_value = environment_texture.Sample(sampler0, float2(env_s, env_t));
+  const float4 env_value = environment_texture.Sample(sampler0, normalize(camera_dir));
 
   output.target_0 = env_value;
   return output;
