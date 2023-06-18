@@ -1,6 +1,6 @@
 #pragma once
-#include "../raygene3d-core/base.h"
-#include "../raygene3d-util/core.h"
+#include "../raygene3d-core/core.h"
+#include "../raygene3d-util/util.h"
 
 namespace RayGene3D
 {

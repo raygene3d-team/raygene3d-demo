@@ -30,6 +30,8 @@ THE SOFTWARE.
 #include "spark/spark.h"
 #include "imgui/imgui.h"
 
+#include "raygene3d-util/broker/import_broker.h"
+
 constexpr char app_name[] = { "Raygene3D Demo" };
 
 constexpr uint32_t def_extent_x{ 16u * 80 };
@@ -155,6 +157,8 @@ std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, con
     {
       const auto extension = ExtractExtension(scene_file);
 
+      const auto import = std::shared_ptr<RayGene3D::Broker>(new RayGene3D::ImportBroker("ImportBroker", CoRegisterActivationFilter, util)
+
       if (std::strcmp(extension.c_str(), "obm") == 0)
       {
         scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_flip, scene_scale, scene_quality);
@@ -215,10 +219,14 @@ namespace RayGene3D
 
   protected:
     std::shared_ptr<RayGene3D::Core> core;
+    std::shared_ptr<RayGene3D::Util> util;
 
   protected:
     std::shared_ptr<RayGene3D::Spark> spark;
     std::shared_ptr<RayGene3D::Imgui> imgui;
+
+  protected:
+    std::shared_ptr<RayGene3D::ImportBroker> import_broker;
 
   protected:
     double delta_xpos{ 0.0 };
@@ -459,11 +467,9 @@ namespace RayGene3D
       prop_camera->SetObjectItem("n_plane", prop_n_plane);
       prop_camera->SetObjectItem("f_plane", prop_f_plane);
 
-      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(property, device, backbuffer_ua_view));
       spark->Initialize();
       spark->SetShadowType(Spark::NO_SHADOWS);
 
-      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*core));
       imgui->AccessRootProperty() = property;
       imgui->AccessOutputView() = backbuffer_rt_view;
       imgui->Initialize();
@@ -594,10 +600,11 @@ namespace RayGene3D
 
     void Discard()
     {
-      core->Discard();
-
       spark->Discard();
-      spark.reset();
+      imgui->Discard();
+
+      util->Discard();
+      core->Discard();
 
       glfwDestroyWindow(glfw);
     }
@@ -607,10 +614,22 @@ namespace RayGene3D
     {
       glfwInit();
 
-      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::ACCELERATION_VLK, RayGene3D::Core::STORAGE_LOCAL));
+      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::ACCELERATION_VLK));
+      util = std::shared_ptr<RayGene3D::Util>(new RayGene3D::Util(RayGene3D::Util::STORAGE_LOCAL));
+
+      import_broker = std::shared_ptr<RayGene3D::Broker>(new RayGene3D::ImportBroker(core, util));
+
+      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(property, device, backbuffer_ua_view));
+
+      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*core));
     }
+
     ~GLFWWrapper()
     {
+      spark.reset();
+      imgui.reset();
+
+      util.reset();
       core.reset();
 
       glfwTerminate();

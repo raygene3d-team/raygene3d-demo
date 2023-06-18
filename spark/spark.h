@@ -28,14 +28,14 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../raygene3d-core/base.h"
-#include "../raygene3d-util/core.h"
+#include "../raygene3d-core/core.h"
+#include "../raygene3d-util/util.h"
 
 namespace RayGene3D
 {
   class Device;
 
-  class Spark : public Usable
+  class Spark : public Broker
   {
   protected:
     std::shared_ptr<Property> property;
