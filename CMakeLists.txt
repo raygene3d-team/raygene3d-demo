@@ -70,13 +70,17 @@ add_executable(${NAME}-demo
   ${SOURCE}
 )
 
-add_subdirectory(${NAME}-util)
+add_subdirectory(${NAME}-data)
 #add_dependencies(${NAME}-demo ${NAME}-util)
-target_link_libraries(${NAME}-demo PUBLIC ${NAME}-util)
+target_link_libraries(${NAME}-demo PUBLIC ${NAME}-data)
 
 add_subdirectory(${NAME}-core)
 #add_dependencies(${NAME}-demo ${NAME}-core)
 target_link_libraries(${NAME}-demo PUBLIC ${NAME}-core)
+
+add_subdirectory(${NAME}-root)
+#add_dependencies(${NAME}-demo ${NAME}-root)
+target_link_libraries(${NAME}-demo PUBLIC ${NAME}-root)
 
 #set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib)
 
