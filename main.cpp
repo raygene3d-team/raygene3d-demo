@@ -26,11 +26,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ================================================================================*/
 
+#include "raygene3d-root/root.h"
 
 #include "spark/spark.h"
 #include "imgui/imgui.h"
 
-#include "raygene3d-util/broker/import_broker.h"
+#include "broker/import_broker.h"
+#include "broker/lightmap_broker.h"
+#include "broker/environment_broker.h"
 
 constexpr char app_name[] = { "Raygene3D Demo" };
 
@@ -128,7 +131,8 @@ std::shared_ptr<RayGene3D::Property> LoadConfig(const std::string& file_path)
   return property;
 }
 
-std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, const std::string& file_name)
+std::shared_ptr<RayGene3D::Property> LoadScene(const std::shared_ptr<RayGene3D::Core>& core, const std::shared_ptr<RayGene3D::Util>& util,
+  const std::string& file_path, const std::string& file_name)
 {
   auto property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
 
@@ -155,20 +159,25 @@ std::shared_ptr<RayGene3D::Property> LoadScene(const std::string& file_path, con
     }
     catch (std::exception e)
     {
-      const auto extension = ExtractExtension(scene_file);
+      //const auto extension = ExtractExtension(scene_file);
 
-      const auto import = std::shared_ptr<RayGene3D::Broker>(new RayGene3D::ImportBroker("ImportBroker", CoRegisterActivationFilter, util)
+      const auto import_broker = new RayGene3D::ImportBroker(core, util);
 
-      if (std::strcmp(extension.c_str(), "obm") == 0)
-      {
-        scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_flip, scene_scale, scene_quality);
-      }
-      else if (std::strcmp(extension.c_str(), "gltf") == 0)
-      {
-        scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_flip, scene_scale, scene_quality);
-      }
+      import_broker->SetFileName(file_name);
+      import_broker->SetPathName(file_path);
 
-      RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
+      //if (std::strcmp(extension.c_str(), "obm") == 0)
+      //{
+      //  scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_flip, scene_scale, scene_quality);
+      //}
+      //else if (std::strcmp(extension.c_str(), "gltf") == 0)
+      //{
+      //  scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_flip, scene_scale, scene_quality);
+      //}
+
+      //RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
+
+      RayGene3D::SaveProperty(directory, ExtractName(scene_file), util->GetProperty());
     }
 
     property->SetObjectItem("scene", scene_prop);
@@ -218,8 +227,7 @@ namespace RayGene3D
     GLFWwindow* glfw{ nullptr };
 
   protected:
-    std::shared_ptr<RayGene3D::Core> core;
-    std::shared_ptr<RayGene3D::Util> util;
+    std::unique_ptr<RayGene3D::Root> root;
 
   protected:
     std::shared_ptr<RayGene3D::Spark> spark;
@@ -227,6 +235,16 @@ namespace RayGene3D
 
   protected:
     std::shared_ptr<RayGene3D::ImportBroker> import_broker;
+    //std::shared_ptr<RayGene3D::ImportBroker> lightmap_broker;
+    //std::shared_ptr<RayGene3D::ImportBroker> environment_broker;
+
+  protected:
+    std::shared_ptr<RayGene3D::View> output_uav;
+    std::shared_ptr<RayGene3D::View> output_rtv;
+
+  protected:
+    std::shared_ptr<RayGene3D::Property> scene_property;
+    std::shared_ptr<RayGene3D::Property> camera_property;
 
   protected:
     double delta_xpos{ 0.0 };
@@ -408,7 +426,7 @@ namespace RayGene3D
       window_handle = (__bridge void*)layer;
 #endif
 
-      auto device = core->AccessDevice();
+      const auto device = root->GetCore()->GetDevice().get();
       const auto device_debug = config_property->GetObjectItem("device_debug")->GetBool();
       const auto device_ordinal = config_property->GetObjectItem("device_ordinal")->GetUint();
       device->SetWindow(window_handle);
@@ -446,8 +464,8 @@ namespace RayGene3D
         backbuffer_ua_view->SetBind(View::BIND_UNORDERED_ACCESS);
       }
 
-      core->AccessDevice()->SetScreen(backbuffer_resource);
-      core->Initialize();
+      root->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
+      root->GetCore()->Initialize();
 
       const auto file_path = config_property->GetObjectItem("file_path")->GetString();
       const auto file_name = config_property->GetObjectItem("file_name")->GetString();
@@ -578,7 +596,7 @@ namespace RayGene3D
         spark->Use();
         imgui->Use();
 
-        core->Use();
+        root->Use();
 
         frame_counter += 1;
         frame_period += delta_time;
@@ -586,7 +604,7 @@ namespace RayGene3D
         if (frame_period > 1.0)
         {
           const auto frame_rate = frame_counter / frame_period;
-          const auto adapter_name = core->AccessDevice()->GetName();
+          const auto adapter_name = root->GetCore()->GetDevice()->GetName();
 
           std::stringstream ss;
           ss << app_name << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
@@ -603,8 +621,7 @@ namespace RayGene3D
       spark->Discard();
       imgui->Discard();
 
-      util->Discard();
-      core->Discard();
+      root->Discard();
 
       glfwDestroyWindow(glfw);
     }
@@ -614,14 +631,13 @@ namespace RayGene3D
     {
       glfwInit();
 
-      core = std::shared_ptr<RayGene3D::Core>(new RayGene3D::Core(RayGene3D::Core::ACCELERATION_VLK));
-      util = std::shared_ptr<RayGene3D::Util>(new RayGene3D::Util(RayGene3D::Util::STORAGE_LOCAL));
+      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Data::STORAGE_LOCAL, RayGene3D::Core::DEVICE_VLK));
 
-      import_broker = std::shared_ptr<RayGene3D::Broker>(new RayGene3D::ImportBroker(core, util));
 
-      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(property, device, backbuffer_ua_view));
+      import_broker = std::shared_ptr<RayGene3D::Broker>(new RayGene3D::ImportBroker(*root));
 
-      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*core));
+      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*root));
+      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*root));
     }
 
     ~GLFWWrapper()
@@ -629,8 +645,9 @@ namespace RayGene3D
       spark.reset();
       imgui.reset();
 
-      util.reset();
-      core.reset();
+      import_broker.reset();
+
+      root.reset();
 
       glfwTerminate();
     }

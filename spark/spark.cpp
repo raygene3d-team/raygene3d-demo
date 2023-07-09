@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  std::shared_ptr<Resource> Spark::RegisterShadowMap(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterShadowMap(Device* device, const std::string& name)
   {
     const auto resource = device->CreateResource(name);
 
@@ -46,7 +46,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterColorTarget(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterColorTarget(Device* device, const std::string& name)
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
@@ -63,7 +63,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterDepthTarget(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterDepthTarget(Device* device, const std::string& name)
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
@@ -80,7 +80,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterScreenData(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterScreenData(Device* device, const std::string& name)
   {
     const auto resource = device->CreateResource(name);
     
@@ -92,7 +92,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterCameraData(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterCameraData(Device* device, const std::string& name)
   {
     const auto resource = device->CreateResource(name);
     
@@ -104,7 +104,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterShadowData(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterShadowData(Device* device, const std::string& name)
   {
     const auto resource = device->CreateResource(name);
 
@@ -116,7 +116,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneInstances(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneInstances(Device* device, const std::string& name)
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
@@ -131,7 +131,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTriangles(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneTriangles(Device* device, const std::string& name)
   {
     const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
 
@@ -146,7 +146,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneVertices0(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneVertices0(Device* device, const std::string& name)
   {
     const auto [data, count] = prop_vertices0->GetTypedBytes<Vertex0>(0);
 
@@ -161,7 +161,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneVertices1(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneVertices1(Device* device, const std::string& name)
   {
     const auto [data, count] = prop_vertices1->GetTypedBytes<Vertex1>(0);
 
@@ -176,7 +176,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneVertices2(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneVertices2(Device* device, const std::string& name)
   {
     const auto [data, count] = prop_vertices2->GetTypedBytes<Vertex2>(0);
 
@@ -191,7 +191,7 @@ namespace RayGene3D
     return resource;
   }
   
-  std::shared_ptr<Resource> Spark::RegisterSceneVertices3(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneVertices3(Device* device, const std::string& name)
   {
     const auto [data, count] = prop_vertices3->GetTypedBytes<Vertex3>(0);
 
@@ -206,7 +206,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTextures0(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneTextures0(Device* device, const std::string& name)
   {
     const auto layers = prop_textures0->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_SRGB;
@@ -234,7 +234,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTextures1(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneTextures1(Device* device, const std::string& name)
   {
     const auto layers = prop_textures1->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -262,7 +262,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTextures2(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneTextures2(Device* device, const std::string& name)
   {
     const auto layers = prop_textures2->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -290,7 +290,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTextures3(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSceneTextures3(Device* device, const std::string& name)
   {
     const auto layers = prop_textures3->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -318,7 +318,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterLightMaps(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterLightMaps(Device* device, const std::string& name)
   {
     const auto layers = prop_lightmaps->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_SRGB;
@@ -346,7 +346,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSkyboxVertices(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSkyboxVertices(Device* device, const std::string& name)
   {
     static const std::array<glm::f32vec4, 4> quad_vtx = {
       glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
@@ -366,7 +366,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSkyboxTriangles(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSkyboxTriangles(Device* device, const std::string& name)
   {
     static const std::array<glm::u32vec3, 2> quad_idx = {
       glm::u32vec3(0u, 1u, 2u),
@@ -384,7 +384,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSkyboxTexture(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterSkyboxTexture(Device* device, const std::string& name)
   {
     const auto layers = prop_skybox->GetArraySize();
     const auto format = FORMAT_R32G32B32A32_FLOAT;
@@ -411,7 +411,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterGraphicArguments(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterGraphicArguments(Device* device, const std::string& name)
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
@@ -425,7 +425,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Resource> Spark::RegisterComputeArguments(const std::string& name)
+  std::shared_ptr<Resource> Spark::RegisterComputeArguments(Device* device, const std::string& name)
   {
     const auto resource = device->CreateResource(name);
     
@@ -437,7 +437,7 @@ namespace RayGene3D
     return resource;
   }
 
-  std::shared_ptr<Layout> Spark::RegisterShadowmapLayout(const std::string& name)
+  std::shared_ptr<Layout> Spark::RegisterShadowmapLayout(Device* device, const std::string& name)
   {
     const auto layout = device->CreateLayout(name);
 
@@ -456,7 +456,7 @@ namespace RayGene3D
     return layout;
   }
 
-  std::shared_ptr<Config> Spark::RegisterShadowmapConfig(const std::string& name)
+  std::shared_ptr<Config> Spark::RegisterShadowmapConfig(Device* device, const std::string& name)
   {
     const auto config = device->CreateConfig(name);
 
@@ -497,7 +497,7 @@ namespace RayGene3D
     return config;
   }
 
-  std::shared_ptr<Pass> Spark::RegisterShadowmapPass(const std::string& name, uint32_t index)
+  std::shared_ptr<Pass> Spark::RegisterShadowmapPass(Device* device, const std::string& name, uint32_t index)
   {
     const auto pass = device->CreatePass(name + "_" + std::to_string(index));
 
@@ -565,7 +565,7 @@ namespace RayGene3D
     return pass;
   }
 
-  std::shared_ptr<Layout> Spark::RegisterUnshadowedLayout(const std::string& name)
+  std::shared_ptr<Layout> Spark::RegisterUnshadowedLayout(Device* device, const std::string& name)
   {
     const auto layout = device->CreateLayout(name);
 
@@ -653,7 +653,7 @@ namespace RayGene3D
     return layout;
   }
 
-  std::shared_ptr<Config> Spark::RegisterUnshadowedConfig(const std::string& name)
+  std::shared_ptr<Config> Spark::RegisterUnshadowedConfig(Device* device, const std::string& name)
   {
     const auto config = device->CreateConfig(name);
 
@@ -712,7 +712,7 @@ namespace RayGene3D
     return config;
   }
 
-  std::shared_ptr<Pass> Spark::RegisterUnshadowedPass(const std::string& name)
+  std::shared_ptr<Pass> Spark::RegisterUnshadowedPass(Device* device, const std::string& name)
   {
     const auto pass = device->CreatePass(name);
 
@@ -842,7 +842,7 @@ namespace RayGene3D
     return pass;
   }
 
-  std::shared_ptr<Layout> Spark::RegisterShadowedLayout(const std::string& name)
+  std::shared_ptr<Layout> Spark::RegisterShadowedLayout(Device* device, const std::string& name)
   {
     const auto layout = device->CreateLayout(name);
     
@@ -931,7 +931,7 @@ namespace RayGene3D
   }
 
 
-  std::shared_ptr<Config> Spark::RegisterShadowedConfig(const std::string& name)
+  std::shared_ptr<Config> Spark::RegisterShadowedConfig(Device* device, const std::string& name)
   {
     const auto config = device->CreateConfig(name);
     
@@ -991,7 +991,7 @@ namespace RayGene3D
   }
 
 
-  std::shared_ptr<Pass> Spark::RegisterShadowedPass(const std::string& name)
+  std::shared_ptr<Pass> Spark::RegisterShadowedPass(Device* device, const std::string& name)
   {
     const auto pass = device->CreatePass(name);
 
@@ -1121,7 +1121,7 @@ namespace RayGene3D
     return pass;
   }
 
-  std::shared_ptr<Layout> Spark::RegisterSkyboxLayout(const std::string& name)
+  std::shared_ptr<Layout> Spark::RegisterSkyboxLayout(Device* device, const std::string& name)
   {
     const auto layout = device->CreateLayout(name);
     
@@ -1161,7 +1161,7 @@ namespace RayGene3D
     return layout;
   }
 
-  std::shared_ptr<Config> Spark::RegisterSkyboxConfig(const std::string& name)
+  std::shared_ptr<Config> Spark::RegisterSkyboxConfig(Device* device, const std::string& name)
   {
     const auto config = device->CreateConfig(name);
     
@@ -1203,7 +1203,7 @@ namespace RayGene3D
     return config;
   }
 
-  std::shared_ptr<Pass> Spark::RegisterSkyboxPass(const std::string& name)
+  std::shared_ptr<Pass> Spark::RegisterSkyboxPass(Device* device, const std::string& name)
   {
     const auto pass = device->CreatePass(name);
 
@@ -1273,7 +1273,7 @@ namespace RayGene3D
     return pass;
   }
 
-  std::shared_ptr<Layout> Spark::RegisterPresentLayout(const std::string& name)
+  std::shared_ptr<Layout> Spark::RegisterPresentLayout(Device* device, const std::string& name)
   {
     const auto layout = device->CreateLayout(name);
 
@@ -1306,14 +1306,14 @@ namespace RayGene3D
     layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
     const std::shared_ptr<View> wi_views[] = {
-      view,
+      backbuffer_rtv,
     };
     layout->UpdateWIViews({ wi_views, uint32_t(std::size(wi_views)) });
 
     return layout;
   }
 
-  std::shared_ptr<Config> Spark::RegisterPresentConfig(const std::string& name)
+  std::shared_ptr<Config> Spark::RegisterPresentConfig(Device* device, const std::string& name)
   {
     const auto config = device->CreateConfig(name);
 
@@ -1328,7 +1328,7 @@ namespace RayGene3D
     return config;
   }
 
-  std::shared_ptr<Pass> Spark::RegisterPresentPass(const std::string& name)
+  std::shared_ptr<Pass> Spark::RegisterPresentPass(Device* device, const std::string& name)
   {
     const auto pass = device->CreatePass(name);
 
@@ -1644,13 +1644,44 @@ namespace RayGene3D
     present_pass->Discard();
   }
 
-  Spark::Spark(const std::shared_ptr<Property>& property, const std::shared_ptr<Device>& device, const std::shared_ptr<View>& view)
-    : Usable("raygene")
-    , property(property)
-    , device(device)
-    , view(view)
+  Spark::Spark(Root& root)
+    : Broker("spark_broker", root)
   {
-    const auto prop_camera = property->GetObjectItem("camera");
+
+    const auto find_view_fn = [this](const std::shared_ptr<View>& view)
+    {
+      if (view->GetName().compare("backbuffer_ua_view") == 0)
+      {
+        this->backbuffer_uav = view;
+      }
+
+      if (view->GetName().compare("backbuffer_rt_view") == 0)
+      {
+        this->backbuffer_rtv = view;
+      }
+    };
+    root.GetCore()->VisitView(find_view_fn);
+
+    const auto find_prop_fn = [this](const std::shared_ptr<Property>& prop)
+    {
+      if (prop->CheckObjectItem("scene"))
+      {
+        this->prop_scene = prop->GetObjectItem("scene");
+      }
+
+      if (prop->CheckObjectItem("camera"))
+      {
+        this->prop_camera = prop->GetObjectItem("camera");
+      }
+
+      if (prop->CheckObjectItem("environment"))
+      {
+        this->prop_environment = prop->GetObjectItem("environment");
+      }
+    };
+    root.GetData()->VisitProperty(find_prop_fn);
+     
+
     {
       prop_eye = prop_camera->GetObjectItem("eye");
       prop_lookat = prop_camera->GetObjectItem("lookat");
@@ -1668,7 +1699,6 @@ namespace RayGene3D
       prop_counter = prop_camera->GetObjectItem("counter");
     }
 
-    const auto prop_scene = property->GetObjectItem("scene");
     {
       prop_instances = prop_scene->GetObjectItem("instances");
       prop_triangles = prop_scene->GetObjectItem("triangles");
@@ -1686,59 +1716,59 @@ namespace RayGene3D
       prop_lightmaps = prop_scene->GetObjectItem("textures4");
     }
 
-    prop_skybox = property->GetObjectItem("environment");
+    auto* device = root.GetCore()->GetDevice().get();
 
-    shadow_map = RegisterShadowMap("spark_shadow_map");
-    color_target = RegisterColorTarget("spark_color_target");
-    depth_target = RegisterDepthTarget("spark_depth_target");
+    shadow_map = RegisterShadowMap(device, "spark_shadow_map");
+    color_target = RegisterColorTarget(device, "spark_color_target");
+    depth_target = RegisterDepthTarget(device, "spark_depth_target");
 
-    screen_data = RegisterScreenData("spark_screen_data");
-    camera_data = RegisterCameraData("spark_camera_data");
-    shadow_data = RegisterShadowData("spark_shadow_data");
+    screen_data = RegisterScreenData(device, "spark_screen_data");
+    camera_data = RegisterCameraData(device, "spark_camera_data");
+    shadow_data = RegisterShadowData(device, "spark_shadow_data");
 
-    scene_instances = RegisterSceneInstances("spark_scene_instances");
-    scene_triangles = RegisterSceneTriangles("spark_scene_triangles");
-    scene_vertices0 = RegisterSceneVertices0("spark_scene_vertices0");
-    scene_vertices1 = RegisterSceneVertices1("spark_scene_vertices1");
-    scene_vertices2 = RegisterSceneVertices2("spark_scene_vertices2");
-    scene_vertices3 = RegisterSceneVertices3("spark_scene_vertices3");
+    scene_instances = RegisterSceneInstances(device, "spark_scene_instances");
+    scene_triangles = RegisterSceneTriangles(device, "spark_scene_triangles");
+    scene_vertices0 = RegisterSceneVertices0(device, "spark_scene_vertices0");
+    scene_vertices1 = RegisterSceneVertices1(device, "spark_scene_vertices1");
+    scene_vertices2 = RegisterSceneVertices2(device, "spark_scene_vertices2");
+    scene_vertices3 = RegisterSceneVertices3(device, "spark_scene_vertices3");
 
-    scene_textures0 = RegisterSceneTextures0("spark_scene_textures0");
-    scene_textures1 = RegisterSceneTextures1("spark_scene_textures1");
-    scene_textures2 = RegisterSceneTextures2("spark_scene_textures2");
-    scene_textures3 = RegisterSceneTextures3("spark_scene_textures3");
+    scene_textures0 = RegisterSceneTextures0(device, "spark_scene_textures0");
+    scene_textures1 = RegisterSceneTextures1(device, "spark_scene_textures1");
+    scene_textures2 = RegisterSceneTextures2(device, "spark_scene_textures2");
+    scene_textures3 = RegisterSceneTextures3(device, "spark_scene_textures3");
 
-    light_maps = RegisterLightMaps("spark_light_maps");
+    light_maps = RegisterLightMaps(device, "spark_light_maps");
 
-    skybox_vertices = RegisterSkyboxVertices("spark_skybox_vertices");
-    skybox_triangles = RegisterSkyboxTriangles("spark_skybox_triangles");
-    skybox_texture = RegisterSkyboxTexture("spark_skybox_textures");
+    skybox_vertices = RegisterSkyboxVertices(device, "spark_skybox_vertices");
+    skybox_triangles = RegisterSkyboxTriangles(device, "spark_skybox_triangles");
+    skybox_texture = RegisterSkyboxTexture(device, "spark_skybox_textures");
 
-    graphic_arguments = RegisterGraphicArguments("spark_graphic_arguments");
-    compute_arguments = RegisterComputeArguments("spark_compute_arguments");
+    graphic_arguments = RegisterGraphicArguments(device, "spark_graphic_arguments");
+    compute_arguments = RegisterComputeArguments(device, "spark_compute_arguments");
 
-    shadowmap_layout = RegisterShadowmapLayout("spark_shadowmap_layout");
-    shadowed_layout = RegisterShadowedLayout("spark_shadowed_layout");
-    unshadowed_layout = RegisterUnshadowedLayout("spark_unshadowed_layout");
-    skybox_layout = RegisterSkyboxLayout("spark_skybox_layout");
-    present_layout = RegisterPresentLayout("spark_present_layout");
+    shadowmap_layout = RegisterShadowmapLayout(device, "spark_shadowmap_layout");
+    shadowed_layout = RegisterShadowedLayout(device, "spark_shadowed_layout");
+    unshadowed_layout = RegisterUnshadowedLayout(device, "spark_unshadowed_layout");
+    skybox_layout = RegisterSkyboxLayout(device, "spark_skybox_layout");
+    present_layout = RegisterPresentLayout(device, "spark_present_layout");
 
-    shadowmap_config = RegisterShadowmapConfig("spark_shadowmap_config");
-    shadowed_config = RegisterShadowedConfig("spark_shadowed_config");
-    unshadowed_config = RegisterUnshadowedConfig("spark_unshadowed_config");
-    skybox_config = RegisterSkyboxConfig("spark_skybox_config");
-    present_config = RegisterPresentConfig("spark_present_config");
+    shadowmap_config = RegisterShadowmapConfig(device, "spark_shadowmap_config");
+    shadowed_config = RegisterShadowedConfig(device, "spark_shadowed_config");
+    unshadowed_config = RegisterUnshadowedConfig(device, "spark_unshadowed_config");
+    skybox_config = RegisterSkyboxConfig(device, "spark_skybox_config");
+    present_config = RegisterPresentConfig(device, "spark_present_config");
 
-    shadowmap_passes[0] = RegisterShadowmapPass("spark_shadowmap_pass", 0);
-    shadowmap_passes[1] = RegisterShadowmapPass("spark_shadowmap_pass", 1);
-    shadowmap_passes[2] = RegisterShadowmapPass("spark_shadowmap_pass", 2);
-    shadowmap_passes[3] = RegisterShadowmapPass("spark_shadowmap_pass", 3);
-    shadowmap_passes[4] = RegisterShadowmapPass("spark_shadowmap_pass", 4);
-    shadowmap_passes[5] = RegisterShadowmapPass("spark_shadowmap_pass", 5);
-    shadowed_pass = RegisterShadowedPass("spark_shadowed_pass");
-    unshadowed_pass = RegisterUnshadowedPass("spark_unshadowed_pass");
+    shadowmap_passes[0] = RegisterShadowmapPass(device, "spark_shadowmap_pass", 0);
+    shadowmap_passes[1] = RegisterShadowmapPass(device, "spark_shadowmap_pass", 1);
+    shadowmap_passes[2] = RegisterShadowmapPass(device, "spark_shadowmap_pass", 2);
+    shadowmap_passes[3] = RegisterShadowmapPass(device, "spark_shadowmap_pass", 3);
+    shadowmap_passes[4] = RegisterShadowmapPass(device, "spark_shadowmap_pass", 4);
+    shadowmap_passes[5] = RegisterShadowmapPass(device, "spark_shadowmap_pass", 5);
+    shadowed_pass = RegisterShadowedPass(device, "spark_shadowed_pass");
+    unshadowed_pass = RegisterUnshadowedPass(device, "spark_unshadowed_pass");
     //skybox_pass = RegisterSkyboxPass("spark_skybox_pass");
-    present_pass = RegisterPresentPass("spark_present_pass");
+    present_pass = RegisterPresentPass(device, "spark_present_pass");
   }
 
   Spark::~Spark()

@@ -13,24 +13,22 @@ namespace RayGene3D
   {
     Discard();
 
-    const auto core = &this->GetCore();
-    const auto device = core->AccessDevice();
-
-    const auto extent_x = root_property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = root_property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
-
+    prop_extent_x = prop_camera->GetObjectItem("extent_x");
+    prop_extent_y = prop_camera->GetObjectItem("extent_y");
 
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
+
+    auto* device = root.GetCore()->GetDevice().get();
 
 
     {
       auto proj_resource = device->CreateResource("imgui_proj_resource");
       {
         const float L = 0.0f;
-        const float R = static_cast<float>(extent_x);
-        const float B = static_cast<float>(extent_y);
+        const float R = static_cast<float>(prop_extent_x->GetUint());
+        const float B = static_cast<float>(prop_extent_y->GetUint());
         const float T = 0.0f;
         const float mvp[4][4] = {
           { 2.0f / (R - L),     0.0f,               0.0f,       0.0f },
@@ -249,7 +247,7 @@ namespace RayGene3D
         config->SetDepthComparison(Config::COMPARISON_ALWAYS);
 
         const Config::Viewport viewports[] = {
-          { 0.0f, 0.0f, float(extent_x), float(extent_y), 0.0f, 1.0f },
+          { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
         };
         config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
       }
@@ -296,7 +294,7 @@ namespace RayGene3D
         pass->SetEnabled(true);
 
         const std::shared_ptr<View> rt_views[] = {
-          output_view,
+          backbuffer_rtv,
         };
         pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
 
@@ -397,14 +395,10 @@ namespace RayGene3D
 
   void Imgui::Use()
   {
-    const auto core = &this->GetCore();
-    const auto extent_x = root_property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = root_property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
-
     ImGuiIO& io = ImGui::GetIO();
 
     // Setup display size (every frame to accommodate for window resizing)
-    io.DisplaySize = ImVec2(float(extent_x), float(extent_y));
+    io.DisplaySize = ImVec2(float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()));
 
 
     const auto now = std::chrono::high_resolution_clock::now();
@@ -517,9 +511,8 @@ namespace RayGene3D
     io.AddInputCharacter(glyph);
   }
 
-  Imgui::Imgui(Core& core)
-    : Usable("imgui")
-    , core(core)
+  Imgui::Imgui(Root& root)
+    : Broker("imgui_broker", root)
   {
     time = std::chrono::high_resolution_clock::now();
   }

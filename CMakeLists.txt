@@ -23,8 +23,6 @@ if(APPLE)
 	add_definitions("-x objective-c++")
 endif(APPLE)
 
-
-
 set(3RDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty)
 set(signal_source
   ${3RDPARTY_DIR}/signals/signals.cpp
@@ -59,6 +57,12 @@ set(SOURCE main.cpp
   imgui/imgui.cpp
   spark/spark.h
   spark/spark.cpp
+  broker/import_broker.h
+  broker/import_broker.cpp
+  broker/lightmap_broker.h
+  broker/lightmap_broker.cpp
+  broker/environment_broker.h
+  broker/environment_broker.cpp
   ${imgui_source}
   ${xatlas_source}
   ${mikktspace_source}

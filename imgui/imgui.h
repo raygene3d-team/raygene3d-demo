@@ -1,26 +1,19 @@
 #pragma once
-#include "../raygene3d-core/core.h"
-#include "../raygene3d-util/util.h"
+#include "../raygene3d-root/root.h"
 
 namespace RayGene3D
 {
-  class Device;
-  class Output;
-  class Asset;
-
-  class Imgui : public Usable
+  class Imgui : public Broker
   {
   protected:
-    Core& core;
-
-  public:
-    Core& GetCore() { return core; }
+    std::shared_ptr<View> backbuffer_rtv;
 
   protected:
-    std::shared_ptr<Property> root_property;
+    std::shared_ptr<Property> prop_camera;
 
-  private:
-    std::shared_ptr<View> output_view;
+  protected:
+    std::shared_ptr<Property> prop_extent_x;
+    std::shared_ptr<Property> prop_extent_y;
 
   protected:
     bool show_test_window{ true };
@@ -72,7 +65,7 @@ namespace RayGene3D
     void OnChar(unsigned int glyph);
 
   public:
-    Imgui(Core& core);
+    Imgui(Root& root);
     virtual ~Imgui();
   };
 }
