@@ -46,7 +46,7 @@ constexpr float def_f_plane{ 100.0f };
 constexpr uint32_t def_device_ordinal{ 0 };
 constexpr bool def_device_debug{ false };
 
-constexpr char config_path[] = { "config.json" };
+constexpr char setup_name[] = { "setup.json" };
 
 #define GLFW_INCLUDE_NONE
 #include <glfw/glfw3.h>
@@ -67,63 +67,63 @@ constexpr char config_path[] = { "config.json" };
 #import <simd/simd.h>
 #endif
 
-std::shared_ptr<RayGene3D::Property> LoadConfig(const std::string& file_path)
+std::shared_ptr<RayGene3D::Property> LoadSetup(const std::string& setup_name)
 {
   const auto directory = std::string("./");
-  auto property = RayGene3D::LoadProperty(directory, ExtractName(config_path));
+  auto property = RayGene3D::LoadProperty(directory, ExtractName(setup_name));
 
   const auto prop_extent_x = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
   {
-    const auto extent_x = property->CheckObjectItem("size_x") ? property->GetObjectItem("size_x")->GetUint() : def_extent_x;
+    const auto extent_x = property->HasObjectItem("size_x") ? property->GetObjectItem("size_x")->GetUint() : def_extent_x;
     prop_extent_x->SetUint(extent_x);
   }
   property->SetObjectItem("extent_x", prop_extent_x);
 
   const auto prop_extent_y = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
   {
-    const auto extent_y = property->CheckObjectItem("size_y") ? property->GetObjectItem("size_y")->GetUint() : def_extent_y;
+    const auto extent_y = property->HasObjectItem("size_y") ? property->GetObjectItem("size_y")->GetUint() : def_extent_y;
     prop_extent_y->SetUint(extent_y);
   }
   property->SetObjectItem("extent_y", prop_extent_y);
 
   const auto prop_fov_x = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_REAL));
   {
-    const auto fov_x = property->CheckObjectItem("fov_x") ? property->GetObjectItem("fov_x")->GetReal() : def_fov_x;
+    const auto fov_x = property->HasObjectItem("fov_x") ? property->GetObjectItem("fov_x")->GetReal() : def_fov_x;
     prop_fov_x->SetReal(fov_x);
   }
   property->SetObjectItem("fov_x", prop_fov_x);
 
   const auto prop_fov_y = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_REAL));
   {
-    const auto fov_y = property->CheckObjectItem("fov_y") ? property->GetObjectItem("fov_y")->GetReal() : def_fov_y;
+    const auto fov_y = property->HasObjectItem("fov_y") ? property->GetObjectItem("fov_y")->GetReal() : def_fov_y;
     prop_fov_y->SetReal(fov_y);
   }
   property->SetObjectItem("fov_y", prop_fov_y);
 
   const auto prop_n_plane = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_REAL));
   {
-    const auto n_plane = property->CheckObjectItem("n_plane") ? property->GetObjectItem("n_plane")->GetReal() : def_n_plane;
+    const auto n_plane = property->HasObjectItem("n_plane") ? property->GetObjectItem("n_plane")->GetReal() : def_n_plane;
     prop_n_plane->SetReal(n_plane);
   }
   property->SetObjectItem("n_plane", prop_n_plane);
 
   const auto prop_f_plane = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_REAL));
   {
-    const auto f_plane = property->CheckObjectItem("f_plane") ? property->GetObjectItem("f_plane")->GetReal() : def_f_plane;
+    const auto f_plane = property->HasObjectItem("f_plane") ? property->GetObjectItem("f_plane")->GetReal() : def_f_plane;
     prop_f_plane->SetReal(f_plane);
   }
   property->SetObjectItem("f_plane", prop_f_plane);
 
   const auto prop_d_ordinal = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
   {
-    const auto device_ordinal = property->CheckObjectItem("device_ordinal") ? property->GetObjectItem("device_ordinal")->GetUint() : def_device_ordinal;
+    const auto device_ordinal = property->HasObjectItem("device_ordinal") ? property->GetObjectItem("device_ordinal")->GetUint() : def_device_ordinal;
     prop_d_ordinal->SetUint(device_ordinal);
   }
   property->SetObjectItem("device_ordinal", prop_d_ordinal);
 
   const auto prop_d_debug = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_BOOL));
   {
-    const auto device_debug = property->CheckObjectItem("device_debug") ? property->GetObjectItem("device_debug")->GetBool() : def_device_debug;
+    const auto device_debug = property->HasObjectItem("device_debug") ? property->GetObjectItem("device_debug")->GetBool() : def_device_debug;
     prop_d_debug->SetBool(device_debug);
   }
   property->SetObjectItem("device_debug", prop_d_debug);
@@ -131,93 +131,62 @@ std::shared_ptr<RayGene3D::Property> LoadConfig(const std::string& file_path)
   return property;
 }
 
-std::shared_ptr<RayGene3D::Property> LoadScene(const std::shared_ptr<RayGene3D::Core>& core, const std::shared_ptr<RayGene3D::Util>& util,
-  const std::string& file_path, const std::string& file_name)
-{
-  auto property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+//std::shared_ptr<RayGene3D::Property> LoadScene(const std::shared_ptr<RayGene3D::Core>& core, const std::shared_ptr<RayGene3D::Util>& util,
+//  const std::string& file_path, const std::string& file_name)
+//{
+//  auto property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+//
+//  std::ifstream input((file_path + file_name).c_str());
+//  nlohmann::json json;
+//  input >> json;
+//  input.close();
+//
+//  const auto scene_json_propertry = RayGene3D::ParseJSON(json);
+//
+//  {
+//    const auto scene_json_property = scene_json_propertry->GetObjectItem("scene");
+//
+//    const auto scene_file = scene_json_property->GetObjectItem("file")->GetString();
+//    const auto scene_flip = scene_json_property->GetObjectItem("flip")->GetBool();
+//    const auto scene_scale = scene_json_property->GetObjectItem("scale")->GetReal();
+//    const auto scene_quality = scene_json_property->GetObjectItem("quality")->GetUint();
+//
+//    const auto directory = std::string("cache/");
+//    std::shared_ptr<RayGene3D::Property> scene_prop;
+//    try
+//    {
+//      scene_prop = RayGene3D::LoadProperty(directory, ExtractName(scene_file));
+//    }
+//    catch (std::exception e)
+//    {
+//      //const auto extension = ExtractExtension(scene_file);
+//
+//      const auto io_broker = new RayGene3D::IOBroker(core, util);
+//
+//      io_broker->SetFileName(file_name);
+//      io_broker->SetPathName(file_path);
+//
+//      //if (std::strcmp(extension.c_str(), "obm") == 0)
+//      //{
+//      //  scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_flip, scene_scale, scene_quality);
+//      //}
+//      //else if (std::strcmp(extension.c_str(), "gltf") == 0)
+//      //{
+//      //  scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_flip, scene_scale, scene_quality);
+//      //}
+//
+//      //RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
+//
+//      RayGene3D::SaveProperty(directory, ExtractName(scene_file), util->GetProperty());
+//    }
+//
+//    property->SetObjectItem("scene", scene_prop);
+//  }
 
-  std::ifstream input((file_path + file_name).c_str());
-  nlohmann::json json;
-  input >> json;
-  input.close();
 
-  const auto scene_json_propertry = RayGene3D::ParseJSON(json);
 
-  {
-    const auto scene_json_property = scene_json_propertry->GetObjectItem("scene");
-
-    const auto scene_file = scene_json_property->GetObjectItem("file")->GetString();
-    const auto scene_flip = scene_json_property->GetObjectItem("flip")->GetBool();
-    const auto scene_scale = scene_json_property->GetObjectItem("scale")->GetReal();
-    const auto scene_quality = scene_json_property->GetObjectItem("quality")->GetUint();
-
-    const auto directory = std::string("cache/");
-    std::shared_ptr<RayGene3D::Property> scene_prop;
-    try
-    {
-      scene_prop = RayGene3D::LoadProperty(directory, ExtractName(scene_file));
-    }
-    catch (std::exception e)
-    {
-      //const auto extension = ExtractExtension(scene_file);
-
-      const auto import_broker = new RayGene3D::ImportBroker(core, util);
-
-      import_broker->SetFileName(file_name);
-      import_broker->SetPathName(file_path);
-
-      //if (std::strcmp(extension.c_str(), "obm") == 0)
-      //{
-      //  scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_flip, scene_scale, scene_quality);
-      //}
-      //else if (std::strcmp(extension.c_str(), "gltf") == 0)
-      //{
-      //  scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_flip, scene_scale, scene_quality);
-      //}
-
-      //RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
-
-      RayGene3D::SaveProperty(directory, ExtractName(scene_file), util->GetProperty());
-    }
-
-    property->SetObjectItem("scene", scene_prop);
-  }
-
-  {
-    const auto camera_json_property = scene_json_propertry->GetObjectItem("camera");
-
-    const auto prop_eye = camera_json_property->GetObjectItem("eye");
-    const auto prop_lookat = camera_json_property->GetObjectItem("lookat");
-    const auto prop_up = camera_json_property->GetObjectItem("up");
-
-    const auto prop_counter = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
-    prop_counter->SetUint(0);
-
-    const auto camera_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
-
-    camera_property->SetObjectItem("eye", prop_eye);
-    camera_property->SetObjectItem("lookat", prop_lookat);
-    camera_property->SetObjectItem("up", prop_up);
-
-    camera_property->SetObjectItem("counter", prop_counter);
-
-    property->SetObjectItem("camera", camera_property);
-  }
-
-  {
-    const auto environment_json_property = scene_json_propertry->GetObjectItem("environment");
-
-    const auto environment_file = environment_json_property->GetObjectItem("file")->GetString();
-    const auto environment_exposure = environment_json_property->GetObjectItem("exposure")->GetReal();
-    const auto environment_quality = environment_json_property->GetObjectItem("quality")->GetUint();
-
-    const auto environment_prop = RayGene3D::ImportEXR(file_path, environment_file, environment_exposure, environment_quality);
-
-    property->SetObjectItem("environment", environment_prop);
-  }
-
-  return property;
-}
+ // return property;
+//}
 
 namespace RayGene3D
 {
@@ -234,7 +203,7 @@ namespace RayGene3D
     std::shared_ptr<RayGene3D::Imgui> imgui;
 
   protected:
-    std::shared_ptr<RayGene3D::ImportBroker> import_broker;
+    std::shared_ptr<RayGene3D::IOBroker> io_broker;
     //std::shared_ptr<RayGene3D::ImportBroker> lightmap_broker;
     //std::shared_ptr<RayGene3D::ImportBroker> environment_broker;
 
@@ -392,14 +361,14 @@ namespace RayGene3D
   public:
     void Initialize()
     {
-      auto config_property = LoadConfig(config_path);
+      auto setup_property = LoadSetup(setup_name);
 
-      prop_extent_x = config_property->GetObjectItem("extent_x");
-      prop_extent_y = config_property->GetObjectItem("extent_y");
-      prop_fov_x = config_property->GetObjectItem("fov_x");
-      prop_fov_y = config_property->GetObjectItem("fov_y");
-      prop_n_plane = config_property->GetObjectItem("n_plane");
-      prop_f_plane = config_property->GetObjectItem("f_plane");
+      prop_extent_x = setup_property->GetObjectItem("extent_x");
+      prop_extent_y = setup_property->GetObjectItem("extent_y");
+      prop_fov_x = setup_property->GetObjectItem("fov_x");
+      prop_fov_y = setup_property->GetObjectItem("fov_y");
+      prop_n_plane = setup_property->GetObjectItem("n_plane");
+      prop_f_plane = setup_property->GetObjectItem("f_plane");
 
       const auto extent_x = prop_extent_x->GetUint();
       const auto extent_y = prop_extent_y->GetUint();
@@ -427,8 +396,8 @@ namespace RayGene3D
 #endif
 
       const auto device = root->GetCore()->GetDevice().get();
-      const auto device_debug = config_property->GetObjectItem("device_debug")->GetBool();
-      const auto device_ordinal = config_property->GetObjectItem("device_ordinal")->GetUint();
+      const auto device_debug = setup_property->GetObjectItem("device_debug")->GetBool();
+      const auto device_ordinal = setup_property->GetObjectItem("device_ordinal")->GetUint();
       device->SetWindow(window_handle);
       device->SetDisplay(display_handle);
       device->SetPath("./asset/shaders/");
@@ -467,29 +436,86 @@ namespace RayGene3D
       root->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
       root->GetCore()->Initialize();
 
-      const auto file_path = config_property->GetObjectItem("file_path")->GetString();
-      const auto file_name = config_property->GetObjectItem("file_name")->GetString();
+      const auto config_path = setup_property->GetObjectItem("file_path")->GetString();
+      const auto config_name = setup_property->GetObjectItem("file_name")->GetString();
 
-      auto property = LoadScene(file_path, file_name);
+      std::ifstream input((config_path + config_name).c_str());
+      nlohmann::json json;
+      input >> json;
+      input.close();
+      const auto config_property = RayGene3D::ParseJSON(json);
 
-      const auto prop_camera = property->GetObjectItem("camera");
-      prop_eye = prop_camera->GetObjectItem("eye");
-      prop_lookat = prop_camera->GetObjectItem("lookat");
-      prop_up = prop_camera->GetObjectItem("up");
-      prop_counter = prop_camera->GetObjectItem("counter");
+      //auto property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+      {
+        const auto scene_name = config_property->GetObjectItem("scene")->GetObjectItem("file")->GetString();
+        const auto scene_path = config_path;
 
-      prop_camera->SetObjectItem("extent_x", prop_extent_x);
-      prop_camera->SetObjectItem("extent_y", prop_extent_y);
-      prop_camera->SetObjectItem("fov_x", prop_fov_x);
-      prop_camera->SetObjectItem("fov_y", prop_fov_y);
-      prop_camera->SetObjectItem("n_plane", prop_n_plane);
-      prop_camera->SetObjectItem("f_plane", prop_f_plane);
+        std::shared_ptr<Property> scene_property;
+        root->GetData()->GetStorage()->Load(ExtractName(scene_name), scene_property);
+
+        if (!scene_property)
+        {
+          io_broker->SetFileName(scene_name);
+          io_broker->SetPathName(scene_path);
+
+          const auto scene_flip = config_property->GetObjectItem("scene")->GetObjectItem("flip")->GetBool();
+          const auto scene_scale = config_property->GetObjectItem("scene")->GetObjectItem("scale")->GetReal();
+          const auto scene_quality = config_property->GetObjectItem("scene")->GetObjectItem("quality")->GetUint();
+
+          io_broker->SetCoordinateFlip(scene_flip);
+          io_broker->SetPositionScale(scene_scale);
+          io_broker->SetTextureLevel(scene_quality);
+
+          io_broker->Initialize();
+          io_broker->Export(scene_property);
+
+          root->GetData()->GetStorage()->Save(ExtractName(scene_name), scene_property);
+        }
+
+        root->GetData()->GetStorage()->Set("scene", scene_property);
+      }
+
+      {
+        const auto camera_eye = config_property->GetObjectItem("camera")->GetObjectItem("eye");
+        const auto camera_lookat = config_property->GetObjectItem("camera")->GetObjectItem("lookat");
+        const auto camera_up = config_property->GetObjectItem("camera")->GetObjectItem("up");
+
+        const auto camera_counter = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
+        camera_counter->SetUint(0);
+
+        const auto camera_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+
+        camera_property->SetObjectItem("eye", prop_eye);
+        camera_property->SetObjectItem("lookat", prop_lookat);
+        camera_property->SetObjectItem("up", prop_up);
+
+        camera_property->SetObjectItem("counter", prop_counter);
+
+        camera_property->SetObjectItem("extent_x", prop_extent_x);
+        camera_property->SetObjectItem("extent_y", prop_extent_y);
+        camera_property->SetObjectItem("fov_x", prop_fov_x);
+        camera_property->SetObjectItem("fov_y", prop_fov_y);
+        camera_property->SetObjectItem("n_plane", prop_n_plane);
+        camera_property->SetObjectItem("f_plane", prop_f_plane);
+
+        root->GetData()->GetStorage()->Set("camera", camera_property);
+      }
+
+      {
+        const auto environment_path = std::string("./").c_str();
+        const auto environment_name = config_property->GetObjectItem("environment")->GetObjectItem("file")->GetString();
+        const auto environment_exposure = config_property->GetObjectItem("environment")->GetObjectItem("exposure")->GetReal();
+        const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
+
+        const auto environment_property = RayGene3D::ImportEXR(environment_path, environment_name, environment_exposure, environment_quality);
+
+        root->GetData()->GetStorage()->Set("environment", environment_property);
+      }
+
 
       spark->Initialize();
       spark->SetShadowType(Spark::NO_SHADOWS);
 
-      imgui->AccessRootProperty() = property;
-      imgui->AccessOutputView() = backbuffer_rt_view;
       imgui->Initialize();
       imgui->SetShowTestWindow(false);
     }
@@ -634,7 +660,7 @@ namespace RayGene3D
       root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Data::STORAGE_LOCAL, RayGene3D::Core::DEVICE_VLK));
 
 
-      import_broker = std::shared_ptr<RayGene3D::Broker>(new RayGene3D::ImportBroker(*root));
+      io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
 
       spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*root));
       imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*root));
@@ -645,7 +671,7 @@ namespace RayGene3D
       spark.reset();
       imgui.reset();
 
-      import_broker.reset();
+      io_broker.reset();
 
       root.reset();
 

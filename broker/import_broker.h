@@ -32,11 +32,9 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  class Core;
+  //class Core;
 
-  //class tinygltf::Model;
-
-  class ImportBroker : public Broker
+  class IOBroker : public Broker
   {
   protected:
     std::string file_name;
@@ -74,6 +72,10 @@ namespace RayGene3D
     void SetCoordinateFlip(bool coordinate_flip) { this->coordinate_flip = coordinate_flip; }
     void SetTextureLevel(uint32_t texture_level) { this->texture_level = texture_level; }
 
+  public:
+    void Export(std::shared_ptr<Property>& property) const;
+    void Import(const std::shared_ptr<Property>& property);
+
   private:
     //std::shared_ptr<Property> ImportOBJM(const std::string& path, const std::string& name, bool flip, float scale, uint32_t mipmaps);
 
@@ -87,8 +89,9 @@ namespace RayGene3D
 
 
   public:
-    ImportBroker(Root& root)
-      : Broker("import_broker", root) {}
-    virtual ~ImportBroker();
+    IOBroker(Root& root);
+    virtual ~IOBroker();
   };
+
+  std::shared_ptr<Property> ImportEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
 }

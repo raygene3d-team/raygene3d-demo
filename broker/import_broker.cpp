@@ -441,7 +441,100 @@ namespace RayGene3D
   //  }
   //}
 
-  void ImportBroker::Initialize()
+
+  std::shared_ptr<Property> CreatePropertyFromTexture(std::pair<const void*, uint32_t> bytes, int32_t tex_x, int32_t tex_y, uint32_t mipmaps)
+  {
+    const auto mipmap_count_fn = [](uint32_t value)
+    {
+      uint32_t power = 0;
+      while ((value >> power) > 0) ++power;
+      return power;
+    };
+    mipmaps = mipmaps > 0 ? mipmaps : std::min(mipmap_count_fn(tex_x), mipmap_count_fn(tex_y));
+
+    //const uint32_t tex_x = (1 << mipmaps) - 1;
+    //const uint32_t tex_y = (1 << mipmaps) - 1;
+    //const uint32_t tex_n = 4;
+
+    const auto texel_count = uint32_t(((1 << mipmaps) * (1 << mipmaps) - 1) / 3);
+    const auto texel_stride = uint32_t(sizeof(glm::u8vec4));
+    unsigned char* texel_data = new unsigned char[texel_count * 4];
+
+    auto dst_tex_x = 1 << (mipmaps - 1);
+    auto dst_tex_y = 1 << (mipmaps - 1);
+    auto dst_tex_n = 4;
+    auto dst_tex_data = texel_data;
+
+    stbir_resize_uint8(reinterpret_cast<const unsigned char*>(bytes.first), tex_x, tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, 4);
+
+    auto src_tex_x = dst_tex_x;
+    auto src_tex_y = dst_tex_y;
+    auto src_tex_n = dst_tex_n;
+    auto src_tex_data = dst_tex_data;
+
+    for (uint32_t i = 1; i < mipmaps; ++i)
+    {
+      dst_tex_x = 1 << (mipmaps - 1 - i);
+      dst_tex_y = 1 << (mipmaps - 1 - i);
+      dst_tex_n = src_tex_n;
+      dst_tex_data += src_tex_x * src_tex_y * src_tex_n;
+      stbir_resize_uint8(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
+
+      src_tex_data = dst_tex_data;
+      src_tex_x = dst_tex_x;
+      src_tex_y = dst_tex_y;
+      src_tex_n = dst_tex_n;
+    }
+
+
+    const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+    {
+      texels_property->RawAllocate(texel_count * texel_stride);
+      texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
+    }
+    delete[] texel_data;
+
+    return texels_property;
+  }
+
+
+  std::shared_ptr<Property> CreatePropertyFromTextures(const std::vector<Texture>& textures, uint32_t mipmaps)
+  {
+    auto textures_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
+
+    if (textures.empty())
+    {
+      textures_property->SetArraySize(uint32_t(1));
+
+      const auto texel_value = glm::u8vec4(255, 255, 255, 255);
+      const auto texel_size = uint32_t(sizeof(texel_value));
+
+      const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+      texels_property->RawAllocate(texel_size);
+      texels_property->SetRawBytes({ &texel_value, texel_size }, 0);
+      textures_property->SetArrayItem(0, texels_property);
+    }
+    else
+    {
+      textures_property->SetArraySize(uint32_t(textures.size()));
+      for (uint32_t i = 0; i < textures_property->GetArraySize(); ++i)
+      {
+        const Texture& texture = textures[i];
+
+        const auto tex_x = int32_t(texture.extent_x);
+        const auto tex_y = int32_t(texture.extent_y);
+        const auto tex_data = reinterpret_cast<const void*>(texture.texels.data());
+        const auto tex_size = uint32_t(texture.texels.size() * sizeof(glm::u8vec4));
+
+        const auto mipmaps_property = CreatePropertyFromTexture(std::pair(tex_data, tex_size), tex_x, tex_y, mipmaps);
+
+        textures_property->SetArrayItem(i, mipmaps_property);
+      }
+    }
+    return textures_property;
+  }
+
+  void IOBroker::Initialize()
   {
     const auto extension = ExtractExtension(file_name);
 
@@ -458,17 +551,17 @@ namespace RayGene3D
     UpdateTangents(instances, triangles, vertices);
   }
 
-  void ImportBroker::Use()
+  void IOBroker::Use()
   {}
 
-  void ImportBroker::Discard()
+  void IOBroker::Discard()
   {
     instances.clear();
     triangles.clear();
     vertices.clear();
   }
 
-  void ImportBroker::ImportGLTF()
+  void IOBroker::ImportGLTF()
   {
     tinygltf::TinyGLTF gltf_ctx;
 
@@ -641,7 +734,7 @@ namespace RayGene3D
     }
   }
 
-  void ImportBroker::ImportOBJM()
+  void IOBroker::ImportOBJM()
   {
     tinyobj::attrib_t obj_attrib;
     std::vector<tinyobj::shape_t> obj_shapes;
@@ -855,10 +948,149 @@ namespace RayGene3D
     }
   }
 
-  ImportBroker::ImportBroker(const std::shared_ptr<Core>& core, const std::shared_ptr<Util>& util)
-    : Broker("ImportBroker", core, util)
+  void IOBroker::Export(std::shared_ptr<Property>& property) const
+  {
+    auto temp = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
+    //property->setSetValue(Property::object());
+  
+    const auto instances_property = CreateBufferProperty(instances.data(), uint32_t(sizeof(Instance)), uint32_t(instances.size()));
+    temp->SetObjectItem("instances", instances_property);
+  
+    const auto triangles_property = CreateBufferProperty(triangles.data(), uint32_t(sizeof(Triangle)), uint32_t(triangles.size()));
+    temp->SetObjectItem("triangles", triangles_property);
+
+    const auto vertices_property = CreateBufferProperty(vertices.data(), uint32_t(sizeof(Vertex)), uint32_t(vertices.size()));
+    temp->SetObjectItem("vertices", vertices_property);
+  
+    //const auto vertices0_property = CreateBufferProperty(scene_vertices0.data(), uint32_t(sizeof(Vertex0)), uint32_t(scene_vertices0.size()));
+    //property->SetObjectItem("vertices0", vertices0_property);
+    //const auto vertices1_property = CreateBufferProperty(scene_vertices1.data(), uint32_t(sizeof(Vertex1)), uint32_t(scene_vertices1.size()));
+    //property->SetObjectItem("vertices1", vertices1_property);
+    //const auto vertices2_property = CreateBufferProperty(scene_vertices2.data(), uint32_t(sizeof(Vertex2)), uint32_t(scene_vertices2.size()));
+    //property->SetObjectItem("vertices2", vertices2_property);
+    //const auto vertices3_property = CreateBufferProperty(scene_vertices3.data(), uint32_t(sizeof(Vertex3)), uint32_t(scene_vertices3.size()));
+    //property->SetObjectItem("vertices3", vertices3_property);
+  
+    const auto textures0_property = CreatePropertyFromTextures(textures_0, texture_level);
+    temp->SetObjectItem("textures0", textures0_property);
+    const auto textures1_property = CreatePropertyFromTextures(textures_1, texture_level);
+    temp->SetObjectItem("textures1", textures1_property);
+    const auto textures2_property = CreatePropertyFromTextures(textures_2, texture_level);
+    temp->SetObjectItem("textures2", textures2_property);
+    const auto textures3_property = CreatePropertyFromTextures(textures_3, texture_level);
+    temp->SetObjectItem("textures3", textures3_property);
+
+    property = temp;
+  }
+
+
+  std::shared_ptr<Property> ImportEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
+  {
+    int32_t src_tex_x = 0;
+    int32_t src_tex_y = 0;
+    int32_t src_tex_n = 4;
+    float* src_tex_data = nullptr;
+    BLAST_ASSERT(0 == LoadEXR(&src_tex_data, &src_tex_x, &src_tex_y, (name).c_str(), nullptr));
+
+    int32_t dst_tex_x = src_tex_x;
+    int32_t dst_tex_y = src_tex_y;
+    int32_t dst_tex_n = 4;
+    float* dst_tex_data = new float[dst_tex_x * dst_tex_y * dst_tex_n];
+    for (uint32_t j = 0; j < src_tex_x * src_tex_y; ++j)
+    {
+      const auto r = src_tex_n > 0 ? src_tex_data[j * src_tex_n + 0] : 0; //0xFF;
+      const auto g = src_tex_n > 1 ? src_tex_data[j * src_tex_n + 1] : r; //0xFF;
+      const auto b = src_tex_n > 2 ? src_tex_data[j * src_tex_n + 2] : r; //0xFF;
+      const auto a = src_tex_n > 3 ? src_tex_data[j * src_tex_n + 3] : r; //0xFF;
+      dst_tex_data[j * dst_tex_n + 0] = r * exposure;
+      dst_tex_data[j * dst_tex_n + 1] = g * exposure;
+      dst_tex_data[j * dst_tex_n + 2] = b * exposure;
+      dst_tex_data[j * dst_tex_n + 3] = a * exposure;
+    }
+    delete[] src_tex_data;
+
+    src_tex_data = dst_tex_data;
+    src_tex_x = dst_tex_x;
+    src_tex_y = dst_tex_y;
+    src_tex_n = dst_tex_n;
+
+    const auto get_pot_fn = [](int32_t value)
+    {
+      int32_t power = 0;
+      while ((1 << power) < value) ++power;
+      return power;
+    };
+
+    const auto pow_tex_x = get_pot_fn(src_tex_x);
+    const auto pow_tex_y = get_pot_fn(src_tex_y);
+    const auto pow_delta = std::abs(pow_tex_x - pow_tex_y);
+
+    //const uint32_t tex_x = (1 << (pow_tex_x > pow_tex_y ? mipmap_count + pow_delta : mipmap_count)) - 1;
+    //const uint32_t tex_y = (1 << (pow_tex_y > pow_tex_x ? mipmap_count + pow_delta : mipmap_count)) - 1;
+    //const uint32_t tex_n = 4;
+
+    const auto texel_pow_x = pow_tex_x > pow_tex_y ? mipmaps + pow_delta : mipmaps;
+    const auto texel_pow_y = pow_tex_y > pow_tex_x ? mipmaps + pow_delta : mipmaps;
+    const auto texel_count = uint32_t(((1 << texel_pow_x) * (1 << texel_pow_y) - 1) / 3);
+    const auto texel_stride = uint32_t(sizeof(glm::f32vec4));
+    float* texel_data = new float[texel_count * 4];
+
+    dst_tex_x = 1 << (texel_pow_x - 1);
+    dst_tex_y = 1 << (texel_pow_y - 1);
+    dst_tex_n = src_tex_n;
+    dst_tex_data = texel_data;
+    stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
+    delete[] src_tex_data;
+
+    //const auto size_x_property = std::shared_ptr<Property>(new Property());
+    //size_x_property->SetValue(uint32_t(dst_tex_x));
+
+    //const auto size_y_property = std::shared_ptr<Property>(new Property());
+    //size_y_property->SetValue(uint32_t(dst_tex_y));
+
+    //const auto mipmaps_property = std::shared_ptr<Property>(new Property());
+    //mipmaps_property->SetValue(uint32_t(mipmaps));
+
+    src_tex_data = dst_tex_data;
+    src_tex_x = dst_tex_x;
+    src_tex_y = dst_tex_y;
+    src_tex_n = dst_tex_n;
+
+    for (uint32_t i = 1; i < mipmaps; ++i)
+    {
+      dst_tex_x = src_tex_x >> 1;
+      dst_tex_y = src_tex_y >> 1;
+      dst_tex_n = src_tex_n;
+      dst_tex_data += src_tex_x * src_tex_y * src_tex_n;
+      stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
+
+      src_tex_data = dst_tex_data;
+      src_tex_x = dst_tex_x;
+      src_tex_y = dst_tex_y;
+      src_tex_n = dst_tex_n;
+    }
+
+    const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+    {
+      texels_property->RawAllocate(texel_count * texel_stride);
+      texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
+    }
+    delete[] texel_data;
+
+    const auto texture_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
+    //texture_property->SetValue(Property::array());
+    texture_property->SetArraySize(1);
+    texture_property->SetArrayItem(0, texels_property);
+
+    return texture_property;
+  }
+
+
+
+  IOBroker::IOBroker(Root& root)
+    : Broker("io_broker", root)
   {}
 
-  ImportBroker::~ImportBroker()
+  IOBroker::~IOBroker()
   {}
 }

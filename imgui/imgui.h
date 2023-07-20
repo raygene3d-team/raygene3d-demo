@@ -43,12 +43,6 @@ namespace RayGene3D
     std::chrono::high_resolution_clock::time_point time;
 
   public:
-    std::shared_ptr<Property>& AccessRootProperty() { return root_property; }
-
-  public:
-    std::shared_ptr<View>& AccessOutputView() { return output_view; }
-
-  public:
     void SetShowTestWindow(bool show_test_window) { this->show_test_window = show_test_window; }
     bool GetShowTestWindow() const { return show_test_window; }
 

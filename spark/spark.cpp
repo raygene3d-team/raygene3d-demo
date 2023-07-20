@@ -1664,17 +1664,17 @@ namespace RayGene3D
 
     const auto find_prop_fn = [this](const std::shared_ptr<Property>& prop)
     {
-      if (prop->CheckObjectItem("scene"))
+      if (prop->HasObjectItem("scene"))
       {
         this->prop_scene = prop->GetObjectItem("scene");
       }
 
-      if (prop->CheckObjectItem("camera"))
+      if (prop->HasObjectItem("camera"))
       {
         this->prop_camera = prop->GetObjectItem("camera");
       }
 
-      if (prop->CheckObjectItem("environment"))
+      if (prop->HasObjectItem("environment"))
       {
         this->prop_environment = prop->GetObjectItem("environment");
       }
