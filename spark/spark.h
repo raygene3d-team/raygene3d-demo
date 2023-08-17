@@ -32,8 +32,6 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  //class Device;
-
   class Spark : public Broker
   {
   protected:
@@ -109,6 +107,69 @@ namespace RayGene3D
     std::shared_ptr<Resource> compute_arguments;
 
   protected:
+    std::shared_ptr<View> shadowmap_camera_data;
+    std::shared_ptr<View> shadowmap_shadow_map[6];
+    std::vector<std::shared_ptr<View>> shadowmap_graphic_arguments;
+    std::shared_ptr<View> shadowmap_scene_vertices0;
+    std::shared_ptr<View> shadowmap_scene_triangles;
+
+  protected:
+    std::shared_ptr<View> unshadowed_screen_data;
+    std::shared_ptr<View> unshadowed_camera_data;
+    std::shared_ptr<View> unshadowed_shadow_data;
+    std::shared_ptr<View> unshadowed_scene_instances;
+    std::shared_ptr<View> unshadowed_scene_textures0;
+    std::shared_ptr<View> unshadowed_scene_textures1;
+    std::shared_ptr<View> unshadowed_scene_textures2;
+    std::shared_ptr<View> unshadowed_scene_textures3;
+    std::shared_ptr<View> unshadowed_light_maps;
+    std::shared_ptr<View> unshadowed_color_target;
+    std::shared_ptr<View> unshadowed_depth_target;
+    std::vector<std::shared_ptr<View>>  unshadowed_graphic_arguments;
+    std::shared_ptr<View> unshadowed_scene_vertices0;
+    std::shared_ptr<View> unshadowed_scene_vertices1;
+    std::shared_ptr<View> unshadowed_scene_vertices2;
+    std::shared_ptr<View> unshadowed_scene_vertices3;
+    std::shared_ptr<View> unshadowed_scene_triangles;
+
+  protected:
+    std::shared_ptr<View> shadowed_screen_data;
+    std::shared_ptr<View> shadowed_camera_data;
+    std::shared_ptr<View> shadowed_shadow_data;
+    std::shared_ptr<View> shadowed_scene_instances;
+    std::shared_ptr<View> shadowed_scene_textures0;
+    std::shared_ptr<View> shadowed_scene_textures1;
+    std::shared_ptr<View> shadowed_scene_textures2;
+    std::shared_ptr<View> shadowed_scene_textures3;
+    std::shared_ptr<View> shadowed_shadow_map;
+    std::shared_ptr<View> shadowed_light_maps;
+    std::shared_ptr<View> shadowed_color_target;
+    std::shared_ptr<View> shadowed_depth_target;
+    std::vector<std::shared_ptr<View>>  shadowed_graphic_arguments;
+    std::shared_ptr<View> shadowed_scene_vertices0;
+    std::shared_ptr<View> shadowed_scene_vertices1;
+    std::shared_ptr<View> shadowed_scene_vertices2;
+    std::shared_ptr<View> shadowed_scene_vertices3;
+    std::shared_ptr<View> shadowed_scene_triangles;
+
+  protected:
+    std::shared_ptr<View> skybox_screen_data;
+    std::shared_ptr<View> skybox_camera_data;
+    std::shared_ptr<View> skybox_skybox_texture;
+    std::shared_ptr<View> skybox_skybox_vertices;
+    std::shared_ptr<View> skybox_skybox_triangles;
+    std::shared_ptr<View> skybox_color_target;
+    std::shared_ptr<View> skybox_depth_target;
+
+  protected:
+    std::shared_ptr<View> present_camera_data;
+    std::shared_ptr<View> present_color_target;
+    std::shared_ptr<View> present_compute_arguments;
+
+
+
+
+  protected:
     std::shared_ptr<Layout> shadowmap_layout;
     std::shared_ptr<Layout> unshadowed_layout;
     std::shared_ptr<Layout> shadowed_layout;
@@ -126,7 +187,7 @@ namespace RayGene3D
     std::shared_ptr<Pass> shadowmap_passes[6];
     std::shared_ptr<Pass> unshadowed_pass;
     std::shared_ptr<Pass> shadowed_pass;
-    //std::shared_ptr<Pass> skybox_pass;
+    std::shared_ptr<Pass> skybox_pass;
     std::shared_ptr<Pass> present_pass;
    
 
@@ -156,54 +217,54 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   protected:
-    std::shared_ptr<Resource> RegisterColorTarget(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterDepthTarget(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterShadowMap(Device* device, const std::string& name);
+    void InitializeColorTarget();
+    void InitializeDepthTarget();
+    void InitializeShadowMap();
 
-    std::shared_ptr<Resource> RegisterScreenData(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterCameraData(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterShadowData(Device* device, const std::string& name);
+    void InitializeScreenData();
+    void InitializeCameraData();
+    void InitializeShadowData();
 
-    std::shared_ptr<Resource> RegisterSceneInstances(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneTriangles(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneVertices0(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneVertices1(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneVertices2(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneVertices3(Device* device, const std::string& name);
+    void InitializeSceneInstances();
+    void InitializeSceneTriangles();
+    void InitializeSceneVertices0();
+    void InitializeSceneVertices1();
+    void InitializeSceneVertices2();
+    void InitializeSceneVertices3();
 
-    std::shared_ptr<Resource> RegisterSceneTextures0(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneTextures1(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneTextures2(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneTextures3(Device* device, const std::string& name);
+    void InitializeSceneTextures0();
+    void InitializeSceneTextures1();
+    void InitializeSceneTextures2();
+    void InitializeSceneTextures3();
 
-    std::shared_ptr<Resource> RegisterLightMaps(Device* device, const std::string& name);
+    void InitializeLightMaps();
 
-    std::shared_ptr<Resource> RegisterSkyboxVertices(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSkyboxTriangles(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterSkyboxTexture(Device* device, const std::string& name);
+    void InitializeSkyboxVertices();
+    void InitializeSkyboxTriangles();
+    void InitializeSkyboxTexture();
 
-    std::shared_ptr<Resource> RegisterGraphicArguments(Device* device, const std::string& name);
-    std::shared_ptr<Resource> RegisterComputeArguments(Device* device, const std::string& name);
+    void InitializeGraphicArguments();
+    void InitializeComputeArguments();
 
-    std::shared_ptr<Layout> RegisterShadowmapLayout(Device* device, const std::string& name);
-    std::shared_ptr<Config> RegisterShadowmapConfig(Device* device, const std::string& name);
-    std::shared_ptr<Pass> RegisterShadowmapPass(Device* device, const std::string& name, uint32_t index);
+    void InitializeShadowmapLayout();
+    void InitializeShadowmapConfig();
+    void InitializeShadowmapPass(uint32_t index);
 
-    std::shared_ptr<Layout> RegisterShadowedLayout(Device* device, const std::string& name);
-    std::shared_ptr<Config> RegisterShadowedConfig(Device* device, const std::string& name);
-    std::shared_ptr<Pass> RegisterShadowedPass(Device* device, const std::string& name);
+    void InitializeShadowedLayout();
+    void InitializeShadowedConfig();
+    void InitializeShadowedPass();
 
-    std::shared_ptr<Layout> RegisterUnshadowedLayout(Device* device, const std::string& name);
-    std::shared_ptr<Config> RegisterUnshadowedConfig(Device* device, const std::string& name);
-    std::shared_ptr<Pass> RegisterUnshadowedPass(Device* device, const std::string& name);
+    void InitializeUnshadowedLayout();
+    void InitializeUnshadowedConfig();
+    void InitializeUnshadowedPass();
 
-    std::shared_ptr<Layout> RegisterSkyboxLayout(Device* device, const std::string& name);
-    std::shared_ptr<Config> RegisterSkyboxConfig(Device* device, const std::string& name);
-    std::shared_ptr<Pass> RegisterSkyboxPass(Device* device, const std::string& name);
+    void InitializeSkyboxLayout();
+    void InitializeSkyboxConfig();
+    void InitializeSkyboxPass();
 
-    std::shared_ptr<Layout> RegisterPresentLayout(Device* device, const std::string& name);
-    std::shared_ptr<Config> RegisterPresentConfig(Device* device, const std::string& name);
-    std::shared_ptr<Pass> RegisterPresentPass(Device* device, const std::string& name);
+    void InitializePresentLayout();
+    void InitializePresentConfig();
+    void InitializePresentPass();
 
   public:
     void Initialize() override;

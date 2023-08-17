@@ -48,6 +48,7 @@ namespace RayGene3D
         proj_resource->SetCount(constants_count);
         proj_resource->SetInteropCount(1);
         proj_resource->SetInteropItem(0, proj_property->GetRawBytes(0));
+        proj_resource->SetUsage(USAGE_CONSTANT_DATA);
       }
       this->proj_resource = proj_resource;
     }
@@ -74,6 +75,7 @@ namespace RayGene3D
         font_resource->SetLayers(1);
         font_resource->SetMipmaps(1);
         font_resource->SetFormat(FORMAT_R8G8B8A8_UNORM);
+        font_resource->SetUsage(USAGE_SHADER_RESOURCE);
         font_resource->SetInteropItem(0, font_property->GetRawBytes(0));
       }
       this->font_resource = font_resource;
@@ -250,6 +252,8 @@ namespace RayGene3D
           { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
         };
         config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
+
+        config->Initialize();
       }
       this->config = config;
     }
@@ -258,12 +262,14 @@ namespace RayGene3D
     {
       auto proj_view = proj_resource->CreateView("imgui_proj_view");
       {
-        proj_view->SetBind(View::BIND_CONSTANT_DATA);
+        proj_view->SetUsage(USAGE_CONSTANT_DATA);
+        proj_view->Initialize();
       }
 
       auto font_view = font_resource->CreateView("imgui_font_view");
       {
-        font_view->SetBind(View::BIND_SHADER_RESOURCE);
+        font_view->SetUsage(USAGE_SHADER_RESOURCE);
+        font_view->Initialize();
       }
 
       auto layout = device->CreateLayout("imgui_layout");
@@ -282,6 +288,8 @@ namespace RayGene3D
            { Layout::Sampler::FILTERING_LINEAR, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
         };
         layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
+
+        layout->Initialize();
       }
       this->layout = layout;
     }
@@ -319,8 +327,9 @@ namespace RayGene3D
         for (uint32_t i = 0; i < sub_limit; ++i)
         {
           auto vtx_view = vtx_resources[i]->CreateView("vtx_view_" + std::to_string(i));
-          vtx_view->SetBind(View::BIND_VERTEX_ARRAY);
+          vtx_view->SetUsage(USAGE_VERTEX_ARRAY);
           vtx_view->SetByteOffset(0);
+          vtx_view->Initialize();
 
           const std::shared_ptr<View> va_views[] = {
             vtx_view,
@@ -328,9 +337,10 @@ namespace RayGene3D
           pass->UpdateSubpassVAViews(i, { va_views, uint32_t(std::size(va_views)) });
 
           auto idx_view = idx_resources[i]->CreateView("idx_view_" + std::to_string(i));
-          idx_view->SetBind(View::BIND_INDEX_ARRAY);
+          idx_view->SetUsage(USAGE_INDEX_ARRAY);
           idx_view->SetByteOffset(0);
           idx_view->SetByteCount(2);
+          idx_view->Initialize();
 
           const std::shared_ptr<View> ia_views[] = {
             idx_view,
@@ -341,9 +351,10 @@ namespace RayGene3D
           for (uint32_t j = 0; j < arg_limit; ++j)
           {
             const auto argument_view = arg_resources[i]->CreateView("arg_ci_view_" + std::to_string(j));
-            argument_view->SetBind(View::BIND_COMMAND_INDIRECT);
+            argument_view->SetUsage(USAGE_COMMAND_INDIRECT);
             argument_view->SetByteOffset(j * sizeof(Pass::Argument));
             argument_view->SetByteCount(sizeof(Pass::Argument));
+            argument_view->Initialize();
 
             commands[j].view = argument_view;
           }
