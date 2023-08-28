@@ -208,8 +208,8 @@ namespace RayGene3D
     //std::shared_ptr<RayGene3D::ImportBroker> environment_broker;
 
   protected:
-    std::shared_ptr<RayGene3D::View> backbuffer_rt_view;
-    std::shared_ptr<RayGene3D::View> backbuffer_ua_view;
+    //std::shared_ptr<RayGene3D::View> backbuffer_rt_view;
+    //std::shared_ptr<RayGene3D::View> backbuffer_ua_view;
 
   protected:
     std::string config_path;
@@ -413,49 +413,56 @@ namespace RayGene3D
       device->SetExtentY(extent_y);
       device->SetOrdinal(device_ordinal);
       device->SetDebug(device_debug);
+      root->GetCore()->Initialize();
 
-      auto backbuffer_resource = device->CreateResource("backbuffer_resource");
+      
       {
         std::vector<glm::u8vec4> frame_pixels(extent_x * extent_y, glm::u8vec4(0, 0, 0, 0));
-
         const auto data = frame_pixels.data();
         const auto stride = uint32_t(sizeof(glm::u8vec4));
         const auto count = uint32_t(extent_x * extent_y);
         prop_screen = CreateBufferProperty(data, stride, count);
+        std::pair<const void*, uint32_t> interops[] =
+        {
+          prop_screen->GetRawBytes(0)
+        };
 
-
-        backbuffer_resource->SetTex2DDesc(
+        const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",
+          Resource::Tex2DDesc
           {
+            Usage(USAGE_RENDER_TARGET | USAGE_UNORDERED_ACCESS),
+            1,
+            1,
             FORMAT_B8G8R8A8_UNORM,
             uint32_t(extent_x),
             uint32_t(extent_y),
-            1,
-            1,
-            Usage(USAGE_RENDER_TARGET | USAGE_UNORDERED_ACCESS),
-          }
+            
+          },
+          Resource::HINT_UNKNOWN,
+          { interops, uint32_t(std::size(interops)) }
         );
+        root->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
 
-        backbuffer_resource->SetType(RayGene3D::Resource::TYPE_IMAGE2D);
+        //backbuffer_resource->SetType(RayGene3D::Resource::TYPE_IMAGE2D);
         //backbuffer_resource->SetExtentX(uint32_t(extent_x));
         //backbuffer_resource->SetExtentY(uint32_t(extent_y));
         //backbuffer_resource->SetFormat(RayGene3D::FORMAT_B8G8R8A8_UNORM);
         //backbuffer_resource->SetBind(Bind(BIND_RENDER_TARGET | BIND_UNORDERED_ACCESS));
-        backbuffer_resource->SetInteropCount(1);
-        backbuffer_resource->SetInteropItem(0, prop_screen->GetRawBytes(0));
-      }
+        //backbuffer_resource->SetInteropCount(1);
+        //backbuffer_resource->SetInteropItem(0, prop_screen->GetRawBytes(0));
 
-      backbuffer_rt_view = backbuffer_resource->CreateView("backbuffer_rt_view");
-      {
-        backbuffer_rt_view->SetUsage(USAGE_RENDER_TARGET);
-      }
 
-      backbuffer_ua_view = backbuffer_resource->CreateView("backbuffer_ua_view");
-      {
-        backbuffer_ua_view->SetUsage(USAGE_UNORDERED_ACCESS);
-      }
+        const auto& backbuffer_rt_view = backbuffer_resource->CreateView("backbuffer_rt_view",
+          Usage(USAGE_RENDER_TARGET)
+        );
+        root->GetCore()->AddView(backbuffer_rt_view);
 
-      root->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
-      root->GetCore()->Initialize();
+        const auto& backbuffer_ua_view = backbuffer_resource->CreateView("backbuffer_ua_view",
+          Usage(USAGE_UNORDERED_ACCESS)
+        );
+        root->GetCore()->AddView(backbuffer_rt_view);
+      }
+      
 
       
       const auto storage = root->GetData()->GetStorage().get();

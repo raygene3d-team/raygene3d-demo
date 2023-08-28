@@ -24,363 +24,341 @@ namespace RayGene3D
 
 
     {
-      auto proj_resource = device->CreateResource("imgui_proj_resource");
+      const float L = 0.0f;
+      const float R = static_cast<float>(prop_extent_x->GetUint());
+      const float B = static_cast<float>(prop_extent_y->GetUint());
+      const float T = 0.0f;
+      const float mvp[4][4] = {
+        { 2.0f / (R - L),     0.0f,               0.0f,       0.0f },
+        { 0.0f,               2.0f / (T - B),     0.0f,       0.0f },
+        { 0.0f,               0.0f,               0.5f,       0.0f },
+        { (R + L) / (L - R),  (T + B) / (B - T),  0.5f,       1.0f },
+      };
+      proj_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+      proj_property->RawAllocate(uint32_t(sizeof(mvp)));
+      proj_property->SetRawBytes({ &mvp[0][0], uint32_t(sizeof(mvp)) }, 0);
+      std::pair<const void*, uint32_t> interops[] =
       {
-        const float L = 0.0f;
-        const float R = static_cast<float>(prop_extent_x->GetUint());
-        const float B = static_cast<float>(prop_extent_y->GetUint());
-        const float T = 0.0f;
-        const float mvp[4][4] = {
-          { 2.0f / (R - L),     0.0f,               0.0f,       0.0f },
-          { 0.0f,               2.0f / (T - B),     0.0f,       0.0f },
-          { 0.0f,               0.0f,               0.5f,       0.0f },
-          { (R + L) / (L - R),  (T + B) / (B - T),  0.5f,       1.0f },
-        };
-        proj_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-        proj_property->RawAllocate(uint32_t(sizeof(mvp)));
-        proj_property->SetRawBytes({ &mvp[0][0], uint32_t(sizeof(mvp)) }, 0);
+        proj_property->GetRawBytes(0)
+      };
 
-        uint32_t constants_stride{ 4 };
-        uint32_t constants_count{ 16 };
-
-        proj_resource->SetType(Resource::TYPE_BUFFER);
-        proj_resource->SetStride(constants_stride);
-        proj_resource->SetCount(constants_count);
-        proj_resource->SetInteropCount(1);
-        proj_resource->SetInteropItem(0, proj_property->GetRawBytes(0));
-        proj_resource->SetUsage(USAGE_CONSTANT_DATA);
-      }
-      this->proj_resource = proj_resource;
+      proj_resource = device->CreateResource("imgui_proj_resource",
+        Resource::BufferDesc
+        {
+          Usage(USAGE_CONSTANT_DATA),
+          sizeof(float),
+          16,
+        },
+        Resource::HINT_UNKNOWN,
+        { interops, uint32_t(std::size(interops)) }
+      );
     }
 
     {
-      auto font_resource = device->CreateResource("imgui_font_resource");
+      ImGui::GetIO().Fonts->AddFontFromFileTTF("3rdparty/imgui/fonts/Roboto-Medium.ttf", 20.0f);
+
+      unsigned char* font_data{ nullptr };
+      int font_stride{ 4 };
+      int font_size_x{ 0 };
+      int font_size_y{ 0 };
+      ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&font_data, &font_size_x, &font_size_y);
+
+      font_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+      font_property->RawAllocate(font_stride * font_size_x * font_size_y);
+      font_property->SetRawBytes({ font_data, font_stride * font_size_x * font_size_y }, 0);
+      std::pair<const void*, uint32_t> interops[] =
       {
-        ImGui::GetIO().Fonts->AddFontFromFileTTF("3rdparty/imgui/fonts/Roboto-Medium.ttf", 20.0f);
+        font_property->GetRawBytes(0)
+      };
 
-        unsigned char* font_data{ nullptr };
-        int font_stride{ 4 };
-        int font_width{ 0 };
-        int font_height{ 0 };
-        ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&font_data, &font_width, &font_height);
-
-        font_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-        font_property->RawAllocate(font_stride * font_width * font_height);
-        font_property->SetRawBytes({ font_data, font_stride * font_width * font_height }, 0);
-        font_resource->SetInteropCount(1);
-
-        font_resource->SetType(Resource::TYPE_IMAGE2D);
-        font_resource->SetExtentX(font_width);
-        font_resource->SetExtentY(font_height);
-        font_resource->SetLayers(1);
-        font_resource->SetMipmaps(1);
-        font_resource->SetFormat(FORMAT_R8G8B8A8_UNORM);
-        font_resource->SetUsage(USAGE_SHADER_RESOURCE);
-        font_resource->SetInteropItem(0, font_property->GetRawBytes(0));
-      }
-      this->font_resource = font_resource;
+      font_resource = device->CreateResource("imgui_font_resource",
+        Resource::Tex2DDesc
+        {
+          Usage(USAGE_SHADER_RESOURCE),
+          1,
+          1,
+          FORMAT_R8G8B8A8_UNORM,
+          uint32_t(font_size_x),
+          uint32_t(font_size_y),
+        },
+        Resource::HINT_UNKNOWN,
+        { interops, uint32_t(std::size(interops)) }
+      );
     }
 
     {
       for (uint32_t i = 0; i < sub_limit; ++i)
       {
-        auto vtx_resource = device->CreateResource("imgui_vtx_resource_" + std::to_string(i));
-        vtx_resource->SetType(Resource::TYPE_BUFFER);
-        vtx_resource->SetStride(uint32_t(sizeof(ImDrawVert)));
-        vtx_resource->SetCount(vtx_limit);
-        vtx_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
+        vtx_resources[i] = device->CreateResource("imgui_vtx_resource_" + std::to_string(i),
+          Resource::BufferDesc
+          {
+            Usage(USAGE_VERTEX_ARRAY),
+            uint32_t(sizeof(ImDrawVert)),
+            vtx_limit,
+          },
+          Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+        );
 
-        auto idx_resource = device->CreateResource("imgui_idx_resource_" + std::to_string(i));
-        idx_resource->SetType(Resource::TYPE_BUFFER);
-        idx_resource->SetStride(uint32_t(sizeof(ImDrawIdx)));
-        idx_resource->SetCount(10000);
-        idx_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
+        idx_resources[i] = device->CreateResource("imgui_idx_resource_" + std::to_string(i),
+          Resource::BufferDesc
+          {
+            Usage(USAGE_INDEX_ARRAY),
+            uint32_t(sizeof(ImDrawIdx)),
+            idx_limit,
+          },
+          Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+        );
 
-        auto arg_resource = device->CreateResource("imgui_arg_resource_" + std::to_string(i));
-        arg_resource->SetType(Resource::TYPE_BUFFER);
-        arg_resource->SetStride(uint32_t(sizeof(Pass::Argument)));
-        arg_resource->SetCount(10);
-        arg_resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-
-        vtx_resources[i] = vtx_resource;
-        idx_resources[i] = idx_resource;
-        arg_resources[i] = arg_resource;
+        arg_resources[i] = device->CreateResource("imgui_arg_resource_" + std::to_string(i),
+          Resource::BufferDesc
+          {
+            Usage(USAGE_COMMAND_INDIRECT),
+            uint32_t(sizeof(Pass::Argument)),
+            arg_limit,
+          },
+          Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+        );
       }
     }
 
 
     {
-      auto config = device->CreateConfig("imgui_config");
+      const std::string debug_source =
+        "\
+      #ifdef USE_SPIRV\n \
+      #define VK_BINDING(x) [[vk::binding(x)]]\n \
+      #define VK_LOCATION(x) [[vk::location(x)]]\n \
+      #else\n \
+      #define VK_BINDING(x)\n \
+      #define VK_LOCATION(x)\n \
+      #endif\n \
+      \
+      struct VSInput\
+      {\
+        VK_LOCATION(0) uint vertID : SV_VertexID;\
+      };\
+      \
+      struct VSOutput\
+      {\
+        VK_LOCATION(0) float4 col : COLOR0;\
+        VK_LOCATION(1) float4 pos : SV_Position;\
+      };\
+      \
+      VSOutput vs_main(VSInput input)\
+      {\
+        float2 positions[3] = {\
+        float2( 0.0,-0.5),\
+        float2( 0.5, 0.5),\
+        float2(-0.5, 0.5)\
+        };\
+        float3 colors[3] = {\
+        float3(1.0, 0.0, 0.0),\
+        float3(0.0, 1.0, 0.0),\
+        float3(0.0, 0.0, 1.0)\
+        };\
+        VSOutput output;\
+        output.pos = float4(positions[input.vertID], 0.5, 1.0);\
+        output.col = float4(colors[input.vertID], 1.0);\
+        return output;\
+      }\
+      struct PSInput\
+      {\
+        VK_LOCATION(0) float4 col : COLOR0;\
+      };\
+      \
+      struct PSOutput\
+      {\
+        float4 col : SV_Target;\
+      };\
+      PSOutput ps_main(PSInput input)\
+      {\
+        PSOutput output;\
+        output.col = float4(input.col.rgb, 1.0);\
+        return output;\
+      }";
+
+      const std::string source =
+        "\
+      #ifdef USE_SPIRV\n \
+      #define VK_BINDING(x) [[vk::binding(x)]]\n \
+      #define VK_LOCATION(x) [[vk::location(x)]]\n \
+      #else\n \
+      #define VK_BINDING(x)\n \
+      #define VK_LOCATION(x)\n \
+      #endif\n \
+      \
+      VK_BINDING(1) cbuffer constant0 : register(b0) \
+      {\
+        float4x4 ProjectionMatrix; \
+      };\
+      VK_BINDING(0) sampler sampler0 : register(s0);\
+      VK_BINDING(2) Texture2D texture0 : register(t0);\
+      struct VSInput\
+      {\
+        VK_LOCATION(0) float2 pos : register0;\
+        VK_LOCATION(1) float2 uv  : register1;\
+        VK_LOCATION(2) float4 col : register2;\
+      };\
+      \
+      struct VSOutput\
+      {\
+        VK_LOCATION(0) float4 col : COLOR0;\
+        VK_LOCATION(1) float2 uv  : TEXCOORD0;\
+        VK_LOCATION(2) float4 pos : SV_Position;\
+      };\
+      \
+      VSOutput vs_main(VSInput input)\
+      {\
+        VSOutput output;\
+        output.pos = mul( ProjectionMatrix, float4(input.pos.xy, 0.0f, 1.0f));\
+        output.col = input.col;\
+        output.uv  = input.uv;\
+        return output;\
+      }\
+      \
+      struct PSInput\
+      {\
+        VK_LOCATION(0) float4 col : COLOR0;\
+        VK_LOCATION(1) float2 uv  : TEXCOORD0;\
+      };\
+      \
+      struct PSOutput\
+      {\
+        float4 col : SV_Target;\
+      };\
+      PSOutput ps_main(PSInput input)\
+      {\
+        PSOutput output;\
+        output.col = input.col * texture0.Sample(sampler0, input.uv); \
+        return output; \
+      }";
+
+      const Config::IAState ia_state =
       {
-        const std::string debug_source =
-          "\
-        #ifdef USE_SPIRV\n \
-        #define VK_BINDING(x) [[vk::binding(x)]]\n \
-        #define VK_LOCATION(x) [[vk::location(x)]]\n \
-        #else\n \
-        #define VK_BINDING(x)\n \
-        #define VK_LOCATION(x)\n \
-        #endif\n \
-        \
-        struct VSInput\
-        {\
-          VK_LOCATION(0) uint vertID : SV_VertexID;\
-        };\
-        \
-        struct VSOutput\
-        {\
-          VK_LOCATION(0) float4 col : COLOR0;\
-          VK_LOCATION(1) float4 pos : SV_Position;\
-        };\
-        \
-        VSOutput vs_main(VSInput input)\
-        {\
-          float2 positions[3] = {\
-          float2( 0.0,-0.5),\
-          float2( 0.5, 0.5),\
-          float2(-0.5, 0.5)\
-          };\
-          float3 colors[3] = {\
-          float3(1.0, 0.0, 0.0),\
-          float3(0.0, 1.0, 0.0),\
-          float3(0.0, 0.0, 1.0)\
-          };\
-          VSOutput output;\
-          output.pos = float4(positions[input.vertID], 0.5, 1.0);\
-          output.col = float4(colors[input.vertID], 1.0);\
-          return output;\
-        }\
-        struct PSInput\
-        {\
-          VK_LOCATION(0) float4 col : COLOR0;\
-        };\
-        \
-        struct PSOutput\
-        {\
-          float4 col : SV_Target;\
-        };\
-        PSOutput ps_main(PSInput input)\
-        {\
-          PSOutput output;\
-          output.col = float4(input.col.rgb, 1.0);\
-          return output;\
-        }";
-
-        const std::string source =
-          "\
-        #ifdef USE_SPIRV\n \
-        #define VK_BINDING(x) [[vk::binding(x)]]\n \
-        #define VK_LOCATION(x) [[vk::location(x)]]\n \
-        #else\n \
-        #define VK_BINDING(x)\n \
-        #define VK_LOCATION(x)\n \
-        #endif\n \
-        \
-        VK_BINDING(1) cbuffer constant0 : register(b0) \
-        {\
-          float4x4 ProjectionMatrix; \
-        };\
-        VK_BINDING(0) sampler sampler0 : register(s0);\
-        VK_BINDING(2) Texture2D texture0 : register(t0);\
-        struct VSInput\
-        {\
-          VK_LOCATION(0) float2 pos : register0;\
-          VK_LOCATION(1) float2 uv  : register1;\
-          VK_LOCATION(2) float4 col : register2;\
-        };\
-        \
-        struct VSOutput\
-        {\
-          VK_LOCATION(0) float4 col : COLOR0;\
-          VK_LOCATION(1) float2 uv  : TEXCOORD0;\
-          VK_LOCATION(2) float4 pos : SV_Position;\
-        };\
-        \
-        VSOutput vs_main(VSInput input)\
-        {\
-          VSOutput output;\
-          output.pos = mul( ProjectionMatrix, float4(input.pos.xy, 0.0f, 1.0f));\
-          output.col = input.col;\
-          output.uv  = input.uv;\
-          return output;\
-        }\
-        \
-        struct PSInput\
-        {\
-          VK_LOCATION(0) float4 col : COLOR0;\
-          VK_LOCATION(1) float2 uv  : TEXCOORD0;\
-        };\
-        \
-        struct PSOutput\
-        {\
-          float4 col : SV_Target;\
-        };\
-        PSOutput ps_main(PSInput input)\
-        {\
-          PSOutput output;\
-          output.col = input.col * texture0.Sample(sampler0, input.uv); \
-          return output; \
-        }";
-        config->SetSource(source);
-        config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
-
-        const Config::Attribute attributes[] = {
+        Config::TOPOLOGY_TRIANGLELIST,
+        Config::INDEXER_16_BIT,
+        {
           { 0, 0, 20, FORMAT_R32G32_FLOAT, false },
           { 0, 8, 20, FORMAT_R32G32_FLOAT, false },
           { 0,16, 20, FORMAT_R8G8B8A8_UNORM, false },
-        };
-        config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-        config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-        config->SetIndexer(Config::INDEXER_16_BIT);
-
-        config->SetFillMode(Config::FILL_SOLID);
-        config->SetCullMode(Config::CULL_NONE);
-        config->SetClipEnabled(false);
-
-        const Config::Blend blends[] = {
-          { true, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-        };
-        config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-        config->SetATCEnabled(false);
-
-        config->SetDepthEnabled(false);
-        config->SetDepthWrite(false);
-        config->SetDepthComparison(Config::COMPARISON_ALWAYS);
-
-        const Config::Viewport viewports[] = {
-          { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
-        };
-        config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
-
-        config->Initialize();
-      }
-      this->config = config;
-    }
-
-
-    {
-      auto proj_view = proj_resource->CreateView("imgui_proj_view");
-      {
-        proj_view->SetUsage(USAGE_CONSTANT_DATA);
-        proj_view->Initialize();
-      }
-
-      auto font_view = font_resource->CreateView("imgui_font_view");
-      {
-        font_view->SetUsage(USAGE_SHADER_RESOURCE);
-        font_view->Initialize();
-      }
-
-      auto layout = device->CreateLayout("imgui_layout");
-      {
-        const std::shared_ptr<View> ub_views[] = {
-          proj_view,
-        };
-        layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
-
-        const std::shared_ptr<View> ri_views[] = {
-          font_view,
-        };
-        layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
-
-        const Layout::Sampler samplers[] = {
-           { Layout::Sampler::FILTERING_LINEAR, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
-        };
-        layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-
-        layout->Initialize();
-      }
-      this->layout = layout;
-    }
-
-
-    {
-      auto pass = device->CreatePass("imgui_pass");
-      {
-        pass->SetType(Pass::TYPE_GRAPHIC);
-        pass->SetEnabled(true);
-
-        const std::shared_ptr<View> rt_views[] = {
-          backbuffer_rtv,
-        };
-        pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-        //const std::shared_ptr<View> ds_views[] = {
-        //  depth_view,
-        //};
-        //pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-
-        const Pass::RTValue rt_values[] = {
-          {},
-        };
-        pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-        //const Pass::DSValue ds_values[] = {
-        //  { 1.0f, std::nullopt },
-        //};
-        //pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-
-        pass->SetSubpassCount(sub_limit);
-        for (uint32_t i = 0; i < sub_limit; ++i)
-        {
-          auto vtx_view = vtx_resources[i]->CreateView("vtx_view_" + std::to_string(i));
-          vtx_view->SetUsage(USAGE_VERTEX_ARRAY);
-          vtx_view->SetByteOffset(0);
-          vtx_view->Initialize();
-
-          const std::shared_ptr<View> va_views[] = {
-            vtx_view,
-          };
-          pass->UpdateSubpassVAViews(i, { va_views, uint32_t(std::size(va_views)) });
-
-          auto idx_view = idx_resources[i]->CreateView("idx_view_" + std::to_string(i));
-          idx_view->SetUsage(USAGE_INDEX_ARRAY);
-          idx_view->SetByteOffset(0);
-          idx_view->SetByteCount(2);
-          idx_view->Initialize();
-
-          const std::shared_ptr<View> ia_views[] = {
-            idx_view,
-          };
-          pass->UpdateSubpassIAViews(i, { ia_views, uint32_t(std::size(ia_views)) });
-
-          std::array<Pass::Command, arg_limit> commands;
-          for (uint32_t j = 0; j < arg_limit; ++j)
-          {
-            const auto argument_view = arg_resources[i]->CreateView("arg_ci_view_" + std::to_string(j));
-            argument_view->SetUsage(USAGE_COMMAND_INDIRECT);
-            argument_view->SetByteOffset(j * sizeof(Pass::Argument));
-            argument_view->SetByteCount(sizeof(Pass::Argument));
-            argument_view->Initialize();
-
-            commands[j].view = argument_view;
-          }
-          pass->UpdateSubpassCommands(i, { commands.data(), uint32_t(commands.size()) });
-
-          pass->SetSubpassLayout(i, layout);
-          pass->SetSubpassConfig(i, config);
         }
-      }
-      this->pass = pass;
+      };
+
+      const Config::RCState rc_state =
+      {
+        Config::FILL_SOLID,
+        Config::CULL_NONE,
+        {
+          { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
+        },
+      };
+
+      const Config::DSState ds_state =
+      {
+        false,
+        false,
+        Config::COMPARISON_ALWAYS
+      };
+
+      const Config::OMState om_state =
+      {
+        false,
+        {
+          { true, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
+        }
+      };
+
+      config = device->CreateConfig("imgui_config",
+        source,
+        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+        {},
+        ia_state,
+        rc_state,
+        ds_state,
+        om_state
+      );
     }
 
-    {
-      proj_resource->Initialize();
-      font_resource->Initialize();
 
+    {
+      auto proj_view = proj_resource->CreateView("imgui_proj_view",
+        Usage(USAGE_CONSTANT_DATA)
+      );
+      const std::shared_ptr<View> ub_views[] = {
+          proj_view,
+      };
+
+      auto font_view = font_resource->CreateView("imgui_font_view",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      const std::shared_ptr<View> ri_views[] = {
+          font_view,
+      };
+
+      const Layout::Sampler samplers[] = {
+        { Layout::Sampler::FILTERING_LINEAR, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+      };
+
+      layout = device->CreateLayout("imgui_layout",
+        { ub_views, uint32_t(std::size(ub_views)) },
+        {},
+        { ri_views, uint32_t(std::size(ri_views)) },
+        {},
+        {},
+        {},
+        { samplers, uint32_t(std::size(samplers)) },
+        {}
+      );
+    }
+
+
+    {
+      Pass::Subpass subpasses[sub_limit];
       for (uint32_t i = 0; i < sub_limit; ++i)
       {
-        vtx_resources[i]->Initialize();
-        idx_resources[i]->Initialize();
-        arg_resources[i]->Initialize();
+        const auto vtx_view = vtx_resources[i]->CreateView("vtx_view_" + std::to_string(i),
+          Usage(USAGE_VERTEX_ARRAY)
+        );
+        const std::shared_ptr<View> va_views[] = {
+          vtx_view,
+        };
+
+        const auto idx_view = idx_resources[i]->CreateView("idx_view_" + std::to_string(i),
+          Usage(USAGE_INDEX_ARRAY)
+        );
+        const std::shared_ptr<View> ia_views[] = {
+          idx_view,
+        };
+
+        Pass::Command commands[arg_limit];
+        for (uint32_t j = 0; j < arg_limit; ++j)
+        {
+          const auto argument_view = arg_resources[i]->CreateView("arg_ci_view_" + std::to_string(j),
+            Usage(USAGE_COMMAND_INDIRECT),
+            { j * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
+          );
+          commands[j].view = argument_view;
+        }
+
+        subpasses[i] =
+        {
+          config, layout,
+          { commands, commands + std::size(commands) },
+          { va_views, va_views + std::size(va_views) },
+          { ia_views, ia_views + std::size(ia_views) }
+        };
       }
 
-      config->Initialize();
-      layout->Initialize();
-      pass->Initialize();
+      const Pass::RTAttachment rt_attachments[] = {
+        backbuffer_rtv, std::nullopt,
+      };
+
+      pass = device->CreatePass("imgui_pass",
+        Pass::TYPE_GRAPHIC,
+        { subpasses, uint32_t(std::size(subpasses)) },
+        { rt_attachments, uint32_t(std::size(rt_attachments)) },
+        {}
+      );
     }
 
 

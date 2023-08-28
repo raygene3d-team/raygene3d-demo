@@ -36,12 +36,12 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
       Resource::Tex2DDesc
       {
+        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
+        1,
+        6,
         FORMAT_D16_UNORM,
         shadow_resolution,
-        shadow_resolution,
-        6,
-        1,
-        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE)
+        shadow_resolution,        
       },
       Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE)
     );
@@ -62,12 +62,12 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_color_target",
       Resource::Tex2DDesc
       {
+        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
+        1,
+        1,
         FORMAT_R11G11B10_FLOAT,
         prop_extent_x->GetUint(),
         prop_extent_y->GetUint(),
-        1,
-        1,
-        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE)
       }
     );
 
@@ -89,12 +89,12 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_depth_target",
       Resource::Tex2DDesc
       {
+        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
+        1,
+        1,
         FORMAT_D32_FLOAT,
         prop_extent_x->GetUint(),
         prop_extent_y->GetUint(),
-        1,
-        1,
-        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE)
       }
     );
 
@@ -116,9 +116,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_screen_data",
       Resource::BufferDesc
       {
+        Usage(USAGE_CONSTANT_DATA),
         uint32_t(sizeof(Screen)),
         1,
-        Usage(USAGE_CONSTANT_DATA)
       },
       Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
     );
@@ -136,9 +136,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_camera_data",
       Resource::BufferDesc
       {
+        Usage(USAGE_CONSTANT_DATA),
         uint32_t(sizeof(Frustum)),
         1,
-        Usage(USAGE_CONSTANT_DATA)
       },
       Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
     );
@@ -156,9 +156,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
       Resource::BufferDesc
       {
+        Usage(USAGE_CONSTANT_DATA),
         uint32_t(sizeof(Frustum)),
         6,
-        Usage(USAGE_CONSTANT_DATA)
       },
       Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
     );
@@ -181,9 +181,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
       Resource::BufferDesc
       {
+        Usage(USAGE_CONSTANT_DATA),
         uint32_t(sizeof(Instance)),
         count,
-        Usage(USAGE_CONSTANT_DATA)
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
@@ -208,9 +208,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_triangles",
       Resource::BufferDesc
       {
+        Usage(USAGE_INDEX_ARRAY),
         uint32_t(sizeof(Triangle)),
         count,
-        Usage(USAGE_INDEX_ARRAY)
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
@@ -235,9 +235,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices0",
       Resource::BufferDesc
       {
+        Usage(USAGE_VERTEX_ARRAY),
         uint32_t(sizeof(Vertex0)),
         count,
-        Usage(USAGE_VERTEX_ARRAY)
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
@@ -262,9 +262,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices1",
       Resource::BufferDesc
       {
+        Usage(USAGE_VERTEX_ARRAY),
         uint32_t(sizeof(Vertex1)),
         count,
-        Usage(USAGE_VERTEX_ARRAY)
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
@@ -289,9 +289,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices2",
       Resource::BufferDesc
       {
+        Usage(USAGE_VERTEX_ARRAY),
         uint32_t(sizeof(Vertex2)),
         count,
-        Usage(USAGE_VERTEX_ARRAY)
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
@@ -316,9 +316,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices3",
       Resource::BufferDesc
       {
+        Usage(USAGE_VERTEX_ARRAY),
         uint32_t(sizeof(Vertex3)),
         count,
-        Usage(USAGE_VERTEX_ARRAY)
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
@@ -357,12 +357,12 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
       Resource::Tex2DDesc
       {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
         format,
         size_x,
         size_y,
-        layers,
-        mipmaps,
-        Usage(USAGE_SHADER_RESOURCE)
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -409,12 +409,13 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
       Resource::Tex2DDesc
       {
+
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
         format,
         size_x,
         size_y,
-        layers,
-        mipmaps,
-        Usage(USAGE_SHADER_RESOURCE)
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -461,12 +462,12 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
       Resource::Tex2DDesc
       {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
         format,
         size_x,
         size_y,
-        layers,
-        mipmaps,
-        Usage(USAGE_SHADER_RESOURCE)
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -513,12 +514,12 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
       Resource::Tex2DDesc
       {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
         format,
         size_x,
         size_y,
-        layers,
-        mipmaps,
-        Usage(USAGE_SHADER_RESOURCE)
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -565,12 +566,12 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_light_maps",
       Resource::Tex2DDesc
       {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
         format,
         size_x,
         size_y,
-        layers,
-        mipmaps,
-        Usage(USAGE_SHADER_RESOURCE)
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -609,9 +610,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_skybox_vertices",
       Resource::BufferDesc
       {
+        Usage(USAGE_VERTEX_ARRAY),
         uint32_t(sizeof(glm::f32vec4)),
         uint32_t(quad_vtx.size()),
-        Usage(USAGE_VERTEX_ARRAY)
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
@@ -640,9 +641,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_skybox_triangles",
       Resource::BufferDesc
       {
+        Usage(USAGE_INDEX_ARRAY),
         uint32_t(sizeof(glm::u32vec3)),
         uint32_t(quad_idx.size()),
-        Usage(USAGE_INDEX_ARRAY)
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
@@ -681,12 +682,12 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_skybox_textures",
       Resource::Tex2DDesc
       {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
         format,
         size_x,
         size_y,
-        layers,
-        mipmaps,
-        Usage(USAGE_SHADER_RESOURCE)
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -715,9 +716,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
       Resource::BufferDesc
       {
+        Usage(USAGE_COMMAND_INDIRECT),
         uint32_t(sizeof(Pass::Argument)),
         uint32_t(count),
-        Usage(USAGE_COMMAND_INDIRECT)
       },
       Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
     );
@@ -735,9 +736,9 @@ namespace RayGene3D
     root.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
       Resource::BufferDesc
       {
+        Usage(USAGE_COMMAND_INDIRECT),
         uint32_t(sizeof(Pass::Argument)),
         1u,
-        Usage(USAGE_COMMAND_INDIRECT)
       },
       Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
     );
@@ -1838,7 +1839,7 @@ namespace RayGene3D
     
     const auto tree = root.GetData()->GetStorage()->GetTree();
     
-    prop_scene = tree->GetObjectItem("scene");
+    prop_scene = tree->GetObjectItem("scene_property");
     {
       prop_instances = prop_scene->GetObjectItem("instances");
       prop_triangles = prop_scene->GetObjectItem("triangles");

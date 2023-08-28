@@ -31,7 +31,6 @@ namespace RayGene3D
     std::shared_ptr<Resource> proj_resource;
     std::shared_ptr<Resource> font_resource;
 
-    //std::array<std::array<std::shared_ptr<View>, arg_limit>, sub_limit> views;
     std::array<std::shared_ptr<Resource>, sub_limit> vtx_resources;
     std::array<std::shared_ptr<Resource>, sub_limit> idx_resources;
     std::array<std::shared_ptr<Resource>, sub_limit> arg_resources;
