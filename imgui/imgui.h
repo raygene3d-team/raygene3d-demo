@@ -7,6 +7,7 @@ namespace RayGene3D
   {
   protected:
     std::shared_ptr<View> backbuffer_rtv;
+    std::shared_ptr<View> backbuffer_uav;
 
   protected:
     std::shared_ptr<Property> prop_camera;

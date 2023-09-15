@@ -33,7 +33,7 @@ namespace RayGene3D
 {
   void Spark::InitializeShadowMap()
   {
-    root.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
+    shadow_map = root.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
       Resource::Tex2DDesc
       {
         Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
@@ -59,7 +59,7 @@ namespace RayGene3D
 
   void Spark::InitializeColorTarget()
   {
-    root.GetCore()->GetDevice()->CreateResource("spark_color_target",
+    color_target = root.GetCore()->GetDevice()->CreateResource("spark_color_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
@@ -86,7 +86,7 @@ namespace RayGene3D
 
   void Spark::InitializeDepthTarget()
   {
-    root.GetCore()->GetDevice()->CreateResource("spark_depth_target",
+    depth_target = root.GetCore()->GetDevice()->CreateResource("spark_depth_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
@@ -113,7 +113,7 @@ namespace RayGene3D
 
   void Spark::InitializeScreenData()
   {
-    root.GetCore()->GetDevice()->CreateResource("spark_screen_data",
+    screen_data = root.GetCore()->GetDevice()->CreateResource("spark_screen_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -133,7 +133,7 @@ namespace RayGene3D
 
   void Spark::InitializeCameraData()
   {
-    root.GetCore()->GetDevice()->CreateResource("spark_camera_data",
+    camera_data = root.GetCore()->GetDevice()->CreateResource("spark_camera_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -153,7 +153,7 @@ namespace RayGene3D
 
   void Spark::InitializeShadowData()
   {
-    root.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
+    shadow_data = root.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -178,7 +178,7 @@ namespace RayGene3D
       prop_instances->GetRawBytes(0),
     };
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
+    scene_instances = root.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -205,7 +205,7 @@ namespace RayGene3D
       prop_triangles->GetRawBytes(0),
     };
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_triangles",
+    scene_triangles = root.GetCore()->GetDevice()->CreateResource("spark_scene_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
@@ -225,113 +225,132 @@ namespace RayGene3D
     //scene_triangles->Initialize();
   }
 
-  void Spark::InitializeSceneVertices0()
+  void Spark::InitializeSceneVertices()
   {
-    const auto [data, count] = prop_vertices0->GetTypedBytes<Vertex0>(0);
+    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices0->GetRawBytes(0),
+      prop_vertices->GetRawBytes(0),
     };
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices0",
+    scene_vertices = root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(Vertex0)),
+        uint32_t(sizeof(Vertex)),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
       { interops, uint32_t(std::size(interops)) }
     );
-
-    //scene_vertices0->SetType(Resource::TYPE_BUFFER);
-    //scene_vertices0->SetStride(uint32_t(sizeof(Vertex0)));
-    //scene_vertices0->SetCount(count);
-    //scene_vertices0->SetInteropCount(1);
-    //scene_vertices0->SetInteropItem(0, prop_vertices0->GetRawBytes(0));
-    //scene_vertices0->SetUsage(USAGE_VERTEX_ARRAY);
-    //scene_vertices0->Initialize();
   }
 
-  void Spark::InitializeSceneVertices1()
-  {
-    const auto [data, count] = prop_vertices1->GetTypedBytes<Vertex1>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices1->GetRawBytes(0),
-    };
+  //void Spark::InitializeSceneVertices0()
+  //{
+  //  const auto [data, count] = prop_vertices0->GetTypedBytes<Vertex0>(0);
+  //  std::pair<const void*, uint32_t> interops[] = {
+  //    prop_vertices0->GetRawBytes(0),
+  //  };
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices1",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(Vertex1)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-    );
+  //  root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices0",
+  //    Resource::BufferDesc
+  //    {
+  //      Usage(USAGE_VERTEX_ARRAY),
+  //      uint32_t(sizeof(Vertex0)),
+  //      count,
+  //    },
+  //    Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+  //    { interops, uint32_t(std::size(interops)) }
+  //  );
 
-    //scene_vertices1->SetType(Resource::TYPE_BUFFER);
-    //scene_vertices1->SetStride(uint32_t(sizeof(Vertex1)));
-    //scene_vertices1->SetCount(count);
-    //scene_vertices1->SetInteropCount(1);
-    //scene_vertices1->SetInteropItem(0, prop_vertices1->GetRawBytes(0));
-    //scene_vertices1->SetUsage(USAGE_VERTEX_ARRAY);
-    //scene_vertices1->Initialize();
-  }
+  //  //scene_vertices0->SetType(Resource::TYPE_BUFFER);
+  //  //scene_vertices0->SetStride(uint32_t(sizeof(Vertex0)));
+  //  //scene_vertices0->SetCount(count);
+  //  //scene_vertices0->SetInteropCount(1);
+  //  //scene_vertices0->SetInteropItem(0, prop_vertices0->GetRawBytes(0));
+  //  //scene_vertices0->SetUsage(USAGE_VERTEX_ARRAY);
+  //  //scene_vertices0->Initialize();
+  //}
 
-  void Spark::InitializeSceneVertices2()
-  {
-    const auto [data, count] = prop_vertices2->GetTypedBytes<Vertex2>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices2->GetRawBytes(0),
-    };
+  //void Spark::InitializeSceneVertices1()
+  //{
+  //  const auto [data, count] = prop_vertices1->GetTypedBytes<Vertex1>(0);
+  //  std::pair<const void*, uint32_t> interops[] = {
+  //    prop_vertices1->GetRawBytes(0),
+  //  };
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices2",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(Vertex2)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-    );
+  //  root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices1",
+  //    Resource::BufferDesc
+  //    {
+  //      Usage(USAGE_VERTEX_ARRAY),
+  //      uint32_t(sizeof(Vertex1)),
+  //      count,
+  //    },
+  //    Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+  //    { interops, uint32_t(std::size(interops)) }
+  //  );
 
-    //scene_vertices2->SetType(Resource::TYPE_BUFFER);
-    //scene_vertices2->SetStride(uint32_t(sizeof(Vertex2)));
-    //scene_vertices2->SetCount(count);
-    //scene_vertices2->SetInteropCount(1);
-    //scene_vertices2->SetInteropItem(0, prop_vertices2->GetRawBytes(0));
-    //scene_vertices2->SetUsage(USAGE_VERTEX_ARRAY);
-    //scene_vertices2->Initialize();
-  }
+  //  //scene_vertices1->SetType(Resource::TYPE_BUFFER);
+  //  //scene_vertices1->SetStride(uint32_t(sizeof(Vertex1)));
+  //  //scene_vertices1->SetCount(count);
+  //  //scene_vertices1->SetInteropCount(1);
+  //  //scene_vertices1->SetInteropItem(0, prop_vertices1->GetRawBytes(0));
+  //  //scene_vertices1->SetUsage(USAGE_VERTEX_ARRAY);
+  //  //scene_vertices1->Initialize();
+  //}
 
-  void Spark::InitializeSceneVertices3()
-  {
-    const auto [data, count] = prop_vertices3->GetTypedBytes<Vertex3>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices3->GetRawBytes(0),
-    };
+  //void Spark::InitializeSceneVertices2()
+  //{
+  //  const auto [data, count] = prop_vertices2->GetTypedBytes<Vertex2>(0);
+  //  std::pair<const void*, uint32_t> interops[] = {
+  //    prop_vertices2->GetRawBytes(0),
+  //  };
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices3",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(Vertex3)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-    );
+  //  root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices2",
+  //    Resource::BufferDesc
+  //    {
+  //      Usage(USAGE_VERTEX_ARRAY),
+  //      uint32_t(sizeof(Vertex2)),
+  //      count,
+  //    },
+  //    Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+  //    { interops, uint32_t(std::size(interops)) }
+  //  );
 
-    //scene_vertices3->SetType(Resource::TYPE_BUFFER);
-    //scene_vertices3->SetStride(uint32_t(sizeof(Vertex3)));
-    //scene_vertices3->SetCount(count);
-    //scene_vertices3->SetInteropCount(1);
-    //scene_vertices3->SetInteropItem(0, prop_vertices3->GetRawBytes(0));
-    //scene_vertices3->SetUsage(USAGE_VERTEX_ARRAY);
-    //scene_vertices3->Initialize();
-  }
+  //  //scene_vertices2->SetType(Resource::TYPE_BUFFER);
+  //  //scene_vertices2->SetStride(uint32_t(sizeof(Vertex2)));
+  //  //scene_vertices2->SetCount(count);
+  //  //scene_vertices2->SetInteropCount(1);
+  //  //scene_vertices2->SetInteropItem(0, prop_vertices2->GetRawBytes(0));
+  //  //scene_vertices2->SetUsage(USAGE_VERTEX_ARRAY);
+  //  //scene_vertices2->Initialize();
+  //}
+
+  //void Spark::InitializeSceneVertices3()
+  //{
+  //  const auto [data, count] = prop_vertices3->GetTypedBytes<Vertex3>(0);
+  //  std::pair<const void*, uint32_t> interops[] = {
+  //    prop_vertices3->GetRawBytes(0),
+  //  };
+
+  //  root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices3",
+  //    Resource::BufferDesc
+  //    {
+  //      Usage(USAGE_VERTEX_ARRAY),
+  //      uint32_t(sizeof(Vertex3)),
+  //      count,
+  //    },
+  //    Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+  //    { interops, uint32_t(std::size(interops)) }
+  //  );
+
+  //  //scene_vertices3->SetType(Resource::TYPE_BUFFER);
+  //  //scene_vertices3->SetStride(uint32_t(sizeof(Vertex3)));
+  //  //scene_vertices3->SetCount(count);
+  //  //scene_vertices3->SetInteropCount(1);
+  //  //scene_vertices3->SetInteropItem(0, prop_vertices3->GetRawBytes(0));
+  //  //scene_vertices3->SetUsage(USAGE_VERTEX_ARRAY);
+  //  //scene_vertices3->Initialize();
+  //}
 
   void Spark::InitializeSceneTextures0()
   {
@@ -354,7 +373,7 @@ namespace RayGene3D
       interops.emplace_back(prop_textures0->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
+    scene_textures0 = root.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -406,7 +425,7 @@ namespace RayGene3D
       interops.emplace_back(prop_textures1->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
+    scene_textures1 = root.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
       Resource::Tex2DDesc
       {
 
@@ -459,7 +478,7 @@ namespace RayGene3D
       interops.emplace_back(prop_textures2->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
+    scene_textures2 = root.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -511,7 +530,7 @@ namespace RayGene3D
       interops.emplace_back(prop_textures3->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    root.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
+    scene_textures3 = root.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -563,7 +582,7 @@ namespace RayGene3D
       interops.emplace_back(prop_lightmaps->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    root.GetCore()->GetDevice()->CreateResource("spark_light_maps",
+    light_maps = root.GetCore()->GetDevice()->CreateResource("spark_light_maps",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -607,7 +626,7 @@ namespace RayGene3D
       { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec4)) },
     };
 
-    root.GetCore()->GetDevice()->CreateResource("spark_skybox_vertices",
+    skybox_vertices = root.GetCore()->GetDevice()->CreateResource("spark_skybox_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
@@ -638,7 +657,7 @@ namespace RayGene3D
       { quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3)) },
     };
 
-    root.GetCore()->GetDevice()->CreateResource("spark_skybox_triangles",
+    skybox_triangles = root.GetCore()->GetDevice()->CreateResource("spark_skybox_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
@@ -679,7 +698,7 @@ namespace RayGene3D
       interops.emplace_back(prop_skybox->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    root.GetCore()->GetDevice()->CreateResource("spark_skybox_textures",
+    skybox_texture = root.GetCore()->GetDevice()->CreateResource("spark_skybox_texture",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -689,7 +708,7 @@ namespace RayGene3D
         size_x,
         size_y,
       },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      Resource::Hint(Resource::HINT_UNKNOWN),
       { interops.data(), uint32_t(interops.size()) }
     );
 
@@ -713,7 +732,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
-    root.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
+    graphic_arguments = root.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
       Resource::BufferDesc
       {
         Usage(USAGE_COMMAND_INDIRECT),
@@ -733,7 +752,7 @@ namespace RayGene3D
 
   void Spark::InitializeComputeArguments()
   {
-    root.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
+    compute_arguments = root.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
       Resource::BufferDesc
       {
         Usage(USAGE_COMMAND_INDIRECT),
@@ -797,7 +816,7 @@ namespace RayGene3D
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false }
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false }
       }
     };
 
@@ -884,11 +903,11 @@ namespace RayGene3D
       commands[j].offsets = { index * uint32_t(sizeof(Frustum)) };
     }
 
-    shadowmap_scene_vertices0 = scene_vertices0->CreateView("spark_shadowmap_scene_vertices0",
+    shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices",
       Usage(USAGE_VERTEX_ARRAY)
     );
     const std::shared_ptr<View> va_views[] = {
-      shadowmap_scene_vertices0,
+      shadowmap_scene_vertices,
     };
 
     shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles",
@@ -1073,7 +1092,7 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    std::pair<const std::string&, const  std::string&> defines[] =
+    std::pair<std::string, std::string> defines[] =
     {
       {"TEST", "1"},
     };
@@ -1087,28 +1106,19 @@ namespace RayGene3D
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
-        { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 1, 12, 16, FORMAT_R32_UINT, false },
-        { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 2, 12, 16, FORMAT_R32_FLOAT, false },
-        { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
-        { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
+        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 28, 64, FORMAT_R32_UINT, false },
+        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 44, 64, FORMAT_R32_FLOAT, false },
+        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
       }
     };
     
 
-    //const Config::Attribute attributes[] = {
-    //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
-    //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 28, 64, FORMAT_R32_UINT, false },
-    //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
-    //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-    //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
-    //};
+
     //const Config::Attribute attributes[] = {
     //  { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
     //  { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
@@ -1198,23 +1208,27 @@ namespace RayGene3D
 
       //unshadowed_pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_OPAQUE, { commands.data(), uint32_t(commands.size()) });
 
-      unshadowed_scene_vertices0 = scene_vertices0->CreateView("spark_unshadowed_scene_vertices0",
+      unshadowed_scene_vertices = scene_vertices->CreateView("spark_unshadowed_scene_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
-      unshadowed_scene_vertices1 = scene_vertices1->CreateView("spark_unshadowed_scene_vertices1",
-        Usage(USAGE_VERTEX_ARRAY)
-      );
-      unshadowed_scene_vertices2 = scene_vertices2->CreateView("spark_unshadowed_scene_vertices2",
-        Usage(USAGE_VERTEX_ARRAY)
-      );
-      unshadowed_scene_vertices3 = scene_vertices3->CreateView("spark_unshadowed_scene_vertices3",
-        Usage(USAGE_VERTEX_ARRAY)
-      );
+      //unshadowed_scene_vertices0 = scene_vertices0->CreateView("spark_unshadowed_scene_vertices0",
+      //  Usage(USAGE_VERTEX_ARRAY)
+      //);
+      //unshadowed_scene_vertices1 = scene_vertices1->CreateView("spark_unshadowed_scene_vertices1",
+      //  Usage(USAGE_VERTEX_ARRAY)
+      //);
+      //unshadowed_scene_vertices2 = scene_vertices2->CreateView("spark_unshadowed_scene_vertices2",
+      //  Usage(USAGE_VERTEX_ARRAY)
+      //);
+      //unshadowed_scene_vertices3 = scene_vertices3->CreateView("spark_unshadowed_scene_vertices3",
+      //  Usage(USAGE_VERTEX_ARRAY)
+      //);
       std::vector<std::shared_ptr<View>> unshadowed_va_views = {
-        unshadowed_scene_vertices0,
-        unshadowed_scene_vertices1,
-        unshadowed_scene_vertices2,
-        unshadowed_scene_vertices3,
+        unshadowed_scene_vertices,
+        //unshadowed_scene_vertices0,
+        //unshadowed_scene_vertices1,
+        //unshadowed_scene_vertices2,
+        //unshadowed_scene_vertices3,
       };
       //unshadowed_pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_OPAQUE, { va_views, uint32_t(std::size(va_views)) });
 
@@ -1354,7 +1368,8 @@ namespace RayGene3D
       Usage(USAGE_SHADER_RESOURCE)
     );
     shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_RESOURCE),
+      View::Bind(View::BIND_CUBEMAP_LAYER)
     );
     const std::shared_ptr<View> ri_views[] = {
       shadowed_scene_textures0,
@@ -1391,7 +1406,7 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    std::pair<const std::string&, const  std::string&> defines[] =
+    std::pair<std::string, std::string> defines[] =
     {
       {"TEST", "1"},
     };
@@ -1401,14 +1416,14 @@ namespace RayGene3D
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
-        { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 1, 12, 16, FORMAT_R32_UINT, false },
-        { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-        { 2, 12, 16, FORMAT_R32_FLOAT, false },
-        { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
-        { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
+        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 28, 64, FORMAT_R32_UINT, false },
+        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 44, 64, FORMAT_R32_FLOAT, false },
+        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
       }
     };
 
@@ -1468,23 +1483,27 @@ namespace RayGene3D
         shadowed_commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
       }
 
-      shadowed_scene_vertices0 = scene_vertices0->CreateView("spark_shadowed_scene_vertices0",
+      shadowed_scene_vertices = scene_vertices->CreateView("spark_shadowed_scene_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
-      shadowed_scene_vertices1 = scene_vertices1->CreateView("spark_shadowed_scene_vertices1",
-        Usage(USAGE_VERTEX_ARRAY)
-      );
-      shadowed_scene_vertices2 = scene_vertices2->CreateView("spark_shadowed_scene_vertices2",
-        Usage(USAGE_VERTEX_ARRAY)
-      );
-      shadowed_scene_vertices3 = scene_vertices3->CreateView("spark_shadowed_scene_vertices3",
-        Usage(USAGE_VERTEX_ARRAY)
-      );
+      //shadowed_scene_vertices0 = scene_vertices0->CreateView("spark_shadowed_scene_vertices0",
+      //  Usage(USAGE_VERTEX_ARRAY)
+      //);
+      //shadowed_scene_vertices1 = scene_vertices1->CreateView("spark_shadowed_scene_vertices1",
+      //  Usage(USAGE_VERTEX_ARRAY)
+      //);
+      //shadowed_scene_vertices2 = scene_vertices2->CreateView("spark_shadowed_scene_vertices2",
+      //  Usage(USAGE_VERTEX_ARRAY)
+      //);
+      //shadowed_scene_vertices3 = scene_vertices3->CreateView("spark_shadowed_scene_vertices3",
+      //  Usage(USAGE_VERTEX_ARRAY)
+      //);
       std::vector<std::shared_ptr<View>> shadowed_va_views = {
-        shadowed_scene_vertices0,
-        shadowed_scene_vertices1,
-        shadowed_scene_vertices2,
-        shadowed_scene_vertices3,
+        shadowed_scene_vertices,
+        //shadowed_scene_vertices0,
+        //shadowed_scene_vertices1,
+        //shadowed_scene_vertices2,
+        //shadowed_scene_vertices3,
       };
 
       shadowed_scene_triangles = scene_triangles->CreateView("spark_shadowed_scene_triangles",
@@ -1579,7 +1598,7 @@ namespace RayGene3D
     };
     //skybox_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
 
-    shadowed_layout = root.GetCore()->GetDevice()->CreateLayout("spark_shadowed_layout",
+    skybox_layout = root.GetCore()->GetDevice()->CreateLayout("spark_skybox_layout",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -1592,15 +1611,15 @@ namespace RayGene3D
   }
 
   void Spark::InitializeSkyboxConfig()
-  { 
+  {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    std::pair<const std::string&, const  std::string&> defines[] =
+    std::pair<std::string, std::string> defines[] =
     {
-      {"TEST", "1"},
+      { "TEST", "1" },
     };
 
     const Config::IAState ia_state =
@@ -1843,21 +1862,35 @@ namespace RayGene3D
     {
       prop_instances = prop_scene->GetObjectItem("instances");
       prop_triangles = prop_scene->GetObjectItem("triangles");
+      prop_vertices = prop_scene->GetObjectItem("vertices");
 
-      prop_vertices0 = prop_scene->GetObjectItem("vertices0");
-      prop_vertices1 = prop_scene->GetObjectItem("vertices1");
-      prop_vertices2 = prop_scene->GetObjectItem("vertices2");
-      prop_vertices3 = prop_scene->GetObjectItem("vertices3");
+      //prop_vertices0 = prop_scene->GetObjectItem("vertices0");
+      //prop_vertices1 = prop_scene->GetObjectItem("vertices1");
+      //prop_vertices2 = prop_scene->GetObjectItem("vertices2");
+      //prop_vertices3 = prop_scene->GetObjectItem("vertices3");
 
       prop_textures0 = prop_scene->GetObjectItem("textures0");
       prop_textures1 = prop_scene->GetObjectItem("textures1");
       prop_textures2 = prop_scene->GetObjectItem("textures2");
       prop_textures3 = prop_scene->GetObjectItem("textures3");
 
-      prop_lightmaps = prop_scene->GetObjectItem("textures4");
+      prop_lightmaps = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
+      {
+        prop_lightmaps->SetArraySize(uint32_t(1));
+
+        const auto texel_value = glm::u8vec4(255, 255, 255, 255);
+        const auto texel_size = uint32_t(sizeof(texel_value));
+
+        const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+        texels_property->RawAllocate(texel_size);
+        texels_property->SetRawBytes({ &texel_value, texel_size }, 0);
+        prop_lightmaps->SetArrayItem(0, texels_property);
+      }
+
+      //prop_lightmaps = prop_scene->GetObjectItem("textures4");
     }
 
-    prop_camera = tree->GetObjectItem("camera");
+    prop_camera = tree->GetObjectItem("camera_property");
     {
       prop_eye = prop_camera->GetObjectItem("eye");
       prop_lookat = prop_camera->GetObjectItem("lookat");
@@ -1875,7 +1908,7 @@ namespace RayGene3D
       prop_counter = prop_camera->GetObjectItem("counter");
     }
 
-    prop_environment = tree->GetObjectItem("environment");
+    prop_skybox = tree->GetObjectItem("environment_property");
 
 
     InitializeColorTarget();
@@ -1888,10 +1921,11 @@ namespace RayGene3D
     
     InitializeSceneInstances();
     InitializeSceneTriangles();
-    InitializeSceneVertices0();
-    InitializeSceneVertices1();
-    InitializeSceneVertices2();
-    InitializeSceneVertices3();
+    InitializeSceneVertices();
+    //InitializeSceneVertices0();
+    //InitializeSceneVertices1();
+    //InitializeSceneVertices2();
+    //InitializeSceneVertices3();
  
     InitializeSceneTextures0();
     InitializeSceneTextures1();
@@ -1913,7 +1947,7 @@ namespace RayGene3D
     InitializeSkyboxLayout();
     InitializePresentLayout();
 
-    InitializeSkyboxConfig();
+    InitializeShadowmapConfig();
     InitializeUnshadowedConfig();
     InitializeShadowedConfig();
     InitializeSkyboxConfig();
@@ -2121,10 +2155,11 @@ namespace RayGene3D
 
     scene_instances->Discard();
     scene_triangles->Discard();
-    scene_vertices0->Discard();
-    scene_vertices1->Discard();
-    scene_vertices2->Discard();
-    scene_vertices3->Discard();
+    scene_vertices->Discard();
+    //scene_vertices0->Discard();
+    //scene_vertices1->Discard();
+    //scene_vertices2->Discard();
+    //scene_vertices3->Discard();
 
     scene_textures0->Discard();
     scene_textures1->Discard();

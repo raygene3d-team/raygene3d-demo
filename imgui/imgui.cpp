@@ -13,8 +13,30 @@ namespace RayGene3D
   {
     Discard();
 
-    prop_extent_x = prop_camera->GetObjectItem("extent_x");
-    prop_extent_y = prop_camera->GetObjectItem("extent_y");
+    const auto find_view_fn = [this](const std::shared_ptr<View>& view)
+    {
+      if (view->GetName().compare("backbuffer_ua_view") == 0)
+      {
+        this->backbuffer_uav = view;
+      }
+
+      if (view->GetName().compare("backbuffer_rt_view") == 0)
+      {
+        this->backbuffer_rtv = view;
+      }
+    };
+    root.GetCore()->VisitView(find_view_fn);
+
+    const auto tree = root.GetData()->GetStorage()->GetTree();
+
+    prop_camera = tree->GetObjectItem("camera_property");
+    {
+      prop_extent_x = prop_camera->GetObjectItem("extent_x");
+      prop_extent_y = prop_camera->GetObjectItem("extent_y");
+    }
+
+    //prop_extent_x = prop_camera->GetObjectItem("extent_x");
+    //prop_extent_y = prop_camera->GetObjectItem("extent_y");
 
     ImGui::CreateContext();
     ImGui::StyleColorsDark();

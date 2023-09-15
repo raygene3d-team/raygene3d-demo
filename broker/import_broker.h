@@ -50,8 +50,8 @@ namespace RayGene3D
     uint32_t degenerated_wrap_tris_count{ 0u };
 
   protected:
-    std::vector<std::vector<Vertex>> vertices;
-    std::vector<std::vector<Triangle>> triangles;
+    std::vector<Vertex> vertices;
+    std::vector<Triangle> triangles;
     std::vector<Instance> instances;
     std::vector<Texture> textures_0;
     std::vector<Texture> textures_1;

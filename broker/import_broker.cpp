@@ -65,7 +65,7 @@ namespace RayGene3D
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
 
-    for (uint32_t k = 0; k < count; ++k)
+    for (uint32_t k = 0; k < count / 3; ++k)
     {
       const auto create_vertex_fn = [align, scale, flip,
         pos_data, pos_stride, pos_idx_data, pos_id_stride,
@@ -161,7 +161,7 @@ namespace RayGene3D
 
       triangle.idx[0] = remap_vertex_fn(vertices, vtx0);
       triangle.idx[1] = remap_vertex_fn(vertices, vtx1);
-      triangle.idx[2] = remap_vertex_fn(vertices, vtx0);
+      triangle.idx[2] = remap_vertex_fn(vertices, vtx2);
 
       triangles.push_back(triangle);
     }
@@ -170,16 +170,16 @@ namespace RayGene3D
   }
 
 
-  void UpdateTangents(std::vector<Instance>& instances, std::vector<std::vector<Triangle>>& triangles, std::vector<std::vector<Vertex>>& vertices)
+  void UpdateTangents(std::vector<Instance>& instances, std::vector<Triangle>& triangles, std::vector<Vertex>& vertices)
   {
 
     for (uint32_t i = 0; i < uint32_t(instances.size()); ++i)
     {
-      auto prim_data = triangles[i].data();
-      const auto prim_count = uint32_t(triangles[i].size());
+      auto prim_data = triangles.data() + instances[i].prim_offset;
+      const auto prim_count = instances[i].prim_count;
 
-      auto vert_data = vertices[i].data();
-      const auto vert_count = uint32_t(vertices.size());
+      auto vert_data = vertices.data() + instances[i].vert_offset;
+      const auto vert_count = instances[i].vert_count;
 
       struct SMikkTSpaceUserData
       {
@@ -547,7 +547,6 @@ namespace RayGene3D
       ImportGLTF();
     }
 
-
     UpdateTangents(instances, triangles, vertices);
   }
 
@@ -595,9 +594,9 @@ namespace RayGene3D
           const auto offset = gltf_view.byteOffset;
 
           const auto& gltf_buffer = gltf_model.buffers[gltf_view.buffer];
-          const auto data = &gltf_buffer.data[gltf_view.byteOffset];
+          const auto data = &gltf_buffer.data[accessor.byteOffset];
 
-          return std::pair{ data, uint32_t(length) };
+          return std::pair{ data + offset, uint32_t(length) };
         };
 
         const auto& gltf_positions = gltf_model.accessors[gltf_primitive.attributes.at("POSITION")];
@@ -646,8 +645,8 @@ namespace RayGene3D
         instance.prim_count = uint32_t(instance_triangles.size());
         instance.prim_offset = uint32_t(triangles.size());
 
-        vertices.emplace_back(std::move(instance_vertices));
-        triangles.emplace_back(std::move(instance_triangles));
+        std::copy(instance_vertices.begin(), instance_vertices.end(), std::back_inserter(vertices));
+        std::copy(instance_triangles.begin(), instance_triangles.end(), std::back_inserter(triangles));
 
         const auto tex_reindex_fn = [](std::vector<uint32_t>& tex_ids, uint32_t tex_id)
         {
@@ -761,28 +760,36 @@ namespace RayGene3D
     {
       const auto& obj_mesh = obj_shapes[i].mesh;
 
-      std::unordered_map<int, std::vector<int>> material_id_map;
+      std::unordered_map<int, std::vector<glm::uvec3>> material_id_map;
       for (uint32_t j = 0; j < uint32_t(obj_mesh.material_ids.size()); ++j)
       {
         const auto id = obj_mesh.material_ids[j];
-        material_id_map[id].push_back(j);
+
+        const auto& idx_0 = obj_mesh.indices[3 * j + 0];
+        material_id_map[id].emplace_back(idx_0.vertex_index, idx_0.normal_index, idx_0.texcoord_index);
+        const auto& idx_1 = obj_mesh.indices[3 * j + 1];
+        material_id_map[id].emplace_back(idx_1.vertex_index, idx_1.normal_index, idx_1.texcoord_index);
+        const auto& idx_2 = obj_mesh.indices[3 * j + 2];
+        material_id_map[id].emplace_back(idx_2.vertex_index, idx_2.normal_index, idx_2.texcoord_index);
       }
 
       uint32_t instance_id = 0u;
       for (const auto& material_id : material_id_map)
       {
-        const auto& indices = material_id.second;
-
-        const auto idx_count = uint32_t(indices.size());
+        const auto idx_count = uint32_t(material_id.second.size());
         const auto idx_align = 4u;
 
-        const auto idx_data = std::pair{ reinterpret_cast<const uint8_t*>(indices.data()), uint32_t(indices.size()) };
-        const auto idx_stride = 4u;
+        const auto pos_idx_data = std::pair{ reinterpret_cast<const uint8_t*>(material_id.second.data()) + 0u, uint32_t(material_id.second.size()) };
+        const auto pos_idx_stride = 3 * 4u;
+        const auto nrm_idx_data = std::pair{ reinterpret_cast<const uint8_t*>(material_id.second.data()) + 4u, uint32_t(material_id.second.size()) };
+        const auto nrm_idx_stride = 3 * 4u;
+        const auto tc0_idx_data = std::pair{ reinterpret_cast<const uint8_t*>(material_id.second.data()) + 8u, uint32_t(material_id.second.size()) };
+        const auto tc0_idx_stride = 3 * 4u;
 
-        const auto [instance_vertices, instance_triangles] = PopulateInstance(idx_count, idx_stride, position_scale, coordinate_flip,
-          pos_data, pos_stride, idx_data, idx_stride,
-          nrm_data, nrm_stride, idx_data, idx_stride,
-          tc0_data, tc0_stride, idx_data, idx_stride,
+        const auto [instance_vertices, instance_triangles] = PopulateInstance(idx_count, idx_align, position_scale, coordinate_flip,
+          pos_data, pos_stride, pos_idx_data, pos_idx_stride,
+          nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
+          tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride,
           degenerated_geom_tris_count, degenerated_wrap_tris_count);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
@@ -872,8 +879,11 @@ namespace RayGene3D
         instance.prim_count = uint32_t(instance_triangles.size());
         instance.prim_offset = uint32_t(triangles.size());
 
-        vertices.emplace_back(std::move(instance_vertices));
-        triangles.emplace_back(std::move(instance_triangles));
+        //vertices.emplace_back(std::move(instance_vertices));
+        //triangles.emplace_back(std::move(instance_triangles));
+
+        std::copy(instance_vertices.begin(), instance_vertices.end(), std::back_inserter(vertices));
+        std::copy(instance_triangles.begin(), instance_triangles.end(), std::back_inserter(triangles));
 
         instances.push_back(instance);
       }

@@ -378,6 +378,8 @@ namespace RayGene3D
       prop_n_plane = setup_property->GetObjectItem("n_plane");
       prop_f_plane = setup_property->GetObjectItem("f_plane");
 
+      //prop_counter = CreateUIntProperty();
+
       const auto extent_x = prop_extent_x->GetUint();
       const auto extent_y = prop_extent_y->GetUint();
 
@@ -476,7 +478,7 @@ namespace RayGene3D
       input.close();
       const auto config_property = RayGene3D::ParseJSON(json);
 
-      scene_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+      //scene_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
         const auto scene_name = config_property->GetObjectItem("scene")->GetObjectItem("file")->GetString();
         const auto scene_path = config_path;
@@ -507,12 +509,12 @@ namespace RayGene3D
 
       camera_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
-        const auto camera_eye = config_property->GetObjectItem("camera")->GetObjectItem("eye");
-        const auto camera_lookat = config_property->GetObjectItem("camera")->GetObjectItem("lookat");
-        const auto camera_up = config_property->GetObjectItem("camera")->GetObjectItem("up");
+        prop_eye = config_property->GetObjectItem("camera")->GetObjectItem("eye");
+        prop_lookat = config_property->GetObjectItem("camera")->GetObjectItem("lookat");
+        prop_up = config_property->GetObjectItem("camera")->GetObjectItem("up");
 
-        const auto camera_counter = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
-        camera_counter->SetUint(0);
+        prop_counter = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
+        prop_counter->SetUint(0);
 
         camera_property->SetObjectItem("eye", prop_eye);
         camera_property->SetObjectItem("lookat", prop_lookat);

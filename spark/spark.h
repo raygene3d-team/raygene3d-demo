@@ -41,7 +41,7 @@ namespace RayGene3D
   protected:
     std::shared_ptr<Property> prop_scene;
     std::shared_ptr<Property> prop_camera;
-    std::shared_ptr<Property> prop_environment;
+    //std::shared_ptr<Property> prop_environment;
 
   protected:
     std::shared_ptr<Property> prop_eye;
@@ -61,11 +61,12 @@ namespace RayGene3D
 
     std::shared_ptr<Property> prop_instances;
     std::shared_ptr<Property> prop_triangles;
+    std::shared_ptr<Property> prop_vertices;
 
-    std::shared_ptr<Property> prop_vertices0;
-    std::shared_ptr<Property> prop_vertices1;
-    std::shared_ptr<Property> prop_vertices2;
-    std::shared_ptr<Property> prop_vertices3;
+    //std::shared_ptr<Property> prop_vertices0;
+    //std::shared_ptr<Property> prop_vertices1;
+    //std::shared_ptr<Property> prop_vertices2;
+    //std::shared_ptr<Property> prop_vertices3;
 
     std::shared_ptr<Property> prop_textures0;
     std::shared_ptr<Property> prop_textures1;
@@ -87,10 +88,11 @@ namespace RayGene3D
 
     std::shared_ptr<Resource> scene_instances;
     std::shared_ptr<Resource> scene_triangles;
-    std::shared_ptr<Resource> scene_vertices0;
-    std::shared_ptr<Resource> scene_vertices1;
-    std::shared_ptr<Resource> scene_vertices2;
-    std::shared_ptr<Resource> scene_vertices3;
+    std::shared_ptr<Resource> scene_vertices;
+    //std::shared_ptr<Resource> scene_vertices0;
+    //std::shared_ptr<Resource> scene_vertices1;
+    //std::shared_ptr<Resource> scene_vertices2;
+    //std::shared_ptr<Resource> scene_vertices3;
 
     std::shared_ptr<Resource> scene_textures0;
     std::shared_ptr<Resource> scene_textures1;
@@ -110,7 +112,7 @@ namespace RayGene3D
     std::shared_ptr<View> shadowmap_camera_data;
     std::shared_ptr<View> shadowmap_shadow_map[6];
     std::vector<std::shared_ptr<View>> shadowmap_graphic_arguments;
-    std::shared_ptr<View> shadowmap_scene_vertices0;
+    std::shared_ptr<View> shadowmap_scene_vertices;
     std::shared_ptr<View> shadowmap_scene_triangles;
 
   protected:
@@ -126,10 +128,11 @@ namespace RayGene3D
     std::shared_ptr<View> unshadowed_color_target;
     std::shared_ptr<View> unshadowed_depth_target;
     std::vector<std::shared_ptr<View>>  unshadowed_graphic_arguments;
-    std::shared_ptr<View> unshadowed_scene_vertices0;
-    std::shared_ptr<View> unshadowed_scene_vertices1;
-    std::shared_ptr<View> unshadowed_scene_vertices2;
-    std::shared_ptr<View> unshadowed_scene_vertices3;
+    //std::shared_ptr<View> unshadowed_scene_vertices0;
+    //std::shared_ptr<View> unshadowed_scene_vertices1;
+    //std::shared_ptr<View> unshadowed_scene_vertices2;
+    //std::shared_ptr<View> unshadowed_scene_vertices3;
+    std::shared_ptr<View> unshadowed_scene_vertices;
     std::shared_ptr<View> unshadowed_scene_triangles;
 
   protected:
@@ -146,10 +149,11 @@ namespace RayGene3D
     std::shared_ptr<View> shadowed_color_target;
     std::shared_ptr<View> shadowed_depth_target;
     std::vector<std::shared_ptr<View>>  shadowed_graphic_arguments;
-    std::shared_ptr<View> shadowed_scene_vertices0;
-    std::shared_ptr<View> shadowed_scene_vertices1;
-    std::shared_ptr<View> shadowed_scene_vertices2;
-    std::shared_ptr<View> shadowed_scene_vertices3;
+    //std::shared_ptr<View> shadowed_scene_vertices0;
+    //std::shared_ptr<View> shadowed_scene_vertices1;
+    //std::shared_ptr<View> shadowed_scene_vertices2;
+    //std::shared_ptr<View> shadowed_scene_vertices3;
+    std::shared_ptr<View> shadowed_scene_vertices;
     std::shared_ptr<View> shadowed_scene_triangles;
 
   protected:
@@ -165,9 +169,6 @@ namespace RayGene3D
     std::shared_ptr<View> present_camera_data;
     std::shared_ptr<View> present_color_target;
     std::shared_ptr<View> present_compute_arguments;
-
-
-
 
   protected:
     std::shared_ptr<Layout> shadowmap_layout;
@@ -227,10 +228,11 @@ namespace RayGene3D
 
     void InitializeSceneInstances();
     void InitializeSceneTriangles();
-    void InitializeSceneVertices0();
-    void InitializeSceneVertices1();
-    void InitializeSceneVertices2();
-    void InitializeSceneVertices3();
+    void InitializeSceneVertices();
+    //void InitializeSceneVertices0();
+    //void InitializeSceneVertices1();
+    //void InitializeSceneVertices2();
+    //void InitializeSceneVertices3();
 
     void InitializeSceneTextures0();
     void InitializeSceneTextures1();
