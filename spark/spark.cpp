@@ -1765,7 +1765,7 @@ namespace RayGene3D
     };
 
     const std::shared_ptr<View> wi_views[] = {
-      backbuffer_rtv,
+      backbuffer_uav,
     };
 
     present_layout = root.GetCore()->GetDevice()->CreateLayout("spark_present_layout",

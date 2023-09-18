@@ -462,7 +462,7 @@ namespace RayGene3D
         const auto& backbuffer_ua_view = backbuffer_resource->CreateView("backbuffer_ua_view",
           Usage(USAGE_UNORDERED_ACCESS)
         );
-        root->GetCore()->AddView(backbuffer_rt_view);
+        root->GetCore()->AddView(backbuffer_ua_view);
       }
       
 

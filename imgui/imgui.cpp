@@ -422,6 +422,7 @@ namespace RayGene3D
     if (show_test_window)
     {
       ImGui::ShowDemoWindow(&show_test_window);
+      pass->SetEnabled(show_test_window);
     }
 
     {
