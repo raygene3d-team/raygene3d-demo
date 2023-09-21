@@ -218,55 +218,98 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   protected:
-    void InitializeColorTarget();
-    void InitializeDepthTarget();
-    void InitializeShadowMap();
+    void CreateColorTarget();
+    void CreateDepthTarget();
+    void CreateShadowMap();
 
-    void InitializeScreenData();
-    void InitializeCameraData();
-    void InitializeShadowData();
+    void CreateScreenData();
+    void CreateCameraData();
+    void CreateShadowData();
 
-    void InitializeSceneInstances();
-    void InitializeSceneTriangles();
-    void InitializeSceneVertices();
-    //void InitializeSceneVertices0();
-    //void InitializeSceneVertices1();
-    //void InitializeSceneVertices2();
-    //void InitializeSceneVertices3();
+    void CreateSceneInstances();
+    void CreateSceneTriangles();
+    void CreateSceneVertices();
 
-    void InitializeSceneTextures0();
-    void InitializeSceneTextures1();
-    void InitializeSceneTextures2();
-    void InitializeSceneTextures3();
+    void CreateSceneTextures0();
+    void CreateSceneTextures1();
+    void CreateSceneTextures2();
+    void CreateSceneTextures3();
 
-    void InitializeLightMaps();
+    void CreateLightMaps();
 
-    void InitializeSkyboxVertices();
-    void InitializeSkyboxTriangles();
-    void InitializeSkyboxTexture();
+    void CreateSkyboxVertices();
+    void CreateSkyboxTriangles();
+    void CreateSkyboxTexture();
 
-    void InitializeGraphicArguments();
-    void InitializeComputeArguments();
+    void CreateGraphicArguments();
+    void CreateComputeArguments();
 
-    void InitializeShadowmapLayout();
-    void InitializeShadowmapConfig();
-    void InitializeShadowmapPass(uint32_t index);
+    void CreateShadowmapLayout();
+    void CreateShadowmapConfig();
+    void CreateShadowmapPass(uint32_t index);
 
-    void InitializeShadowedLayout();
-    void InitializeShadowedConfig();
-    void InitializeShadowedPass();
+    void CreateShadowedLayout();
+    void CreateShadowedConfig();
+    void CreateShadowedPass();
 
-    void InitializeUnshadowedLayout();
-    void InitializeUnshadowedConfig();
-    void InitializeUnshadowedPass();
+    void CreateUnshadowedLayout();
+    void CreateUnshadowedConfig();
+    void CreateUnshadowedPass();
 
-    void InitializeSkyboxLayout();
-    void InitializeSkyboxConfig();
-    void InitializeSkyboxPass();
+    void CreateSkyboxLayout();
+    void CreateSkyboxConfig();
+    void CreateSkyboxPass();
 
-    void InitializePresentLayout();
-    void InitializePresentConfig();
-    void InitializePresentPass();
+    void CreatePresentLayout();
+    void CreatePresentConfig();
+    void CreatePresentPass();
+
+  protected:
+    void DestroyColorTarget();
+    void DestroyDepthTarget();
+    void DestroyShadowMap();
+
+    void DestroyScreenData();
+    void DestroyCameraData();
+    void DestroyShadowData();
+
+    void DestroySceneInstances();
+    void DestroySceneTriangles();
+    void DestroySceneVertices();
+
+    void DestroySceneTextures0();
+    void DestroySceneTextures1();
+    void DestroySceneTextures2();
+    void DestroySceneTextures3();
+
+    void DestroyLightMaps();
+
+    void DestroySkyboxVertices();
+    void DestroySkyboxTriangles();
+    void DestroySkyboxTexture();
+
+    void DestroyGraphicArguments();
+    void DestroyComputeArguments();
+
+    void DestroyShadowmapLayout();
+    void DestroyShadowmapConfig();
+    void DestroyShadowmapPass(uint32_t index);
+
+    void DestroyShadowedLayout();
+    void DestroyShadowedConfig();
+    void DestroyShadowedPass();
+
+    void DestroyUnshadowedLayout();
+    void DestroyUnshadowedConfig();
+    void DestroyUnshadowedPass();
+
+    void DestroySkyboxLayout();
+    void DestroySkyboxConfig();
+    void DestroySkyboxPass();
+
+    void DestroyPresentLayout();
+    void DestroyPresentConfig();
+    void DestroyPresentPass();
 
   public:
     void Initialize() override;

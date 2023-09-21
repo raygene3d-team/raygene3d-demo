@@ -131,63 +131,6 @@ std::shared_ptr<RayGene3D::Property> LoadSetup(const std::string& setup_name)
   return property;
 }
 
-//std::shared_ptr<RayGene3D::Property> LoadScene(const std::shared_ptr<RayGene3D::Core>& core, const std::shared_ptr<RayGene3D::Util>& util,
-//  const std::string& file_path, const std::string& file_name)
-//{
-//  auto property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
-//
-//  std::ifstream input((file_path + file_name).c_str());
-//  nlohmann::json json;
-//  input >> json;
-//  input.close();
-//
-//  const auto scene_json_propertry = RayGene3D::ParseJSON(json);
-//
-//  {
-//    const auto scene_json_property = scene_json_propertry->GetObjectItem("scene");
-//
-//    const auto scene_file = scene_json_property->GetObjectItem("file")->GetString();
-//    const auto scene_flip = scene_json_property->GetObjectItem("flip")->GetBool();
-//    const auto scene_scale = scene_json_property->GetObjectItem("scale")->GetReal();
-//    const auto scene_quality = scene_json_property->GetObjectItem("quality")->GetUint();
-//
-//    const auto directory = std::string("cache/");
-//    std::shared_ptr<RayGene3D::Property> scene_prop;
-//    try
-//    {
-//      scene_prop = RayGene3D::LoadProperty(directory, ExtractName(scene_file));
-//    }
-//    catch (std::exception e)
-//    {
-//      //const auto extension = ExtractExtension(scene_file);
-//
-//      const auto io_broker = new RayGene3D::IOBroker(core, util);
-//
-//      io_broker->SetFileName(file_name);
-//      io_broker->SetPathName(file_path);
-//
-//      //if (std::strcmp(extension.c_str(), "obm") == 0)
-//      //{
-//      //  scene_prop = RayGene3D::ImportOBJ(file_path, scene_file, scene_flip, scene_scale, scene_quality);
-//      //}
-//      //else if (std::strcmp(extension.c_str(), "gltf") == 0)
-//      //{
-//      //  scene_prop = RayGene3D::ImportGLTF(file_path, scene_file, scene_flip, scene_scale, scene_quality);
-//      //}
-//
-//      //RayGene3D::SaveProperty(directory, ExtractName(scene_file), scene_prop);
-//
-//      RayGene3D::SaveProperty(directory, ExtractName(scene_file), util->GetProperty());
-//    }
-//
-//    property->SetObjectItem("scene", scene_prop);
-//  }
-
-
-
- // return property;
-//}
-
 namespace RayGene3D
 {
   class GLFWWrapper
@@ -203,13 +146,9 @@ namespace RayGene3D
     std::shared_ptr<RayGene3D::Imgui> imgui;
 
   protected:
-    std::shared_ptr<RayGene3D::IOBroker> io_broker;
+    //std::shared_ptr<RayGene3D::IOBroker> io_broker;
     //std::shared_ptr<RayGene3D::ImportBroker> lightmap_broker;
     //std::shared_ptr<RayGene3D::ImportBroker> environment_broker;
-
-  protected:
-    //std::shared_ptr<RayGene3D::View> backbuffer_rt_view;
-    //std::shared_ptr<RayGene3D::View> backbuffer_ua_view;
 
   protected:
     std::string config_path;
@@ -488,6 +427,8 @@ namespace RayGene3D
 
         if (!scene_property)
         {
+          auto io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
+
           io_broker->SetFileName(scene_name);
           io_broker->SetPathName(scene_path);
 
@@ -501,6 +442,8 @@ namespace RayGene3D
 
           io_broker->Initialize();
           io_broker->Export(scene_property);
+
+          io_broker.reset();
 
           root->GetData()->GetStorage()->Save(ExtractName(scene_name), scene_property);
         }
@@ -542,10 +485,11 @@ namespace RayGene3D
       }
       tree_property->SetObjectItem("environment_property", environment_property);
 
-      spark->Initialize();
+
+      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*root));
       spark->SetShadowType(Spark::NO_SHADOWS);
 
-      imgui->Initialize();
+      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*root));
       imgui->SetShowTestWindow(false);
     }
 
@@ -673,8 +617,11 @@ namespace RayGene3D
 
     void Discard()
     {
-      spark->Discard();
-      imgui->Discard();
+      //spark->Discard();
+      //imgui->Discard();
+
+      spark.reset();
+      imgui.reset();
 
       root->Discard();
 
@@ -686,20 +633,14 @@ namespace RayGene3D
     {
       glfwInit();
 
-      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Data::STORAGE_LOCAL, RayGene3D::Core::DEVICE_VLK));
+      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Data::STORAGE_LOCAL, RayGene3D::Core::DEVICE_D11));
 
-      io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
-
-      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*root));
-      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*root));
+      //io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
     }
 
     ~GLFWWrapper()
     {
-      spark.reset();
-      imgui.reset();
-
-      io_broker.reset();
+      //io_broker.reset();
 
       root.reset();
 

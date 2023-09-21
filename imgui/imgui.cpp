@@ -11,7 +11,131 @@ namespace RayGene3D
 
   void Imgui::Initialize()
   {
-    Discard();
+  }
+
+  void Imgui::Use()
+  {
+    ImGuiIO& io = ImGui::GetIO();
+
+    // Setup display size (every frame to accommodate for window resizing)
+    io.DisplaySize = ImVec2(float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()));
+
+
+    const auto now = std::chrono::high_resolution_clock::now();
+    const auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(now - time);
+    io.DeltaTime = delta.count();
+    time = now;
+
+    // Start the frame
+    ImGui::NewFrame();
+    if (show_test_window)
+    {
+      ImGui::ShowDemoWindow(&show_test_window);
+      pass->SetEnabled(show_test_window);
+    }
+
+    {
+      for (uint32_t i = 0; i < sub_limit; ++i)
+      {
+        auto& arg_resource = arg_resources[i];
+
+        auto arg_mapped = arg_resource->Map();
+        for (uint32_t j = 0; j < arg_limit; ++j)
+        {
+          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[j];
+          graphic_arg = { 0, 0, 0, 0, 0 };
+        }
+        arg_resource->Unmap();
+      }
+    }
+
+
+    {
+      ImGui::Render();
+
+      ImDrawData* draw_data = ImGui::GetDrawData();
+      const auto pass_count = std::min(sub_limit, uint32_t(draw_data->CmdListsCount));
+      for (uint32_t i = 0; i < pass_count; ++i)
+      {
+        const ImDrawList* cmd_list = draw_data->CmdLists[i];
+
+        const auto vtx_stride = static_cast<uint32_t>(sizeof(ImDrawVert));
+        const auto vtx_count = static_cast<uint32_t>(cmd_list->VtxBuffer.Size);
+        const auto vtx_data = cmd_list->VtxBuffer.Data;
+
+        const auto idx_stride = static_cast<uint32_t>(sizeof(ImDrawIdx));
+        const auto idx_count = static_cast<uint32_t>(cmd_list->IdxBuffer.Size);
+        const auto idx_data = cmd_list->IdxBuffer.Data;
+
+        auto& vtx_resource = vtx_resources[i];
+        auto& idx_resource = idx_resources[i];
+        auto& arg_resource = arg_resources[i];
+
+        if (vtx_count > vtx_resource->GetCount() || idx_count > idx_resource->GetCount())
+          continue;
+
+        auto vtx_mapped = vtx_resource->Map();
+        memcpy(vtx_mapped, vtx_data, vtx_stride * vtx_count);
+        vtx_resource->Unmap();
+
+        auto idx_mapped = idx_resource->Map();
+        memcpy(idx_mapped, idx_data, idx_stride * idx_count);
+        idx_resource->Unmap();
+
+
+        const auto arg_count = std::min(arg_limit, uint32_t(cmd_list->CmdBuffer.Size));
+
+        auto arg_mapped = arg_resource->Map();
+        for (uint32_t j = 0; j < arg_count; ++j)
+        {
+          const auto& draw_data = cmd_list->CmdBuffer[j];
+          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[j];
+          graphic_arg = { draw_data.ElemCount, 1, draw_data.IdxOffset, draw_data.VtxOffset, 0 };
+        }
+        arg_resource->Unmap();
+      }
+    }
+  }
+
+
+  void Imgui::Discard()
+  {
+  }
+
+  void Imgui::OnCursor(double xpos, double ypos)
+  {
+    ImGuiIO& io = ImGui::GetIO();
+    io.MousePos = ImVec2((float)xpos, (float)ypos);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
+  }
+
+  void Imgui::OnKeyboard(int key, int scancode, int action, int mods)
+  {
+    ImGuiIO& io = ImGui::GetIO();
+    io.KeysDown[key] = action == 1 ? true : false;
+  }
+
+  void Imgui::OnMouse(int button, int action, int mods)
+  {
+    ImGuiIO& io = ImGui::GetIO();
+    io.MouseDown[button] = action == 1 ? true : false;
+  }
+
+  void Imgui::OnScroll(double xoffset, double yoffset)
+  {
+    ImGuiIO& io = ImGui::GetIO();
+    io.MouseWheel += (float)yoffset;
+  }
+
+  void Imgui::OnChar(unsigned int glyph)
+  {
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddInputCharacter(glyph);
+  }
+
+  Imgui::Imgui(Root& root)
+    : Broker("imgui_broker", root)
+  {
+    time = std::chrono::high_resolution_clock::now();
 
     const auto find_view_fn = [this](const std::shared_ptr<View>& view)
     {
@@ -119,7 +243,7 @@ namespace RayGene3D
             vtx_limit,
           },
           Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
-        );
+          );
 
         idx_resources[i] = device->CreateResource("imgui_idx_resource_" + std::to_string(i),
           Resource::BufferDesc
@@ -129,7 +253,7 @@ namespace RayGene3D
             idx_limit,
           },
           Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
-        );
+          );
 
         arg_resources[i] = device->CreateResource("imgui_arg_resource_" + std::to_string(i),
           Resource::BufferDesc
@@ -139,7 +263,7 @@ namespace RayGene3D
             arg_limit,
           },
           Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
-        );
+          );
       }
     }
 
@@ -402,131 +526,6 @@ namespace RayGene3D
 
     io.RenderDrawListsFn = nullptr;  // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
     io.ImeWindowHandle = nullptr;
-  }
-
-  void Imgui::Use()
-  {
-    ImGuiIO& io = ImGui::GetIO();
-
-    // Setup display size (every frame to accommodate for window resizing)
-    io.DisplaySize = ImVec2(float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()));
-
-
-    const auto now = std::chrono::high_resolution_clock::now();
-    const auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(now - time);
-    io.DeltaTime = delta.count();
-    time = now;
-
-    // Start the frame
-    ImGui::NewFrame();
-    if (show_test_window)
-    {
-      ImGui::ShowDemoWindow(&show_test_window);
-      pass->SetEnabled(show_test_window);
-    }
-
-    {
-      for (uint32_t i = 0; i < sub_limit; ++i)
-      {
-        auto& arg_resource = arg_resources[i];
-
-        auto arg_mapped = arg_resource->Map();
-        for (uint32_t j = 0; j < arg_limit; ++j)
-        {
-          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[j];
-          graphic_arg = { 0, 0, 0, 0, 0 };
-        }
-        arg_resource->Unmap();
-      }
-    }
-
-
-    {
-      ImGui::Render();
-
-      ImDrawData* draw_data = ImGui::GetDrawData();
-      const auto pass_count = std::min(sub_limit, uint32_t(draw_data->CmdListsCount));
-      for (uint32_t i = 0; i < pass_count; ++i)
-      {
-        const ImDrawList* cmd_list = draw_data->CmdLists[i];
-
-        const auto vtx_stride = static_cast<uint32_t>(sizeof(ImDrawVert));
-        const auto vtx_count = static_cast<uint32_t>(cmd_list->VtxBuffer.Size);
-        const auto vtx_data = cmd_list->VtxBuffer.Data;
-
-        const auto idx_stride = static_cast<uint32_t>(sizeof(ImDrawIdx));
-        const auto idx_count = static_cast<uint32_t>(cmd_list->IdxBuffer.Size);
-        const auto idx_data = cmd_list->IdxBuffer.Data;
-
-        auto& vtx_resource = vtx_resources[i];
-        auto& idx_resource = idx_resources[i];
-        auto& arg_resource = arg_resources[i];
-
-        if (vtx_count > vtx_resource->GetCount() || idx_count > idx_resource->GetCount())
-          continue;
-
-        auto vtx_mapped = vtx_resource->Map();
-        memcpy(vtx_mapped, vtx_data, vtx_stride * vtx_count);
-        vtx_resource->Unmap();
-
-        auto idx_mapped = idx_resource->Map();
-        memcpy(idx_mapped, idx_data, idx_stride * idx_count);
-        idx_resource->Unmap();
-
-
-        const auto arg_count = std::min(arg_limit, uint32_t(cmd_list->CmdBuffer.Size));
-
-        auto arg_mapped = arg_resource->Map();
-        for (uint32_t j = 0; j < arg_count; ++j)
-        {
-          const auto& draw_data = cmd_list->CmdBuffer[j];
-          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[j];
-          graphic_arg = { draw_data.ElemCount, 1, draw_data.IdxOffset, draw_data.VtxOffset, 0 };
-        }
-        arg_resource->Unmap();
-      }
-    }
-  }
-
-
-  void Imgui::Discard()
-  {
-  }
-
-  void Imgui::OnCursor(double xpos, double ypos)
-  {
-    ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2((float)xpos, (float)ypos);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
-  }
-
-  void Imgui::OnKeyboard(int key, int scancode, int action, int mods)
-  {
-    ImGuiIO& io = ImGui::GetIO();
-    io.KeysDown[key] = action == 1 ? true : false;
-  }
-
-  void Imgui::OnMouse(int button, int action, int mods)
-  {
-    ImGuiIO& io = ImGui::GetIO();
-    io.MouseDown[button] = action == 1 ? true : false;
-  }
-
-  void Imgui::OnScroll(double xoffset, double yoffset)
-  {
-    ImGuiIO& io = ImGui::GetIO();
-    io.MouseWheel += (float)yoffset;
-  }
-
-  void Imgui::OnChar(unsigned int glyph)
-  {
-    ImGuiIO& io = ImGui::GetIO();
-    io.AddInputCharacter(glyph);
-  }
-
-  Imgui::Imgui(Root& root)
-    : Broker("imgui_broker", root)
-  {
-    time = std::chrono::high_resolution_clock::now();
   }
 
   Imgui::~Imgui()
