@@ -6,4 +6,5 @@
 	url = https://github.com/raygene3d-team/raygene3d-root.git
 [submodule "raygene3d-data"]
 	path = raygene3d-data
-	url = git@github.com:raygene3d-team/raygene3d-data.git
+	url = https://github.com/raygene3d-team/raygene3d-data.git
+	branch = main
