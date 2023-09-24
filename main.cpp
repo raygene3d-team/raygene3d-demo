@@ -633,7 +633,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Data::STORAGE_LOCAL, RayGene3D::Core::DEVICE_D11));
+      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Data::STORAGE_LOCAL, RayGene3D::Core::DEVICE_VLK));
 
       //io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
     }
