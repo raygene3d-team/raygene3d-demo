@@ -474,14 +474,14 @@ namespace RayGene3D
       }
       tree_property->SetObjectItem("camera_property", camera_property);
 
-      environment_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+      //environment_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
         const auto environment_path = "./";
         const auto environment_name = config_property->GetObjectItem("environment")->GetObjectItem("file")->GetString();
         const auto environment_exposure = config_property->GetObjectItem("environment")->GetObjectItem("exposure")->GetReal();
         const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
 
-        environment_property.swap(RayGene3D::ImportEXR(environment_path, environment_name, environment_exposure, environment_quality));
+        environment_property = RayGene3D::ImportEXR(environment_path, environment_name, environment_exposure, environment_quality);
       }
       tree_property->SetObjectItem("environment_property", environment_property);
 
