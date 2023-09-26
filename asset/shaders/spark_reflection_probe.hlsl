@@ -21,7 +21,9 @@ VK_BINDING(1) cbuffer constant0 : register(b0)
 {
   uint mip_level     : packoffset(c0.x);
   uint mip_size      : packoffset(c0.y);
-  uint dummy[62]     : packoffset(c0.z);
+  uint dummy_z       : packoffset(c0.z);
+  uint dummy_w       : packoffset(c0.w);
+  uint4 dummy[15]    : packoffset(c1.x);
 }
 
 VK_BINDING(2) TextureCube<float4> skybox_texture : register(t0);
