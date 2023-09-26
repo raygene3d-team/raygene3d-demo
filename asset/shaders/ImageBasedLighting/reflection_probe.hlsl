@@ -16,8 +16,6 @@ float4 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
   float3 light_int = float3(0.0, 0.0, 0.0);
   float  cbsdf_int = 0.0;
 
-  if (sample_count == 0) return skybox_texture.SampleLevel(sampler0, N, 0);
-
   for (uint i = 0; i < sample_count; ++i)
   {
     float3 L;
