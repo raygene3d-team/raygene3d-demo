@@ -16,7 +16,7 @@ float4 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
   float3 light_int = float3(0.0, 0.0, 0.0);
   float  cbsdf_int = 0.0;
 
-  if (sample_count == 1) return skybox_texture.SampleLevel(sampler0, N, 0);
+  if (sample_count == 0) return skybox_texture.SampleLevel(sampler0, N, 0);
 
   for (uint i = 0; i < sample_count; ++i)
   {
@@ -80,18 +80,18 @@ float MipmapLevelToPerceptualRoughness(float mipmap_level, float mipmap_levels_c
 
 uint GetSampleCount(uint mip_level)
 {
-  uint sample_count = 1;
+  return mip_level * 20;
 
-  switch (mip_level)
-  {
-    case 0: sample_count = 1; break;
-    case 1: sample_count = 20; break;
-    case 2: sample_count = 40; break;
-    case 3: sample_count = 60; break;
-    case 4: sample_count = 80; break;
-    case 5: sample_count = 100; break;
-    case 6: sample_count = 120; break;
-  }
+  //switch (mip_level)
+  //{
+  //  case 0: return 1;
+  //  case 1: return 20;
+  //  case 2: return 40;
+  //  case 3: return 60;
+  //  case 4: return 80;
+  //  case 5: return 100;
+  //  case 6: return 120;
+  //}
 
-  return sample_count;
+  //return 1;
 }
