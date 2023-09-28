@@ -406,7 +406,7 @@ namespace RayGene3D
       
 
       
-      const auto storage = root->GetData()->GetStorage().get();
+      const auto storage = root->GetUtil()->GetStorage().get();
 
       auto tree_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       storage->SetTree(tree_property);
@@ -423,7 +423,7 @@ namespace RayGene3D
         const auto scene_path = config_path;
 
         //std::shared_ptr<Property> scene_property;
-        root->GetData()->GetStorage()->Load(ExtractName(scene_name), scene_property);
+        root->GetUtil()->GetStorage()->Load(ExtractName(scene_name), scene_property);
 
         if (!scene_property)
         {
@@ -445,7 +445,7 @@ namespace RayGene3D
 
           io_broker.reset();
 
-          root->GetData()->GetStorage()->Save(ExtractName(scene_name), scene_property);
+          root->GetUtil()->GetStorage()->Save(ExtractName(scene_name), scene_property);
         }
       }
       tree_property->SetObjectItem("scene_property", scene_property);
@@ -633,7 +633,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Data::STORAGE_LOCAL, RayGene3D::Core::DEVICE_VLK));
+      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Core::DEVICE_D11, RayGene3D::Util::STORAGE_LOCAL));
 
       //io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
     }

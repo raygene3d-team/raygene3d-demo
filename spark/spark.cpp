@@ -1684,7 +1684,7 @@ namespace RayGene3D
     root.GetCore()->VisitView(find_view_fn);
 
 
-    const auto tree = root.GetData()->GetStorage()->GetTree();
+    const auto tree = root.GetUtil()->GetStorage()->GetTree();
 
     prop_scene = tree->GetObjectItem("scene_property");
     {
