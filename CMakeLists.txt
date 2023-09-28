@@ -74,46 +74,31 @@ add_executable(${NAME}-demo
   ${SOURCE}
 )
 
-add_subdirectory(${NAME}-core)
-#add_dependencies(${NAME}-demo ${NAME}-core)
-target_link_libraries(${NAME}-demo PUBLIC ${NAME}-core)
+add_subdirectory(${NAME}-root)
+#add_dependencies(${NAME}-demo ${NAME}-root)
+target_link_libraries(${NAME}-demo PUBLIC ${NAME}-root)
 
 add_subdirectory(${NAME}-util)
 #add_dependencies(${NAME}-demo ${NAME}-util)
 target_link_libraries(${NAME}-demo PUBLIC ${NAME}-util)
 
-add_subdirectory(${NAME}-root)
-#add_dependencies(${NAME}-demo ${NAME}-root)
-target_link_libraries(${NAME}-demo PUBLIC ${NAME}-root)
+add_subdirectory(${NAME}-core)
+#add_dependencies(${NAME}-demo ${NAME}-core)
+target_link_libraries(${NAME}-demo PUBLIC ${NAME}-core)
 
-#set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib)
+set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib)
 
-#set(GLSLANG_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glslang/lib)
-#set(SPIRV_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/SPIRV/lib)
-#set(SPIRVTOOLS_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/spirv-tools/lib)
 
 if(WIN32)
-	set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib/win64)
-endif(WIN32)
-
-if(UNIX)
-	if(APPLE)
-		set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib/macos)
-	else(APPLE)
-		set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib/linux)
-	endif(APPLE)
-endif(UNIX)
-
-if(WIN32)
-target_link_libraries(${NAME}-demo PRIVATE
-	debug ${GLFW_LIB_PATH}/glfw3d.lib optimized ${GLFW_LIB_PATH}/glfw3.lib
+	target_link_libraries(${NAME}-demo PRIVATE
+		debug ${GLFW_LIB_PATH}/win64/glfw3d.lib optimized ${GLFW_LIB_PATH}/win64/glfw3.lib
 )
 endif(WIN32)
 
 if(UNIX)
 	if(APPLE)
 		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${GLFW_LIB_PATH}/libglfw3.a
+			optimized ${GLFW_LIB_PATH}/macos/libglfw3.a
 		)
 		target_link_libraries(${NAME}-demo PRIVATE
 			"-framework AppKit"
@@ -123,7 +108,7 @@ if(UNIX)
 		)
 	else(APPLE)
 		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${GLFW_LIB_PATH}/libglfw3.a
+			optimized ${GLFW_LIB_PATH}/linux/libglfw3.a
 		)
 		target_link_libraries(${NAME}-demo PRIVATE
 			optimized -ldl
