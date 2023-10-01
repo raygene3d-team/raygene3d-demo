@@ -76,6 +76,7 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_lightmaps;
 
     std::shared_ptr<Property> prop_skybox;
+    std::shared_ptr<Property> prop_reflection_probe;
 
   protected:
     std::shared_ptr<Resource> color_target;
@@ -85,6 +86,7 @@ namespace RayGene3D
     std::shared_ptr<Resource> screen_data;
     std::shared_ptr<Resource> camera_data;
     std::shared_ptr<Resource> shadow_data;
+    std::shared_ptr<Resource> reflection_probe_data;
 
     std::shared_ptr<Resource> scene_instances;
     std::shared_ptr<Resource> scene_triangles;
@@ -100,6 +102,8 @@ namespace RayGene3D
     std::shared_ptr<Resource> scene_textures3;
 
     std::shared_ptr<Resource> light_maps;
+
+    std::shared_ptr<Resource> reflection_probe;
 
     std::shared_ptr<Resource> skybox_vertices;
     std::shared_ptr<Resource> skybox_triangles;
@@ -178,6 +182,7 @@ namespace RayGene3D
     std::shared_ptr<Layout> present_layout;
 
   protected:
+    std::shared_ptr<Config> reflection_probe_configs[7];
     std::shared_ptr<Config> shadowmap_config;
     std::shared_ptr<Config> unshadowed_config;
     std::shared_ptr<Config> shadowed_config;
@@ -185,6 +190,7 @@ namespace RayGene3D
     std::shared_ptr<Config> present_config;
 
   protected:
+    std::shared_ptr<Pass> reflection_probe_passes[7];
     std::shared_ptr<Pass> shadowmap_passes[6];
     std::shared_ptr<Pass> unshadowed_pass;
     std::shared_ptr<Pass> shadowed_pass;
@@ -194,6 +200,7 @@ namespace RayGene3D
 
   protected:
     uint32_t shadow_resolution { 1024 };
+    uint32_t reflection_probe_size { 1024 };
     glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
 
   public:
@@ -221,10 +228,12 @@ namespace RayGene3D
     void CreateColorTarget();
     void CreateDepthTarget();
     void CreateShadowMap();
+    std::shared_ptr<Resource> RegisterReflectionProbe(const std::string& name);
 
     void CreateScreenData();
     void CreateCameraData();
     void CreateShadowData();
+    std::shared_ptr<Resource> RegisterReflectionProbeData(const std::string& name);
 
     void CreateSceneInstances();
     void CreateSceneTriangles();
@@ -247,6 +256,10 @@ namespace RayGene3D
     void CreateShadowmapLayout();
     void CreateShadowmapConfig();
     void CreateShadowmapPass(uint32_t index);
+
+    std::shared_ptr<Layout> RegisterReflectionLayout(const std::string& name);
+    std::shared_ptr<Config> RegisterReflectionConfig(const std::string& name, const uint32_t& mip_level);
+    std::shared_ptr<Pass> RegisterReflectionPass(const std::string& name, const uint32_t& mip_level);
 
     void CreateShadowedLayout();
     void CreateShadowedConfig();

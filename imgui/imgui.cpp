@@ -444,6 +444,12 @@ namespace RayGene3D
       const Layout::Sampler samplers[] = {
         { Layout::Sampler::FILTERING_LINEAR, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
       };
+        const auto extent_x = root_property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
+        const auto extent_y = root_property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
+
+
+        pass->SetExtentX(extent_x);
+        pass->SetExtentY(extent_y);
 
       layout = device->CreateLayout("imgui_layout",
         { ub_views, uint32_t(std::size(ub_views)) },
