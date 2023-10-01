@@ -1790,30 +1790,30 @@ namespace RayGene3D
 
   Spark::~Spark()
   {
+    DestroyPresentPass();
     DestroyPresentLayout();
     DestroyPresentConfig();
-    DestroyPresentPass();
-
+    
+    DestroySkyboxPass();
     DestroySkyboxLayout();
     DestroySkyboxConfig();
-    DestroySkyboxPass();
-
+    
+    DestroyUnshadowedPass();
     DestroyUnshadowedLayout();
     DestroyUnshadowedConfig();
-    DestroyUnshadowedPass();
 
+    DestroyShadowedPass();
     DestroyShadowedLayout();
     DestroyShadowedConfig();
-    DestroyShadowedPass();
 
+    DestroyShadowmapPass(5);
+    DestroyShadowmapPass(4);
+    DestroyShadowmapPass(3);
+    DestroyShadowmapPass(2);
+    DestroyShadowmapPass(1);
+    DestroyShadowmapPass(0);
     DestroyShadowmapLayout();
     DestroyShadowmapConfig();
-    DestroyShadowmapPass(0);
-    DestroyShadowmapPass(1);
-    DestroyShadowmapPass(2);
-    DestroyShadowmapPass(3);
-    DestroyShadowmapPass(4);
-    DestroyShadowmapPass(5);
 
     DestroyGraphicArguments();
     DestroyComputeArguments();
