@@ -481,7 +481,7 @@ namespace RayGene3D
         const auto environment_exposure = config_property->GetObjectItem("environment")->GetObjectItem("exposure")->GetReal();
         const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
 
-        environment_property = RayGene3D::ImportEXR(environment_path, environment_name, environment_exposure, environment_quality);
+        environment_property = RayGene3D::ImportAsPanoEXR(environment_path, environment_name, environment_exposure, environment_quality);
       }
       tree_property->SetObjectItem("environment_property", environment_property);
 
@@ -633,7 +633,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Core::DEVICE_D11, RayGene3D::Util::STORAGE_LOCAL));
+      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
 
       //io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
     }

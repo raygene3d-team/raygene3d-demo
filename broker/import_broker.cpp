@@ -991,7 +991,7 @@ namespace RayGene3D
   }
 
 
-  std::shared_ptr<Property> ImportEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
+  std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
   {
     int32_t src_tex_x = 0;
     int32_t src_tex_y = 0;
@@ -1088,6 +1088,140 @@ namespace RayGene3D
     //texture_property->SetValue(Property::array());
     texture_property->SetArraySize(1);
     texture_property->SetArrayItem(0, texels_property);
+
+    return texture_property;
+  }
+
+  std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
+  {
+    const auto cubemap_layer_counter = 6u;
+    const auto cubemap_layer_size = 1 << (mipmaps - 1);
+
+    auto texture_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
+    texture_property->SetArraySize(cubemap_layer_counter);
+
+    enum CUBEMAP_LAYERS
+    {
+      CUBEMAP_POSITIVE_X,
+      CUBEMAP_NEGATIVE_X,
+      CUBEMAP_POSITIVE_Y,
+      CUBEMAP_NEGATIVE_Y,
+      CUBEMAP_POSITIVE_Z,
+      CUBEMAP_NEGATIVE_Z
+    };
+
+    const auto uv_to_cube = [](float u, float v, uint32_t layer)
+    {
+      glm::fvec3 text_coord = { 0.0f, 0.0f, 0.0f };
+
+      switch (layer)
+      {
+      case CUBEMAP_POSITIVE_X:
+        text_coord = { 1.0f, -(2.0f * v - 1.0f), -(2.0f * u - 1.0f) };
+        break;
+      case CUBEMAP_NEGATIVE_X:
+        text_coord = { -1.0f, -(2.0f * v - 1.0f), (2.0f * u - 1.0f) };
+        break;
+      case CUBEMAP_POSITIVE_Y:
+        text_coord = { (2.0f * u - 1.0f), 1.0f, (2.0f * v - 1.0f) };
+        break;
+      case CUBEMAP_NEGATIVE_Y:
+        text_coord = { (2.0f * u - 1.0f), -1.0f, -(2.0f * v - 1.0f) };
+        break;
+      case CUBEMAP_POSITIVE_Z:
+        text_coord = { (2.0f * u - 1.0f), -(2.0f * v - 1.0f), 1.0f };
+        break;
+      case CUBEMAP_NEGATIVE_Z:
+        text_coord = { -(2.0f * u - 1.0f), -(2.0f * v - 1.0f), -1.0f };
+        break;
+      }
+      return glm::normalize(text_coord);
+    };
+
+    const auto cube_to_pano = [](const glm::fvec3& cube_tex_coord)
+    {
+      glm::fvec2 tex_coord = { 0.0f, 0.0f };
+      tex_coord.x = 0.5f * atan2(cube_tex_coord.x, cube_tex_coord.z) / glm::pi<float>() + 0.5f;
+      tex_coord.y = -asin(cube_tex_coord.y) / glm::pi<float>() + 0.5f;
+      return tex_coord;
+    };
+
+    const auto src_tex_n = 4;
+    const auto dst_tex_n = 4;
+    auto pano_tex_x = 0;
+    auto pano_tex_y = 0;
+    float* pano_tex_data = nullptr;
+    BLAST_ASSERT(0 == LoadEXR(&pano_tex_data, &pano_tex_x, &pano_tex_y, (name).c_str(), nullptr));
+
+    for (uint32_t i = 0; i < cubemap_layer_counter; ++i)
+    {
+      auto dst_tex_x = cubemap_layer_size;
+      auto dst_tex_y = cubemap_layer_size;
+      const auto texel_pow = mipmaps;
+
+      const auto texel_count = uint32_t(((1 << texel_pow) * (1 << texel_pow) - 1) / 3);
+      float* texel_data = new float[texel_count * dst_tex_n];
+
+      {
+        auto dst_tex_data = texel_data;
+        for (uint32_t j = 0; j < dst_tex_x; ++j)
+        {
+          for (uint32_t k = 0; k < dst_tex_y; ++k)
+          {
+            const float u = (float(j) + 0.5f) / dst_tex_x;
+            const float v = (float(k) + 0.5f) / dst_tex_y;
+
+            const auto cube_text_coord = uv_to_cube(u, v, i);
+            const auto pano_text_coord = cube_to_pano(cube_text_coord);
+
+            const auto x = uint32_t(pano_tex_x * pano_text_coord.x);
+            const auto y = uint32_t(pano_tex_y * pano_text_coord.y);
+            const auto texel_num = y * pano_tex_x + x;
+
+            const auto index = j + k * dst_tex_x;
+            const auto offset = index * dst_tex_n;
+
+            dst_tex_data[offset + 0] = pano_tex_data[texel_num * src_tex_n + 0] * exposure;
+            dst_tex_data[offset + 1] = pano_tex_data[texel_num * src_tex_n + 1] * exposure;
+            dst_tex_data[offset + 2] = pano_tex_data[texel_num * src_tex_n + 2] * exposure;
+            dst_tex_data[offset + 3] = pano_tex_data[texel_num * src_tex_n + 3] * exposure;
+          }
+        }
+      }
+
+      {
+        auto src_tex_x = cubemap_layer_size;
+        auto src_tex_y = cubemap_layer_size;
+        auto dst_tex_data = texel_data;
+        auto src_tex_data = dst_tex_data;
+
+        auto offset = 0u;
+        for (uint32_t i = 1; i < mipmaps; ++i)
+        {
+          dst_tex_x = src_tex_x >> 1;
+          dst_tex_y = src_tex_y >> 1;
+          dst_tex_data += src_tex_x * src_tex_y * dst_tex_n;
+          offset += src_tex_x * src_tex_y * dst_tex_n;
+          stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
+
+          src_tex_data = dst_tex_data;
+          src_tex_x = dst_tex_x;
+          src_tex_y = dst_tex_y;
+        }
+      }
+
+      const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+      {
+        const auto texel_stride = uint32_t(sizeof(float) * dst_tex_n);
+        texels_property->RawAllocate(texel_count * texel_stride);
+        texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
+      }
+
+      texture_property->SetArrayItem(i, texels_property);
+      delete[] texel_data;
+    }
+
+    delete[] pano_tex_data;
 
     return texture_property;
   }
