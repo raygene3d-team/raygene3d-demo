@@ -21,7 +21,9 @@ VK_BINDING(1) cbuffer constant0 : register(b0)
 {
   uint mip_level     : packoffset(c0.x);
   uint mip_size      : packoffset(c0.y);
-  uint dummy[62]     : packoffset(c0.z);
+  uint dummy_z       : packoffset(c0.z);
+  uint dummy_w       : packoffset(c0.w);
+  uint4 dummy[15]    : packoffset(c1.x);
 }
 
 VK_BINDING(2) TextureCube<float4> skybox_texture : register(t0);
@@ -116,6 +118,7 @@ float3 UVtoCube(float u, float v, uint layer)
 
 float4 ps_main(GSOutput input) : SV_Target
 {
+
   float2 uv = input.pos.xy / float2(mip_size, mip_size);
   float3 cube_texcoord = UVtoCube(uv.x, uv.y, input.inst_id);
 
@@ -127,11 +130,17 @@ float4 ps_main(GSOutput input) : SV_Target
   float3 N = cube_texcoord;
   float3 V = N;
 
+  if (mip_level == 0)
+  {
+    float4 skybox_value = skybox_texture.SampleLevel(sampler0, cube_texcoord, 0);
+    return float4(skybox_value.xyz, 1.0);
+  }
+
   float perceptual_roughness = MipmapLevelToPerceptualRoughness(mip_level, REFLECTION_TEXTURE_CUBE_LOD_COUNTER);
   float roughness = PerceptualRoughnessToRoughness(perceptual_roughness);
-  uint  sampleCount = GetSampleCount(mip_level);
+  uint sample_count = GetSampleCount(mip_level);
 
-  float4 color = IntegrateReflectionProbe(V, N, roughness, inv_omega_p, sampleCount);
+  float4 color = IntegrateReflectionProbe(V, N, roughness, inv_omega_p, sample_count);
 
   return float4(color.xyz, 1.0);
 }
