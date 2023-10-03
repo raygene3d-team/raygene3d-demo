@@ -1,6 +1,4 @@
 #include "imgui.h"
-//#include "../core/device/device.h"
-
 
 #include <imgui/imgui.h>
 
@@ -20,7 +18,6 @@ namespace RayGene3D
     // Setup display size (every frame to accommodate for window resizing)
     io.DisplaySize = ImVec2(float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()));
 
-
     const auto now = std::chrono::high_resolution_clock::now();
     const auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(now - time);
     io.DeltaTime = delta.count();
@@ -35,23 +32,13 @@ namespace RayGene3D
     }
 
     {
-      for (uint32_t i = 0; i < sub_limit; ++i)
-      {
-        auto& arg_resource = arg_resources[i];
-
-        auto arg_mapped = arg_resource->Map();
-        for (uint32_t j = 0; j < arg_limit; ++j)
-        {
-          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[j];
-          graphic_arg = { 0, 0, 0, 0, 0 };
-        }
-        arg_resource->Unmap();
-      }
-    }
-
-
-    {
       ImGui::Render();
+
+      auto vtx_mapped = vtx_resource->Map();
+      auto idx_mapped = idx_resource->Map();
+      auto arg_mapped = arg_resource->Map();
+
+      memset(arg_mapped, 0, sizeof(Pass::Argument) * arg_limit * sub_limit);
 
       ImDrawData* draw_data = ImGui::GetDrawData();
       const auto pass_count = std::min(sub_limit, uint32_t(draw_data->CmdListsCount));
@@ -67,33 +54,27 @@ namespace RayGene3D
         const auto idx_count = static_cast<uint32_t>(cmd_list->IdxBuffer.Size);
         const auto idx_data = cmd_list->IdxBuffer.Data;
 
-        auto& vtx_resource = vtx_resources[i];
-        auto& idx_resource = idx_resources[i];
-        auto& arg_resource = arg_resources[i];
-
         if (vtx_count > vtx_resource->GetCount() || idx_count > idx_resource->GetCount())
           continue;
 
-        auto vtx_mapped = vtx_resource->Map();
-        memcpy(vtx_mapped, vtx_data, vtx_stride * vtx_count);
-        vtx_resource->Unmap();
-
-        auto idx_mapped = idx_resource->Map();
-        memcpy(idx_mapped, idx_data, idx_stride * idx_count);
-        idx_resource->Unmap();
-
+        auto vtx_aligned = &reinterpret_cast<ImDrawVert*>(vtx_mapped)[i * vtx_limit];
+        memcpy(vtx_aligned, vtx_data, vtx_stride * vtx_count);
+        
+        auto idx_aligned = &reinterpret_cast<ImDrawIdx*>(idx_mapped)[i * idx_limit];
+        memcpy(idx_aligned, idx_data, idx_stride * idx_count);
 
         const auto arg_count = std::min(arg_limit, uint32_t(cmd_list->CmdBuffer.Size));
-
-        auto arg_mapped = arg_resource->Map();
         for (uint32_t j = 0; j < arg_count; ++j)
         {
           const auto& draw_data = cmd_list->CmdBuffer[j];
-          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[j];
+          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[i * arg_limit + j];
           graphic_arg = { draw_data.ElemCount, 1, draw_data.IdxOffset, draw_data.VtxOffset, 0 };
         }
-        arg_resource->Unmap();
       }
+
+      vtx_resource->Unmap();
+      idx_resource->Unmap();
+      arg_resource->Unmap();
     }
   }
 
@@ -135,8 +116,6 @@ namespace RayGene3D
   Imgui::Imgui(Root& root)
     : Broker("imgui_broker", root)
   {
-    time = std::chrono::high_resolution_clock::now();
-
     const auto find_view_fn = [this](const std::shared_ptr<View>& view)
     {
       if (view->GetName().compare("backbuffer_ua_view") == 0)
@@ -158,9 +137,6 @@ namespace RayGene3D
       prop_extent_x = prop_camera->GetObjectItem("extent_x");
       prop_extent_y = prop_camera->GetObjectItem("extent_y");
     }
-
-    //prop_extent_x = prop_camera->GetObjectItem("extent_x");
-    //prop_extent_y = prop_camera->GetObjectItem("extent_y");
 
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
@@ -233,38 +209,35 @@ namespace RayGene3D
     }
 
     {
-      for (uint32_t i = 0; i < sub_limit; ++i)
-      {
-        vtx_resources[i] = device->CreateResource("imgui_vtx_resource_" + std::to_string(i),
-          Resource::BufferDesc
-          {
-            Usage(USAGE_VERTEX_ARRAY),
-            uint32_t(sizeof(ImDrawVert)),
-            vtx_limit,
-          },
-          Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
-          );
+      vtx_resource = device->CreateResource("imgui_vtx_resource",
+        Resource::BufferDesc
+        {
+          Usage(USAGE_VERTEX_ARRAY),
+          uint32_t(sizeof(ImDrawVert)),
+          vtx_limit * sub_limit,
+        },
+        Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+      );
 
-        idx_resources[i] = device->CreateResource("imgui_idx_resource_" + std::to_string(i),
-          Resource::BufferDesc
-          {
-            Usage(USAGE_INDEX_ARRAY),
-            uint32_t(sizeof(ImDrawIdx)),
-            idx_limit,
-          },
-          Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
-          );
+      idx_resource = device->CreateResource("imgui_idx_resource",
+        Resource::BufferDesc
+        {
+          Usage(USAGE_INDEX_ARRAY),
+          uint32_t(sizeof(ImDrawIdx)),
+          idx_limit * sub_limit,
+        },
+        Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+      );
 
-        arg_resources[i] = device->CreateResource("imgui_arg_resource_" + std::to_string(i),
-          Resource::BufferDesc
-          {
-            Usage(USAGE_COMMAND_INDIRECT),
-            uint32_t(sizeof(Pass::Argument)),
-            arg_limit,
-          },
-          Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
-          );
-      }
+      arg_resource = device->CreateResource("imgui_arg_resource",
+        Resource::BufferDesc
+        {
+          Usage(USAGE_COMMAND_INDIRECT),
+          uint32_t(sizeof(Pass::Argument)),
+          arg_limit * sub_limit,
+        },
+        Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+      );
     }
 
 
@@ -444,12 +417,6 @@ namespace RayGene3D
       const Layout::Sampler samplers[] = {
         { Layout::Sampler::FILTERING_LINEAR, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
       };
-        const auto extent_x = root_property->GetObjectItem("camera")->GetObjectItem("extent_x")->GetUint();
-        const auto extent_y = root_property->GetObjectItem("camera")->GetObjectItem("extent_y")->GetUint();
-
-
-        pass->SetExtentX(extent_x);
-        pass->SetExtentY(extent_y);
 
       layout = device->CreateLayout("imgui_layout",
         { ub_views, uint32_t(std::size(ub_views)) },
@@ -463,20 +430,21 @@ namespace RayGene3D
       );
     }
 
-
     {
       Pass::Subpass subpasses[sub_limit];
       for (uint32_t i = 0; i < sub_limit; ++i)
       {
-        const auto vtx_view = vtx_resources[i]->CreateView("vtx_view_" + std::to_string(i),
-          Usage(USAGE_VERTEX_ARRAY)
+        const auto vtx_view = vtx_resource->CreateView("vtx_view_" + std::to_string(i),
+          Usage(USAGE_VERTEX_ARRAY),
+          { i * uint32_t(sizeof(ImDrawVert)) * vtx_limit, uint32_t(sizeof(ImDrawVert)) * vtx_limit }
         );
         const std::shared_ptr<View> va_views[] = {
-          vtx_view,
+          vtx_view
         };
 
-        const auto idx_view = idx_resources[i]->CreateView("idx_view_" + std::to_string(i),
-          Usage(USAGE_INDEX_ARRAY)
+        const auto idx_view = idx_resource->CreateView("idx_view_" + std::to_string(i),
+          Usage(USAGE_INDEX_ARRAY),
+          { i * uint32_t(sizeof(ImDrawIdx)) * idx_limit, uint32_t(sizeof(ImDrawIdx)) * idx_limit }
         );
         const std::shared_ptr<View> ia_views[] = {
           idx_view,
@@ -485,9 +453,9 @@ namespace RayGene3D
         Pass::Command commands[arg_limit];
         for (uint32_t j = 0; j < arg_limit; ++j)
         {
-          const auto argument_view = arg_resources[i]->CreateView("arg_ci_view_" + std::to_string(j),
+          const auto argument_view = arg_resource->CreateView("arg_ci_view_" + std::to_string(j),
             Usage(USAGE_COMMAND_INDIRECT),
-            { j * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
+            { (i * arg_limit + j) * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
           );
           commands[j].view = argument_view;
         }
@@ -513,6 +481,7 @@ namespace RayGene3D
       );
     }
 
+    time = std::chrono::high_resolution_clock::now();
 
     ImGuiIO& io = ImGui::GetIO(); // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
     io.KeyMap[ImGuiKey_Escape] = 256; // GLFW_KEY_ESCAPE             
@@ -536,5 +505,28 @@ namespace RayGene3D
 
   Imgui::~Imgui()
   {
+    root.GetCore()->GetDevice()->DestroyPass(pass);
+    pass.reset();
+
+    root.GetCore()->GetDevice()->DestroyLayout(layout);
+    layout.reset();
+
+    root.GetCore()->GetDevice()->DestroyConfig(config);
+    config.reset();
+
+    root.GetCore()->GetDevice()->DestroyResource(proj_resource);
+    proj_resource.reset();
+
+    root.GetCore()->GetDevice()->DestroyResource(font_resource);
+    font_resource.reset();
+
+    root.GetCore()->GetDevice()->DestroyResource(arg_resource);
+    arg_resource.reset();
+
+    root.GetCore()->GetDevice()->DestroyResource(idx_resource);
+    idx_resource.reset();
+
+    root.GetCore()->GetDevice()->DestroyResource(vtx_resource);
+    vtx_resource.reset();
   }
 }

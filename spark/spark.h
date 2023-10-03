@@ -113,68 +113,6 @@ namespace RayGene3D
     std::shared_ptr<Resource> compute_arguments;
 
   protected:
-    std::shared_ptr<View> shadowmap_camera_data;
-    std::shared_ptr<View> shadowmap_shadow_map[6];
-    std::vector<std::shared_ptr<View>> shadowmap_graphic_arguments;
-    std::shared_ptr<View> shadowmap_scene_vertices;
-    std::shared_ptr<View> shadowmap_scene_triangles;
-
-  protected:
-    std::shared_ptr<View> unshadowed_screen_data;
-    std::shared_ptr<View> unshadowed_camera_data;
-    std::shared_ptr<View> unshadowed_shadow_data;
-    std::shared_ptr<View> unshadowed_scene_instances;
-    std::shared_ptr<View> unshadowed_scene_textures0;
-    std::shared_ptr<View> unshadowed_scene_textures1;
-    std::shared_ptr<View> unshadowed_scene_textures2;
-    std::shared_ptr<View> unshadowed_scene_textures3;
-    std::shared_ptr<View> unshadowed_light_maps;
-    std::shared_ptr<View> unshadowed_color_target;
-    std::shared_ptr<View> unshadowed_depth_target;
-    std::vector<std::shared_ptr<View>>  unshadowed_graphic_arguments;
-    //std::shared_ptr<View> unshadowed_scene_vertices0;
-    //std::shared_ptr<View> unshadowed_scene_vertices1;
-    //std::shared_ptr<View> unshadowed_scene_vertices2;
-    //std::shared_ptr<View> unshadowed_scene_vertices3;
-    std::shared_ptr<View> unshadowed_scene_vertices;
-    std::shared_ptr<View> unshadowed_scene_triangles;
-
-  protected:
-    std::shared_ptr<View> shadowed_screen_data;
-    std::shared_ptr<View> shadowed_camera_data;
-    std::shared_ptr<View> shadowed_shadow_data;
-    std::shared_ptr<View> shadowed_scene_instances;
-    std::shared_ptr<View> shadowed_scene_textures0;
-    std::shared_ptr<View> shadowed_scene_textures1;
-    std::shared_ptr<View> shadowed_scene_textures2;
-    std::shared_ptr<View> shadowed_scene_textures3;
-    std::shared_ptr<View> shadowed_shadow_map;
-    std::shared_ptr<View> shadowed_light_maps;
-    std::shared_ptr<View> shadowed_color_target;
-    std::shared_ptr<View> shadowed_depth_target;
-    std::vector<std::shared_ptr<View>>  shadowed_graphic_arguments;
-    //std::shared_ptr<View> shadowed_scene_vertices0;
-    //std::shared_ptr<View> shadowed_scene_vertices1;
-    //std::shared_ptr<View> shadowed_scene_vertices2;
-    //std::shared_ptr<View> shadowed_scene_vertices3;
-    std::shared_ptr<View> shadowed_scene_vertices;
-    std::shared_ptr<View> shadowed_scene_triangles;
-
-  protected:
-    std::shared_ptr<View> skybox_screen_data;
-    std::shared_ptr<View> skybox_camera_data;
-    std::shared_ptr<View> skybox_skybox_texture;
-    std::shared_ptr<View> skybox_skybox_vertices;
-    std::shared_ptr<View> skybox_skybox_triangles;
-    std::shared_ptr<View> skybox_color_target;
-    std::shared_ptr<View> skybox_depth_target;
-
-  protected:
-    std::shared_ptr<View> present_camera_data;
-    std::shared_ptr<View> present_color_target;
-    std::shared_ptr<View> present_compute_arguments;
-
-  protected:
     std::shared_ptr<Layout> shadowmap_layout;
     std::shared_ptr<Layout> unshadowed_layout;
     std::shared_ptr<Layout> shadowed_layout;
@@ -228,12 +166,10 @@ namespace RayGene3D
     void CreateColorTarget();
     void CreateDepthTarget();
     void CreateShadowMap();
-    std::shared_ptr<Resource> RegisterReflectionProbe(const std::string& name);
 
     void CreateScreenData();
     void CreateCameraData();
     void CreateShadowData();
-    std::shared_ptr<Resource> RegisterReflectionProbeData(const std::string& name);
 
     void CreateSceneInstances();
     void CreateSceneTriangles();
@@ -256,10 +192,6 @@ namespace RayGene3D
     void CreateShadowmapLayout();
     void CreateShadowmapConfig();
     void CreateShadowmapPass(uint32_t index);
-
-    std::shared_ptr<Layout> RegisterReflectionLayout(const std::string& name);
-    std::shared_ptr<Config> RegisterReflectionConfig(const std::string& name, const uint32_t& mip_level);
-    std::shared_ptr<Pass> RegisterReflectionPass(const std::string& name, const uint32_t& mip_level);
 
     void CreateShadowedLayout();
     void CreateShadowedConfig();

@@ -617,9 +617,6 @@ namespace RayGene3D
 
     void Discard()
     {
-      //spark->Discard();
-      //imgui->Discard();
-
       spark.reset();
       imgui.reset();
 
@@ -634,14 +631,10 @@ namespace RayGene3D
       glfwInit();
 
       root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
-
-      //io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
     }
 
     ~GLFWWrapper()
     {
-      //io_broker.reset();
-
       root.reset();
 
       glfwTerminate();

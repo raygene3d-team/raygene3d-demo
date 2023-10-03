@@ -17,6 +17,10 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_extent_y;
 
   protected:
+    std::shared_ptr<Property> proj_property;
+    std::shared_ptr<Property> font_property;
+
+  protected:
     bool show_test_window{ true };
 
     const uint32_t vtx_limit{ 10000 };
@@ -32,12 +36,9 @@ namespace RayGene3D
     std::shared_ptr<Resource> proj_resource;
     std::shared_ptr<Resource> font_resource;
 
-    std::array<std::shared_ptr<Resource>, sub_limit> vtx_resources;
-    std::array<std::shared_ptr<Resource>, sub_limit> idx_resources;
-    std::array<std::shared_ptr<Resource>, sub_limit> arg_resources;
-
-    std::shared_ptr<Property> proj_property;
-    std::shared_ptr<Property> font_property;
+    std::shared_ptr<Resource> vtx_resource;
+    std::shared_ptr<Resource> idx_resource;
+    std::shared_ptr<Resource> arg_resource;
 
   protected:
     std::chrono::high_resolution_clock::time_point time;

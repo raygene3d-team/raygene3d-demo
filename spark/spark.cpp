@@ -468,7 +468,7 @@ namespace RayGene3D
 
   void Spark::CreateShadowmapLayout()
   {
-    shadowmap_camera_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
+    auto shadowmap_camera_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
       USAGE_CONSTANT_DATA,
       { 0, sizeof(Frustum) }
     );
@@ -543,7 +543,7 @@ namespace RayGene3D
   void Spark::CreateShadowmapPass(uint32_t index)
   {
     const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    shadowmap_graphic_arguments.resize(instance_count);
+    auto shadowmap_graphic_arguments = std::vector<std::shared_ptr<View>>(instance_count);
     for (uint32_t j = 0; j < uint32_t(shadowmap_graphic_arguments.size()); ++j)
     {
       shadowmap_graphic_arguments[j] = graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(index) + "_" + std::to_string(j),
@@ -558,14 +558,14 @@ namespace RayGene3D
       commands[j].offsets = { index * uint32_t(sizeof(Frustum)) };
     }
 
-    shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices",
+    auto shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices",
       Usage(USAGE_VERTEX_ARRAY)
     );
     const std::shared_ptr<View> va_views[] = {
       shadowmap_scene_vertices,
     };
 
-    shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles",
+    auto shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles",
       Usage(USAGE_INDEX_ARRAY)
     );
     const std::shared_ptr<View> ia_views[] = {
@@ -576,13 +576,13 @@ namespace RayGene3D
       { shadowmap_config, shadowmap_layout, std::move(commands), {va_views, va_views + std::size(va_views)}, {ia_views, ia_views + std::size(ia_views)} }
     };
 
-    shadowmap_shadow_map[index] = shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index),
+    auto shadowmap_shadow_map = shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index),
       Usage(USAGE_DEPTH_STENCIL),
       { index, 1 }
     );
 
     const Pass::DSAttachment ds_attachments[] = {
-      { shadowmap_shadow_map[index], { 1.0f, std::nullopt }},
+      { shadowmap_shadow_map, { 1.0f, std::nullopt }},
     };
 
     shadowmap_passes[index] = root.GetCore()->GetDevice()->CreatePass("spark_shadowmap_pass_" + std::to_string(index),
@@ -595,15 +595,15 @@ namespace RayGene3D
 
   void Spark::CreateUnshadowedLayout()
   {
-    unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data",
+    auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
 
-    unshadowed_camera_data = camera_data->CreateView("spark_unshadowed_camera_data",
+    auto unshadowed_camera_data = camera_data->CreateView("spark_unshadowed_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
 
-    unshadowed_shadow_data = shadow_data->CreateView("spark_unshadowed_shadow_data",
+    auto unshadowed_shadow_data = shadow_data->CreateView("spark_unshadowed_shadow_data",
       Usage(USAGE_CONSTANT_DATA),
       { 0, uint32_t(sizeof(Frustum)) }
     );
@@ -615,7 +615,7 @@ namespace RayGene3D
     };
 
 
-    unshadowed_scene_instances = scene_instances->CreateView("spark_unshadowed_scene_instances",
+    auto unshadowed_scene_instances = scene_instances->CreateView("spark_unshadowed_scene_instances",
       Usage(USAGE_CONSTANT_DATA),
       { 0, uint32_t(sizeof(Instance)) }
     );
@@ -625,23 +625,23 @@ namespace RayGene3D
     };
 
 
-    unshadowed_scene_textures0 = scene_textures0->CreateView("spark_unshadowed_scene_textures0",
+    auto unshadowed_scene_textures0 = scene_textures0->CreateView("spark_unshadowed_scene_textures0",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    unshadowed_scene_textures1 = scene_textures1->CreateView("spark_unshadowed_scene_textures1",
+    auto unshadowed_scene_textures1 = scene_textures1->CreateView("spark_unshadowed_scene_textures1",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    unshadowed_scene_textures2 = scene_textures2->CreateView("spark_unshadowed_scene_textures2",
+    auto unshadowed_scene_textures2 = scene_textures2->CreateView("spark_unshadowed_scene_textures2",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    unshadowed_scene_textures3 = scene_textures3->CreateView("spark_unshadowed_scene_textures3",
+    auto unshadowed_scene_textures3 = scene_textures3->CreateView("spark_unshadowed_scene_textures3",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    unshadowed_light_maps = light_maps->CreateView("spark_unshadowed_light_maps",
+    auto unshadowed_light_maps = light_maps->CreateView("spark_unshadowed_light_maps",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
@@ -737,7 +737,7 @@ namespace RayGene3D
     Pass::Subpass subpasses[ShadingSubpass::SUBPASS_MAX_COUNT] = {};
     {
       const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-      unshadowed_graphic_arguments.resize(instance_count);
+      auto unshadowed_graphic_arguments = std::vector<std::shared_ptr<View>>(instance_count);
       for (uint32_t j = 0; j < uint32_t(unshadowed_graphic_arguments.size()); ++j)
       {
         unshadowed_graphic_arguments[j] = graphic_arguments->CreateView("spark_unshadowed_graphic_argument_" + std::to_string(j),
@@ -752,14 +752,14 @@ namespace RayGene3D
         unshadowed_commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
       }
 
-      unshadowed_scene_vertices = scene_vertices->CreateView("spark_unshadowed_scene_vertices",
+      auto unshadowed_scene_vertices = scene_vertices->CreateView("spark_unshadowed_scene_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
       std::vector<std::shared_ptr<View>> unshadowed_va_views = {
         unshadowed_scene_vertices,
       };
 
-      unshadowed_scene_triangles = scene_triangles->CreateView("spark_unshadowed_scene_triangles",
+      auto unshadowed_scene_triangles = scene_triangles->CreateView("spark_unshadowed_scene_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       std::vector<std::shared_ptr<View>> unshadowed_ia_views = {
@@ -779,14 +779,14 @@ namespace RayGene3D
         {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
       };
 
-      skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
+      auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
       const std::shared_ptr<View> skybox_va_views[] = {
         skybox_skybox_vertices,
       };
 
-      skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
+      auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       const std::shared_ptr<View> skybox_ia_views[] = {
@@ -802,14 +802,14 @@ namespace RayGene3D
       };
     }
 
-    unshadowed_color_target = color_target->CreateView("spark_unshadowed_color_target",
+    auto unshadowed_color_target = color_target->CreateView("spark_unshadowed_color_target",
       Usage(USAGE_RENDER_TARGET)
     );
     const Pass::RTAttachment rt_attachments[] = {
       unshadowed_color_target, std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
     };
 
-    unshadowed_depth_target = depth_target->CreateView("spark_unshadowed_depth_target",
+    auto unshadowed_depth_target = depth_target->CreateView("spark_unshadowed_depth_target",
       Usage(USAGE_DEPTH_STENCIL)
     );
     const Pass::DSAttachment ds_attachments[] = {
@@ -826,13 +826,13 @@ namespace RayGene3D
 
   void Spark::CreateShadowedLayout()
   {
-    shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data",
+    auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
-    shadowed_camera_data = camera_data->CreateView("spark_shadowed_camera_data",
+    auto shadowed_camera_data = camera_data->CreateView("spark_shadowed_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
-    shadowed_shadow_data = shadow_data->CreateView("spark_shadowed_shadow_data",
+    auto shadowed_shadow_data = shadow_data->CreateView("spark_shadowed_shadow_data",
       Usage(USAGE_CONSTANT_DATA),
       { 0, sizeof(Frustum) }
     );
@@ -843,7 +843,7 @@ namespace RayGene3D
     };
     //shadowed_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
-    shadowed_scene_instances = scene_instances->CreateView("spark_shadowed_scene_instances",
+    auto shadowed_scene_instances = scene_instances->CreateView("spark_shadowed_scene_instances",
       Usage(USAGE_CONSTANT_DATA),
       { 0, sizeof(Instance) }
     );
@@ -852,19 +852,19 @@ namespace RayGene3D
     };
     //shadowed_layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
 
-    shadowed_scene_textures0 = scene_textures0->CreateView("spark_shadowed_scene_textures0",
+    auto shadowed_scene_textures0 = scene_textures0->CreateView("spark_shadowed_scene_textures0",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    shadowed_scene_textures1 = scene_textures1->CreateView("spark_shadowed_scene_textures1",
+    auto shadowed_scene_textures1 = scene_textures1->CreateView("spark_shadowed_scene_textures1",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    shadowed_scene_textures2 = scene_textures2->CreateView("spark_shadowed_scene_textures2",
+    auto shadowed_scene_textures2 = scene_textures2->CreateView("spark_shadowed_scene_textures2",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    shadowed_scene_textures3 = scene_textures3->CreateView("spark_shadowed_scene_textures3",
+    auto shadowed_scene_textures3 = scene_textures3->CreateView("spark_shadowed_scene_textures3",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
+    auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
       Usage(USAGE_SHADER_RESOURCE),
       View::Bind(View::BIND_CUBEMAP_LAYER)
     );
@@ -963,7 +963,7 @@ namespace RayGene3D
     Pass::Subpass subpasses[ShadingSubpass::SUBPASS_MAX_COUNT] = {};
     {
       const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-      shadowed_graphic_arguments.resize(instance_count);
+      auto shadowed_graphic_arguments = std::vector<std::shared_ptr<View>>(instance_count);
       for (uint32_t j = 0; j < uint32_t(shadowed_graphic_arguments.size()); ++j)
       {
         shadowed_graphic_arguments[j] = graphic_arguments->CreateView("spark_shadowed_graphic_argument_" + std::to_string(j),
@@ -978,14 +978,14 @@ namespace RayGene3D
         shadowed_commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
       }
 
-      shadowed_scene_vertices = scene_vertices->CreateView("spark_shadowed_scene_vertices",
+      auto shadowed_scene_vertices = scene_vertices->CreateView("spark_shadowed_scene_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
       std::vector<std::shared_ptr<View>> shadowed_va_views = {
         shadowed_scene_vertices,
       };
 
-      shadowed_scene_triangles = scene_triangles->CreateView("spark_shadowed_scene_triangles",
+      auto shadowed_scene_triangles = scene_triangles->CreateView("spark_shadowed_scene_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       std::vector<std::shared_ptr<View>> shadowed_ia_views = {
@@ -1005,14 +1005,14 @@ namespace RayGene3D
         {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
       };
 
-      skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
+      auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
       const std::shared_ptr<View> skybox_va_views[] = {
         skybox_skybox_vertices,
       };
 
-      skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
+      auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       const std::shared_ptr<View> skybox_ia_views[] = {
@@ -1028,14 +1028,14 @@ namespace RayGene3D
       };
     }
 
-    shadowed_color_target = color_target->CreateView("spark_shadowed_color_target",
+    auto shadowed_color_target = color_target->CreateView("spark_shadowed_color_target",
       Usage(USAGE_RENDER_TARGET)
     );
     const Pass::RTAttachment rt_attachments[] = {
       shadowed_color_target, std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
     };
 
-    shadowed_depth_target = depth_target->CreateView("spark_shadowed_depth_target",
+    auto shadowed_depth_target = depth_target->CreateView("spark_shadowed_depth_target",
       Usage(USAGE_DEPTH_STENCIL)
     );
     const Pass::DSAttachment ds_attachments[] = {
@@ -1052,10 +1052,10 @@ namespace RayGene3D
 
   void Spark::CreateSkyboxLayout()
   {
-    skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data",
+    auto skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
-    skybox_camera_data = camera_data->CreateView("spark_skybox_camera_data",
+    auto skybox_camera_data = camera_data->CreateView("spark_skybox_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
     const std::shared_ptr<View> ub_views[] = {
@@ -1064,7 +1064,7 @@ namespace RayGene3D
     };
     //skybox_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
-    skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture",
+    auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -1152,14 +1152,14 @@ namespace RayGene3D
       {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
     };
 
-    skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
+    auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
       Usage(USAGE_VERTEX_ARRAY)
     );
     const std::shared_ptr<View> skybox_va_views[] = {
       skybox_skybox_vertices,
     };
 
-    skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
+    auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
       Usage(USAGE_INDEX_ARRAY)
     );
     const std::shared_ptr<View> skybox_ia_views[] = {
@@ -1174,14 +1174,14 @@ namespace RayGene3D
       { skybox_ia_views, skybox_ia_views + std::size(skybox_ia_views) }
     };
 
-    skybox_color_target = color_target->CreateView("spark_skybox_color_target",
+    auto skybox_color_target = color_target->CreateView("spark_skybox_color_target",
       Usage(USAGE_RENDER_TARGET)
     );
     const Pass::RTAttachment rt_attachments[] = {
       skybox_color_target, std::nullopt,
     };
 
-    skybox_depth_target = depth_target->CreateView("spark_skybox_depth_target",
+    auto skybox_depth_target = depth_target->CreateView("spark_skybox_depth_target",
       Usage(USAGE_DEPTH_STENCIL)
     );
     const Pass::DSAttachment ds_attachments[] = {
@@ -1198,14 +1198,14 @@ namespace RayGene3D
 
   void Spark::CreatePresentLayout()
   {
-    present_camera_data = camera_data->CreateView("spark_present_camera_data",
+    auto present_camera_data = camera_data->CreateView("spark_present_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
     const std::shared_ptr<View> ub_views[] = {
       present_camera_data,
     };
 
-    present_color_target = color_target->CreateView("spark_present_color_target",
+    auto present_color_target = color_target->CreateView("spark_present_color_target",
       Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -1248,7 +1248,7 @@ namespace RayGene3D
 
   void Spark::CreatePresentPass()
   {
-    present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
+    auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
       Usage(USAGE_COMMAND_INDIRECT)
     );
     Pass::Command present_commands[] = {
