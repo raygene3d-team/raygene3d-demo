@@ -53,7 +53,7 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  std::pair<std::vector<Vertex>, std::vector<Triangle>> PopulateInstance(uint32_t count, uint32_t align, float scale, bool flip,
+  std::pair<std::vector<Vertex>, std::vector<Triangle>> PopulateInstance(uint32_t count, uint32_t align, float scale, bool z_up, bool flip_v,
     std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_id_stride,
     std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_id_stride,
     std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_id_stride,
@@ -64,7 +64,7 @@ namespace RayGene3D
 
     for (uint32_t k = 0; k < count / 3; ++k)
     {
-      const auto create_vertex_fn = [align, scale, flip,
+      const auto create_vertex_fn = [align, scale, z_up, flip_v,
         pos_data, pos_stride, pos_idx_data, pos_id_stride,
         nrm_data, nrm_stride, nrm_idx_data, nrm_id_stride,
         tc0_data, tc0_stride, tc0_idx_data, tc0_id_stride]
@@ -93,9 +93,9 @@ namespace RayGene3D
 
         Vertex vertex;
 
-        vertex.pos = scale * (flip ? glm::fvec3{ pos.x,-pos.z,-pos.y } : glm::fvec3{ pos.x, pos.y,-pos.z });
-        vertex.nrm = glm::normalize(flip ? glm::fvec3{ nrm.x,-nrm.z,-nrm.y } : glm::fvec3{ nrm.x, nrm.y,-nrm.z });
-        vertex.tc0 = glm::f32vec2(tc0.x, tc0.y);
+        vertex.pos = scale * (z_up ? glm::fvec3{ pos.x,-pos.z, pos.y } : glm::fvec3{ pos.x, pos.y,-pos.z });
+        vertex.nrm = glm::normalize(z_up ? glm::fvec3{ nrm.x,-nrm.z, nrm.y } : glm::fvec3{ nrm.x, nrm.y,-nrm.z });
+        vertex.tc0 = flip_v ? glm::f32vec2(tc0.x,-tc0.y) : glm::f32vec2(tc0.x, tc0.y);
 
         return vertex;
       };
@@ -620,7 +620,7 @@ namespace RayGene3D
                               : 0;
         const auto idx_count = gltf_indices.count;
 
-        const auto [instance_vertices, instance_triangles] = PopulateInstance(idx_count, idx_stride, position_scale, coordinate_flip,
+        const auto [instance_vertices, instance_triangles] = PopulateInstance(idx_count, idx_stride, position_scale, coordinate_flip, false,
           pos_data, pos_stride, idx_data, idx_stride,
           nrm_data, nrm_stride, idx_data, idx_stride,
           tc0_data, tc0_stride, idx_data, idx_stride,
@@ -783,7 +783,7 @@ namespace RayGene3D
         const auto tc0_idx_data = std::pair{ reinterpret_cast<const uint8_t*>(material_id.second.data()) + 8u, uint32_t(material_id.second.size()) };
         const auto tc0_idx_stride = 3 * 4u;
 
-        const auto [instance_vertices, instance_triangles] = PopulateInstance(idx_count, idx_align, position_scale, coordinate_flip,
+        const auto [instance_vertices, instance_triangles] = PopulateInstance(idx_count, idx_align, position_scale, coordinate_flip, true,
           pos_data, pos_stride, pos_idx_data, pos_idx_stride,
           nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
           tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride,
