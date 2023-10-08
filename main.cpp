@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ================================================================================*/
 
-#include "raygene3d-root/root.h"
+#include "raygene3d-wrap/wrap.h"
 
 #include "spark/spark.h"
 #include "imgui/imgui.h"
@@ -139,7 +139,7 @@ namespace RayGene3D
     GLFWwindow* glfw{ nullptr };
 
   protected:
-    std::unique_ptr<RayGene3D::Root> root;
+    std::unique_ptr<RayGene3D::Wrap> wrap;
 
   protected:
     std::shared_ptr<RayGene3D::Spark> spark;
@@ -344,7 +344,7 @@ namespace RayGene3D
       window_handle = (__bridge void*)layer;
 #endif
 
-      const auto device = root->GetCore()->GetDevice().get();
+      const auto device = wrap->GetCore()->GetDevice().get();
       const auto device_debug = setup_property->GetObjectItem("device_debug")->GetBool();
       const auto device_ordinal = setup_property->GetObjectItem("device_ordinal")->GetUint();
       device->SetWindow(window_handle);
@@ -354,7 +354,7 @@ namespace RayGene3D
       device->SetExtentY(extent_y);
       device->SetOrdinal(device_ordinal);
       device->SetDebug(device_debug);
-      root->GetCore()->Initialize();
+      wrap->GetCore()->Initialize();
 
       
       {
@@ -382,7 +382,7 @@ namespace RayGene3D
           Resource::HINT_UNKNOWN,
           { interops, uint32_t(std::size(interops)) }
         );
-        root->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
+        wrap->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
 
         //backbuffer_resource->SetType(RayGene3D::Resource::TYPE_IMAGE2D);
         //backbuffer_resource->SetExtentX(uint32_t(extent_x));
@@ -396,17 +396,17 @@ namespace RayGene3D
         const auto& backbuffer_rt_view = backbuffer_resource->CreateView("backbuffer_rt_view",
           Usage(USAGE_RENDER_TARGET)
         );
-        root->GetCore()->AddView(backbuffer_rt_view);
+        wrap->GetCore()->AddView(backbuffer_rt_view);
 
         const auto& backbuffer_ua_view = backbuffer_resource->CreateView("backbuffer_ua_view",
           Usage(USAGE_UNORDERED_ACCESS)
         );
-        root->GetCore()->AddView(backbuffer_ua_view);
+        wrap->GetCore()->AddView(backbuffer_ua_view);
       }
       
 
       
-      const auto storage = root->GetUtil()->GetStorage().get();
+      const auto storage = wrap->GetUtil()->GetStorage().get();
 
       auto tree_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       storage->SetTree(tree_property);
@@ -423,11 +423,11 @@ namespace RayGene3D
         const auto scene_path = config_path;
 
         //std::shared_ptr<Property> scene_property;
-        root->GetUtil()->GetStorage()->Load(ExtractName(scene_name), scene_property);
+        wrap->GetUtil()->GetStorage()->Load(ExtractName(scene_name), scene_property);
 
         if (!scene_property)
         {
-          auto io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*root));
+          auto io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*wrap));
 
           io_broker->SetFileName(scene_name);
           io_broker->SetPathName(scene_path);
@@ -445,7 +445,7 @@ namespace RayGene3D
 
           io_broker.reset();
 
-          root->GetUtil()->GetStorage()->Save(ExtractName(scene_name), scene_property);
+          wrap->GetUtil()->GetStorage()->Save(ExtractName(scene_name), scene_property);
         }
       }
       tree_property->SetObjectItem("scene_property", scene_property);
@@ -486,10 +486,10 @@ namespace RayGene3D
       tree_property->SetObjectItem("environment_property", environment_property);
 
 
-      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*root));
+      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*wrap));
       spark->SetShadowType(Spark::NO_SHADOWS);
 
-      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*root));
+      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*wrap));
       imgui->SetShowTestWindow(false);
     }
 
@@ -595,7 +595,7 @@ namespace RayGene3D
         spark->Use();
         imgui->Use();
 
-        root->Use();
+        wrap->Use();
 
         frame_counter += 1;
         frame_period += delta_time;
@@ -603,7 +603,7 @@ namespace RayGene3D
         if (frame_period > 1.0)
         {
           const auto frame_rate = frame_counter / frame_period;
-          const auto adapter_name = root->GetCore()->GetDevice()->GetName();
+          const auto adapter_name = wrap->GetCore()->GetDevice()->GetName();
 
           std::stringstream ss;
           ss << app_name << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
@@ -620,7 +620,7 @@ namespace RayGene3D
       spark.reset();
       imgui.reset();
 
-      root->Discard();
+      wrap->Discard();
 
       glfwDestroyWindow(glfw);
     }
@@ -630,12 +630,12 @@ namespace RayGene3D
     {
       glfwInit();
 
-      root = std::unique_ptr<RayGene3D::Root>(new RayGene3D::Root(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
+      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
     }
 
     ~GLFWWrapper()
     {
-      root.reset();
+        wrap.reset();
 
       glfwTerminate();
     }

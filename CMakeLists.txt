@@ -74,9 +74,9 @@ add_executable(${NAME}-demo
   ${SOURCE}
 )
 
-add_subdirectory(${NAME}-root)
-#add_dependencies(${NAME}-demo ${NAME}-root)
-target_link_libraries(${NAME}-demo PUBLIC ${NAME}-root)
+add_subdirectory(${NAME}-wrap)
+#add_dependencies(${NAME}-demo ${NAME}-wrap)
+target_link_libraries(${NAME}-demo PUBLIC ${NAME}-wrap)
 
 add_subdirectory(${NAME}-util)
 #add_dependencies(${NAME}-demo ${NAME}-util)

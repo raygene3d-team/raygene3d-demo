@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../raygene3d-root/root.h"
+#include "../raygene3d-wrap/wrap.h"
 
 namespace RayGene3D
 {
@@ -89,7 +89,7 @@ namespace RayGene3D
 
 
   public:
-    IOBroker(Root& root);
+    IOBroker(Wrap& wrap);
     virtual ~IOBroker();
   };
 

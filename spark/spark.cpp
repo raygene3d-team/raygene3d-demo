@@ -33,7 +33,7 @@ namespace RayGene3D
 {
   void Spark::CreateShadowMap()
   {
-    shadow_map = root.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
+    shadow_map = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
       Resource::Tex2DDesc
       {
         Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
@@ -49,7 +49,7 @@ namespace RayGene3D
 
   void Spark::CreateColorTarget()
   {
-    color_target = root.GetCore()->GetDevice()->CreateResource("spark_color_target",
+    color_target = wrap.GetCore()->GetDevice()->CreateResource("spark_color_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
@@ -64,7 +64,7 @@ namespace RayGene3D
 
   void Spark::CreateDepthTarget()
   {
-    depth_target = root.GetCore()->GetDevice()->CreateResource("spark_depth_target",
+    depth_target = wrap.GetCore()->GetDevice()->CreateResource("spark_depth_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
@@ -79,7 +79,7 @@ namespace RayGene3D
 
   void Spark::CreateScreenData()
   {
-    screen_data = root.GetCore()->GetDevice()->CreateResource("spark_screen_data",
+    screen_data = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -92,7 +92,7 @@ namespace RayGene3D
 
   void Spark::CreateCameraData()
   {
-    camera_data = root.GetCore()->GetDevice()->CreateResource("spark_camera_data",
+    camera_data = wrap.GetCore()->GetDevice()->CreateResource("spark_camera_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -105,7 +105,7 @@ namespace RayGene3D
 
   void Spark::CreateShadowData()
   {
-    shadow_data = root.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
+    shadow_data = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -123,7 +123,7 @@ namespace RayGene3D
       prop_instances->GetRawBytes(0),
     };
 
-    scene_instances = root.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
+    scene_instances = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -142,7 +142,7 @@ namespace RayGene3D
       prop_triangles->GetRawBytes(0),
     };
 
-    scene_triangles = root.GetCore()->GetDevice()->CreateResource("spark_scene_triangles",
+    scene_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
@@ -161,7 +161,7 @@ namespace RayGene3D
       prop_vertices->GetRawBytes(0),
     };
 
-    scene_vertices = root.GetCore()->GetDevice()->CreateResource("spark_scene_vertices",
+    scene_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
@@ -194,7 +194,7 @@ namespace RayGene3D
       interops.emplace_back(prop_textures0->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    scene_textures0 = root.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
+    scene_textures0 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -230,7 +230,7 @@ namespace RayGene3D
       interops.emplace_back(prop_textures1->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    scene_textures1 = root.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
+    scene_textures1 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
       Resource::Tex2DDesc
       {
 
@@ -267,7 +267,7 @@ namespace RayGene3D
       interops.emplace_back(prop_textures2->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    scene_textures2 = root.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
+    scene_textures2 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -303,7 +303,7 @@ namespace RayGene3D
       interops.emplace_back(prop_textures3->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    scene_textures3 = root.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
+    scene_textures3 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -339,7 +339,7 @@ namespace RayGene3D
       interops.emplace_back(prop_lightmaps->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    light_maps = root.GetCore()->GetDevice()->CreateResource("spark_light_maps",
+    light_maps = wrap.GetCore()->GetDevice()->CreateResource("spark_light_maps",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -367,7 +367,7 @@ namespace RayGene3D
       { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec4)) },
     };
 
-    skybox_vertices = root.GetCore()->GetDevice()->CreateResource("spark_skybox_vertices",
+    skybox_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
@@ -390,7 +390,7 @@ namespace RayGene3D
       { quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3)) },
     };
 
-    skybox_triangles = root.GetCore()->GetDevice()->CreateResource("spark_skybox_triangles",
+    skybox_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
@@ -423,7 +423,7 @@ namespace RayGene3D
       interops.emplace_back(prop_skybox->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    skybox_texture = root.GetCore()->GetDevice()->CreateResource("spark_skybox_texture",
+    skybox_texture = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_texture",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -442,7 +442,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
-    graphic_arguments = root.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
+    graphic_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
       Resource::BufferDesc
       {
         Usage(USAGE_COMMAND_INDIRECT),
@@ -455,7 +455,7 @@ namespace RayGene3D
 
   void Spark::CreateComputeArguments()
   {
-    compute_arguments = root.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
+    compute_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
       Resource::BufferDesc
       {
         Usage(USAGE_COMMAND_INDIRECT),
@@ -477,7 +477,7 @@ namespace RayGene3D
       shadowmap_camera_data,
     };
 
-    shadowmap_layout = root.GetCore()->GetDevice()->CreateLayout("spark_shadowmap_layout",
+    shadowmap_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_shadowmap_layout",
       {},
       { sb_views, uint32_t(std::size(sb_views)) },
       {},
@@ -529,7 +529,7 @@ namespace RayGene3D
       }
     };
 
-    shadowmap_config = root.GetCore()->GetDevice()->CreateConfig("spark_shadowmap_config",
+    shadowmap_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_shadowmap_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS),
       {},
@@ -585,7 +585,7 @@ namespace RayGene3D
       { shadowmap_shadow_map, { 1.0f, std::nullopt }},
     };
 
-    shadowmap_passes[index] = root.GetCore()->GetDevice()->CreatePass("spark_shadowmap_pass_" + std::to_string(index),
+    shadowmap_passes[index] = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowmap_pass_" + std::to_string(index),
       Pass::TYPE_GRAPHIC,
       { subpasses, uint32_t(std::size(subpasses)) },
       {},
@@ -657,7 +657,7 @@ namespace RayGene3D
       { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    unshadowed_layout = root.GetCore()->GetDevice()->CreateLayout("spark_unshadowed_layout",
+    unshadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_unshadowed_layout",
       { ub_views, uint32_t(std::size(ub_views)) },
       { ue_views, uint32_t(std::size(ue_views)) },
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -721,7 +721,7 @@ namespace RayGene3D
       }
     };
 
-    unshadowed_config = root.GetCore()->GetDevice()->CreateConfig("spark_unshadowed_config",
+    unshadowed_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_unshadowed_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
@@ -816,7 +816,7 @@ namespace RayGene3D
       unshadowed_depth_target, { 1.0f, std::nullopt },
     };
 
-    unshadowed_pass = root.GetCore()->GetDevice()->CreatePass("spark_unshadowed_pass",
+    unshadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_unshadowed_pass",
       Pass::TYPE_GRAPHIC,
       { subpasses, uint32_t(std::size(subpasses)) },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
@@ -881,7 +881,7 @@ namespace RayGene3D
       { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
     };
 
-    shadowed_layout = root.GetCore()->GetDevice()->CreateLayout("spark_shadowed_layout",
+    shadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_shadowed_layout",
       { ub_views, uint32_t(std::size(ub_views)) },
       { ue_views, uint32_t(std::size(ue_views)) },
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -946,7 +946,7 @@ namespace RayGene3D
       }
     };
 
-    shadowed_config = root.GetCore()->GetDevice()->CreateConfig("spark_shadowed_config",
+    shadowed_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_shadowed_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
@@ -1042,7 +1042,7 @@ namespace RayGene3D
       shadowed_depth_target, { 1.0f, std::nullopt },
     };
 
-    shadowed_pass = root.GetCore()->GetDevice()->CreatePass("spark_shadowed_pass",
+    shadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowed_pass",
       Pass::TYPE_GRAPHIC,
       { subpasses, uint32_t(std::size(subpasses)) },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
@@ -1077,7 +1077,7 @@ namespace RayGene3D
     };
     //skybox_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
 
-    skybox_layout = root.GetCore()->GetDevice()->CreateLayout("spark_skybox_layout",
+    skybox_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_skybox_layout",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -1135,7 +1135,7 @@ namespace RayGene3D
       }
     };
 
-    skybox_config = root.GetCore()->GetDevice()->CreateConfig("spark_skybox_config",
+    skybox_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_skybox_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
@@ -1188,7 +1188,7 @@ namespace RayGene3D
       skybox_depth_target, { std::nullopt, std::nullopt },
     };
 
-    skybox_pass = root.GetCore()->GetDevice()->CreatePass("spark_skybox_pass",
+    skybox_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_skybox_pass",
       Pass::TYPE_GRAPHIC,
       { subpasses, uint32_t(std::size(subpasses)) },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
@@ -1216,7 +1216,7 @@ namespace RayGene3D
       backbuffer_uav,
     };
 
-    present_layout = root.GetCore()->GetDevice()->CreateLayout("spark_present_layout",
+    present_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_present_layout",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -1235,7 +1235,7 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    present_config = root.GetCore()->GetDevice()->CreateConfig("spark_present_config",
+    present_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_present_config",
       shader_ss.str(),
       Config::COMPILATION_CS,
       {},
@@ -1267,7 +1267,7 @@ namespace RayGene3D
       {}
     };
 
-    present_pass = root.GetCore()->GetDevice()->CreatePass("spark_present_pass",
+    present_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_present_pass",
       Pass::TYPE_COMPUTE,
       { subpasses, uint32_t(std::size(subpasses)) },
       {},
@@ -1283,205 +1283,205 @@ namespace RayGene3D
 
   void Spark::DestroyColorTarget()
   {
-    root.GetCore()->GetDevice()->DestroyResource(color_target);
+    wrap.GetCore()->GetDevice()->DestroyResource(color_target);
     color_target.reset();
   }
 
   void Spark::DestroyDepthTarget()
   {
-    root.GetCore()->GetDevice()->DestroyResource(depth_target);
+    wrap.GetCore()->GetDevice()->DestroyResource(depth_target);
     depth_target.reset();
   }
 
   void Spark::DestroyShadowMap()
   {
-    root.GetCore()->GetDevice()->DestroyResource(shadow_map);
+    wrap.GetCore()->GetDevice()->DestroyResource(shadow_map);
     shadow_map.reset();
   }
 
   void Spark::DestroyScreenData()
   {
-    root.GetCore()->GetDevice()->DestroyResource(screen_data);
+    wrap.GetCore()->GetDevice()->DestroyResource(screen_data);
     screen_data.reset();
   }
 
   void Spark::DestroyCameraData()
   {
-    root.GetCore()->GetDevice()->DestroyResource(camera_data);
+    wrap.GetCore()->GetDevice()->DestroyResource(camera_data);
     camera_data.reset();
   }
 
   void Spark::DestroyShadowData()
   {
-    root.GetCore()->GetDevice()->DestroyResource(shadow_data);
+    wrap.GetCore()->GetDevice()->DestroyResource(shadow_data);
     shadow_data.reset();
   }
 
   void Spark::DestroySceneInstances()
   {
-    root.GetCore()->GetDevice()->DestroyResource(scene_instances);
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_instances);
     scene_instances.reset();
   }
 
   void Spark::DestroySceneTriangles()
   {
-    root.GetCore()->GetDevice()->DestroyResource(scene_triangles);
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_triangles);
     scene_triangles.reset();
   }
 
   void Spark::DestroySceneVertices()
   {
-    root.GetCore()->GetDevice()->DestroyResource(scene_vertices);
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_vertices);
     scene_vertices.reset();
   }
 
   void Spark::DestroySceneTextures0()
   {
-    root.GetCore()->GetDevice()->DestroyResource(scene_textures0);
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures0);
     scene_textures0.reset();
   }
 
   void Spark::DestroySceneTextures1()
   {
-    root.GetCore()->GetDevice()->DestroyResource(scene_textures1);
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures1);
     scene_textures1.reset();
   }
 
   void Spark::DestroySceneTextures2()
   {
-    root.GetCore()->GetDevice()->DestroyResource(scene_textures2);
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures2);
     scene_textures2.reset();
   }
 
   void Spark::DestroySceneTextures3()
   {
-    root.GetCore()->GetDevice()->DestroyResource(scene_textures3);
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures3);
     scene_textures3.reset();
   }
 
   void Spark::DestroyLightMaps()
   {
-    root.GetCore()->GetDevice()->DestroyResource(light_maps);
+    wrap.GetCore()->GetDevice()->DestroyResource(light_maps);
     light_maps.reset();
   }
 
   void Spark::DestroySkyboxVertices()
   {
-    root.GetCore()->GetDevice()->DestroyResource(skybox_vertices);
+    wrap.GetCore()->GetDevice()->DestroyResource(skybox_vertices);
     skybox_vertices.reset();
   }
 
   void Spark::DestroySkyboxTriangles()
   {
-    root.GetCore()->GetDevice()->DestroyResource(skybox_triangles);
+    wrap.GetCore()->GetDevice()->DestroyResource(skybox_triangles);
     skybox_triangles.reset();
   }
 
   void Spark::DestroySkyboxTexture()
   {
-    root.GetCore()->GetDevice()->DestroyResource(skybox_texture);
+    wrap.GetCore()->GetDevice()->DestroyResource(skybox_texture);
     skybox_texture.reset();
   }
 
   void Spark::DestroyGraphicArguments()
   {
-    root.GetCore()->GetDevice()->DestroyResource(graphic_arguments);
+    wrap.GetCore()->GetDevice()->DestroyResource(graphic_arguments);
     graphic_arguments.reset();
   }
 
   void Spark::DestroyComputeArguments()
   {
-    root.GetCore()->GetDevice()->DestroyResource(compute_arguments);
+    wrap.GetCore()->GetDevice()->DestroyResource(compute_arguments);
     compute_arguments.reset();
   }
 
   void Spark::DestroyShadowmapLayout()
   {
-    root.GetCore()->GetDevice()->DestroyLayout(shadowmap_layout);
+    wrap.GetCore()->GetDevice()->DestroyLayout(shadowmap_layout);
     shadowmap_layout.reset();
   }
 
   void Spark::DestroyShadowmapConfig()
   {
-    root.GetCore()->GetDevice()->DestroyConfig(shadowmap_config);
+    wrap.GetCore()->GetDevice()->DestroyConfig(shadowmap_config);
     shadowmap_config.reset();
   }
 
   void Spark::DestroyShadowmapPass(uint32_t index)
   {
-    root.GetCore()->GetDevice()->DestroyPass(shadowmap_passes[index]);
+    wrap.GetCore()->GetDevice()->DestroyPass(shadowmap_passes[index]);
     shadowmap_passes[index].reset();
   }
 
   void Spark::DestroyShadowedLayout()
   {
-    root.GetCore()->GetDevice()->DestroyLayout(shadowed_layout);
+    wrap.GetCore()->GetDevice()->DestroyLayout(shadowed_layout);
     shadowed_layout.reset();
   }
 
   void Spark::DestroyShadowedConfig()
   {
-    root.GetCore()->GetDevice()->DestroyConfig(shadowed_config);
+    wrap.GetCore()->GetDevice()->DestroyConfig(shadowed_config);
     shadowed_config.reset();
   }
 
   void Spark::DestroyShadowedPass()
   {
-    root.GetCore()->GetDevice()->DestroyPass(shadowed_pass);
+    wrap.GetCore()->GetDevice()->DestroyPass(shadowed_pass);
     shadowed_pass.reset();
   }
 
   void Spark::DestroyUnshadowedLayout()
   {
-    root.GetCore()->GetDevice()->DestroyLayout(unshadowed_layout);
+    wrap.GetCore()->GetDevice()->DestroyLayout(unshadowed_layout);
     unshadowed_layout.reset();
   }
 
   void Spark::DestroyUnshadowedConfig()
   {
-    root.GetCore()->GetDevice()->DestroyConfig(unshadowed_config);
+    wrap.GetCore()->GetDevice()->DestroyConfig(unshadowed_config);
     unshadowed_config.reset();
   }
 
   void Spark::DestroyUnshadowedPass()
   {
-    root.GetCore()->GetDevice()->DestroyPass(unshadowed_pass);
+    wrap.GetCore()->GetDevice()->DestroyPass(unshadowed_pass);
     unshadowed_pass.reset();
   }
 
   void Spark::DestroySkyboxLayout()
   {
-    root.GetCore()->GetDevice()->DestroyLayout(skybox_layout);
+    wrap.GetCore()->GetDevice()->DestroyLayout(skybox_layout);
     skybox_layout.reset();
   }
 
   void Spark::DestroySkyboxConfig()
   {
-    root.GetCore()->GetDevice()->DestroyConfig(skybox_config);
+    wrap.GetCore()->GetDevice()->DestroyConfig(skybox_config);
     skybox_config.reset();
   }
 
   void Spark::DestroySkyboxPass()
   {
-    root.GetCore()->GetDevice()->DestroyPass(skybox_pass);
+    wrap.GetCore()->GetDevice()->DestroyPass(skybox_pass);
     skybox_pass.reset();
   }
 
   void Spark::DestroyPresentLayout()
   {
-    root.GetCore()->GetDevice()->DestroyLayout(present_layout);
+    wrap.GetCore()->GetDevice()->DestroyLayout(present_layout);
     present_layout.reset();
   }
 
   void Spark::DestroyPresentConfig()
   {
-    root.GetCore()->GetDevice()->DestroyConfig(present_config);
+    wrap.GetCore()->GetDevice()->DestroyConfig(present_config);
     present_config.reset();
   }
 
   void Spark::DestroyPresentPass()
   {
-    root.GetCore()->GetDevice()->DestroyPass(present_pass);
+    wrap.GetCore()->GetDevice()->DestroyPass(present_pass);
     present_pass.reset();
   }
 
@@ -1666,8 +1666,8 @@ namespace RayGene3D
   {
   }
 
-  Spark::Spark(Root& root)
-    : Broker("spark_broker", root)
+  Spark::Spark(Wrap& wrap)
+    : Broker("spark_broker", wrap)
   {
     const auto find_view_fn = [this](const std::shared_ptr<View>& view)
     {
@@ -1681,10 +1681,10 @@ namespace RayGene3D
         this->backbuffer_rtv = view;
       }
     };
-    root.GetCore()->VisitView(find_view_fn);
+    wrap.GetCore()->VisitView(find_view_fn);
 
 
-    const auto tree = root.GetUtil()->GetStorage()->GetTree();
+    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
     prop_scene = tree->GetObjectItem("scene_property");
     {

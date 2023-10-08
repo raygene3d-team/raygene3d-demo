@@ -113,8 +113,8 @@ namespace RayGene3D
     io.AddInputCharacter(glyph);
   }
 
-  Imgui::Imgui(Root& root)
-    : Broker("imgui_broker", root)
+  Imgui::Imgui(Wrap& wrap)
+    : Broker("imgui_broker", wrap)
   {
     const auto find_view_fn = [this](const std::shared_ptr<View>& view)
     {
@@ -128,9 +128,9 @@ namespace RayGene3D
         this->backbuffer_rtv = view;
       }
     };
-    root.GetCore()->VisitView(find_view_fn);
+    wrap.GetCore()->VisitView(find_view_fn);
 
-    const auto tree = root.GetUtil()->GetStorage()->GetTree();
+    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
     prop_camera = tree->GetObjectItem("camera_property");
     {
@@ -142,7 +142,7 @@ namespace RayGene3D
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
-    auto* device = root.GetCore()->GetDevice().get();
+    auto* device = wrap.GetCore()->GetDevice().get();
 
 
     {
@@ -505,28 +505,28 @@ namespace RayGene3D
 
   Imgui::~Imgui()
   {
-    root.GetCore()->GetDevice()->DestroyPass(pass);
+    wrap.GetCore()->GetDevice()->DestroyPass(pass);
     pass.reset();
 
-    root.GetCore()->GetDevice()->DestroyLayout(layout);
+    wrap.GetCore()->GetDevice()->DestroyLayout(layout);
     layout.reset();
 
-    root.GetCore()->GetDevice()->DestroyConfig(config);
+    wrap.GetCore()->GetDevice()->DestroyConfig(config);
     config.reset();
 
-    root.GetCore()->GetDevice()->DestroyResource(proj_resource);
+    wrap.GetCore()->GetDevice()->DestroyResource(proj_resource);
     proj_resource.reset();
 
-    root.GetCore()->GetDevice()->DestroyResource(font_resource);
+    wrap.GetCore()->GetDevice()->DestroyResource(font_resource);
     font_resource.reset();
 
-    root.GetCore()->GetDevice()->DestroyResource(arg_resource);
+    wrap.GetCore()->GetDevice()->DestroyResource(arg_resource);
     arg_resource.reset();
 
-    root.GetCore()->GetDevice()->DestroyResource(idx_resource);
+    wrap.GetCore()->GetDevice()->DestroyResource(idx_resource);
     idx_resource.reset();
 
-    root.GetCore()->GetDevice()->DestroyResource(vtx_resource);
+    wrap.GetCore()->GetDevice()->DestroyResource(vtx_resource);
     vtx_resource.reset();
   }
 }

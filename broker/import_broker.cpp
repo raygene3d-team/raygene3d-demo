@@ -1228,8 +1228,8 @@ namespace RayGene3D
 
 
 
-  IOBroker::IOBroker(Root& root)
-    : Broker("io_broker", root)
+  IOBroker::IOBroker(Wrap& wrap)
+    : Broker("io_broker", wrap)
   {}
 
   IOBroker::~IOBroker()

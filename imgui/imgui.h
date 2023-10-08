@@ -1,5 +1,5 @@
 #pragma once
-#include "../raygene3d-root/root.h"
+#include "../raygene3d-wrap/wrap.h"
 
 namespace RayGene3D
 {
@@ -60,7 +60,7 @@ namespace RayGene3D
     void OnChar(unsigned int glyph);
 
   public:
-    Imgui(Root& root);
+    Imgui(Wrap& wrap);
     virtual ~Imgui();
   };
 }
