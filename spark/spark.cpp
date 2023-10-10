@@ -508,7 +508,7 @@ namespace RayGene3D
     const Config::RCState rc_state =
     {
       Config::FILL_SOLID,
-      Config::CULL_FRONT,
+      Config::CULL_BACK,
       {
         { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f }
       },
