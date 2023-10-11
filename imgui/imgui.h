@@ -1,26 +1,24 @@
 #pragma once
-#include "../raygene3d-core/core.h"
-#include "../raygene3d-util/property.h"
+#include "../raygene3d-wrap/wrap.h"
 
 namespace RayGene3D
 {
-  class Device;
-  class Output;
-  class Asset;
-
-  class Imgui : public Usable
+  class Imgui : public Broker
   {
   protected:
-    Core& core;
-
-  public:
-    Core& GetCore() { return core; }
+    std::shared_ptr<View> backbuffer_rtv;
+    std::shared_ptr<View> backbuffer_uav;
 
   protected:
-    std::shared_ptr<Property> root_property;
+    std::shared_ptr<Property> prop_camera;
 
-  private:
-    std::shared_ptr<View> output_view;
+  protected:
+    std::shared_ptr<Property> prop_extent_x;
+    std::shared_ptr<Property> prop_extent_y;
+
+  protected:
+    std::shared_ptr<Property> proj_property;
+    std::shared_ptr<Property> font_property;
 
   protected:
     bool show_test_window{ true };
@@ -38,22 +36,12 @@ namespace RayGene3D
     std::shared_ptr<Resource> proj_resource;
     std::shared_ptr<Resource> font_resource;
 
-    //std::array<std::array<std::shared_ptr<View>, arg_limit>, sub_limit> views;
-    std::array<std::shared_ptr<Resource>, sub_limit> vtx_resources;
-    std::array<std::shared_ptr<Resource>, sub_limit> idx_resources;
-    std::array<std::shared_ptr<Resource>, sub_limit> arg_resources;
-
-    std::shared_ptr<Property> proj_property;
-    std::shared_ptr<Property> font_property;
+    std::shared_ptr<Resource> vtx_resource;
+    std::shared_ptr<Resource> idx_resource;
+    std::shared_ptr<Resource> arg_resource;
 
   protected:
     std::chrono::high_resolution_clock::time_point time;
-
-  public:
-    std::shared_ptr<Property>& AccessRootProperty() { return root_property; }
-
-  public:
-    std::shared_ptr<View>& AccessOutputView() { return output_view; }
 
   public:
     void SetShowTestWindow(bool show_test_window) { this->show_test_window = show_test_window; }
@@ -72,7 +60,7 @@ namespace RayGene3D
     void OnChar(unsigned int glyph);
 
   public:
-    Imgui(Core& core);
+    Imgui(Wrap& wrap);
     virtual ~Imgui();
   };
 }

@@ -31,224 +31,149 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  std::shared_ptr<Resource> Spark::RegisterReflectionProbe(const std::string& name)
+  void Spark::CreateShadowMap()
   {
-    const auto resource = device->CreateResource("reflection_probe");    
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(reflection_probe_size);
-    resource->SetExtentY(reflection_probe_size);
-    resource->SetLayers(6);
-    resource->SetMipmaps(7);
-    resource->SetFormat(FORMAT_R11G11B10_FLOAT);
-    resource->SetHint(Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE));
-
-    return resource;
+    shadow_map = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
+        1,
+        6,
+        FORMAT_D16_UNORM,
+        shadow_resolution,
+        shadow_resolution,        
+      },
+      Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE)
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterShadowMap(const std::string& name)
+  void Spark::CreateColorTarget()
   {
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(shadow_resolution);
-    resource->SetExtentY(shadow_resolution);
-    resource->SetLayers(6);
-    resource->SetMipmaps(1);
-    resource->SetFormat(FORMAT_D16_UNORM);
-    resource->SetHint(Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE));
-
-    return resource;
+    color_target = wrap.GetCore()->GetDevice()->CreateResource("spark_color_target",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
+        1,
+        1,
+        FORMAT_R11G11B10_FLOAT,
+        prop_extent_x->GetUint(),
+        prop_extent_y->GetUint(),
+      }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterColorTarget(const std::string& name)
+  void Spark::CreateDepthTarget()
   {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(extent_x);
-    resource->SetExtentY(extent_y);
-    resource->SetLayers(1);
-    resource->SetMipmaps(1);
-    resource->SetFormat(FORMAT_R11G11B10_FLOAT);
-    
-    return resource;
+    depth_target = wrap.GetCore()->GetDevice()->CreateResource("spark_depth_target",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
+        1,
+        1,
+        FORMAT_D32_FLOAT,
+        prop_extent_x->GetUint(),
+        prop_extent_y->GetUint(),
+      }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterDepthTarget(const std::string& name)
+  void Spark::CreateScreenData()
   {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(extent_x);
-    resource->SetExtentY(extent_y);
-    resource->SetLayers(1);
-    resource->SetMipmaps(1);
-    resource->SetFormat(FORMAT_D32_FLOAT);
-    
-    return resource;
+    screen_data = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_data",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_CONSTANT_DATA),
+        uint32_t(sizeof(Screen)),
+        1,
+      },
+      Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterScreenData(const std::string& name)
+  void Spark::CreateCameraData()
   {
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Screen)));
-    resource->SetCount(1);
-    resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-
-    return resource;
+    camera_data = wrap.GetCore()->GetDevice()->CreateResource("spark_camera_data",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_CONSTANT_DATA),
+        uint32_t(sizeof(Frustum)),
+        1,
+      },
+      Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterCameraData(const std::string& name)
+  void Spark::CreateShadowData()
   {
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Frustum)));
-    resource->SetCount(1);
-    resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-    
-    return resource;
+    shadow_data = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_CONSTANT_DATA),
+        uint32_t(sizeof(Frustum)),
+        6,
+      },
+      Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterShadowData(const std::string& name)
-  {
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Frustum)));
-    resource->SetCount(6);
-    resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-   
-    return resource;
-  }
-
-  std::shared_ptr<Resource> Spark::RegisterReflectionProbeData(const std::string& name)
-  {
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(ReflectionProbeLevel)));
-    resource->SetCount(7);
-    resource->SetInteropCount(7);
-
-    prop_reflection_probe = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-    prop_reflection_probe->SetArraySize(uint32_t(7));
-
-    const auto level_size = uint32_t(sizeof(ReflectionProbeLevel));
-    for (uint32_t i = 0; i < 7; ++i)
-    {
-      ReflectionProbeLevel level_data{ i, reflection_probe_size >> i , 0};
-
-      const auto level_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-      level_property->RawAllocate(level_size);
-      level_property->SetRawBytes({ &level_data, level_size }, 0);
-
-      resource->SetInteropItem(i, level_property->GetRawBytes(0));
-      prop_reflection_probe->SetArrayItem(i, level_property);
-    }
-
-    return resource;
-  }
-
-  std::shared_ptr<Resource> Spark::RegisterSceneInstances(const std::string& name)
+  void Spark::CreateSceneInstances()
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    std::pair<const void*, uint32_t> interops[] = {
+      prop_instances->GetRawBytes(0),
+    };
 
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Instance)));
-    resource->SetCount(count);
-    resource->SetInteropCount(1);
-    resource->SetInteropItem(0, prop_instances->GetRawBytes(0));
-
-    return resource;
+    scene_instances = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_CONSTANT_DATA),
+        uint32_t(sizeof(Instance)),
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTriangles(const std::string& name)
+  void Spark::CreateSceneTriangles()
   {
     const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
+    std::pair<const void*, uint32_t> interops[] = {
+      prop_triangles->GetRawBytes(0),
+    };
 
-    const auto resource = device->CreateResource(name);     
-
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Triangle)));
-    resource->SetCount(count);
-    resource->SetInteropCount(1);
-    resource->SetInteropItem(0, prop_triangles->GetRawBytes(0));
-
-    return resource;
+    scene_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_triangles",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_INDEX_ARRAY),
+        uint32_t(sizeof(Triangle)),
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneVertices0(const std::string& name)
+  void Spark::CreateSceneVertices()
   {
-    const auto [data, count] = prop_vertices0->GetTypedBytes<Vertex0>(0);
+    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
+    std::pair<const void*, uint32_t> interops[] = {
+      prop_vertices->GetRawBytes(0),
+    };
 
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Vertex0)));
-    resource->SetCount(count);
-    resource->SetInteropCount(1);
-    resource->SetInteropItem(0, prop_vertices0->GetRawBytes(0));
-
-    return resource;
+    scene_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_vertices",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_VERTEX_ARRAY),
+        uint32_t(sizeof(Vertex)),
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneVertices1(const std::string& name)
-  {
-    const auto [data, count] = prop_vertices1->GetTypedBytes<Vertex1>(0);
-
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Vertex1)));
-    resource->SetCount(count);
-    resource->SetInteropCount(1);
-    resource->SetInteropItem(0, prop_vertices1->GetRawBytes(0));
-
-    return resource;
-  }
-
-  std::shared_ptr<Resource> Spark::RegisterSceneVertices2(const std::string& name)
-  {
-    const auto [data, count] = prop_vertices2->GetTypedBytes<Vertex2>(0);
-
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Vertex2)));
-    resource->SetCount(count);
-    resource->SetInteropCount(1);
-    resource->SetInteropItem(0, prop_vertices2->GetRawBytes(0));
-
-    return resource;
-  }
-  
-  std::shared_ptr<Resource> Spark::RegisterSceneVertices3(const std::string& name)
-  {
-    const auto [data, count] = prop_vertices3->GetTypedBytes<Vertex3>(0);
-
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Vertex3)));
-    resource->SetCount(count);
-    resource->SetInteropCount(1);
-    resource->SetInteropItem(0, prop_vertices3->GetRawBytes(0));
-
-    return resource;
-  }
-
-  std::shared_ptr<Resource> Spark::RegisterSceneTextures0(const std::string& name)
+  void Spark::CreateSceneTextures0()
   {
     const auto layers = prop_textures0->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_SRGB;
@@ -258,25 +183,33 @@ namespace RayGene3D
     auto size_x = 1u;
     auto size_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+    while ((size += size_x * size_y * bpp) != prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    {
+      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+    }
 
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(size_x);
-    resource->SetExtentY(size_y);
-    resource->SetExtentZ(1);
-    resource->SetHint(Resource::HINT_LAYERED_IMAGE);
-    resource->SetLayers(layers);
-    resource->SetMipmaps(mipmaps);
-    resource->SetFormat(format);
-    resource->SetInteropCount(layers);
-    for (uint32_t i = 0; i < layers; ++i) { resource->SetInteropItem(i, prop_textures0->GetArrayItem(i)->GetRawBytes(0)); }
+    std::vector<std::pair<const void*, uint32_t>> interops;
+    for (uint32_t i = 0; i < prop_textures0->GetArraySize(); ++i)
+    {
+      interops.emplace_back(prop_textures0->GetArrayItem(i)->GetRawBytes(0));
+    }
 
-    return resource;
+    scene_textures0 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
+        format,
+        size_x,
+        size_y,
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTextures1(const std::string& name)
+  void Spark::CreateSceneTextures1()
   {
     const auto layers = prop_textures1->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -286,25 +219,34 @@ namespace RayGene3D
     auto size_x = 1u;
     auto size_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+    while ((size += size_x * size_y * bpp) != prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    {
+      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+    }
 
-    const auto resource = device->CreateResource(name);
+    std::vector<std::pair<const void*, uint32_t>> interops;
+    for (uint32_t i = 0; i < prop_textures1->GetArraySize(); ++i)
+    {
+      interops.emplace_back(prop_textures1->GetArrayItem(i)->GetRawBytes(0));
+    }
 
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(size_x);
-    resource->SetExtentY(size_y);
-    resource->SetExtentZ(1);
-    resource->SetHint(Resource::HINT_LAYERED_IMAGE);
-    resource->SetLayers(layers);
-    resource->SetMipmaps(mipmaps);
-    resource->SetFormat(format);
-    resource->SetInteropCount(layers);
-    for (uint32_t i = 0; i < layers; ++i) { resource->SetInteropItem(i, prop_textures1->GetArrayItem(i)->GetRawBytes(0)); }
+    scene_textures1 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
+      Resource::Tex2DDesc
+      {
 
-    return resource;
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
+        format,
+        size_x,
+        size_y,
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTextures2(const std::string& name)
+  void Spark::CreateSceneTextures2()
   {
     const auto layers = prop_textures2->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -314,25 +256,33 @@ namespace RayGene3D
     auto size_x = 1u;
     auto size_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+    while ((size += size_x * size_y * bpp) != prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    {
+      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+    }
 
-    const auto resource = device->CreateResource(name);
+    std::vector<std::pair<const void*, uint32_t>> interops;
+    for (uint32_t i = 0; i < prop_textures2->GetArraySize(); ++i)
+    {
+      interops.emplace_back(prop_textures2->GetArrayItem(i)->GetRawBytes(0));
+    }
 
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(size_x);
-    resource->SetExtentY(size_y);
-    resource->SetExtentZ(1);
-    resource->SetHint(Resource::HINT_LAYERED_IMAGE);
-    resource->SetLayers(layers);
-    resource->SetMipmaps(mipmaps);
-    resource->SetFormat(format);
-    resource->SetInteropCount(layers);
-    for (uint32_t i = 0; i < layers; ++i) { resource->SetInteropItem(i, prop_textures2->GetArrayItem(i)->GetRawBytes(0)); }
-
-    return resource;
+    scene_textures2 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
+        format,
+        size_x,
+        size_y,
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSceneTextures3(const std::string& name)
+  void Spark::CreateSceneTextures3()
   {
     const auto layers = prop_textures3->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -342,25 +292,33 @@ namespace RayGene3D
     auto size_x = 1u;
     auto size_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+    while ((size += size_x * size_y * bpp) != prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    {
+      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+    }
 
-    const auto resource = device->CreateResource(name);
+    std::vector<std::pair<const void*, uint32_t>> interops;
+    for (uint32_t i = 0; i < prop_textures3->GetArraySize(); ++i)
+    {
+      interops.emplace_back(prop_textures3->GetArrayItem(i)->GetRawBytes(0));
+    }
 
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(size_x);
-    resource->SetExtentY(size_y);
-    resource->SetExtentZ(1);
-    resource->SetHint(Resource::HINT_LAYERED_IMAGE);
-    resource->SetLayers(layers);
-    resource->SetMipmaps(mipmaps);
-    resource->SetFormat(format);
-    resource->SetInteropCount(layers);
-    for (uint32_t i = 0; i < layers; ++i) { resource->SetInteropItem(i, prop_textures3->GetArrayItem(i)->GetRawBytes(0)); }
-
-    return resource;
+    scene_textures3 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
+        format,
+        size_x,
+        size_y,
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterLightMaps(const std::string& name)
+  void Spark::CreateLightMaps()
   {
     const auto layers = prop_lightmaps->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_SRGB;
@@ -370,25 +328,33 @@ namespace RayGene3D
     auto size_x = 1u;
     auto size_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_lightmaps->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size_x <<= 1; size_y <<= 1; }
+    while ((size += size_x * size_y * bpp) != prop_lightmaps->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    {
+      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+    }
 
-    const auto resource = device->CreateResource(name);
+    std::vector<std::pair<const void*, uint32_t>> interops;
+    for (uint32_t i = 0; i < prop_lightmaps->GetArraySize(); ++i)
+    {
+      interops.emplace_back(prop_lightmaps->GetArrayItem(i)->GetRawBytes(0));
+    }
 
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(size_x);
-    resource->SetExtentY(size_y);
-    resource->SetExtentZ(1);
-    resource->SetHint(Resource::HINT_LAYERED_IMAGE);
-    resource->SetLayers(layers);
-    resource->SetMipmaps(mipmaps);
-    resource->SetFormat(format);
-    resource->SetInteropCount(layers);
-    for (uint32_t i = 0; i < layers; ++i) { resource->SetInteropItem(i, prop_lightmaps->GetArrayItem(i)->GetRawBytes(0)); }
-
-    return resource;
+    light_maps = wrap.GetCore()->GetDevice()->CreateResource("spark_light_maps",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
+        format,
+        size_x,
+        size_y,
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSkyboxVertices(const std::string& name)
+  void Spark::CreateSkyboxVertices()
   {
     static const std::array<glm::f32vec4, 4> quad_vtx = {
       glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
@@ -397,449 +363,287 @@ namespace RayGene3D
       glm::f32vec4(1.0f,-1.0f, 1.0f, 1.0f),
     };
 
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(glm::f32vec4)));
-    resource->SetCount(uint32_t(quad_vtx.size()));
-    resource->SetInteropCount(1);
-    resource->SetInteropItem(0, std::pair(quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec4))));
+    std::pair<const void*, uint32_t> interops[] = {
+      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec4)) },
+    };
 
-    return resource;
+    skybox_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_vertices",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_VERTEX_ARRAY),
+        uint32_t(sizeof(glm::f32vec4)),
+        uint32_t(quad_vtx.size()),
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSkyboxTriangles(const std::string& name)
+  void Spark::CreateSkyboxTriangles()
   {
     static const std::array<glm::u32vec3, 2> quad_idx = {
       glm::u32vec3(0u, 1u, 2u),
       glm::u32vec3(3u, 2u, 1u),
     };
 
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(glm::u32vec3)));
-    resource->SetCount(uint32_t(quad_idx.size()));
-    resource->SetInteropCount(1);
-    resource->SetInteropItem(0, std::pair(quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3))));
-    
-    return resource;
+    std::pair<const void*, uint32_t> interops[] = {
+      { quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3)) },
+    };
+
+    skybox_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_triangles",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_INDEX_ARRAY),
+        uint32_t(sizeof(glm::u32vec3)),
+        uint32_t(quad_idx.size()),
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterSkyboxTexture(const std::string& name)
+  void Spark::CreateSkyboxTexture()
   {
     const auto layers = prop_skybox->GetArraySize();
     const auto format = FORMAT_R32G32B32A32_FLOAT;
-    const auto hint = layers == uint32_t(6)
-      ? Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE
-      : Resource::HINT_UNKNOWN;
     const auto bpp = 16u;
 
-    auto mipmaps = 0u;
+    auto mipmaps = 1u;
+    auto size_x = 2u;
+    auto size_y = 1u;
     auto size = 0u;
-    while (size != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u) { mipmaps += 1; size = bpp * uint32_t(((1 << mipmaps) * (1 << mipmaps) - 1) / 3); }
+    while ((size += size_x * size_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    {
+      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+    }
 
-    auto size_x = 1 << (mipmaps - 1);
-    auto size_y = 1 << (mipmaps - 1);
+    std::vector<std::pair<const void*, uint32_t>> interops;
+    for (uint32_t i = 0; i < prop_skybox->GetArraySize(); ++i)
+    {
+      interops.emplace_back(prop_skybox->GetArrayItem(i)->GetRawBytes(0));
+    }
 
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_IMAGE2D);
-    resource->SetExtentX(size_x);
-    resource->SetExtentY(size_y);
-    resource->SetExtentZ(1);
-    resource->SetLayers(layers);
-    resource->SetMipmaps(mipmaps);
-    resource->SetFormat(format);
-    resource->SetHint(Resource::Hint(hint));
-    resource->SetInteropCount(layers);
-    for (uint32_t i = 0; i < layers; ++i) { resource->SetInteropItem(i, prop_skybox->GetArrayItem(i)->GetRawBytes(0)); }
-
-    return resource;
+    skybox_texture = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_texture",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmaps,
+        layers,
+        format,
+        size_x,
+        size_y,
+      },
+      Resource::Hint(Resource::HINT_UNKNOWN),
+      { interops.data(), uint32_t(interops.size()) }
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterGraphicArguments(const std::string& name)
+  void Spark::CreateGraphicArguments()
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
-    const auto resource = device->CreateResource(name);
-
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Pass::Argument)));
-    resource->SetCount(uint32_t(count));
-    resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-
-    return resource;
+    graphic_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_COMMAND_INDIRECT),
+        uint32_t(sizeof(Pass::Argument)),
+        uint32_t(count),
+      },
+      Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
+    );
   }
 
-  std::shared_ptr<Resource> Spark::RegisterComputeArguments(const std::string& name)
+  void Spark::CreateComputeArguments()
   {
-    const auto resource = device->CreateResource(name);
-    
-    resource->SetType(Resource::TYPE_BUFFER);
-    resource->SetStride(uint32_t(sizeof(Pass::Argument)));
-    resource->SetCount(1);
-    resource->SetHint(Resource::HINT_DYNAMIC_BUFFER);
-    
-    return resource;
+    compute_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_COMMAND_INDIRECT),
+        uint32_t(sizeof(Pass::Argument)),
+        1u,
+      },
+      Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
+    );
   }
 
-  std::shared_ptr<Layout> Spark::RegisterShadowmapLayout(const std::string& name)
+  void Spark::CreateShadowmapLayout()
   {
-    const auto layout = device->CreateLayout(name);
-
-    const auto shadowmap_camera_data = shadow_data->CreateView("spark_shadowmap_shadow_data");
-    {
-      shadowmap_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadowmap_camera_data->SetByteOffset(0);
-      shadowmap_camera_data->SetByteCount(sizeof(Frustum));
-    }
+    auto shadowmap_camera_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
+      USAGE_CONSTANT_DATA,
+      { 0, sizeof(Frustum) }
+    );
 
     const std::shared_ptr<View> sb_views[] = {
       shadowmap_camera_data,
     };
-    layout->UpdateSBViews({ sb_views, uint32_t(std::size(sb_views)) });
 
-    return layout;
+    shadowmap_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_shadowmap_layout",
+      {},
+      { sb_views, uint32_t(std::size(sb_views)) },
+      {},
+      {},
+      {},
+      {},
+      {},
+      {}
+    );
   }
 
-  std::shared_ptr<Config> Spark::RegisterShadowmapConfig(const std::string& name)
+  void Spark::CreateShadowmapConfig()
   {
-    const auto config = device->CreateConfig(name);
-
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadow.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    config->SetSource(shader_ss.str());
-    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS));
-    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-    config->SetIndexer(Config::INDEXER_32_BIT);
-
-    const Config::Attribute attributes[] = {
-      { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
+    const Config::IAState ia_state =
+    {
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
+      {
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false }
+      }
     };
-    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
-    config->SetFillMode(Config::FILL_SOLID);
-    config->SetCullMode(Config::CULL_FRONT);
-    config->SetClipEnabled(false);
-
-    const Config::Blend blends[] = {
-      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    const Config::RCState rc_state =
+    {
+      Config::FILL_SOLID,
+      Config::CULL_BACK,
+      {
+        { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f }
+      },
     };
-    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-    config->SetATCEnabled(false);
 
-    config->SetDepthEnabled(true);
-    config->SetDepthWrite(true);
-    config->SetDepthComparison(Config::COMPARISON_LESS);
-
-    const Config::Viewport viewports[] = {
-      { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f },
+    const Config::DSState ds_state =
+    {
+      true, //depth_enabled
+      true, //depth_write
+      Config::COMPARISON_LESS //depth_comparison
     };
-    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
 
-    return config;
+    const Config::OMState om_state =
+    {
+      false,
+      {
+        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
+      }
+    };
+
+    shadowmap_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_shadowmap_config",
+      shader_ss.str(),
+      Config::Compilation(Config::COMPILATION_VS),
+      {},
+      ia_state,
+      rc_state,
+      ds_state,
+      om_state
+    );
   }
 
-  std::shared_ptr<Pass> Spark::RegisterShadowmapPass(const std::string& name, uint32_t index)
+  void Spark::CreateShadowmapPass(uint32_t index)
   {
-    const auto pass = device->CreatePass(name + "_" + std::to_string(index));
-
-    pass->SetType(Pass::TYPE_GRAPHIC);
-    pass->SetEnabled(true);
-
-    pass->SetExtentX(shadow_resolution);
-    pass->SetExtentY(shadow_resolution);
-
-    const auto shadowmap_shadow_map = shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index));
-    shadowmap_shadow_map->SetBind(View::BIND_DEPTH_STENCIL);
-    shadowmap_shadow_map->SetLayerOffset(index);
-    shadowmap_shadow_map->SetLayerCount(1);
-
-    const std::shared_ptr<View> ds_views[] = {
-      shadowmap_shadow_map,
-    };
-    pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-    const Pass::DSValue ds_values[] = {
-      { 1.0f, std::nullopt },
-    };
-    pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-    pass->SetSubpassCount(1);
-
     const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::vector<Pass::Command> commands(instance_count);
-    for (uint32_t j = 0; j < instance_count; ++j)
+    auto shadowmap_graphic_arguments = std::vector<std::shared_ptr<View>>(instance_count);
+    for (uint32_t j = 0; j < uint32_t(shadowmap_graphic_arguments.size()); ++j)
     {
-      const auto shadowmap_graphic_argument = graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(index) + "_" + std::to_string(j));
-      shadowmap_graphic_argument->SetBind(View::BIND_COMMAND_INDIRECT);
-      shadowmap_graphic_argument->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
-      shadowmap_graphic_argument->SetByteCount(uint32_t(sizeof(Pass::Argument)));
-
-      commands[j].view = shadowmap_graphic_argument;
+      shadowmap_graphic_arguments[j] = graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(index) + "_" + std::to_string(j),
+        Usage(USAGE_COMMAND_INDIRECT),
+        { j * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
+      );
+    }
+    std::vector<Pass::Command> commands(instance_count);
+    for (uint32_t j = 0; j < uint32_t(commands.size()); ++j)
+    {
+      commands[j].view = shadowmap_graphic_arguments[j];
       commands[j].offsets = { index * uint32_t(sizeof(Frustum)) };
     }
-    pass->UpdateSubpassCommands(0, { commands.data(), uint32_t(commands.size()) });
 
-    const auto shadowmap_scene_vertices0 = scene_vertices0->CreateView("spark_shadowmap_scene_vertices0");
-    {
-      shadowmap_scene_vertices0->SetBind(View::BIND_VERTEX_ARRAY);
-      shadowmap_scene_vertices0->SetByteOffset(0);
-      shadowmap_scene_vertices0->SetByteCount(uint32_t(-1));
-    }
-
+    auto shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices",
+      Usage(USAGE_VERTEX_ARRAY)
+    );
     const std::shared_ptr<View> va_views[] = {
-      shadowmap_scene_vertices0,
+      shadowmap_scene_vertices,
     };
-    pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
 
-    const auto shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles");
-    {
-      shadowmap_scene_triangles->SetBind(View::BIND_INDEX_ARRAY);
-      shadowmap_scene_triangles->SetByteOffset(0);
-      shadowmap_scene_triangles->SetByteCount(uint32_t(-1));
-    }
-
+    auto shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles",
+      Usage(USAGE_INDEX_ARRAY)
+    );
     const std::shared_ptr<View> ia_views[] = {
       shadowmap_scene_triangles,
     };
-    pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
 
-    pass->SetSubpassLayout(0, shadowmap_layout);
-    pass->SetSubpassConfig(0, shadowmap_config);
-    
-    return pass;
+    const Pass::Subpass subpasses[] = {
+      { shadowmap_config, shadowmap_layout, std::move(commands), {va_views, va_views + std::size(va_views)}, {ia_views, ia_views + std::size(ia_views)} }
+    };
+
+    auto shadowmap_shadow_map = shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index),
+      Usage(USAGE_DEPTH_STENCIL),
+      { index, 1 }
+    );
+
+    const Pass::DSAttachment ds_attachments[] = {
+      { shadowmap_shadow_map, { 1.0f, std::nullopt }},
+    };
+
+    shadowmap_passes[index] = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowmap_pass_" + std::to_string(index),
+      Pass::TYPE_GRAPHIC,
+      { subpasses, uint32_t(std::size(subpasses)) },
+      {},
+      { ds_attachments, uint32_t(std::size(ds_attachments)) }
+    );
   }
 
-  std::shared_ptr<Layout> Spark::RegisterReflectionLayout(const std::string& name)
+  void Spark::CreateUnshadowedLayout()
   {
-    const auto layout = device->CreateLayout(name);
-    
-    const Layout::Sampler samplers[] = {
-    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f }
-    };
-    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
+    auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
 
-    const auto reflection_level_data = reflection_probe_data->CreateView("spark_reflection_level_data");
-    {
-      reflection_level_data->SetBind(View::BIND_CONSTANT_DATA);
-      reflection_level_data->SetByteOffset(0);
-      reflection_level_data->SetByteCount(sizeof(ReflectionProbeLevel));
-    }
+    auto unshadowed_camera_data = camera_data->CreateView("spark_unshadowed_camera_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
 
-    const std::shared_ptr<View> sb_views[] = {
-      reflection_level_data,
-    };
-    layout->UpdateSBViews({ sb_views, uint32_t(std::size(sb_views)) });
-
-    const auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture");
-    {
-      skybox_skybox_texture->SetBind(View::BIND_SHADER_RESOURCE);
-      skybox_skybox_texture->SetUsage(View::USAGE_CUBEMAP_LAYER);
-    }
-
-    const std::shared_ptr<View> ri_views[] = {
-      skybox_skybox_texture
-    };
-    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
-
-    return layout;
-  }
-
-  std::shared_ptr<Config> Spark::RegisterReflectionConfig(const std::string& name, const uint32_t& mip_level)
-  {
-    const auto config = device->CreateConfig(name);
-
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-
-    config->SetSource(shader_ss.str());
-    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_GS | Config::COMPILATION_PS));
-    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-    config->SetIndexer(Config::INDEXER_32_BIT);
-
-    const Config::Attribute attributes[] = {
-      { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-      { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
-    };
-    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
-
-    config->SetFillMode(Config::FILL_SOLID);
-    config->SetCullMode(Config::CULL_NONE);
-    config->SetClipEnabled(false);
-
-    const Config::Blend blends[] = {
-      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-    };
-    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-    config->SetATCEnabled(false);
-
-    config->SetDepthEnabled(false);
-    config->SetDepthWrite(false);
-
-    const auto mip_size = reflection_probe_size >> mip_level;
-
-    const Config::Viewport viewports[] = {
-      { 0.0f, 0.0f, float(mip_size), float(mip_size), 0.0f, 1.0f },
-    };
-    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
-
-    return config;
-  }
-
-  std::shared_ptr<Pass> Spark::RegisterReflectionPass(const std::string& name, const uint32_t& mip_level)
-  {
-    const auto pass = device->CreatePass(name);
-
-    pass->SetExtentX(reflection_probe_size >> mip_level);
-    pass->SetExtentY(reflection_probe_size >> mip_level);
-
-    pass->SetType(Pass::TYPE_GRAPHIC);
-    pass->SetEnabled(true);
-
-    const auto reflection_color_target = reflection_probe->CreateView("spark_reflection_color_target");
-    {
-      reflection_color_target->SetBind(View::BIND_RENDER_TARGET);
-      reflection_color_target->SetLayerOffset(0);
-      reflection_color_target->SetLayerCount(6);
-
-      reflection_color_target->SetMipmapCount(1);
-      reflection_color_target->SetMipmapOffset(mip_level);
-    }
-
-    const std::shared_ptr<View> rt_views[] = {
-      reflection_color_target,
-    };
-    pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-    const Pass::RTValue rt_values[] = {
-      std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f },
-    };
-    pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-    pass->SetSubpassCount(1);
-
-
-    Pass::Command commands[] = {
-      {nullptr, {6, 6, 0, 0, 0, 0, 0, 0}},
-    };
-    commands[0].offsets = { mip_level * uint32_t(sizeof(ReflectionProbeLevel)) };
-    pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
-
-    const auto reflection_probe_vertices = skybox_vertices->CreateView("spark_reflection_vertices");
-    {
-      reflection_probe_vertices->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const std::shared_ptr<View> va_views[] = {
-      reflection_probe_vertices,
-    };
-    pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
-
-    const auto reflection_probe_triangles = skybox_triangles->CreateView("spark_reflection_triangles");
-    {
-      reflection_probe_triangles->SetBind(View::BIND_INDEX_ARRAY);
-    }
-
-    const std::shared_ptr<View> ia_views[] = {
-      reflection_probe_triangles,
-    };
-    pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
-
-    pass->SetSubpassLayout(0, reflection_probe_layout);
-    pass->SetSubpassConfig(0, reflection_probe_configs[mip_level]);
-
-    return pass;
-  }
-
-  std::shared_ptr<Layout> Spark::RegisterUnshadowedLayout(const std::string& name)
-  {
-    const auto layout = device->CreateLayout(name);
-
-    const Layout::Sampler samplers[] = {
-    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    };
-    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-
-    const auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data");
-    {
-      unshadowed_screen_data->SetBind(View::BIND_CONSTANT_DATA);
-      unshadowed_screen_data->SetByteOffset(0);
-      unshadowed_screen_data->SetByteCount(uint32_t(-1));
-    }
-
-    const auto unshadowed_camera_data = camera_data->CreateView("spark_unshadowed_camera_data");
-    {
-      unshadowed_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      unshadowed_camera_data->SetByteOffset(0);
-      unshadowed_camera_data->SetByteCount(uint32_t(-1));
-    }
-
-    const auto unshadowed_shadow_data = shadow_data->CreateView("spark_unshadowed_shadow_data");
-    {
-      unshadowed_shadow_data->SetBind(View::BIND_CONSTANT_DATA);
-      unshadowed_shadow_data->SetByteOffset(0);
-      unshadowed_shadow_data->SetByteCount(sizeof(Frustum));
-    }
+    auto unshadowed_shadow_data = shadow_data->CreateView("spark_unshadowed_shadow_data",
+      Usage(USAGE_CONSTANT_DATA),
+      { 0, uint32_t(sizeof(Frustum)) }
+    );
 
     const std::shared_ptr<View> ub_views[] = {
       unshadowed_screen_data,
       unshadowed_camera_data,
       unshadowed_shadow_data,
     };
-    layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
 
-    const auto unshadowed_scene_instances = scene_instances->CreateView("spark_unshadowed_scene_instances");
-    {
-      unshadowed_scene_instances->SetBind(View::BIND_CONSTANT_DATA);
-      unshadowed_scene_instances->SetByteOffset(0);
-      unshadowed_scene_instances->SetByteCount(sizeof(Instance));
-    }
+    auto unshadowed_scene_instances = scene_instances->CreateView("spark_unshadowed_scene_instances",
+      Usage(USAGE_CONSTANT_DATA),
+      { 0, uint32_t(sizeof(Instance)) }
+    );
 
     const std::shared_ptr<View> ue_views[] = {
       unshadowed_scene_instances
     };
-    layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
 
 
-    const auto unshadowed_scene_textures0 = scene_textures0->CreateView("spark_unshadowed_scene_textures0");
-    {
-      unshadowed_scene_textures0->SetBind(View::BIND_SHADER_RESOURCE);
-    }
+    auto unshadowed_scene_textures0 = scene_textures0->CreateView("spark_unshadowed_scene_textures0",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
 
-    const auto unshadowed_scene_textures1 = scene_textures1->CreateView("spark_unshadowed_scene_textures1");
-    {
-      unshadowed_scene_textures1->SetBind(View::BIND_SHADER_RESOURCE);
-    }
+    auto unshadowed_scene_textures1 = scene_textures1->CreateView("spark_unshadowed_scene_textures1",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
 
-    const auto unshadowed_scene_textures2 = scene_textures2->CreateView("spark_unshadowed_scene_textures2");
-    {
-      unshadowed_scene_textures2->SetBind(View::BIND_SHADER_RESOURCE);
-    }
+    auto unshadowed_scene_textures2 = scene_textures2->CreateView("spark_unshadowed_scene_textures2",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
 
-    const auto unshadowed_scene_textures3 = scene_textures3->CreateView("spark_unshadowed_scene_textures3");
-    {
-      unshadowed_scene_textures3->SetBind(View::BIND_SHADER_RESOURCE);
-    }
+    auto unshadowed_scene_textures3 = scene_textures3->CreateView("spark_unshadowed_scene_textures3",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
 
-    const auto unshadowed_light_maps = light_maps->CreateView("spark_unshadowed_light_maps");
-    {
-      unshadowed_light_maps->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto reflection_probe_texture = reflection_probe->CreateView("spark_reflection_probe_texture");
-    {
-      reflection_probe_texture->SetBind(View::BIND_SHADER_RESOURCE);
-      reflection_probe_texture->SetUsage(View::USAGE_CUBEMAP_LAYER);
-    }
+    auto unshadowed_light_maps = light_maps->CreateView("spark_unshadowed_light_maps",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
 
     const std::shared_ptr<View> ri_views[] = {
       unshadowed_scene_textures0,
@@ -847,284 +651,223 @@ namespace RayGene3D
       unshadowed_scene_textures2,
       unshadowed_scene_textures3,
       unshadowed_light_maps,
-      reflection_probe_texture,
     };
-    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
-    return layout;
+    const Layout::Sampler samplers[] = {
+      { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    };
+
+    unshadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_unshadowed_layout",
+      { ub_views, uint32_t(std::size(ub_views)) },
+      { ue_views, uint32_t(std::size(ue_views)) },
+      { ri_views, uint32_t(std::size(ri_views)) },
+      {},
+      {},
+      {},
+      { samplers, uint32_t(std::size(samplers)) },
+      {}
+    );
   }
 
-  std::shared_ptr<Config> Spark::RegisterUnshadowedConfig(const std::string& name)
+  void Spark::CreateUnshadowedConfig()
   {
-    const auto config = device->CreateConfig(name);
-
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_simple.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    config->SetSource(shader_ss.str());
-    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
-    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-    config->SetIndexer(Config::INDEXER_32_BIT);
-    config->SetDefineItem("TEST", "1");
-
-    //const Config::Attribute attributes[] = {
-    //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
-    //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 28, 64, FORMAT_R32_UINT, false },
-    //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
-    //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-    //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
-    //};
-    const Config::Attribute attributes[] = {
-      { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-      { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
-      { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-      { 1, 12, 16, FORMAT_R32_UINT, false },
-      { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-      { 2, 12, 16, FORMAT_R32_FLOAT, false },
-      { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
-      { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
+    std::pair<std::string, std::string> defines[] =
+    {
+      {"TEST", "1"},
     };
-    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
-    config->SetFillMode(Config::FILL_SOLID);
-    config->SetCullMode(Config::CULL_BACK);
-    config->SetClipEnabled(false);
-
-    const Config::Blend blends[] = {
-      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    const Config::IAState ia_state =
+    {
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
+      {
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
+        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 28, 64, FORMAT_R32_UINT, false },
+        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 44, 64, FORMAT_R32_FLOAT, false },
+        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+      }
     };
-    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-    config->SetATCEnabled(false);
-
-    config->SetDepthEnabled(true);
-    config->SetDepthWrite(true);
-    config->SetDepthComparison(Config::COMPARISON_LESS);
-
-    const Config::Viewport viewports[] = {
-      { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
+    
+    const Config::RCState rc_state =
+    {
+      Config::FILL_SOLID,
+      Config::CULL_FRONT,
+      {
+        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
+      },
     };
-    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
 
-    return config;
+    const Config::DSState ds_state =
+    {
+      true, //depth_enabled
+      true, //depth_write
+      Config::COMPARISON_LESS //depth_comparison
+    };
+
+    const Config::OMState om_state =
+    {
+      false,
+      {
+        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
+      }
+    };
+
+    unshadowed_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_unshadowed_config",
+      shader_ss.str(),
+      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+      { defines, uint32_t(std::size(defines)) },
+      ia_state,
+      rc_state,
+      ds_state,
+      om_state
+    );
   }
 
-  std::shared_ptr<Pass> Spark::RegisterUnshadowedPass(const std::string& name)
+  void Spark::CreateUnshadowedPass()
   {
-    const auto pass = device->CreatePass(name);
-
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-
-    pass->SetType(Pass::TYPE_GRAPHIC);
-    pass->SetEnabled(true);
-
-    pass->SetExtentX(extent_x);
-    pass->SetExtentY(extent_y);
-
-    const auto unshadowed_color_target = color_target->CreateView("spark_unshadowed_color_target");
-    {
-      unshadowed_color_target->SetBind(View::BIND_RENDER_TARGET);
-    }
-
-    const std::shared_ptr<View> rt_views[] = {
-      unshadowed_color_target,
-    };
-    pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-    const auto unshadowed_depth_target = depth_target->CreateView("spark_unshadowed_depth_target");
-    {
-      unshadowed_depth_target->SetBind(View::BIND_DEPTH_STENCIL);
-    }
-
-    const std::shared_ptr<View> ds_views[] = {
-      unshadowed_depth_target,
-    };
-    pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-    const Pass::RTValue rt_values[] = {
-      std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
-    };
-    pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-    const Pass::DSValue ds_values[] = {
-      { 1.0f, std::nullopt },
-    };
-    pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-    pass->SetSubpassCount(ShadingSubpass::SUBPASS_MAX_COUNT);
-
+    Pass::Subpass subpasses[ShadingSubpass::SUBPASS_MAX_COUNT] = {};
     {
       const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-      std::vector<Pass::Command> commands(instance_count);
-      for (uint32_t j = 0; j < instance_count; ++j)
+      auto unshadowed_graphic_arguments = std::vector<std::shared_ptr<View>>(instance_count);
+      for (uint32_t j = 0; j < uint32_t(unshadowed_graphic_arguments.size()); ++j)
       {
-        const auto unshadowed_graphic_argument = graphic_arguments->CreateView("spark_unshadowed_graphic_argument_" + std::to_string(j));
-        unshadowed_graphic_argument->SetBind(View::BIND_COMMAND_INDIRECT);
-        unshadowed_graphic_argument->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
-        unshadowed_graphic_argument->SetByteCount(uint32_t(sizeof(Pass::Argument)));
-
-        commands[j].view = unshadowed_graphic_argument;
-        commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
+        unshadowed_graphic_arguments[j] = graphic_arguments->CreateView("spark_unshadowed_graphic_argument_" + std::to_string(j),
+          Usage(USAGE_COMMAND_INDIRECT),
+          { j * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
+        );
+      }
+      std::vector<Pass::Command> unshadowed_commands(instance_count);
+      for (uint32_t j = 0; j < uint32_t(unshadowed_commands.size()); ++j)
+      {
+        unshadowed_commands[j].view = unshadowed_graphic_arguments[j];
+        unshadowed_commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
       }
 
-      pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_OPAQUE, { commands.data(), uint32_t(commands.size()) });
-
-      const auto unshadowed_scene_vertices0 = scene_vertices0->CreateView("spark_unshadowed_scene_vertices0");
-      {
-        unshadowed_scene_vertices0->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const auto unshadowed_scene_vertices1 = scene_vertices1->CreateView("spark_unshadowed_scene_vertices1");
-      {
-        unshadowed_scene_vertices1->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const auto unshadowed_scene_vertices2 = scene_vertices2->CreateView("spark_unshadowed_scene_vertices2");
-      {
-        unshadowed_scene_vertices2->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const auto unshadowed_scene_vertices3 = scene_vertices3->CreateView("spark_unshadowed_scene_vertices3");
-      {
-        unshadowed_scene_vertices3->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const std::shared_ptr<View> va_views[] = {
-        unshadowed_scene_vertices0,
-        unshadowed_scene_vertices1,
-        unshadowed_scene_vertices2,
-        unshadowed_scene_vertices3,
+      auto unshadowed_scene_vertices = scene_vertices->CreateView("spark_unshadowed_scene_vertices",
+        Usage(USAGE_VERTEX_ARRAY)
+      );
+      std::vector<std::shared_ptr<View>> unshadowed_va_views = {
+        unshadowed_scene_vertices,
       };
-      pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_OPAQUE, { va_views, uint32_t(std::size(va_views)) });
 
-      const auto unshadowed_scene_triangles = scene_triangles->CreateView("spark_unshadowed_scene_triangles");
-      {
-        unshadowed_scene_triangles->SetBind(View::BIND_INDEX_ARRAY);
-      }
-
-      const std::shared_ptr<View> ia_views[] = {
+      auto unshadowed_scene_triangles = scene_triangles->CreateView("spark_unshadowed_scene_triangles",
+        Usage(USAGE_INDEX_ARRAY)
+      );
+      std::vector<std::shared_ptr<View>> unshadowed_ia_views = {
         unshadowed_scene_triangles,
       };
-      pass->UpdateSubpassIAViews(ShadingSubpass::SUBPASS_OPAQUE, { ia_views, uint32_t(std::size(ia_views)) });
 
-      pass->SetSubpassLayout(ShadingSubpass::SUBPASS_OPAQUE, unshadowed_layout);
-      pass->SetSubpassConfig(ShadingSubpass::SUBPASS_OPAQUE, unshadowed_config);
+      subpasses[ShadingSubpass::SUBPASS_OPAQUE] =
+      {
+        unshadowed_config, unshadowed_layout,
+        std::move(unshadowed_commands),
+        std::move(unshadowed_va_views),
+        std::move(unshadowed_ia_views)
+      };
     }
-
     {
-      Pass::Command commands[] = {
+      const Pass::Command skybox_commands[] = {
         {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
       };
-      pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_SKYBOX, { commands, uint32_t(std::size(commands)) });
 
-      const auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices");
-      {
-        skybox_skybox_vertices->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const std::shared_ptr<View> va_views[] = {
+      auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
+        Usage(USAGE_VERTEX_ARRAY)
+      );
+      const std::shared_ptr<View> skybox_va_views[] = {
         skybox_skybox_vertices,
       };
-      pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_SKYBOX, { va_views, uint32_t(std::size(va_views)) });
 
-      const auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles");
-      {
-        skybox_skybox_triangles->SetBind(View::BIND_INDEX_ARRAY);
-      }
-
-      const std::shared_ptr<View> ia_views[] = {
+      auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
+        Usage(USAGE_INDEX_ARRAY)
+      );
+      const std::shared_ptr<View> skybox_ia_views[] = {
         skybox_skybox_triangles,
       };
-      pass->UpdateSubpassIAViews(ShadingSubpass::SUBPASS_SKYBOX, { ia_views, uint32_t(std::size(ia_views)) });
 
-      pass->SetSubpassLayout(ShadingSubpass::SUBPASS_SKYBOX, skybox_layout);
-      pass->SetSubpassConfig(ShadingSubpass::SUBPASS_SKYBOX, skybox_config);
+      subpasses[ShadingSubpass::SUBPASS_SKYBOX] =
+      {
+        skybox_config, skybox_layout,
+        { skybox_commands, skybox_commands + std::size(skybox_commands) },
+        { skybox_va_views, skybox_va_views + std::size(skybox_va_views) },
+        { skybox_ia_views, skybox_ia_views + std::size(skybox_ia_views) }
+      };
     }
 
-    return pass;
+    auto unshadowed_color_target = color_target->CreateView("spark_unshadowed_color_target",
+      Usage(USAGE_RENDER_TARGET)
+    );
+    const Pass::RTAttachment rt_attachments[] = {
+      unshadowed_color_target, std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
+    };
+
+    auto unshadowed_depth_target = depth_target->CreateView("spark_unshadowed_depth_target",
+      Usage(USAGE_DEPTH_STENCIL)
+    );
+    const Pass::DSAttachment ds_attachments[] = {
+      unshadowed_depth_target, { 1.0f, std::nullopt },
+    };
+
+    unshadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_unshadowed_pass",
+      Pass::TYPE_GRAPHIC,
+      { subpasses, uint32_t(std::size(subpasses)) },
+      { rt_attachments, uint32_t(std::size(rt_attachments)) },
+      { ds_attachments, uint32_t(std::size(ds_attachments)) }
+    );
   }
 
-  std::shared_ptr<Layout> Spark::RegisterShadowedLayout(const std::string& name)
+  void Spark::CreateShadowedLayout()
   {
-    const auto layout = device->CreateLayout(name);
-    
-    const Layout::Sampler samplers[] = {
-    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
-    };
-    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-
-    const auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data");
-    {
-      shadowed_screen_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadowed_screen_data->SetByteOffset(0);
-      shadowed_screen_data->SetByteCount(uint32_t(-1));
-    }
-
-    const auto shadowed_camera_data = camera_data->CreateView("spark_shadowed_camera_data");
-    {
-      shadowed_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadowed_camera_data->SetByteOffset(0);
-      shadowed_camera_data->SetByteCount(uint32_t(-1));
-    }
-
-    const auto shadowed_shadow_data = shadow_data->CreateView("spark_shadowed_shadow_data");
-    {
-      shadowed_shadow_data->SetBind(View::BIND_CONSTANT_DATA);
-      shadowed_shadow_data->SetByteOffset(0);
-      shadowed_shadow_data->SetByteCount(sizeof(Frustum));
-    }
-
+    auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
+    auto shadowed_camera_data = camera_data->CreateView("spark_shadowed_camera_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
+    auto shadowed_shadow_data = shadow_data->CreateView("spark_shadowed_shadow_data",
+      Usage(USAGE_CONSTANT_DATA),
+      { 0, sizeof(Frustum) }
+    );
     const std::shared_ptr<View> ub_views[] = {
       shadowed_screen_data,
       shadowed_camera_data,
       shadowed_shadow_data,
     };
-    layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
+    //shadowed_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
-    const auto shadowed_scene_instances = scene_instances->CreateView("spark_shadowed_scene_instances");
-    {
-      shadowed_scene_instances->SetBind(View::BIND_CONSTANT_DATA);
-      shadowed_scene_instances->SetByteOffset(0);
-      shadowed_scene_instances->SetByteCount(sizeof(Instance));
-    }
-
+    auto shadowed_scene_instances = scene_instances->CreateView("spark_shadowed_scene_instances",
+      Usage(USAGE_CONSTANT_DATA),
+      { 0, sizeof(Instance) }
+    );
     const std::shared_ptr<View> ue_views[] = {
       shadowed_scene_instances
     };
-    layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
+    //shadowed_layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
 
-    const auto shadowed_scene_textures0 = scene_textures0->CreateView("spark_shadowed_scene_textures0");
-    {
-      shadowed_scene_textures0->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto shadowed_scene_textures1 = scene_textures1->CreateView("spark_shadowed_scene_textures1");
-    {
-      shadowed_scene_textures1->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto shadowed_scene_textures2 = scene_textures2->CreateView("spark_shadowed_scene_textures2");
-    {
-      shadowed_scene_textures2->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto shadowed_scene_textures3 = scene_textures3->CreateView("spark_shadowed_scene_textures3");
-    {
-      shadowed_scene_textures3->SetBind(View::BIND_SHADER_RESOURCE);
-    }
-
-    const auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map");
-    {
-      shadowed_shadow_map->SetBind(View::BIND_SHADER_RESOURCE);
-      shadowed_shadow_map->SetUsage(View::USAGE_CUBEMAP_LAYER);
-    }
-
+    auto shadowed_scene_textures0 = scene_textures0->CreateView("spark_shadowed_scene_textures0",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+    auto shadowed_scene_textures1 = scene_textures1->CreateView("spark_shadowed_scene_textures1",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+    auto shadowed_scene_textures2 = scene_textures2->CreateView("spark_shadowed_scene_textures2",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+    auto shadowed_scene_textures3 = scene_textures3->CreateView("spark_shadowed_scene_textures3",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+    auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
+      Usage(USAGE_SHADER_RESOURCE),
+      View::Bind(View::BIND_CUBEMAP_LAYER)
+    );
     const std::shared_ptr<View> ri_views[] = {
       shadowed_scene_textures0,
       shadowed_scene_textures1,
@@ -1132,517 +875,615 @@ namespace RayGene3D
       shadowed_scene_textures3,
       shadowed_shadow_map,
     };
-    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
-    return layout;
+    const Layout::Sampler samplers[] = {
+      { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+      { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+    };
+
+    shadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_shadowed_layout",
+      { ub_views, uint32_t(std::size(ub_views)) },
+      { ue_views, uint32_t(std::size(ue_views)) },
+      { ri_views, uint32_t(std::size(ri_views)) },
+      {},
+      {},
+      {},
+      { samplers, uint32_t(std::size(samplers)) },
+      {}
+    );
   }
 
 
-  std::shared_ptr<Config> Spark::RegisterShadowedConfig(const std::string& name)
+  void Spark::CreateShadowedConfig()
   {
-    const auto config = device->CreateConfig(name);
-    
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_advanced.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    config->SetSource(shader_ss.str());
-    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
-    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-    config->SetIndexer(Config::INDEXER_32_BIT);
-
-    //const Config::Attribute attributes[] = {
-    //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 12, 64, FORMAT_R8G8B8A8_UINT, false },
-    //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 28, 64, FORMAT_R32_UINT, false },
-    //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-    //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
-    //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-    //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
-    //};
-
-    const Config::Attribute attributes[] = {
-      { 0,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-      { 0, 12, 16, FORMAT_R8G8B8A8_UNORM, false },
-      { 1,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-      { 1, 12, 16, FORMAT_R32_UINT, false },
-      { 2,  0, 16, FORMAT_R32G32B32_FLOAT, false },
-      { 2, 12, 16, FORMAT_R32_FLOAT, false },
-      { 3,  0, 16, FORMAT_R32G32_FLOAT, false },
-      { 3,  8, 16, FORMAT_R32G32_FLOAT, false },
+    std::pair<std::string, std::string> defines[] =
+    {
+      {"TEST", "1"},
     };
-    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
-    config->SetFillMode(Config::FILL_SOLID);
-    config->SetCullMode(Config::CULL_BACK);
-    config->SetClipEnabled(false);
-
-    const Config::Blend blends[] = {
-      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    const Config::IAState ia_state =
+    {
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
+      {
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
+        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 28, 64, FORMAT_R32_UINT, false },
+        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+        { 0, 44, 64, FORMAT_R32_FLOAT, false },
+        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+      }
     };
-    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-    config->SetATCEnabled(false);
 
-    config->SetDepthEnabled(true);
-    config->SetDepthWrite(true);
-    config->SetDepthComparison(Config::COMPARISON_LESS);
-
-    const Config::Viewport viewports[] = {
-      { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
+    const Config::RCState rc_state =
+    {
+      Config::FILL_SOLID,
+      Config::CULL_FRONT,
+      {
+        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
+      },
     };
-    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
 
-    return config;
+    const Config::DSState ds_state =
+    {
+      true, //depth_enabled
+      true, //depth_write
+      Config::COMPARISON_LESS //depth_comparison
+    };
+
+    const Config::OMState om_state =
+    {
+      false,
+      {
+        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
+      }
+    };
+
+    shadowed_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_shadowed_config",
+      shader_ss.str(),
+      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+      { defines, uint32_t(std::size(defines)) },
+      ia_state,
+      rc_state,
+      ds_state,
+      om_state
+    );
   }
 
 
-  std::shared_ptr<Pass> Spark::RegisterShadowedPass(const std::string& name)
+  void Spark::CreateShadowedPass()
   {
-    const auto pass = device->CreatePass(name);
-
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-
-    pass->SetType(Pass::TYPE_GRAPHIC);
-    pass->SetEnabled(true);
-
-    pass->SetExtentX(extent_x);
-    pass->SetExtentY(extent_y);
-
-    const auto shadowed_color_target = color_target->CreateView("spark_shadowed_color_target");
-    {
-      shadowed_color_target->SetBind(View::BIND_RENDER_TARGET);
-    }
-
-    const std::shared_ptr<View> rt_views[] = {
-      shadowed_color_target,
-    };
-    pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-    const auto shadowed_depth_target = depth_target->CreateView("spark_shadowed_depth_target");
-    {
-      shadowed_depth_target->SetBind(View::BIND_DEPTH_STENCIL);
-    }
-
-    const std::shared_ptr<View> ds_views[] = {
-      shadowed_depth_target,
-    };
-    pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-    const Pass::RTValue rt_values[] = {
-      std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
-    };
-    pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-    const Pass::DSValue ds_values[] = {
-      { 1.0f, std::nullopt },
-    };
-    pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-    pass->SetSubpassCount(ShadingSubpass::SUBPASS_MAX_COUNT);
-
+    Pass::Subpass subpasses[ShadingSubpass::SUBPASS_MAX_COUNT] = {};
     {
       const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-      std::vector<Pass::Command> commands(instance_count);
-      for (uint32_t j = 0; j < instance_count; ++j)
+      auto shadowed_graphic_arguments = std::vector<std::shared_ptr<View>>(instance_count);
+      for (uint32_t j = 0; j < uint32_t(shadowed_graphic_arguments.size()); ++j)
       {
-        const auto shadowed_graphic_arguments = graphic_arguments->CreateView("spark_shadowed_graphic_arguments_" + std::to_string(j));
-        shadowed_graphic_arguments->SetBind(View::BIND_COMMAND_INDIRECT);
-        shadowed_graphic_arguments->SetByteOffset(j * uint32_t(sizeof(Pass::Argument)));
-        shadowed_graphic_arguments->SetByteCount(uint32_t(sizeof(Pass::Argument)));
-
-        commands[j].view = shadowed_graphic_arguments;
-        commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
+        shadowed_graphic_arguments[j] = graphic_arguments->CreateView("spark_shadowed_graphic_argument_" + std::to_string(j),
+          Usage(USAGE_COMMAND_INDIRECT),
+          { j * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
+        );
+      }
+      std::vector<Pass::Command> shadowed_commands(instance_count);
+      for (uint32_t j = 0; j < uint32_t(shadowed_commands.size()); ++j)
+      {
+        shadowed_commands[j].view = shadowed_graphic_arguments[j];
+        shadowed_commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
       }
 
-      pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_OPAQUE, { commands.data(), uint32_t(commands.size()) });
-
-      const auto shadowed_scene_vertices0 = scene_vertices0->CreateView("spark_shadowed_scene_vertices0");
-      {
-        shadowed_scene_vertices0->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const auto shadowed_scene_vertices1 = scene_vertices1->CreateView("spark_shadowed_scene_vertices1");
-      {
-        shadowed_scene_vertices1->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const auto shadowed_scene_vertices2 = scene_vertices2->CreateView("spark_shadowed_scene_vertices2");
-      {
-        shadowed_scene_vertices2->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const auto shadowed_scene_vertices3 = scene_vertices3->CreateView("spark_shadowed_scene_vertices3");
-      {
-        shadowed_scene_vertices3->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const std::shared_ptr<View> va_views[] = {
-        shadowed_scene_vertices0,
-        shadowed_scene_vertices1,
-        shadowed_scene_vertices2,
-        shadowed_scene_vertices3,
+      auto shadowed_scene_vertices = scene_vertices->CreateView("spark_shadowed_scene_vertices",
+        Usage(USAGE_VERTEX_ARRAY)
+      );
+      std::vector<std::shared_ptr<View>> shadowed_va_views = {
+        shadowed_scene_vertices,
       };
-      pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_OPAQUE, { va_views, uint32_t(std::size(va_views)) });
 
-      const auto shadowed_scene_triangles = scene_triangles->CreateView("spark_shadowed_scene_triangles");
-      {
-        shadowed_scene_triangles->SetBind(View::BIND_INDEX_ARRAY);
-      }
-
-      const std::shared_ptr<View> ia_views[] = {
+      auto shadowed_scene_triangles = scene_triangles->CreateView("spark_shadowed_scene_triangles",
+        Usage(USAGE_INDEX_ARRAY)
+      );
+      std::vector<std::shared_ptr<View>> shadowed_ia_views = {
         shadowed_scene_triangles,
       };
-      pass->UpdateSubpassIAViews(ShadingSubpass::SUBPASS_OPAQUE, { ia_views, uint32_t(std::size(ia_views)) });
 
-      pass->SetSubpassLayout(ShadingSubpass::SUBPASS_OPAQUE, shadowed_layout);
-      pass->SetSubpassConfig(ShadingSubpass::SUBPASS_OPAQUE, shadowed_config);
+      subpasses[ShadingSubpass::SUBPASS_OPAQUE] =
+      {
+        shadowed_config, shadowed_layout,
+        std::move(shadowed_commands),
+        std::move(shadowed_va_views),
+        std::move(shadowed_ia_views)
+      };
     }
-
     {
-      Pass::Command commands[] = {
+      const Pass::Command skybox_commands[] = {
         {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
       };
-      pass->UpdateSubpassCommands(ShadingSubpass::SUBPASS_SKYBOX, { commands, uint32_t(std::size(commands)) });
 
-      const auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices");
-      {
-        skybox_skybox_vertices->SetBind(View::BIND_VERTEX_ARRAY);
-      }
-
-      const std::shared_ptr<View> va_views[] = {
+      auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
+        Usage(USAGE_VERTEX_ARRAY)
+      );
+      const std::shared_ptr<View> skybox_va_views[] = {
         skybox_skybox_vertices,
       };
-      pass->UpdateSubpassVAViews(ShadingSubpass::SUBPASS_SKYBOX, { va_views, uint32_t(std::size(va_views)) });
 
-      const auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles");
-      {
-        skybox_skybox_triangles->SetBind(View::BIND_INDEX_ARRAY);
-      }
-
-      const std::shared_ptr<View> ia_views[] = {
+      auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
+        Usage(USAGE_INDEX_ARRAY)
+      );
+      const std::shared_ptr<View> skybox_ia_views[] = {
         skybox_skybox_triangles,
       };
-      pass->UpdateSubpassIAViews(ShadingSubpass::SUBPASS_SKYBOX, { ia_views, uint32_t(std::size(ia_views)) });
 
-      pass->SetSubpassLayout(ShadingSubpass::SUBPASS_SKYBOX, skybox_layout);
-      pass->SetSubpassConfig(ShadingSubpass::SUBPASS_SKYBOX, skybox_config);
+      subpasses[ShadingSubpass::SUBPASS_SKYBOX] =
+      {
+        skybox_config, skybox_layout,
+        { skybox_commands, skybox_commands + std::size(skybox_commands) },
+        { skybox_va_views, skybox_va_views + std::size(skybox_va_views) },
+        { skybox_ia_views, skybox_ia_views + std::size(skybox_ia_views) }
+      };
     }
 
-    return pass;
+    auto shadowed_color_target = color_target->CreateView("spark_shadowed_color_target",
+      Usage(USAGE_RENDER_TARGET)
+    );
+    const Pass::RTAttachment rt_attachments[] = {
+      shadowed_color_target, std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f },
+    };
+
+    auto shadowed_depth_target = depth_target->CreateView("spark_shadowed_depth_target",
+      Usage(USAGE_DEPTH_STENCIL)
+    );
+    const Pass::DSAttachment ds_attachments[] = {
+      shadowed_depth_target, { 1.0f, std::nullopt },
+    };
+
+    shadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowed_pass",
+      Pass::TYPE_GRAPHIC,
+      { subpasses, uint32_t(std::size(subpasses)) },
+      { rt_attachments, uint32_t(std::size(rt_attachments)) },
+      { ds_attachments, uint32_t(std::size(ds_attachments)) }
+    );
   }
 
-  std::shared_ptr<Layout> Spark::RegisterSkyboxLayout(const std::string& name)
+  void Spark::CreateSkyboxLayout()
   {
-    const auto layout = device->CreateLayout(name);
-    
-    const Layout::Sampler samplers[] = {
-    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    };
-    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-
-
-    const auto skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data");
-    {
-      skybox_screen_data->SetBind(View::BIND_CONSTANT_DATA);
-    }
-
-    const auto skybox_camera_data = camera_data->CreateView("spark_skybox_camera_data");
-    {
-      skybox_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-    }
-
+    auto skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
+    auto skybox_camera_data = camera_data->CreateView("spark_skybox_camera_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
     const std::shared_ptr<View> ub_views[] = {
       skybox_screen_data,
       skybox_camera_data,
     };
-    layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
+    //skybox_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
-    const auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture");
-    {
-      skybox_skybox_texture->SetBind(View::BIND_SHADER_RESOURCE);
-      skybox_skybox_texture->SetUsage(View::USAGE_CUBEMAP_LAYER);
-    }
-
+    auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
     const std::shared_ptr<View> ri_views[] = {
       skybox_skybox_texture,
     };
-    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
+    //skybox_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
-    return layout;
+    const Layout::Sampler samplers[] = {
+      { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    };
+    //skybox_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
+
+    skybox_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_skybox_layout",
+      { ub_views, uint32_t(std::size(ub_views)) },
+      {},
+      { ri_views, uint32_t(std::size(ri_views)) },
+      {},
+      {},
+      {},
+      { samplers, uint32_t(std::size(samplers)) },
+      {}
+    );
   }
 
-  std::shared_ptr<Config> Spark::RegisterSkyboxConfig(const std::string& name)
+  void Spark::CreateSkyboxConfig()
   {
-    const auto config = device->CreateConfig(name);
-
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    config->SetSource(shader_ss.str());
-    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS));
-    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-    config->SetIndexer(Config::INDEXER_32_BIT);
-
-    const Config::Attribute attributes[] = {
-      { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-      { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+    std::pair<std::string, std::string> defines[] =
+    {
+      { "TEST", "1" },
     };
-    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
-    config->SetFillMode(Config::FILL_SOLID);
-    config->SetCullMode(Config::CULL_NONE);
-    config->SetClipEnabled(false);
-
-    const Config::Blend blends[] = {
-      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    const Config::IAState ia_state =
+    {
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
+      {
+        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+      }
     };
-    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-    config->SetATCEnabled(false);
 
-    config->SetDepthEnabled(true);
-    config->SetDepthWrite(false);
-    config->SetDepthComparison(Config::COMPARISON_EQUAL);
-
-    const Config::Viewport viewports[] = {
-      { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f },
+    const Config::RCState rc_state =
+    {
+      Config::FILL_SOLID,
+      Config::CULL_FRONT,
+      {
+        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
+      },
     };
-    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
 
-    return config;
+    const Config::DSState ds_state =
+    {
+      true, //depth_enabled
+      false, //depth_write
+      Config::COMPARISON_EQUAL //depth_comparison
+    };
+
+    const Config::OMState om_state =
+    {
+      false,
+      {
+        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
+      }
+    };
+
+    skybox_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_skybox_config",
+      shader_ss.str(),
+      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+      { defines, uint32_t(std::size(defines)) },
+      ia_state,
+      rc_state,
+      ds_state,
+      om_state
+    );
   }
 
-  std::shared_ptr<Pass> Spark::RegisterSkyboxPass(const std::string& name)
+  void Spark::CreateSkyboxPass()
   {
-    const auto pass = device->CreatePass(name);
-
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-
-    pass->SetType(Pass::TYPE_GRAPHIC);
-    pass->SetEnabled(true);
-
-    pass->SetExtentX(extent_x);
-    pass->SetExtentY(extent_y);
-
-    const auto skybox_color_target = color_target->CreateView("spark_skybox_color_target");
-    {
-      skybox_color_target->SetBind(View::BIND_RENDER_TARGET);
-    }
-
-    const std::shared_ptr<View> rt_views[] = {
-      skybox_color_target,
-    };
-    pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-    const auto skybox_depth_target = depth_target->CreateView("spark_skybox_depth_target");
-    {
-      skybox_depth_target->SetBind(View::BIND_DEPTH_STENCIL);
-    }
-
-    const std::shared_ptr<View> ds_views[] = {
-      skybox_depth_target,
-    };
-    pass->UpdateDSViews({ ds_views, uint32_t(std::size(ds_views)) });
-
-    const Pass::RTValue rt_values[] = {
-      std::nullopt,
-    };
-    pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-    const Pass::DSValue ds_values[] = {
-      { std::nullopt, std::nullopt },
-    };
-    pass->UpdateDSValues({ ds_values, uint32_t(std::size(ds_values)) });
-
-    pass->SetSubpassCount(1);
-
-    Pass::Command commands[] = {
+    const Pass::Command skybox_commands[] = {
       {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
     };
-    pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
 
-    const auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices");
-    {
-      skybox_skybox_vertices->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
-    const std::shared_ptr<View> va_views[] = {
+    auto skybox_skybox_vertices = skybox_vertices->CreateView("spark_skybox_vertices",
+      Usage(USAGE_VERTEX_ARRAY)
+    );
+    const std::shared_ptr<View> skybox_va_views[] = {
       skybox_skybox_vertices,
     };
-    pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
 
-    const auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles");
-    {
-      skybox_skybox_triangles->SetBind(View::BIND_INDEX_ARRAY);
-    }
-
-    const std::shared_ptr<View> ia_views[] = {
+    auto skybox_skybox_triangles = skybox_triangles->CreateView("spark_skybox_triangles",
+      Usage(USAGE_INDEX_ARRAY)
+    );
+    const std::shared_ptr<View> skybox_ia_views[] = {
       skybox_skybox_triangles,
     };
-    pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
 
-    pass->SetSubpassLayout(0, skybox_layout);
-    pass->SetSubpassConfig(0, skybox_config);
+    Pass::Subpass subpasses[] =
+    {
+      skybox_config, skybox_layout,
+      { skybox_commands, skybox_commands + std::size(skybox_commands) },
+      { skybox_va_views, skybox_va_views + std::size(skybox_va_views) },
+      { skybox_ia_views, skybox_ia_views + std::size(skybox_ia_views) }
+    };
 
-    return pass;
+    auto skybox_color_target = color_target->CreateView("spark_skybox_color_target",
+      Usage(USAGE_RENDER_TARGET)
+    );
+    const Pass::RTAttachment rt_attachments[] = {
+      skybox_color_target, std::nullopt,
+    };
+
+    auto skybox_depth_target = depth_target->CreateView("spark_skybox_depth_target",
+      Usage(USAGE_DEPTH_STENCIL)
+    );
+    const Pass::DSAttachment ds_attachments[] = {
+      skybox_depth_target, { std::nullopt, std::nullopt },
+    };
+
+    skybox_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_skybox_pass",
+      Pass::TYPE_GRAPHIC,
+      { subpasses, uint32_t(std::size(subpasses)) },
+      { rt_attachments, uint32_t(std::size(rt_attachments)) },
+      { ds_attachments, uint32_t(std::size(ds_attachments)) }
+    );
   }
 
-
-
-  std::shared_ptr<Layout> Spark::RegisterPresentLayout(const std::string& name)
+  void Spark::CreatePresentLayout()
   {
-    const auto layout = device->CreateLayout(name);
-
-    auto present_camera_data = camera_data->CreateView("spark_present_camera_data");
-    {
-      present_camera_data->SetBind(View::BIND_CONSTANT_DATA);
-      present_camera_data->SetByteOffset(0);
-      present_camera_data->SetByteCount(uint32_t(-1));
-    }
-    
+    auto present_camera_data = camera_data->CreateView("spark_present_camera_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
     const std::shared_ptr<View> ub_views[] = {
       present_camera_data,
     };
-    layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
-    layout->UpdateRBViews({});
-
-    layout->UpdateWBViews({});
-
-    auto present_color_target = color_target->CreateView("spark_present_color_target");
-    {
-      present_color_target->SetBind(View::BIND_SHADER_RESOURCE);
-      present_color_target->SetLayerOffset(0);
-      present_color_target->SetLayerCount(uint32_t(-1));
-    }
-
+    auto present_color_target = color_target->CreateView("spark_present_color_target",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
     const std::shared_ptr<View> ri_views[] = {
       present_color_target,
     };
-    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
     const std::shared_ptr<View> wi_views[] = {
-      view,
+      backbuffer_uav,
     };
-    layout->UpdateWIViews({ wi_views, uint32_t(std::size(wi_views)) });
 
-    return layout;
+    present_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_present_layout",
+      { ub_views, uint32_t(std::size(ub_views)) },
+      {},
+      { ri_views, uint32_t(std::size(ri_views)) },
+      { wi_views, uint32_t(std::size(wi_views)) },
+      {},
+      {},
+      {},
+      {}
+    );
   }
 
-  std::shared_ptr<Config> Spark::RegisterPresentConfig(const std::string& name)
+  void Spark::CreatePresentConfig()
   {
-    const auto config = device->CreateConfig(name);
-
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    config->SetSource(shader_ss.str());
-    config->SetCompilation(Config::COMPILATION_CS);
-
-    return config;
+    present_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_present_config",
+      shader_ss.str(),
+      Config::COMPILATION_CS,
+      {},
+      {},
+      {},
+      {},
+      {}
+    );
   }
 
-  std::shared_ptr<Pass> Spark::RegisterPresentPass(const std::string& name)
+  void Spark::CreatePresentPass()
   {
-    const auto pass = device->CreatePass(name);
-
-    pass->SetType(Pass::TYPE_COMPUTE);
-    pass->SetEnabled(true);
-
-    pass->SetSubpassCount(1);
-
-    const auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments");
-    {
-      present_compute_arguments->SetBind(View::BIND_COMMAND_INDIRECT);
-      present_compute_arguments->SetByteOffset(0);
-      present_compute_arguments->SetByteCount(uint32_t(-1));
-    }
-    
-    Pass::Command commands[] = {
-      {present_compute_arguments},
+    auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
+      Usage(USAGE_COMMAND_INDIRECT)
+    );
+    Pass::Command present_commands[] = {
+      { present_compute_arguments },
     };
-    pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
+    //present_pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
 
-    pass->SetSubpassLayout(0, present_layout);
-    pass->SetSubpassConfig(0, present_config);
+    //present_pass->SetSubpassLayout(0, present_layout);
+    //present_pass->SetSubpassConfig(0, present_config);
 
-    return pass;   
+    Pass::Subpass subpasses[] =
+    {
+      present_config, present_layout,
+      { present_commands, present_commands + std::size(present_commands) },
+      {},
+      {}
+    };
+
+    present_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_present_pass",
+      Pass::TYPE_COMPUTE,
+      { subpasses, uint32_t(std::size(subpasses)) },
+      {},
+      {}
+    );
   }
 
 
   void Spark::Initialize()
   {
-    color_target->Initialize();
-    depth_target->Initialize();
-    shadow_map->Initialize();
-    reflection_probe->Initialize();
-
-    screen_data->Initialize();
-    camera_data->Initialize();
-    shadow_data->Initialize();
-    reflection_probe_data->Initialize();
-    
-    scene_instances->Initialize();
-    scene_triangles->Initialize();
-    scene_vertices0->Initialize();
-    scene_vertices1->Initialize();
-    scene_vertices2->Initialize();
-    scene_vertices3->Initialize();
- 
-    scene_textures0->Initialize();
-    scene_textures1->Initialize();
-    scene_textures2->Initialize();
-    scene_textures3->Initialize();
-   
-    light_maps->Initialize();
-
-    skybox_vertices->Initialize();
-    skybox_triangles->Initialize();
-    skybox_texture->Initialize();
-
-    graphic_arguments->Initialize();
-    compute_arguments->Initialize();
-
-    reflection_probe_layout->Initialize();
-    shadowmap_layout->Initialize();
-    unshadowed_layout->Initialize();
-    shadowed_layout->Initialize();
-    skybox_layout->Initialize();
-    present_layout->Initialize();
-
-    for (auto i = 0; i < 7; ++i)
-    {
-      reflection_probe_configs[i]->Initialize();
-    }
-    shadowmap_config->Initialize();
-    unshadowed_config->Initialize();
-    shadowed_config->Initialize();
-    skybox_config->Initialize();
-    present_config->Initialize();
-
-    for (auto i = 0; i < 7; ++i)
-    {
-      reflection_probe_passes[i]->Initialize();
-    }
-    shadowmap_passes[0]->Initialize();
-    shadowmap_passes[1]->Initialize();
-    shadowmap_passes[2]->Initialize();
-    shadowmap_passes[3]->Initialize();
-    shadowmap_passes[4]->Initialize();
-    shadowmap_passes[5]->Initialize();    
-    unshadowed_pass->Initialize();
-    shadowed_pass->Initialize();
-    //skybox_pass->Initialize();
-    present_pass->Initialize();
   }
 
+
+  void Spark::DestroyColorTarget()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(color_target);
+    color_target.reset();
+  }
+
+  void Spark::DestroyDepthTarget()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(depth_target);
+    depth_target.reset();
+  }
+
+  void Spark::DestroyShadowMap()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(shadow_map);
+    shadow_map.reset();
+  }
+
+  void Spark::DestroyScreenData()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(screen_data);
+    screen_data.reset();
+  }
+
+  void Spark::DestroyCameraData()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(camera_data);
+    camera_data.reset();
+  }
+
+  void Spark::DestroyShadowData()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(shadow_data);
+    shadow_data.reset();
+  }
+
+  void Spark::DestroySceneInstances()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_instances);
+    scene_instances.reset();
+  }
+
+  void Spark::DestroySceneTriangles()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_triangles);
+    scene_triangles.reset();
+  }
+
+  void Spark::DestroySceneVertices()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_vertices);
+    scene_vertices.reset();
+  }
+
+  void Spark::DestroySceneTextures0()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures0);
+    scene_textures0.reset();
+  }
+
+  void Spark::DestroySceneTextures1()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures1);
+    scene_textures1.reset();
+  }
+
+  void Spark::DestroySceneTextures2()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures2);
+    scene_textures2.reset();
+  }
+
+  void Spark::DestroySceneTextures3()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures3);
+    scene_textures3.reset();
+  }
+
+  void Spark::DestroyLightMaps()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(light_maps);
+    light_maps.reset();
+  }
+
+  void Spark::DestroySkyboxVertices()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(skybox_vertices);
+    skybox_vertices.reset();
+  }
+
+  void Spark::DestroySkyboxTriangles()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(skybox_triangles);
+    skybox_triangles.reset();
+  }
+
+  void Spark::DestroySkyboxTexture()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(skybox_texture);
+    skybox_texture.reset();
+  }
+
+  void Spark::DestroyGraphicArguments()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(graphic_arguments);
+    graphic_arguments.reset();
+  }
+
+  void Spark::DestroyComputeArguments()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(compute_arguments);
+    compute_arguments.reset();
+  }
+
+  void Spark::DestroyShadowmapLayout()
+  {
+    wrap.GetCore()->GetDevice()->DestroyLayout(shadowmap_layout);
+    shadowmap_layout.reset();
+  }
+
+  void Spark::DestroyShadowmapConfig()
+  {
+    wrap.GetCore()->GetDevice()->DestroyConfig(shadowmap_config);
+    shadowmap_config.reset();
+  }
+
+  void Spark::DestroyShadowmapPass(uint32_t index)
+  {
+    wrap.GetCore()->GetDevice()->DestroyPass(shadowmap_passes[index]);
+    shadowmap_passes[index].reset();
+  }
+
+  void Spark::DestroyShadowedLayout()
+  {
+    wrap.GetCore()->GetDevice()->DestroyLayout(shadowed_layout);
+    shadowed_layout.reset();
+  }
+
+  void Spark::DestroyShadowedConfig()
+  {
+    wrap.GetCore()->GetDevice()->DestroyConfig(shadowed_config);
+    shadowed_config.reset();
+  }
+
+  void Spark::DestroyShadowedPass()
+  {
+    wrap.GetCore()->GetDevice()->DestroyPass(shadowed_pass);
+    shadowed_pass.reset();
+  }
+
+  void Spark::DestroyUnshadowedLayout()
+  {
+    wrap.GetCore()->GetDevice()->DestroyLayout(unshadowed_layout);
+    unshadowed_layout.reset();
+  }
+
+  void Spark::DestroyUnshadowedConfig()
+  {
+    wrap.GetCore()->GetDevice()->DestroyConfig(unshadowed_config);
+    unshadowed_config.reset();
+  }
+
+  void Spark::DestroyUnshadowedPass()
+  {
+    wrap.GetCore()->GetDevice()->DestroyPass(unshadowed_pass);
+    unshadowed_pass.reset();
+  }
+
+  void Spark::DestroySkyboxLayout()
+  {
+    wrap.GetCore()->GetDevice()->DestroyLayout(skybox_layout);
+    skybox_layout.reset();
+  }
+
+  void Spark::DestroySkyboxConfig()
+  {
+    wrap.GetCore()->GetDevice()->DestroyConfig(skybox_config);
+    skybox_config.reset();
+  }
+
+  void Spark::DestroySkyboxPass()
+  {
+    wrap.GetCore()->GetDevice()->DestroyPass(skybox_pass);
+    skybox_pass.reset();
+  }
+
+  void Spark::DestroyPresentLayout()
+  {
+    wrap.GetCore()->GetDevice()->DestroyLayout(present_layout);
+    present_layout.reset();
+  }
+
+  void Spark::DestroyPresentConfig()
+  {
+    wrap.GetCore()->GetDevice()->DestroyConfig(present_config);
+    present_config.reset();
+  }
+
+  void Spark::DestroyPresentPass()
+  {
+    wrap.GetCore()->GetDevice()->DestroyPass(present_pass);
+    present_pass.reset();
+  }
 
   void Spark::Use()
   {
@@ -1690,11 +1531,6 @@ namespace RayGene3D
       present_pass->SetEnabled(false);
       break;
     }
-    }
-
-    for (auto i = 0; i < 7; ++i)
-    {
-      reflection_probe_passes[i]->SetEnabled(false);
     }
 
 
@@ -1828,77 +1664,61 @@ namespace RayGene3D
 
   void Spark::Discard()
   {
-    color_target->Discard();
-    depth_target->Discard();
-    shadow_map->Discard();
-    reflection_probe->Discard();
-
-    screen_data->Discard();
-    camera_data->Discard();
-    shadow_data->Discard();
-    reflection_probe_data->Discard();
-
-    scene_instances->Discard();
-    scene_triangles->Discard();
-    scene_vertices0->Discard();
-    scene_vertices1->Discard();
-    scene_vertices2->Discard();
-    scene_vertices3->Discard();
-
-    scene_textures0->Discard();
-    scene_textures1->Discard();
-    scene_textures2->Discard();
-    scene_textures3->Discard();
-
-    light_maps->Discard();
-
-    skybox_vertices->Discard();
-    skybox_triangles->Discard();
-    skybox_texture->Discard();
-
-    graphic_arguments->Discard();
-    compute_arguments->Discard();
-
-    reflection_probe_layout->Discard();
-    shadowmap_layout->Discard();
-    unshadowed_layout->Discard();
-    shadowed_layout->Discard();
-    skybox_layout->Discard();
-    present_layout->Discard();
-
-    for (auto i = 0; i < 7; ++i)
-    {
-      reflection_probe_configs[i]->Discard();
-    }
-    shadowmap_config->Discard();
-    unshadowed_config->Discard();
-    shadowed_config->Discard();
-    skybox_config->Discard();
-    present_config->Discard();
-
-    for (auto i = 0; i < 7; ++i)
-    {
-      reflection_probe_passes[i]->Discard();
-    }
-    shadowmap_passes[0]->Discard();
-    shadowmap_passes[1]->Discard();
-    shadowmap_passes[2]->Discard();
-    shadowmap_passes[3]->Discard();
-    shadowmap_passes[4]->Discard();
-    shadowmap_passes[5]->Discard();
-    unshadowed_pass->Discard();
-    shadowed_pass->Discard();
-    //skybox_pass->Discard();
-    present_pass->Discard();
   }
 
-  Spark::Spark(const std::shared_ptr<Property>& property, const std::shared_ptr<Device>& device, const std::shared_ptr<View>& view)
-    : Usable("raygene")
-    , property(property)
-    , device(device)
-    , view(view)
+  Spark::Spark(Wrap& wrap)
+    : Broker("spark_broker", wrap)
   {
-    const auto prop_camera = property->GetObjectItem("camera");
+    const auto find_view_fn = [this](const std::shared_ptr<View>& view)
+    {
+      if (view->GetName().compare("backbuffer_ua_view") == 0)
+      {
+        this->backbuffer_uav = view;
+      }
+
+      if (view->GetName().compare("backbuffer_rt_view") == 0)
+      {
+        this->backbuffer_rtv = view;
+      }
+    };
+    wrap.GetCore()->VisitView(find_view_fn);
+
+
+    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
+
+    prop_scene = tree->GetObjectItem("scene_property");
+    {
+      prop_instances = prop_scene->GetObjectItem("instances");
+      prop_triangles = prop_scene->GetObjectItem("triangles");
+      prop_vertices = prop_scene->GetObjectItem("vertices");
+
+      //prop_vertices0 = prop_scene->GetObjectItem("vertices0");
+      //prop_vertices1 = prop_scene->GetObjectItem("vertices1");
+      //prop_vertices2 = prop_scene->GetObjectItem("vertices2");
+      //prop_vertices3 = prop_scene->GetObjectItem("vertices3");
+
+      prop_textures0 = prop_scene->GetObjectItem("textures0");
+      prop_textures1 = prop_scene->GetObjectItem("textures1");
+      prop_textures2 = prop_scene->GetObjectItem("textures2");
+      prop_textures3 = prop_scene->GetObjectItem("textures3");
+
+      prop_lightmaps = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
+      {
+        prop_lightmaps->SetArraySize(uint32_t(1));
+
+        const auto texel_value = glm::u8vec4(255, 255, 255, 255);
+        const auto texel_size = uint32_t(sizeof(texel_value));
+
+        const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+        texels_property->RawAllocate(texel_size);
+        texels_property->SetRawBytes({ &texel_value, texel_size }, 0);
+        prop_lightmaps->SetArrayItem(0, texels_property);
+      }
+
+      //prop_lightmaps = prop_scene->GetObjectItem("textures4");
+    }
+
+    prop_camera = tree->GetObjectItem("camera_property");
     {
       prop_eye = prop_camera->GetObjectItem("eye");
       prop_lookat = prop_camera->GetObjectItem("lookat");
@@ -1916,93 +1736,109 @@ namespace RayGene3D
       prop_counter = prop_camera->GetObjectItem("counter");
     }
 
-    const auto prop_scene = property->GetObjectItem("scene");
-    {
-      prop_instances = prop_scene->GetObjectItem("instances");
-      prop_triangles = prop_scene->GetObjectItem("triangles");
+    prop_skybox = tree->GetObjectItem("environment_property");
 
-      prop_vertices0 = prop_scene->GetObjectItem("vertices0");
-      prop_vertices1 = prop_scene->GetObjectItem("vertices1");
-      prop_vertices2 = prop_scene->GetObjectItem("vertices2");
-      prop_vertices3 = prop_scene->GetObjectItem("vertices3");
 
-      prop_textures0 = prop_scene->GetObjectItem("textures0");
-      prop_textures1 = prop_scene->GetObjectItem("textures1");
-      prop_textures2 = prop_scene->GetObjectItem("textures2");
-      prop_textures3 = prop_scene->GetObjectItem("textures3");
+    CreateColorTarget();
+    CreateDepthTarget();
+    CreateShadowMap();
 
-      prop_lightmaps = prop_scene->GetObjectItem("textures4");
-    }
+    CreateScreenData();
+    CreateCameraData();
+    CreateShadowData();
 
-    prop_skybox = property->GetObjectItem("environment");
+    CreateSceneInstances();
+    CreateSceneTriangles();
+    CreateSceneVertices();
 
-    reflection_probe = RegisterReflectionProbe("spark_reflection_probe");
+    CreateSceneTextures0();
+    CreateSceneTextures1();
+    CreateSceneTextures2();
+    CreateSceneTextures3();
 
-    shadow_map = RegisterShadowMap("spark_shadow_map");
-    color_target = RegisterColorTarget("spark_color_target");
-    depth_target = RegisterDepthTarget("spark_depth_target");
+    CreateLightMaps();
 
-    screen_data = RegisterScreenData("spark_screen_data");
-    camera_data = RegisterCameraData("spark_camera_data");
-    shadow_data = RegisterShadowData("spark_shadow_data");
-    reflection_probe_data = RegisterReflectionProbeData("spark_reflection_probe_data");
+    CreateSkyboxVertices();
+    CreateSkyboxTriangles();
+    CreateSkyboxTexture();
 
-    scene_instances = RegisterSceneInstances("spark_scene_instances");
-    scene_triangles = RegisterSceneTriangles("spark_scene_triangles");
-    scene_vertices0 = RegisterSceneVertices0("spark_scene_vertices0");
-    scene_vertices1 = RegisterSceneVertices1("spark_scene_vertices1");
-    scene_vertices2 = RegisterSceneVertices2("spark_scene_vertices2");
-    scene_vertices3 = RegisterSceneVertices3("spark_scene_vertices3");
+    CreateGraphicArguments();
+    CreateComputeArguments();
 
-    scene_textures0 = RegisterSceneTextures0("spark_scene_textures0");
-    scene_textures1 = RegisterSceneTextures1("spark_scene_textures1");
-    scene_textures2 = RegisterSceneTextures2("spark_scene_textures2");
-    scene_textures3 = RegisterSceneTextures3("spark_scene_textures3");
+    CreateShadowmapLayout();
+    CreateUnshadowedLayout();
+    CreateShadowedLayout();
+    CreateSkyboxLayout();
+    CreatePresentLayout();
 
-    light_maps = RegisterLightMaps("spark_light_maps");
+    CreateShadowmapConfig();
+    CreateUnshadowedConfig();
+    CreateShadowedConfig();
+    CreateSkyboxConfig();
+    CreatePresentConfig();
 
-    skybox_vertices = RegisterSkyboxVertices("spark_skybox_vertices");
-    skybox_triangles = RegisterSkyboxTriangles("spark_skybox_triangles");
-    skybox_texture = RegisterSkyboxTexture("spark_skybox_textures");
-
-    graphic_arguments = RegisterGraphicArguments("spark_graphic_arguments");
-    compute_arguments = RegisterComputeArguments("spark_compute_arguments");
-
-    reflection_probe_layout = RegisterReflectionLayout("spark_reflection_layout");
-    shadowmap_layout = RegisterShadowmapLayout("spark_shadowmap_layout");
-    shadowed_layout = RegisterShadowedLayout("spark_shadowed_layout");
-    unshadowed_layout = RegisterUnshadowedLayout("spark_unshadowed_layout");
-    skybox_layout = RegisterSkyboxLayout("spark_skybox_layout");
-    present_layout = RegisterPresentLayout("spark_present_layout");
-
-    for (auto i = 0; i < 7; ++i)
-    {
-      reflection_probe_configs[i] = RegisterReflectionConfig("spark_reflection_probe_config", i);
-    }
-
-    shadowmap_config = RegisterShadowmapConfig("spark_shadowmap_config");
-    shadowed_config = RegisterShadowedConfig("spark_shadowed_config");
-    unshadowed_config = RegisterUnshadowedConfig("spark_unshadowed_config");
-    skybox_config = RegisterSkyboxConfig("spark_skybox_config");
-    present_config = RegisterPresentConfig("spark_present_config");
-
-    for (auto i = 0; i < 7; ++i)
-    {
-      reflection_probe_passes[i] = RegisterReflectionPass("spark_reflectoin_pass", i);
-    }
-    shadowmap_passes[0] = RegisterShadowmapPass("spark_shadowmap_pass", 0);
-    shadowmap_passes[1] = RegisterShadowmapPass("spark_shadowmap_pass", 1);
-    shadowmap_passes[2] = RegisterShadowmapPass("spark_shadowmap_pass", 2);
-    shadowmap_passes[3] = RegisterShadowmapPass("spark_shadowmap_pass", 3);
-    shadowmap_passes[4] = RegisterShadowmapPass("spark_shadowmap_pass", 4);
-    shadowmap_passes[5] = RegisterShadowmapPass("spark_shadowmap_pass", 5);
-    shadowed_pass = RegisterShadowedPass("spark_shadowed_pass");
-    unshadowed_pass = RegisterUnshadowedPass("spark_unshadowed_pass");
-    //skybox_pass = RegisterSkyboxPass("spark_skybox_pass");
-    present_pass = RegisterPresentPass("spark_present_pass");
+    CreateShadowmapPass(0);
+    CreateShadowmapPass(1);
+    CreateShadowmapPass(2);
+    CreateShadowmapPass(3);
+    CreateShadowmapPass(4);
+    CreateShadowmapPass(5);
+    CreateUnshadowedPass();
+    CreateShadowedPass();
+    CreatePresentPass();
   }
 
   Spark::~Spark()
   {
+    DestroyPresentPass();
+    DestroyPresentLayout();
+    DestroyPresentConfig();
+    
+    DestroySkyboxPass();
+    DestroySkyboxLayout();
+    DestroySkyboxConfig();
+    
+    DestroyUnshadowedPass();
+    DestroyUnshadowedLayout();
+    DestroyUnshadowedConfig();
+
+    DestroyShadowedPass();
+    DestroyShadowedLayout();
+    DestroyShadowedConfig();
+
+    DestroyShadowmapPass(5);
+    DestroyShadowmapPass(4);
+    DestroyShadowmapPass(3);
+    DestroyShadowmapPass(2);
+    DestroyShadowmapPass(1);
+    DestroyShadowmapPass(0);
+    DestroyShadowmapLayout();
+    DestroyShadowmapConfig();
+
+    DestroyGraphicArguments();
+    DestroyComputeArguments();
+
+    DestroySkyboxVertices();
+    DestroySkyboxTriangles();
+    DestroySkyboxTexture();
+
+    DestroyLightMaps();
+
+    DestroySceneTextures0();
+    DestroySceneTextures1();
+    DestroySceneTextures2();
+    DestroySceneTextures3();
+
+    DestroySceneInstances();
+    DestroySceneTriangles();
+    DestroySceneVertices();
+
+    DestroyScreenData();
+    DestroyCameraData();
+    DestroyShadowData();
+
+    DestroyColorTarget();
+    DestroyDepthTarget();
+    DestroyShadowMap();
   }
 }

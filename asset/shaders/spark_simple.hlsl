@@ -16,9 +16,8 @@
 
 
 VK_BINDING(0) sampler sampler0 : register(s0);
-VK_BINDING(1) sampler sampler1 : register(s1);
 
-VK_BINDING(2) cbuffer constant0 : register(b0)
+VK_BINDING(1) cbuffer constant0 : register(b0)
 {
   uint extent_x       : packoffset(c0.x);
   uint extent_y       : packoffset(c0.y);
@@ -26,7 +25,7 @@ VK_BINDING(2) cbuffer constant0 : register(b0)
   uint rnd_seed       : packoffset(c0.w);
 }
 
-VK_BINDING(3) cbuffer constant1 : register(b1)
+VK_BINDING(2) cbuffer constant1 : register(b1)
 {
   float4x4 camera_view     : packoffset(c0.x);
   float4x4 camera_proj     : packoffset(c4.x);
@@ -34,7 +33,7 @@ VK_BINDING(3) cbuffer constant1 : register(b1)
   float4x4 camera_proj_inv : packoffset(c12.x);
 }
 
-VK_BINDING(4) cbuffer constant2 : register(b2)
+VK_BINDING(3) cbuffer constant2 : register(b2)
 {
   float4x4 shadow_view     : packoffset(c0.x);
   float4x4 shadow_proj     : packoffset(c4.x);
@@ -42,7 +41,7 @@ VK_BINDING(4) cbuffer constant2 : register(b2)
   float4x4 shadow_proj_inv : packoffset(c12.x);
 }
 
-VK_BINDING(5) cbuffer constant3 : register(b3)
+VK_BINDING(4) cbuffer constant3 : register(b3)
 {
   float4x3 transform  : packoffset(c0.x);
 
@@ -69,14 +68,14 @@ VK_BINDING(5) cbuffer constant3 : register(b3)
   uint4 padding[7]    : packoffset(c9.x);
 };
 
-VK_BINDING(6) Texture2DArray<float4> texture0_items : register(t0);
-VK_BINDING(7) Texture2DArray<float4> texture1_items : register(t1);
-VK_BINDING(8) Texture2DArray<float4> texture2_items : register(t2);
-VK_BINDING(9) Texture2DArray<float4> texture3_items : register(t3);
+VK_BINDING(5) Texture2DArray<float4> texture0_items : register(t0);
+VK_BINDING(6) Texture2DArray<float4> texture1_items : register(t1);
+VK_BINDING(7) Texture2DArray<float4> texture2_items : register(t2);
+VK_BINDING(8) Texture2DArray<float4> texture3_items : register(t3);
 
-VK_BINDING(10) Texture2DArray<float4> texture4_items : register(t4);
+VK_BINDING(9) Texture2DArray<float4> texture4_items : register(t4);
 
-VK_BINDING(11) TextureCube<float4> reflection_probe : register(t5);
+VK_BINDING(10) TextureCube<float4> reflection_probe : register(t5);
 
 
 

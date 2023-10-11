@@ -28,19 +28,20 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../raygene3d-core/core.h"
-#include "../raygene3d-util/property.h"
+#include "../raygene3d-wrap/wrap.h"
 
 namespace RayGene3D
 {
-  class Device;
-
-  class Spark : public Usable
+  class Spark : public Broker
   {
   protected:
-    std::shared_ptr<Property> property;
-    std::shared_ptr<Device> device;
-    std::shared_ptr<View> view;
+    std::shared_ptr<View> backbuffer_uav;
+    std::shared_ptr<View> backbuffer_rtv;
+
+  protected:
+    std::shared_ptr<Property> prop_scene;
+    std::shared_ptr<Property> prop_camera;
+    //std::shared_ptr<Property> prop_environment;
 
   protected:
     std::shared_ptr<Property> prop_eye;
@@ -60,11 +61,12 @@ namespace RayGene3D
 
     std::shared_ptr<Property> prop_instances;
     std::shared_ptr<Property> prop_triangles;
+    std::shared_ptr<Property> prop_vertices;
 
-    std::shared_ptr<Property> prop_vertices0;
-    std::shared_ptr<Property> prop_vertices1;
-    std::shared_ptr<Property> prop_vertices2;
-    std::shared_ptr<Property> prop_vertices3;
+    //std::shared_ptr<Property> prop_vertices0;
+    //std::shared_ptr<Property> prop_vertices1;
+    //std::shared_ptr<Property> prop_vertices2;
+    //std::shared_ptr<Property> prop_vertices3;
 
     std::shared_ptr<Property> prop_textures0;
     std::shared_ptr<Property> prop_textures1;
@@ -88,10 +90,11 @@ namespace RayGene3D
 
     std::shared_ptr<Resource> scene_instances;
     std::shared_ptr<Resource> scene_triangles;
-    std::shared_ptr<Resource> scene_vertices0;
-    std::shared_ptr<Resource> scene_vertices1;
-    std::shared_ptr<Resource> scene_vertices2;
-    std::shared_ptr<Resource> scene_vertices3;
+    std::shared_ptr<Resource> scene_vertices;
+    //std::shared_ptr<Resource> scene_vertices0;
+    //std::shared_ptr<Resource> scene_vertices1;
+    //std::shared_ptr<Resource> scene_vertices2;
+    //std::shared_ptr<Resource> scene_vertices3;
 
     std::shared_ptr<Resource> scene_textures0;
     std::shared_ptr<Resource> scene_textures1;
@@ -110,7 +113,6 @@ namespace RayGene3D
     std::shared_ptr<Resource> compute_arguments;
 
   protected:
-    std::shared_ptr<Layout> reflection_probe_layout;
     std::shared_ptr<Layout> shadowmap_layout;
     std::shared_ptr<Layout> unshadowed_layout;
     std::shared_ptr<Layout> shadowed_layout;
@@ -130,7 +132,7 @@ namespace RayGene3D
     std::shared_ptr<Pass> shadowmap_passes[6];
     std::shared_ptr<Pass> unshadowed_pass;
     std::shared_ptr<Pass> shadowed_pass;
-    //std::shared_ptr<Pass> skybox_pass;
+    std::shared_ptr<Pass> skybox_pass;
     std::shared_ptr<Pass> present_pass;
    
 
@@ -161,60 +163,98 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   protected:
-    std::shared_ptr<Resource> RegisterColorTarget(const std::string& name);
-    std::shared_ptr<Resource> RegisterDepthTarget(const std::string& name);
-    std::shared_ptr<Resource> RegisterShadowMap(const std::string& name);
-    std::shared_ptr<Resource> RegisterReflectionProbe(const std::string& name);
+    void CreateColorTarget();
+    void CreateDepthTarget();
+    void CreateShadowMap();
 
-    std::shared_ptr<Resource> RegisterScreenData(const std::string& name);
-    std::shared_ptr<Resource> RegisterCameraData(const std::string& name);
-    std::shared_ptr<Resource> RegisterShadowData(const std::string& name);
-    std::shared_ptr<Resource> RegisterReflectionProbeData(const std::string& name);
+    void CreateScreenData();
+    void CreateCameraData();
+    void CreateShadowData();
 
-    std::shared_ptr<Resource> RegisterSceneInstances(const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneTriangles(const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneVertices0(const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneVertices1(const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneVertices2(const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneVertices3(const std::string& name);
+    void CreateSceneInstances();
+    void CreateSceneTriangles();
+    void CreateSceneVertices();
 
-    std::shared_ptr<Resource> RegisterSceneTextures0(const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneTextures1(const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneTextures2(const std::string& name);
-    std::shared_ptr<Resource> RegisterSceneTextures3(const std::string& name);
+    void CreateSceneTextures0();
+    void CreateSceneTextures1();
+    void CreateSceneTextures2();
+    void CreateSceneTextures3();
 
-    std::shared_ptr<Resource> RegisterLightMaps(const std::string& name);
+    void CreateLightMaps();
 
-    std::shared_ptr<Resource> RegisterSkyboxVertices(const std::string& name);
-    std::shared_ptr<Resource> RegisterSkyboxTriangles(const std::string& name);
-    std::shared_ptr<Resource> RegisterSkyboxTexture(const std::string& name);
+    void CreateSkyboxVertices();
+    void CreateSkyboxTriangles();
+    void CreateSkyboxTexture();
 
-    std::shared_ptr<Resource> RegisterGraphicArguments(const std::string& name);
-    std::shared_ptr<Resource> RegisterComputeArguments(const std::string& name);
+    void CreateGraphicArguments();
+    void CreateComputeArguments();
 
-    std::shared_ptr<Layout> RegisterShadowmapLayout(const std::string& name);
-    std::shared_ptr<Config> RegisterShadowmapConfig(const std::string& name);
-    std::shared_ptr<Pass> RegisterShadowmapPass(const std::string& name, uint32_t index);
+    void CreateShadowmapLayout();
+    void CreateShadowmapConfig();
+    void CreateShadowmapPass(uint32_t index);
 
-    std::shared_ptr<Layout> RegisterReflectionLayout(const std::string& name);
-    std::shared_ptr<Config> RegisterReflectionConfig(const std::string& name, const uint32_t& mip_level);
-    std::shared_ptr<Pass> RegisterReflectionPass(const std::string& name, const uint32_t& mip_level);
+    void CreateShadowedLayout();
+    void CreateShadowedConfig();
+    void CreateShadowedPass();
 
-    std::shared_ptr<Layout> RegisterShadowedLayout(const std::string& name);
-    std::shared_ptr<Config> RegisterShadowedConfig(const std::string& name);
-    std::shared_ptr<Pass> RegisterShadowedPass(const std::string& name);
+    void CreateUnshadowedLayout();
+    void CreateUnshadowedConfig();
+    void CreateUnshadowedPass();
 
-    std::shared_ptr<Layout> RegisterUnshadowedLayout(const std::string& name);
-    std::shared_ptr<Config> RegisterUnshadowedConfig(const std::string& name);
-    std::shared_ptr<Pass> RegisterUnshadowedPass(const std::string& name);
+    void CreateSkyboxLayout();
+    void CreateSkyboxConfig();
+    void CreateSkyboxPass();
 
-    std::shared_ptr<Layout> RegisterSkyboxLayout(const std::string& name);
-    std::shared_ptr<Config> RegisterSkyboxConfig(const std::string& name);
-    std::shared_ptr<Pass> RegisterSkyboxPass(const std::string& name);
+    void CreatePresentLayout();
+    void CreatePresentConfig();
+    void CreatePresentPass();
 
-    std::shared_ptr<Layout> RegisterPresentLayout(const std::string& name);
-    std::shared_ptr<Config> RegisterPresentConfig(const std::string& name);
-    std::shared_ptr<Pass> RegisterPresentPass(const std::string& name);
+  protected:
+    void DestroyColorTarget();
+    void DestroyDepthTarget();
+    void DestroyShadowMap();
+
+    void DestroyScreenData();
+    void DestroyCameraData();
+    void DestroyShadowData();
+
+    void DestroySceneInstances();
+    void DestroySceneTriangles();
+    void DestroySceneVertices();
+
+    void DestroySceneTextures0();
+    void DestroySceneTextures1();
+    void DestroySceneTextures2();
+    void DestroySceneTextures3();
+
+    void DestroyLightMaps();
+
+    void DestroySkyboxVertices();
+    void DestroySkyboxTriangles();
+    void DestroySkyboxTexture();
+
+    void DestroyGraphicArguments();
+    void DestroyComputeArguments();
+
+    void DestroyShadowmapLayout();
+    void DestroyShadowmapConfig();
+    void DestroyShadowmapPass(uint32_t index);
+
+    void DestroyShadowedLayout();
+    void DestroyShadowedConfig();
+    void DestroyShadowedPass();
+
+    void DestroyUnshadowedLayout();
+    void DestroyUnshadowedConfig();
+    void DestroyUnshadowedPass();
+
+    void DestroySkyboxLayout();
+    void DestroySkyboxConfig();
+    void DestroySkyboxPass();
+
+    void DestroyPresentLayout();
+    void DestroyPresentConfig();
+    void DestroyPresentPass();
 
   public:
     void Initialize() override;
@@ -222,7 +262,7 @@ namespace RayGene3D
     void Discard() override;
 
   public:
-    Spark(const std::shared_ptr<Property>& property, const std::shared_ptr<Device>& device, const std::shared_ptr<View>& output);
+    Spark(Wrap& wrap);
     virtual ~Spark();
   };
 }

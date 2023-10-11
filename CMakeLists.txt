@@ -23,8 +23,6 @@ if(APPLE)
 	add_definitions("-x objective-c++")
 endif(APPLE)
 
-
-
 set(3RDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty)
 set(signal_source
   ${3RDPARTY_DIR}/signals/signals.cpp
@@ -59,6 +57,12 @@ set(SOURCE main.cpp
   imgui/imgui.cpp
   spark/spark.h
   spark/spark.cpp
+  broker/import_broker.h
+  broker/import_broker.cpp
+  broker/lightmap_broker.h
+  broker/lightmap_broker.cpp
+  broker/environment_broker.h
+  broker/environment_broker.cpp
   ${imgui_source}
   ${xatlas_source}
   ${mikktspace_source}
@@ -70,6 +74,10 @@ add_executable(${NAME}-demo
   ${SOURCE}
 )
 
+add_subdirectory(${NAME}-wrap)
+#add_dependencies(${NAME}-demo ${NAME}-wrap)
+target_link_libraries(${NAME}-demo PUBLIC ${NAME}-wrap)
+
 add_subdirectory(${NAME}-util)
 #add_dependencies(${NAME}-demo ${NAME}-util)
 target_link_libraries(${NAME}-demo PUBLIC ${NAME}-util)
@@ -78,79 +86,19 @@ add_subdirectory(${NAME}-core)
 #add_dependencies(${NAME}-demo ${NAME}-core)
 target_link_libraries(${NAME}-demo PUBLIC ${NAME}-core)
 
-#set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib)
+set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib)
 
-#set(GLSLANG_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glslang/lib)
-#set(SPIRV_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/SPIRV/lib)
-#set(SPIRVTOOLS_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/spirv-tools/lib)
 
 if(WIN32)
-	set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib/win64)
-	set(GLSLANG_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glslang/lib/win64)
-	set(SPIRV_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/SPIRV/lib/win64)
-	set(SPIRVTOOLS_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/spirv-tools/lib/win64)
-endif(WIN32)
-
-if(UNIX)
-	if(APPLE)
-		set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib/macos)
-		set(GLSLANG_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glslang/lib/macos)
-		set(SPIRV_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/SPIRV/lib/macos)
-		set(SPIRVTOOLS_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/spirv-tools/lib/macos)
-	else(APPLE)
-		set(GLFW_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glfw/lib/linux)
-		set(GLSLANG_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/glslang/lib/linux)
-		set(SPIRV_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/SPIRV/lib/linux)
-		set(SPIRVTOOLS_LIB_PATH ${CMAKE_SOURCE_DIR}/3rdparty/spirv-tools/lib/linux)
-	endif(APPLE)
-endif(UNIX)
-
-if(WIN32)
-target_link_libraries(${NAME}-demo PRIVATE
-	debug ${GLFW_LIB_PATH}/glfw3d.lib optimized ${GLFW_LIB_PATH}/glfw3.lib
-)
-target_link_libraries(${NAME}-demo PRIVATE
-	debug ${GLSLANG_LIB_PATH}/glslangd.lib optimized ${GLSLANG_LIB_PATH}/glslang.lib
-	debug ${GLSLANG_LIB_PATH}/HLSLd.lib optimized ${GLSLANG_LIB_PATH}/HLSL.lib
-	debug ${GLSLANG_LIB_PATH}/OGLCompilerd.lib optimized ${GLSLANG_LIB_PATH}/OGLCompiler.lib
-	debug ${GLSLANG_LIB_PATH}/OSDependentd.lib optimized ${GLSLANG_LIB_PATH}/OSDependent.lib
-	debug ${GLSLANG_LIB_PATH}/GenericCodeGend.lib optimized ${GLSLANG_LIB_PATH}/GenericCodeGen.lib
-	debug ${GLSLANG_LIB_PATH}/MachineIndependentd.lib optimized ${GLSLANG_LIB_PATH}/MachineIndependent.lib
-)
-target_link_libraries(${NAME}-demo PRIVATE
-	debug ${SPIRV_LIB_PATH}/SPIRVd.lib optimized ${SPIRV_LIB_PATH}/SPIRV.lib
-	debug ${SPIRV_LIB_PATH}/SPVRemapperd.lib optimized ${SPIRV_LIB_PATH}/SPVRemapper.lib
-	debug ${SPIRV_LIB_PATH}/SPIRVd.lib optimized ${SPIRV_LIB_PATH}/SPIRV.lib
-)
-target_link_libraries(${NAME}-demo PRIVATE
-	debug ${SPIRVTOOLS_LIB_PATH}/SPIRV-Toolsd.lib optimized ${SPIRVTOOLS_LIB_PATH}/SPIRV-Tools.lib
-	debug ${SPIRVTOOLS_LIB_PATH}/SPIRV-Tools-optd.lib optimized ${SPIRVTOOLS_LIB_PATH}/SPIRV-Tools-opt.lib
-	debug ${SPIRVTOOLS_LIB_PATH}/SPIRV-Tools-reduced.lib optimized ${SPIRVTOOLS_LIB_PATH}/SPIRV-Tools-reduce.lib
+	target_link_libraries(${NAME}-demo PRIVATE
+		debug ${GLFW_LIB_PATH}/win64/glfw3d.lib optimized ${GLFW_LIB_PATH}/win64/glfw3.lib
 )
 endif(WIN32)
 
 if(UNIX)
 	if(APPLE)
 		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${GLFW_LIB_PATH}/libglfw3.a
-		)
-		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${GLSLANG_LIB_PATH}/libMachineIndependent.a
-			optimized ${GLSLANG_LIB_PATH}/libGenericCodeGen.a
-			optimized ${GLSLANG_LIB_PATH}/libglslang.a
-			optimized ${GLSLANG_LIB_PATH}/libHLSL.a
-			optimized ${GLSLANG_LIB_PATH}/libOGLCompiler.a
-			optimized ${GLSLANG_LIB_PATH}/libOSDependent.a
-		)
-		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${SPIRV_LIB_PATH}/libSPIRV.a
-			optimized ${SPIRV_LIB_PATH}/libSPVRemapper.a
-			optimized ${SPIRV_LIB_PATH}/libSPIRV.a
-		)
-		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${SPIRVTOOLS_LIB_PATH}/libSPIRV-Tools.a
-			optimized ${SPIRVTOOLS_LIB_PATH}/libSPIRV-Tools-opt.a
-			optimized ${SPIRVTOOLS_LIB_PATH}/libSPIRV-Tools-reduce.a
+			optimized ${GLFW_LIB_PATH}/macos/libglfw3.a
 		)
 		target_link_libraries(${NAME}-demo PRIVATE
 			"-framework AppKit"
@@ -160,25 +108,7 @@ if(UNIX)
 		)
 	else(APPLE)
 		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${GLFW_LIB_PATH}/libglfw3.a
-		)
-		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${GLSLANG_LIB_PATH}/libMachineIndependent.a
-			optimized ${GLSLANG_LIB_PATH}/libGenericCodeGen.a
-			optimized ${GLSLANG_LIB_PATH}/libglslang.a
-			optimized ${GLSLANG_LIB_PATH}/libHLSL.a
-			optimized ${GLSLANG_LIB_PATH}/libOGLCompiler.a
-			optimized ${GLSLANG_LIB_PATH}/libOSDependent.a
-		)
-		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${SPIRV_LIB_PATH}/libSPIRV.a
-			optimized ${SPIRV_LIB_PATH}/libSPVRemapper.a
-			optimized ${SPIRV_LIB_PATH}/libSPIRV.a
-		)
-		target_link_libraries(${NAME}-demo PRIVATE
-			optimized ${SPIRVTOOLS_LIB_PATH}/libSPIRV-Tools.a
-			optimized ${SPIRVTOOLS_LIB_PATH}/libSPIRV-Tools-opt.a
-			optimized ${SPIRVTOOLS_LIB_PATH}/libSPIRV-Tools-reduce.a
+			optimized ${GLFW_LIB_PATH}/linux/libglfw3.a
 		)
 		target_link_libraries(${NAME}-demo PRIVATE
 			optimized -ldl
