@@ -13,9 +13,9 @@ BRDF_Lambert Initialize_Lambert(Surface surface)
   return brdf;
 }
 
-float3 Evaluate_Lambert(BRDF_Lambert brdf, float3 lo, float3 wo)
+float3 Evaluate_Lambert(BRDF_Lambert brdf, float3 light, float3 normal)
 {
-  float res = 1.0;
+  float res = max(0.0, dot(light, normal));
   return float3(res, res, res); // *brdf.color;
 }
 
@@ -36,9 +36,9 @@ BRDF_BlinnPhong Initialize_BlinnPhong(Surface surface)
   return brdf;
 }
 
-float3 Evaluate_BlinnPhong(BRDF_BlinnPhong brdf, float3 lo, float3 wo)
+float3 Evaluate_BlinnPhong(BRDF_BlinnPhong brdf, float3 light, float3 view, float3 normal)
 {
-  float res = pow(max(0.0, normalize(wo + lo).z), brdf.shininess);
+  float res = pow(max(0.0, dot(normalize(view + light), normal)), brdf.shininess);
   return float3(res, res, res); // *brdf.color;
 }
 

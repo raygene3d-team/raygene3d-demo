@@ -132,10 +132,6 @@ PSOutput ps_main(PSInput input)
 {
   PSOutput output;
 
-  float3 n = normalize(input.w_nrm_u.xyz);
-  float3 t = normalize(input.w_tng_v.xyz);
-  float3 b = input.w_pos_d.w * cross(n, t);
-
 #ifdef USE_SPECULAR_SETUP
   const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(1.0, 1.0, 1.0, 1.0);
@@ -157,13 +153,12 @@ PSOutput ps_main(PSInput input)
 //#endif
 //
 #ifdef USE_NORMAL_MAP
-  n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
-  t = normalize(t - n * dot(t, n));
-  b = cross(t, n);
-#endif
+  float3 normal_ws = normalize(input.w_nrm_u.xyz);
+  float3 tangent_ws = normalize(input.w_tng_v.xyz);
+  float3 bitangent_ws = input.w_pos_d.w * cross(normal_ws, tangent_ws);
 
-  const float3x3 tbn = float3x3(t, b, n);
-  const float3x3 inverse_tbn = InverseTBN(tbn);
+  normal_ws = normalize(surface.normal.x * tangent_ws + surface.normal.y * bitangent_ws + surface.normal.z * normal_ws);
+#endif
   
   const float3 surface_pos = input.w_pos_d.xyz;
 
@@ -171,13 +166,13 @@ PSOutput ps_main(PSInput input)
   const float camera_dst = length(camera_pos - surface_pos);
   const float3 camera_dir = (camera_pos - surface_pos) / camera_dst;
 
-  const float3 shadow_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
-  const float shadow_dst = length(shadow_pos - surface_pos);
-  const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
+  const float3 light_pos_ws = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
+  const float light_dst = length(light_pos_ws - surface_pos);
+  const float3 light_dir_ws = (light_pos_ws - surface_pos) / light_dst;
   
-  const float3 wo = mul(inverse_tbn, camera_dir);
-  const float3 lo = mul(inverse_tbn, shadow_dir);
-  const float attenuation = 10.0 * 1.0 / (shadow_dst * shadow_dst) * max(0.0, lo.z);
+  //const float3 wo = mul(inverse_tbn, camera_dir);
+  //const float3 lo = mul(inverse_tbn, shadow_dir);
+  const float attenuation = 10.0 * 1.0 / (light_dst * light_dst);
   
   const float3 ambient = 0.025 * surface.diffuse + surface.emission;
 
@@ -193,11 +188,13 @@ PSOutput ps_main(PSInput input)
   //surface.specular = surface.diffuse * surface.metallic; // (1.0 - surface.m);
   //surface.diffuse = surface.diffuse * (1.0 - surface.metallic); // lerp(kDielectricSpec.rgb, surface.Kd, surface.m);
 
-  const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface), lo, wo) * surface.diffuse; // *(1.0 - surface.metallic);
+  //const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface), light_dir_ws, normal_ws) * surface.diffuse; // *(1.0 - surface.metallic);
+  const float3 diffuse = surface.diffuse;
+
 
   //data_blinn_phong.color = specularColor;
   //data_blinn_phong.shininess = 2 /(surface.r * surface.r) - 2;
-  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface), lo, wo) * surface.diffuse; // *surface.metallic;
+  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface), light_dir_ws, camera_dir, normal_ws) * surface.diffuse; // *surface.metallic;
   //const float3 specular = Evaluate_CookTorrance(Initialize_CookTorrance(surface), lo, wo) * surface.diffuse * surface.metallic;
 
   const float3 color = ambient + diffuse * attenuation + specular * attenuation;
@@ -214,15 +211,17 @@ PSOutput ps_main(PSInput input)
 
 
   #ifdef TEST
-  float4 res = texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx));
-  float temp = pow(max(0.0, dot(n, normalize(camera_dir + shadow_dir))), surface.shininess);
-  output.target_0 = float4(color, 1.0);
+  //float4 res = texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx));
+  //float temp = pow(max(0.0, dot(n, normalize(camera_dir + shadow_dir))), surface.shininess);
+  
 
   //float2 pattern = floor(input.tc1 * 2048.0 / 16.0);
   //float fading = 0.5 * frac(0.5 * (pattern.x + pattern.y)) + 0.5;
   //output.target_0.xyz *= fading;
 
   #endif
+
+  output.target_0 = float4(color, 1.0);
 
   return output;
 };
