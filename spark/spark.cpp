@@ -508,7 +508,7 @@ namespace RayGene3D
     const Config::RCState rc_state =
     {
       Config::FILL_SOLID,
-      Config::CULL_BACK,
+      Config::CULL_FRONT,
       {
         { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f }
       },
@@ -700,7 +700,7 @@ namespace RayGene3D
     const Config::RCState rc_state =
     {
       Config::FILL_SOLID,
-      Config::CULL_FRONT,
+      Config::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
@@ -841,7 +841,6 @@ namespace RayGene3D
       shadowed_camera_data,
       shadowed_shadow_data,
     };
-    //shadowed_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
     auto shadowed_scene_instances = scene_instances->CreateView("spark_shadowed_scene_instances",
       Usage(USAGE_CONSTANT_DATA),
@@ -850,7 +849,6 @@ namespace RayGene3D
     const std::shared_ptr<View> ue_views[] = {
       shadowed_scene_instances
     };
-    //shadowed_layout->UpdateSBViews({ ue_views, uint32_t(std::size(ue_views)) });
 
     auto shadowed_scene_textures0 = scene_textures0->CreateView("spark_shadowed_scene_textures0",
       Usage(USAGE_SHADER_RESOURCE)
@@ -925,7 +923,7 @@ namespace RayGene3D
     const Config::RCState rc_state =
     {
       Config::FILL_SOLID,
-      Config::CULL_FRONT,
+      Config::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
@@ -1062,7 +1060,6 @@ namespace RayGene3D
       skybox_screen_data,
       skybox_camera_data,
     };
-    //skybox_layout->UpdateUBViews({ ub_views, uint32_t(std::size(ub_views)) });
 
     auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture",
       Usage(USAGE_SHADER_RESOURCE)
@@ -1070,12 +1067,10 @@ namespace RayGene3D
     const std::shared_ptr<View> ri_views[] = {
       skybox_skybox_texture,
     };
-    //skybox_layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
 
     const Layout::Sampler samplers[] = {
       { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
-    //skybox_layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
 
     skybox_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_skybox_layout",
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1114,7 +1109,7 @@ namespace RayGene3D
     const Config::RCState rc_state =
     {
       Config::FILL_SOLID,
-      Config::CULL_FRONT,
+      Config::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
@@ -1254,10 +1249,6 @@ namespace RayGene3D
     Pass::Command present_commands[] = {
       { present_compute_arguments },
     };
-    //present_pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
-
-    //present_pass->SetSubpassLayout(0, present_layout);
-    //present_pass->SetSubpassConfig(0, present_config);
 
     Pass::Subpass subpasses[] =
     {
@@ -1275,11 +1266,9 @@ namespace RayGene3D
     );
   }
 
-
   void Spark::Initialize()
   {
   }
-
 
   void Spark::DestroyColorTarget()
   {
