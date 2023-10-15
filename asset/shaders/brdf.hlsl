@@ -4,7 +4,7 @@ struct BRDF_Lambert
   float dummy;
 };
 
-BRDF_Lambert Initialize_Lambert(Surface surface)
+BRDF_Lambert Initialize_Lambert(SurfaceData surface)
 {
   BRDF_Lambert brdf = (BRDF_Lambert)0;
 
@@ -26,7 +26,7 @@ struct BRDF_BlinnPhong
   float shininess;
 };
 
-BRDF_BlinnPhong Initialize_BlinnPhong(Surface surface)
+BRDF_BlinnPhong Initialize_BlinnPhong(SurfaceData surface)
 {
   BRDF_BlinnPhong brdf = (BRDF_BlinnPhong)0;
 
@@ -38,7 +38,8 @@ BRDF_BlinnPhong Initialize_BlinnPhong(Surface surface)
 
 float3 Evaluate_BlinnPhong(BRDF_BlinnPhong brdf, float3 light, float3 view, float3 normal)
 {
-  float res = pow(max(0.0, dot(normalize(view + light), normal)), brdf.shininess);
+  float3 halfway = normalize(view + light);
+  float res = pow(saturate(dot(halfway, normal)), brdf.shininess);
   return float3(res, res, res); // *brdf.color;
 }
 
@@ -50,7 +51,7 @@ struct BRDF_CookTorrance
   float metallic;
 };
 
-BRDF_CookTorrance Initialize_CookTorrance(Surface surface)
+BRDF_CookTorrance Initialize_CookTorrance(SurfaceData surface)
 {
   BRDF_CookTorrance brdf = (BRDF_CookTorrance)0;
 

@@ -10,11 +10,6 @@
 //#define USE_ALPHA_CLIP
 #define USE_SPECULAR_SETUP
 
-#include "common.hlsl"
-#include "surface.hlsl"
-#include "brdf.hlsl"
-
-
 VK_BINDING(0) sampler sampler0 : register(s0);
 
 VK_BINDING(1) cbuffer constant0 : register(b0)
@@ -77,7 +72,10 @@ VK_BINDING(9) Texture2DArray<float4> texture4_items : register(t4);
 
 VK_BINDING(10) TextureCube<float4> reflection_probe : register(t5);
 
-
+#include "common.hlsl"
+#include "spark_surface_data.hlsl"
+#include "spark_geometry_data.hlsl"
+#include "spark_forward.hlsl"
 
 struct VSInput
 {
@@ -138,90 +136,20 @@ PSOutput ps_main(PSInput input)
   const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.5, 0.5, 0.0, 0.0);
 
-  const Surface surface = Initialize_OBJ(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
+  const SurfaceData surface_data = Initialize_OBJ(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
 #else
   const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(0.0, 0.0, 0.0, 0.0);
   const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.5, 0.5, 0.5, 0.0);
 
-  const Surface surface = Initialize_GLTF(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
+  const SurfaceData surface_data = Initialize_GLTF(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
 #endif
 
-//#ifdef USE_ALPHA_CLIP
-//  if (surface.alpha < 0.1) discard;
-//#endif
-//
-#ifdef USE_NORMAL_MAP
-  float3 normal_ws = normalize(input.w_nrm_u.xyz);
-  float3 tangent_ws = normalize(input.w_tng_v.xyz);
-  float3 bitangent_ws = input.w_pos_d.w * cross(normal_ws, tangent_ws);
+  GeometryData geometry_data = (GeometryData)0;
+  InitializeGeometryData(geometry_data, surface_data, input.w_pos_d.xyz, input.w_nrm_u.xyz, float4(input.w_tng_v.xyz, input.w_pos_d.w));
 
-  normal_ws = normalize(surface.normal.x * tangent_ws + surface.normal.y * bitangent_ws + surface.normal.z * normal_ws);
-#endif
-  
-  const float3 surface_pos = input.w_pos_d.xyz;
-
-  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
-  const float camera_dst = length(camera_pos - surface_pos);
-  const float3 camera_dir = (camera_pos - surface_pos) / camera_dst;
-
-  const float3 light_pos_ws = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
-  const float light_dst = length(light_pos_ws - surface_pos);
-  const float3 light_dir_ws = (light_pos_ws - surface_pos) / light_dst;
-  
-  //const float3 wo = mul(inverse_tbn, camera_dir);
-  //const float3 lo = mul(inverse_tbn, shadow_dir);
-  const float attenuation = 10.0 * 1.0 / (light_dst * light_dst);
-  
-  const float3 ambient = 0.025 * surface.diffuse + surface.emission;
-
-  //half4 kDielectricSpec = half4(0.04, 0.04, 0.04, 1.0 - 0.04);
-  //// We'll need oneMinusReflectivity, so
-  ////   1-reflectivity = 1-lerp(dielectricSpec, 1, metallic) = lerp(1-dielectricSpec, 0, metallic)
-  //// store (1-dielectricSpec) in kDielectricSpec.a, then
-  ////   1-reflectivity = lerp(alpha, 0, metallic) = alpha + metallic*(0 - alpha) =
-  ////                  = alpha - metallic * alpha
-  //half oneMinusDielectricSpec = kDielectricSpec.a;
-  //return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
-
-  //surface.specular = surface.diffuse * surface.metallic; // (1.0 - surface.m);
-  //surface.diffuse = surface.diffuse * (1.0 - surface.metallic); // lerp(kDielectricSpec.rgb, surface.Kd, surface.m);
-
-  //const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface), light_dir_ws, normal_ws) * surface.diffuse; // *(1.0 - surface.metallic);
-  const float3 diffuse = surface.diffuse;
-
-
-  //data_blinn_phong.color = specularColor;
-  //data_blinn_phong.shininess = 2 /(surface.r * surface.r) - 2;
-  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface), light_dir_ws, camera_dir, normal_ws) * surface.diffuse; // *surface.metallic;
-  //const float3 specular = Evaluate_CookTorrance(Initialize_CookTorrance(surface), lo, wo) * surface.diffuse * surface.metallic;
-
-  const float3 color = ambient + diffuse * attenuation + specular * attenuation;
-
-
-  //const float3 viewDirectionWS = normalize(camera_pos - surface_pos);
-  //const float3 normalWS = normalize(input.w_nrm_u.xyz);
-  //float3 reflectVector = reflect(viewDirectionWS, normalWS);
-
-  //float perceptualRoughness = RoughnessToPerceptualRoughness(shininess);
-  //float mip_level = PerceptualRoughnessToMipmapLevel(shininess, 7);
-
-  //float4 reflection = reflection_probe.SampleLevel(sampler1, normalize(-reflectVector), mip_level);
-
-
-  #ifdef TEST
-  //float4 res = texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx));
-  //float temp = pow(max(0.0, dot(n, normalize(camera_dir + shadow_dir))), surface.shininess);
-  
-
-  //float2 pattern = floor(input.tc1 * 2048.0 / 16.0);
-  //float fading = 0.5 * frac(0.5 * (pattern.x + pattern.y)) + 0.5;
-  //output.target_0.xyz *= fading;
-
-  #endif
-
-  output.target_0 = float4(color, 1.0);
+  output.target_0 = EvaluateBlinnPhong(geometry_data, surface_data);
 
   return output;
 };

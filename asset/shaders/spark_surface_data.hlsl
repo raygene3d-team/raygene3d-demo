@@ -1,4 +1,4 @@
-struct Surface
+struct SurfaceData
 {
   float3 emission;
   float intensity;
@@ -22,10 +22,10 @@ struct Frame
   float2 duvdy;
 };
 
-Surface Initialize_OBJ(float3 emission, float intensity, float3 diffuse, float shininess, float3 specular, float alpha,
+SurfaceData Initialize_OBJ(float3 emission, float intensity, float3 diffuse, float shininess, float3 specular, float alpha,
   float4 tex0_value, float4 tex1_value, float4 tex2_value, float4 tex3_value)
 {
-  Surface surface = (Surface)0;
+  SurfaceData surface = (SurfaceData)0;
 
   surface.emission = emission;
   surface.intensity = intensity;
@@ -50,10 +50,10 @@ Surface Initialize_OBJ(float3 emission, float intensity, float3 diffuse, float s
 }
 
 
-Surface Initialize_GLTF(float3 emission, float intensity, float3 diffuse, float shininess, float3 specular, float alpha,
+SurfaceData Initialize_GLTF(float3 emission, float intensity, float3 diffuse, float shininess, float3 specular, float alpha,
   float4 tex0_value, float4 tex1_value, float4 tex2_value, float4 tex3_value)
 {
-  Surface surface = (Surface)0;
+  SurfaceData surface = (SurfaceData)0;
 
   surface.emission = tex1_value.xyz;
   surface.intensity = intensity;

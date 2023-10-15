@@ -7,12 +7,9 @@
 #endif
 
 #define USE_NORMAL_MAP
+#define LIGHT_SHADOW
+#define USE_SPECULAR_SETUP
 //#define USE_ALPHA_CLIP
-
-
-#include "common.hlsl"
-#include "surface.hlsl"
-#include "brdf.hlsl"
 
 VK_BINDING(0) sampler sampler0 : register(s0);
 VK_BINDING(1) sampler sampler1 : register(s1);
@@ -83,6 +80,11 @@ static const float4x4 poisson_disk = float4x4(
   float4(0.93688596, 0.05578877, -0.16948928, 0.84225623)
 );
 
+#include "common.hlsl"
+#include "spark_surface_data.hlsl"
+#include "spark_geometry_data.hlsl"
+#include "spark_forward.hlsl"
+
 struct VSInput
 {
   VK_LOCATION(0) float3 pos : register0;
@@ -126,90 +128,36 @@ struct PSOutput
   float4 target_0 : SV_Target0;
 };
 
-float Shadow(const float3 w_pos)
-{
-  const float3 light_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
-  const float3 view_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
-  const float3 tc = w_pos - light_pos;
 
-  const float m22 = shadow_proj[2][2];
-  const float m23 = shadow_proj[2][3];
-
-  const float near = -m23 / m22;
-  const float far = near / (m22 - 1.0);  
-
-  const float3 atc = abs(tc);
-  const float m = max(max(atc.x, atc.y), atc.z);
-  const float3 tk = step(m, atc);
-
-  const float3 dx = normalize(cross(tc, w_pos - view_pos));
-  const float3 dy = normalize(cross(tc, dx));
-
-  const float d = shadow_map.Sample(sampler1, normalize(tc));
-
-  const float cd = far * (1.0 - near / (dot(tk, atc))) / (far - near);
-  const float blur_radius = 0.005;
-
-  float shadow = step(d, cd);
-  for(uint x = 0; x < 8; ++x)
-  {
-    const float3 offset = (dx * poisson_disk[x / 2][2 * (x % 2)] + dy * poisson_disk[x / 2][2 * (x % 2) + 1]) * blur_radius;
-    const float d = shadow_map.Sample(sampler1, normalize(tc) + offset);
-    shadow += step(d, cd);
-  }
-  shadow /= 9.0;
-  shadow *= sign(d);
-
-  return 1.0 - shadow;
-}
 
 PSOutput ps_main(PSInput input)
 {
+  PSOutput output;
+
+#ifdef USE_SPECULAR_SETUP
   const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.5, 0.5, 0.0, 0.0);
 
-  const Surface surface = Initialize_OBJ(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
+  const SurfaceData surface_data = Initialize_OBJ(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
+#else
+  const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+  const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(0.0, 0.0, 0.0, 0.0);
+  const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+  const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.5, 0.5, 0.5, 0.0);
+
+  const SurfaceData surface_data = Initialize_GLTF(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
+#endif
 
 #ifdef USE_ALPHA_CLIP
   if (surface.alpha < 0.1) discard;
 #endif
 
-#ifdef USE_NORMAL_MAP
-  float3 normal_ws = normalize(input.w_nrm_u.xyz);
-  float3 tangent_ws = normalize(input.w_tng_v.xyz);
-  float3 bitangent_ws = input.w_pos_d.w * cross(normal_ws, tangent_ws);
+  GeometryData geometry_data = (GeometryData)0;
+  InitializeGeometryData(geometry_data, surface_data, input.w_pos_d.xyz, input.w_nrm_u.xyz, float4(input.w_tng_v.xyz, input.w_pos_d.w));
 
-  normal_ws = normalize(surface.normal.x * tangent_ws + surface.normal.y * bitangent_ws + surface.normal.z * normal_ws);
-#endif
-
-  const float3 surface_pos = input.w_pos_d.xyz;
-
-  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
-  const float camera_dst = length(camera_pos - surface_pos);
-  const float3 camera_dir = (camera_pos - surface_pos) / camera_dst;
-
-  const float3 light_pos_ws = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
-  const float light_dst = length(light_pos_ws - surface_pos);
-  const float3 light_dir_ws = (light_pos_ws - surface_pos) / light_dst;
-
-  const float attenuation = 10.0 * 1.0 / (light_dst * light_dst) * Shadow(surface_pos);
-  const float3 ambient = 0.025 * surface.diffuse;
-
-  //const float3 diffuseColor = surface.Kd; // *(1.0 - surface.m);
-  //const float3 specularColor = surface.Kd * surface.m; // lerp(kDielectricSpec.rgb, surface.Kd, surface.m);
-
-  const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface), light_dir_ws, normal_ws) * surface.diffuse;
-
-  //data_blinn_phong.color = specularColor;
-  //data_blinn_phong.shininess = 2 /(surface.r * surface.r) - 2;
-  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface), light_dir_ws, camera_dir, normal_ws) * surface.diffuse;
-
-  const float3 color = ambient + diffuse * attenuation + specular * attenuation;
-
-  PSOutput output;
-  output.target_0 = float4(color, 0.0);
+  output.target_0 = EvaluateBlinnPhong(geometry_data, surface_data);
 
   return output;
 };
