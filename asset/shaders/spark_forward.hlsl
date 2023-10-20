@@ -44,17 +44,20 @@ float Shadow(const float3 w_pos)
 
 float4 EvaluateBlinnPhong(GeometryData geometry_data, SurfaceData surface_data)
 {
-  float3 n = geometry_data.normal_ws;
-  float3 t = geometry_data.tanghent_ws.xyz;
-  float3 b = geometry_data.tanghent_ws.w * cross(n, t);
-
   #ifdef USE_NORMAL_MAP
+    float3 t = geometry_data.tbn[0];
+    float3 b = geometry_data.tbn[1];
+    float3 n = geometry_data.tbn[2];
+
     n = normalize(surface_data.normal.x * t + surface_data.normal.y * b + surface_data.normal.z * n);
     t = normalize(t - n * dot(t, n));
     b = cross(t, n);
+
+    const float3x3 tbn = float3x3(t, b, n);
+  #else
+    const float3x3 tbn = geometry_data.tbn;
   #endif
 
-  const float3x3 tbn = float3x3(t, b, n);
   const float3x3 inverse_tbn = InverseTBN(tbn);
 
   const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);

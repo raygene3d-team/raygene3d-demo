@@ -146,8 +146,7 @@ PSOutput ps_main(PSInput input)
   const SurfaceData surface_data = Initialize_GLTF(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
 #endif
 
-  GeometryData geometry_data = (GeometryData)0;
-  InitializeGeometryData(geometry_data, input.w_pos_d.xyz, input.w_nrm_u.xyz, float4(input.w_tng_v.xyz, input.w_pos_d.w));
+  GeometryData geometry_data = InitializeGeometryData(input.w_pos_d.xyz, input.w_nrm_u.xyz, float4(input.w_tng_v.xyz, input.w_pos_d.w));
 
   output.target_0 = EvaluateBlinnPhong(geometry_data, surface_data);
 
