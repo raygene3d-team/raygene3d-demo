@@ -44,9 +44,18 @@ float Shadow(const float3 w_pos)
 
 float4 EvaluateBlinnPhong(GeometryData geometry_data, SurfaceData surface_data)
 {
+  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
+  const float camera_dst = length(camera_pos - geometry_data.position_ws);
+  const float3 view_dir_ws = (camera_pos - geometry_data.position_ws) / camera_dst;
+
+  const float3 light_pos_ws = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
+  const float light_dst = length(light_pos_ws - geometry_data.position_ws);
+  const float3 light_dir_ws = (light_pos_ws - geometry_data.position_ws) / light_dst;
+
+#ifdef USE_TANGENT_SPACE
   float3 n = geometry_data.normal_ws;
-  float3 t = geometry_data.tanghent_ws.xyz;
-  float3 b = geometry_data.tanghent_ws.w * cross(n, t);
+  float3 t = geometry_data.tangent_ws.xyz;
+  float3 b = geometry_data.tangent_ws.w * cross(n, t);
 
   #ifdef USE_NORMAL_MAP
     n = normalize(surface_data.normal.x * t + surface_data.normal.y * b + surface_data.normal.z * n);
@@ -57,26 +66,28 @@ float4 EvaluateBlinnPhong(GeometryData geometry_data, SurfaceData surface_data)
   const float3x3 tbn = float3x3(t, b, n);
   const float3x3 inverse_tbn = InverseTBN(tbn);
 
-  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
-  const float camera_dst = length(camera_pos - geometry_data.position_ws);
-  const float3 view_dir_ws = (camera_pos - geometry_data.position_ws) / camera_dst;
-
-  const float3 light_pos_ws = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
-  const float light_dst = length(light_pos_ws - geometry_data.position_ws);
-  const float3 light_dir_ws = (light_pos_ws - geometry_data.position_ws) / light_dst;
-
+  const float3 no = float3(0.0, 0.0, 1.0);
   const float3 wo = mul(tbn, view_dir_ws);
   const float3 lo = mul(tbn, light_dir_ws);
+#else
+  const float3 bitangent_ws = geometry_data.tangent_ws.w * cross(geometry_data.normal_ws, geometry_data.tangent_ws.xyz);
+  const float3 no = normalize(surface_data.normal.x * geometry_data.tangent_ws.xyz + surface_data.normal.y * bitangent_ws + surface_data.normal.z * geometry_data.normal_ws);
+  const float3 wo = view_dir_ws;
+  const float3 lo = light_dir_ws;
+#endif 
 
-  float attenuation = 10.0 * 1.0 / (light_dst * light_dst);
 #ifdef LIGHT_SHADOW
-  attenuation *= Shadow(geometry_data.position_ws);
+  const float shadow = Shadow(geometry_data.position_ws);
+#else
+  const float shadow = 1.0;
 #endif
-  const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface_data), lo) * surface_data.diffuse;
-  const float3 ambient = 0.025 * surface_data.diffuse + surface_data.emission;
-  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface_data), lo, wo) * surface_data.specular;
 
-  const float3 color = ambient + (diffuse + specular) * attenuation;
+  const float attenuation = 10.0 * 1.0 / (light_dst * light_dst);
+  const float3 diffuse = Evaluate_Lambert(Initialize_Lambert(surface_data), lo, no) * surface_data.diffuse;
+  const float3 ambient = 0.025 * surface_data.diffuse + surface_data.emission;
+  const float3 specular = Evaluate_BlinnPhong(Initialize_BlinnPhong(surface_data), lo, wo, no) * surface_data.specular;
+
+  const float3 color = ambient + (diffuse + specular) * attenuation * shadow;
 
   return float4(color, 1.0);
 }
