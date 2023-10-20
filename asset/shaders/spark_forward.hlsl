@@ -68,7 +68,7 @@ float4 EvaluateBlinnPhong(GeometryData geometry_data, SurfaceData surface_data)
   const float3 wo = mul(tbn, view_dir_ws);
   const float3 lo = mul(tbn, light_dir_ws);
 
-  float attenuation = 10.0 * 1.0 / (light_dst * light_dst);
+  float attenuation = 10.0 * 1.0 / (light_dst * light_dst) * max(0.0, lo.z);
 #ifdef LIGHT_SHADOW
   attenuation *= Shadow(geometry_data.position_ws);
 #endif
