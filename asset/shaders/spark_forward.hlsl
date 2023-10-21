@@ -44,22 +44,6 @@ float Shadow(const float3 w_pos)
 
 float4 EvaluateBlinnPhong(GeometryData geometry_data, SurfaceData surface_data)
 {
-  #ifdef USE_NORMAL_MAP
-    float3 t = geometry_data.tbn[0];
-    float3 b = geometry_data.tbn[1];
-    float3 n = geometry_data.tbn[2];
-
-    n = normalize(surface_data.normal.x * t + surface_data.normal.y * b + surface_data.normal.z * n);
-    t = normalize(t - n * dot(t, n));
-    b = cross(t, n);
-
-    const float3x3 tbn = float3x3(t, b, n);
-  #else
-    const float3x3 tbn = geometry_data.tbn;
-  #endif
-
-  const float3x3 inverse_tbn = InverseTBN(tbn);
-
   const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
   const float camera_dst = length(camera_pos - geometry_data.position_ws);
   const float3 view_dir_ws = (camera_pos - geometry_data.position_ws) / camera_dst;
@@ -68,8 +52,18 @@ float4 EvaluateBlinnPhong(GeometryData geometry_data, SurfaceData surface_data)
   const float light_dst = length(light_pos_ws - geometry_data.position_ws);
   const float3 light_dir_ws = (light_pos_ws - geometry_data.position_ws) / light_dst;
 
-  const float3 wo = mul(tbn, view_dir_ws);
-  const float3 lo = mul(tbn, light_dir_ws);
+  float3 t = geometry_data.tbn[0];
+  float3 b = geometry_data.tbn[1];
+  float3 n = geometry_data.tbn[2];
+
+#ifdef USE_NORMAL_MAP
+  n = normalize(surface_data.normal.x * t + surface_data.normal.y * b + surface_data.normal.z * n);
+  t = normalize(t - n * dot(t, n));
+  b = cross(t, n);
+#endif
+
+  const float3 wo = float3(dot(t, view_dir_ws), dot(b, view_dir_ws), dot(n, view_dir_ws)); // mul(view_dir_ws, inverse_tbn);
+  const float3 lo = float3(dot(t, light_dir_ws), dot(b, light_dir_ws), dot(n, light_dir_ws)); // mul(light_dir_ws, inverse_tbn);
 
   float attenuation = 10.0 * 1.0 / (light_dst * light_dst) * max(0.0, lo.z);
 #ifdef LIGHT_SHADOW
