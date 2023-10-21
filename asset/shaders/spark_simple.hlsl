@@ -163,7 +163,7 @@ PSOutput ps_main(PSInput input)
 #endif
 
   const float3x3 tbn = float3x3(t, b, n);
-  const float3x3 inverse_tbn = InverseTBN(tbn);
+  //const float3x3 inverse_tbn = InverseTBN(tbn);
   
   const float3 surface_pos = input.w_pos_d.xyz;
 
@@ -175,8 +175,9 @@ PSOutput ps_main(PSInput input)
   const float shadow_dst = length(shadow_pos - surface_pos);
   const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
   
-  const float3 wo = mul(inverse_tbn, camera_dir);
-  const float3 lo = mul(inverse_tbn, shadow_dir);
+  // TBN inverse is its transpose due to orthonormal property
+  const float3 wo = float3(dot(t, camera_dir), dot(b, camera_dir), dot(n, camera_dir)); // mul(inverse_tbn, camera_dir);
+  const float3 lo = float3(dot(t, shadow_dir), dot(b, shadow_dir), dot(n, shadow_dir)); // mul(inverse_tbn, shadow_dir);
   const float attenuation = 10.0 * 1.0 / (shadow_dst * shadow_dst) * max(0.0, lo.z);
   
   const float3 ambient = 0.025 * surface.diffuse + surface.emission;
