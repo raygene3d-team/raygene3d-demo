@@ -371,11 +371,11 @@ PSOutput ps_main(PSInput input)
   const float3 lo = float3(dot(t, shadow_dir), dot(b, shadow_dir), dot(n, shadow_dir)); // mul(inverse_tbn, shadow_dir);
 
   Ray ray;
-  ray.org = shadow_pos;
+  ray.org = surface_pos;
   ray.tmin = RAY_TMIN;
   ray.dir = shadow_dir;
-  ray.tmax = RAY_TMAX;
-  const float attenuation = 10.0 * 1.0 / (shadow_dst * shadow_dst) * max(0.0, lo.z) * OccludeScene(ray);
+  ray.tmax = shadow_dst;
+  const float attenuation = OccludeScene(ray) ? 0.0 : 10.0 * 1.0 / (shadow_dst * shadow_dst) * max(0.0, lo.z);
 
   const float3 ambient = 0.025 * surface.diffuse;
 
