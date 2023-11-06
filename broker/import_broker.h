@@ -34,7 +34,7 @@ namespace RayGene3D
 {
   //class Core;
 
-  class IOBroker : public Broker
+  class ImportBroker : public Broker
   {
   protected:
     std::string file_name;
@@ -89,8 +89,8 @@ namespace RayGene3D
 
 
   public:
-    IOBroker(Wrap& wrap);
-    virtual ~IOBroker();
+    ImportBroker(Wrap& wrap);
+    virtual ~ImportBroker();
   };
 
   std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);

@@ -531,7 +531,7 @@ namespace RayGene3D
     return textures_property;
   }
 
-  void IOBroker::Initialize()
+  void ImportBroker::Initialize()
   {
     const auto extension = ExtractExtension(file_name);
 
@@ -547,17 +547,17 @@ namespace RayGene3D
     UpdateTangents(instances, triangles, vertices);
   }
 
-  void IOBroker::Use()
+  void ImportBroker::Use()
   {}
 
-  void IOBroker::Discard()
+  void ImportBroker::Discard()
   {
     instances.clear();
     triangles.clear();
     vertices.clear();
   }
 
-  void IOBroker::ImportGLTF()
+  void ImportBroker::ImportGLTF()
   {
     tinygltf::TinyGLTF gltf_ctx;
 
@@ -730,7 +730,7 @@ namespace RayGene3D
     }
   }
 
-  void IOBroker::ImportOBJM()
+  void ImportBroker::ImportOBJM()
   {
     tinyobj::attrib_t obj_attrib;
     std::vector<tinyobj::shape_t> obj_shapes;
@@ -770,7 +770,6 @@ namespace RayGene3D
         material_id_map[id].emplace_back(idx_2.vertex_index, idx_2.normal_index, idx_2.texcoord_index);
       }
 
-      uint32_t instance_id = 0u;
       for (const auto& material_id : material_id_map)
       {
         const auto idx_count = uint32_t(material_id.second.size());
@@ -793,7 +792,7 @@ namespace RayGene3D
 
         const auto vertices_count = uint32_t(instance_vertices.size());
         const auto triangles_count = uint32_t(instance_triangles.size());
-        BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instance_id, vertices_count, triangles_count);
+        BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instances.size(), vertices_count, triangles_count);
 
         Instance instance;
         instance.transform;
@@ -955,7 +954,7 @@ namespace RayGene3D
     }
   }
 
-  void IOBroker::Export(std::shared_ptr<Property>& property) const
+  void ImportBroker::Export(std::shared_ptr<Property>& property) const
   {
     auto temp = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
     //property->setSetValue(Property::object());
@@ -1077,11 +1076,12 @@ namespace RayGene3D
       src_tex_n = dst_tex_n;
     }
 
-    const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    {
-      texels_property->RawAllocate(texel_count * texel_stride);
-      texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
-    }
+    const auto texels_property = CreateBufferProperty(texel_data, texel_stride, texel_count);
+    //std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+    //{
+    //  texels_property->RawAllocate(texel_count * texel_stride);
+    //  texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
+    //}
     delete[] texel_data;
 
     const auto texture_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
@@ -1226,12 +1226,10 @@ namespace RayGene3D
     return texture_property;
   }
 
-
-
-  IOBroker::IOBroker(Wrap& wrap)
-    : Broker("io_broker", wrap)
+  ImportBroker::ImportBroker(Wrap& wrap)
+    : Broker("import_broker", wrap)
   {}
 
-  IOBroker::~IOBroker()
+  ImportBroker::~ImportBroker()
   {}
 }

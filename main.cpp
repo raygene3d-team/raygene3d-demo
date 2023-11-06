@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "spark/spark.h"
 #include "imgui/imgui.h"
 
+#include "broker/bvh_broker.h"
 #include "broker/import_broker.h"
 #include "broker/lightmap_broker.h"
 #include "broker/environment_broker.h"
@@ -384,15 +385,6 @@ namespace RayGene3D
         );
         wrap->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
 
-        //backbuffer_resource->SetType(RayGene3D::Resource::TYPE_IMAGE2D);
-        //backbuffer_resource->SetExtentX(uint32_t(extent_x));
-        //backbuffer_resource->SetExtentY(uint32_t(extent_y));
-        //backbuffer_resource->SetFormat(RayGene3D::FORMAT_B8G8R8A8_UNORM);
-        //backbuffer_resource->SetBind(Bind(BIND_RENDER_TARGET | BIND_UNORDERED_ACCESS));
-        //backbuffer_resource->SetInteropCount(1);
-        //backbuffer_resource->SetInteropItem(0, prop_screen->GetRawBytes(0));
-
-
         const auto& backbuffer_rt_view = backbuffer_resource->CreateView("backbuffer_rt_view",
           Usage(USAGE_RENDER_TARGET)
         );
@@ -427,28 +419,35 @@ namespace RayGene3D
 
         if (!scene_property)
         {
-          auto io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*wrap));
+          auto import_broker = std::shared_ptr<RayGene3D::ImportBroker>(new RayGene3D::ImportBroker(*wrap));
 
-          io_broker->SetFileName(scene_name);
-          io_broker->SetPathName(scene_path);
+          import_broker->SetFileName(scene_name);
+          import_broker->SetPathName(scene_path);
 
           const auto scene_flip = config_property->GetObjectItem("scene")->GetObjectItem("flip")->GetBool();
           const auto scene_scale = config_property->GetObjectItem("scene")->GetObjectItem("scale")->GetReal();
           const auto scene_quality = config_property->GetObjectItem("scene")->GetObjectItem("quality")->GetUint();
 
-          io_broker->SetCoordinateFlip(scene_flip);
-          io_broker->SetPositionScale(scene_scale);
-          io_broker->SetTextureLevel(scene_quality);
+          import_broker->SetCoordinateFlip(scene_flip);
+          import_broker->SetPositionScale(scene_scale);
+          import_broker->SetTextureLevel(scene_quality);
 
-          io_broker->Initialize();
-          io_broker->Export(scene_property);
+          import_broker->Initialize();
+          import_broker->Export(scene_property);
 
-          io_broker.reset();
+          import_broker.reset();
 
           wrap->GetUtil()->GetStorage()->Save(ExtractName(scene_name), scene_property);
         }
       }
       tree_property->SetObjectItem("scene_property", scene_property);
+
+      {
+        auto bvh_broker = std::shared_ptr<RayGene3D::BVHBroker>(new RayGene3D::BVHBroker(*wrap));
+        bvh_broker->Initialize();
+
+        bvh_broker.reset();
+      }
 
       camera_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
@@ -487,7 +486,7 @@ namespace RayGene3D
 
 
       spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*wrap));
-      spark->SetShadowType(Spark::NO_SHADOWS);
+      spark->SetShadowType(Spark::NO_SHADOW);
 
       imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*wrap));
       imgui->SetShowTestWindow(false);
@@ -577,8 +576,9 @@ namespace RayGene3D
         if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
         {
           auto shadow_type = spark->GetShadowType();
-          if (shadow_type == Spark::NO_SHADOWS) { shadow_type = Spark::POINT_SHADOWS; } else
-          if (shadow_type == Spark::POINT_SHADOWS) { shadow_type = Spark::NO_SHADOWS; }
+          if (shadow_type == Spark::NO_SHADOW) { shadow_type = Spark::SHADOW_CUBEMAP; } else
+          if (shadow_type == Spark::SHADOW_CUBEMAP) { shadow_type = Spark::SW_TRACE_SHADOW; } else
+          if (shadow_type == Spark::SW_TRACE_SHADOW) { shadow_type = Spark::NO_SHADOW; }
           spark->SetShadowType(shadow_type);
           change_spark = false;
         }

@@ -32,13 +32,23 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  //class Core;
-
   class BVHBroker : public Broker
   {
+  protected:
+    std::shared_ptr<Property> prop_scene;
+
+  protected:
+    std::shared_ptr<Property> prop_instances;
+    std::shared_ptr<Property> prop_triangles;
+    std::shared_ptr<Property> prop_vertices;
+
+  public:
+    void Initialize() override;
+    void Use() override;
+    void Discard() override;
 
   public:
     BVHBroker(Wrap& wrap);
     virtual ~BVHBroker();
-  }
+  };
 }

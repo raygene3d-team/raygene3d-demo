@@ -25,7 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ================================================================================*/
-#include "import_broker.h"
+#include "bvh_broker.h"
 
 namespace RayGene3D
 {
@@ -259,52 +259,77 @@ namespace RayGene3D
     }
     BLAST_ASSERT(counter == instance_leaves.size())
 
-      for (auto& node : nodes)
+    for (auto& node : nodes)
+    {
+      if (node.count == 1)
       {
-        if (node.count == 1)
-        {
-          const auto center = 0.5f * (node.max + node.min);
-          const auto extent = 0.5f * (node.max - node.min);
+        const auto center = 0.5f * (node.max + node.min);
+        const auto extent = 0.5f * (node.max - node.min);
 
-          glm::uvec3 packed_min;
-          packed_min.x = glm::packHalf2x16(glm::f32vec2(center.x, extent.x));
-          packed_min.y = glm::packHalf2x16(glm::f32vec2(center.y, extent.y));
-          packed_min.z = glm::packHalf2x16(glm::f32vec2(center.z, extent.z));
-          memcpy(&node.min, &packed_min, 3 * sizeof(uint32_t));
+        glm::uvec3 packed_min;
+        packed_min.x = glm::packHalf2x16(glm::f32vec2(center.x, extent.x));
+        packed_min.y = glm::packHalf2x16(glm::f32vec2(center.y, extent.y));
+        packed_min.z = glm::packHalf2x16(glm::f32vec2(center.z, extent.z));
+        memcpy(&node.min, &packed_min, 3 * sizeof(uint32_t));
 
-          glm::uvec3 packed_max;
-          packed_max.x = glm::packHalf2x16(glm::f32vec2(extent.x, center.x));
-          packed_max.y = glm::packHalf2x16(glm::f32vec2(extent.y, center.y));
-          packed_max.z = glm::packHalf2x16(glm::f32vec2(extent.z, center.z));
-          memcpy(&node.max, &packed_max, 3 * sizeof(uint32_t));
-        }
+        glm::uvec3 packed_max;
+        packed_max.x = glm::packHalf2x16(glm::f32vec2(extent.x, center.x));
+        packed_max.y = glm::packHalf2x16(glm::f32vec2(extent.y, center.y));
+        packed_max.z = glm::packHalf2x16(glm::f32vec2(extent.z, center.z));
+        memcpy(&node.max, &packed_max, 3 * sizeof(uint32_t));
       }
+    }
+
     instance_boxes.insert(instance_boxes.end(), nodes.begin(), nodes.end());;
   }
 
 
-  void BVH2::Build()
+  void BVHBroker::Initialize()
   {
-    std::vector<Box> instance_boxes;
-    std::vector<Box> triangle_boxes;
+    if (prop_scene->HasObjectItem("t_boxes")) return;
+    if (prop_scene->HasObjectItem("b_boxes")) return;
 
-    //const auto instance_items = instances->GetItems<Instance>(0);
-    //const auto triangle_items = triangles->GetItems<Triangle>(0);
-    //const auto vertex_items = vertices->GetItems<Vertex>(0);
+    std::vector<Box> t_boxes;
+    std::vector<Box> b_boxes;
 
-    MainBuild(instances, triangles, vertices, t_boxes, b_boxes);
+    const auto instance_items = prop_instances->GetTypedBytes<Instance>(0);
+    const auto triangle_items = prop_triangles->GetTypedBytes<Triangle>(0);
+    const auto vertex_items = prop_vertices->GetTypedBytes<Vertex>(0);
 
-    //t_boxes = {instance_boxes.data(), uint32_t(sizeof(Box)), uint32_t(instance_boxes.size()));
-    //b_boxes = {triangle_boxes.data(), uint32_t(sizeof(Box)), uint32_t(triangle_boxes.size()));
+
+    MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
+
+    const auto prop_t_boxes = CreateBufferProperty(t_boxes.data(), uint32_t(sizeof(RayGene3D::Box)), uint32_t(t_boxes.size()));
+    const auto prop_b_boxes = CreateBufferProperty(b_boxes.data(), uint32_t(sizeof(RayGene3D::Box)), uint32_t(b_boxes.size()));
+
+    prop_scene->SetObjectItem("t_boxes", prop_t_boxes);
+    prop_scene->SetObjectItem("b_boxes", prop_b_boxes);
   }
 
-  void BVH2::Destroy()
+  void BVHBroker::Use()
   {
+
+  }
+
+  void BVHBroker::Discard()
+  {
+    if (prop_scene->HasObjectItem("t_boxes")) prop_scene->RemoveObjectItem("t_boxes");
+    if (prop_scene->HasObjectItem("b_boxes")) prop_scene->RemoveObjectItem("b_boxes");
   }
 
   BVHBroker::BVHBroker(Wrap& wrap)
-    : BVHBroker("bvh_broker", wrap)
-  {}
+    : Broker("bvh_broker", wrap)
+  {
+    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
+
+    prop_scene = tree->GetObjectItem("scene_property");
+    {
+      prop_instances = prop_scene->GetObjectItem("instances");
+      prop_triangles = prop_scene->GetObjectItem("triangles");
+      prop_vertices = prop_scene->GetObjectItem("vertices");
+    } 
+  
+  }
 
   BVHBroker::~BVHBroker()
   {}

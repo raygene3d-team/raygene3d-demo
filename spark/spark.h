@@ -68,6 +68,9 @@ namespace RayGene3D
     //std::shared_ptr<Property> prop_vertices2;
     //std::shared_ptr<Property> prop_vertices3;
 
+    std::shared_ptr<Property> prop_t_boxes;
+    std::shared_ptr<Property> prop_b_boxes;
+
     std::shared_ptr<Property> prop_textures0;
     std::shared_ptr<Property> prop_textures1;
     std::shared_ptr<Property> prop_textures2;
@@ -96,6 +99,14 @@ namespace RayGene3D
     //std::shared_ptr<Resource> scene_vertices2;
     //std::shared_ptr<Resource> scene_vertices3;
 
+    std::shared_ptr<Resource> scene_t_boxes;
+    std::shared_ptr<Resource> scene_b_boxes;
+
+    //Copies of original resources bacause of DX11 limitations
+    std::shared_ptr<Resource> trace_instances;
+    std::shared_ptr<Resource> trace_triangles;
+    std::shared_ptr<Resource> trace_vertices;
+
     std::shared_ptr<Resource> scene_textures0;
     std::shared_ptr<Resource> scene_textures1;
     std::shared_ptr<Resource> scene_textures2;
@@ -116,6 +127,8 @@ namespace RayGene3D
     std::shared_ptr<Layout> shadowmap_layout;
     std::shared_ptr<Layout> unshadowed_layout;
     std::shared_ptr<Layout> shadowed_layout;
+    std::shared_ptr<Layout> sw_traced_layout;
+    std::shared_ptr<Layout> hw_traced_layout;
     std::shared_ptr<Layout> skybox_layout;
     std::shared_ptr<Layout> present_layout;
 
@@ -124,6 +137,8 @@ namespace RayGene3D
     std::shared_ptr<Config> shadowmap_config;
     std::shared_ptr<Config> unshadowed_config;
     std::shared_ptr<Config> shadowed_config;
+    std::shared_ptr<Config> sw_traced_config;
+    std::shared_ptr<Config> hw_traced_config;
     std::shared_ptr<Config> skybox_config;
     std::shared_ptr<Config> present_config;
 
@@ -132,6 +147,8 @@ namespace RayGene3D
     std::shared_ptr<Pass> shadowmap_passes[6];
     std::shared_ptr<Pass> unshadowed_pass;
     std::shared_ptr<Pass> shadowed_pass;
+    std::shared_ptr<Pass> sw_traced_pass;
+    std::shared_ptr<Pass> hw_traced_pass;
     std::shared_ptr<Pass> skybox_pass;
     std::shared_ptr<Pass> present_pass;
    
@@ -144,8 +161,10 @@ namespace RayGene3D
   public:
     enum ShadowType
     {
-      NO_SHADOWS = 0,
-      POINT_SHADOWS = 1,
+      NO_SHADOW = 0,
+      SHADOW_CUBEMAP = 1,
+      SW_TRACE_SHADOW = 2,
+      HW_TRACE_SHADOW = 3,
     };
 
     enum ShadingSubpass
@@ -156,7 +175,7 @@ namespace RayGene3D
     };
 
   protected:
-    ShadowType shadows{ NO_SHADOWS };
+    ShadowType shadows{ NO_SHADOW };
 
   public:
     void SetShadowType(ShadowType shadows) { this->shadows = shadows; }
@@ -174,6 +193,13 @@ namespace RayGene3D
     void CreateSceneInstances();
     void CreateSceneTriangles();
     void CreateSceneVertices();
+
+    void CreateSceneTBoxes();
+    void CreateSceneBBoxes();
+
+    void CreateTraceInstances();
+    void CreateTraceTriangles();
+    void CreateTraceVertices();
 
     void CreateSceneTextures0();
     void CreateSceneTextures1();
@@ -196,6 +222,14 @@ namespace RayGene3D
     void CreateShadowedLayout();
     void CreateShadowedConfig();
     void CreateShadowedPass();
+
+    void CreateSWTracedLayout();
+    void CreateSWTracedConfig();
+    void CreateSWTracedPass();
+
+    void CreateHWTracedLayout();
+    void CreateHWTracedConfig();
+    void CreateHWTracedPass();
 
     void CreateUnshadowedLayout();
     void CreateUnshadowedConfig();
@@ -222,6 +256,13 @@ namespace RayGene3D
     void DestroySceneTriangles();
     void DestroySceneVertices();
 
+    void DestroySceneTBoxes();
+    void DestroySceneBBoxes();
+
+    void DestroyTraceInstances();
+    void DestroyTraceTriangles();
+    void DestroyTraceVertices();
+
     void DestroySceneTextures0();
     void DestroySceneTextures1();
     void DestroySceneTextures2();
@@ -243,6 +284,14 @@ namespace RayGene3D
     void DestroyShadowedLayout();
     void DestroyShadowedConfig();
     void DestroyShadowedPass();
+
+    void DestroySWTracedLayout();
+    void DestroySWTracedConfig();
+    void DestroySWTracedPass();
+
+    void DestroyHWTracedLayout();
+    void DestroyHWTracedConfig();
+    void DestroyHWTracedPass();
 
     void DestroyUnshadowedLayout();
     void DestroyUnshadowedConfig();

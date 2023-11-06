@@ -57,6 +57,8 @@ set(SOURCE main.cpp
   imgui/imgui.cpp
   spark/spark.h
   spark/spark.cpp
+  broker/bvh_broker.h
+  broker/bvh_broker.cpp
   broker/import_broker.h
   broker/import_broker.cpp
   broker/lightmap_broker.h
