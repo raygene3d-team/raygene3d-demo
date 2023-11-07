@@ -143,6 +143,9 @@ namespace RayGene3D
     std::unique_ptr<RayGene3D::Wrap> wrap;
 
   protected:
+    std::string mode_name{"Disabled Shadow"};
+
+  protected:
     std::shared_ptr<RayGene3D::Spark> spark;
     std::shared_ptr<RayGene3D::Imgui> imgui;
 
@@ -576,9 +579,21 @@ namespace RayGene3D
         if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
         {
           auto shadow_type = spark->GetShadowType();
-          if (shadow_type == Spark::NO_SHADOW) { shadow_type = Spark::SHADOW_CUBEMAP; } else
-          if (shadow_type == Spark::SHADOW_CUBEMAP) { shadow_type = Spark::SW_TRACE_SHADOW; } else
-          if (shadow_type == Spark::SW_TRACE_SHADOW) { shadow_type = Spark::NO_SHADOW; }
+          if (shadow_type == Spark::NO_SHADOW)
+          {
+            shadow_type = Spark::SHADOW_CUBEMAP;
+            mode_name = "Cubemap Shadow";
+          }
+          else if (shadow_type == Spark::SHADOW_CUBEMAP)
+          {
+            shadow_type = Spark::SW_TRACE_SHADOW;
+            mode_name = "SW Traced Shadow";
+          }
+          else if (shadow_type == Spark::SW_TRACE_SHADOW)
+          {
+            shadow_type = Spark::NO_SHADOW;
+            mode_name = "Disabled Shadow";
+          }
           spark->SetShadowType(shadow_type);
           change_spark = false;
         }
@@ -606,7 +621,7 @@ namespace RayGene3D
           const auto adapter_name = wrap->GetCore()->GetDevice()->GetName();
 
           std::stringstream ss;
-          ss << app_name << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
+          ss << app_name << " [" << mode_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
           glfwSetWindowTitle(glfw, ss.str().c_str());
 
           frame_counter = 0;
