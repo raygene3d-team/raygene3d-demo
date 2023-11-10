@@ -489,7 +489,7 @@ namespace RayGene3D
 
 
       spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*wrap));
-      spark->SetShadowType(Spark::NO_SHADOW);
+      spark->SetShadowType(Spark::DISABLED_SHADOW);
 
       imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*wrap));
       imgui->SetShowTestWindow(false);
@@ -579,19 +579,19 @@ namespace RayGene3D
         if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
         {
           auto shadow_type = spark->GetShadowType();
-          if (shadow_type == Spark::NO_SHADOW)
+          if (shadow_type == Spark::DISABLED_SHADOW)
           {
-            shadow_type = Spark::SHADOW_CUBEMAP;
+            shadow_type = Spark::CUBEMAP_SHADOW;
             mode_name = "Cubemap Shadow";
           }
-          else if (shadow_type == Spark::SHADOW_CUBEMAP)
+          else if (shadow_type == Spark::CUBEMAP_SHADOW)
           {
-            shadow_type = Spark::SW_TRACE_SHADOW;
+            shadow_type = Spark::SW_TRACED_SHADOW;
             mode_name = "SW Traced Shadow";
           }
-          else if (shadow_type == Spark::SW_TRACE_SHADOW)
+          else if (shadow_type == Spark::SW_TRACED_SHADOW)
           {
-            shadow_type = Spark::NO_SHADOW;
+            shadow_type = Spark::DISABLED_SHADOW;
             mode_name = "Disabled Shadow";
           }
           spark->SetShadowType(shadow_type);

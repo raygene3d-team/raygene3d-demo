@@ -1890,7 +1890,7 @@ namespace RayGene3D
   {
     switch (shadows)
     {
-    case NO_SHADOW:
+    case DISABLED_SHADOW:
     {
       shadowmap_passes[0]->SetEnabled(false);
       shadowmap_passes[1]->SetEnabled(false);
@@ -1905,7 +1905,7 @@ namespace RayGene3D
       present_pass->SetEnabled(true);
       break;
     }
-    case SHADOW_CUBEMAP:
+    case CUBEMAP_SHADOW:
     {
       shadowmap_passes[0]->SetEnabled(true);
       shadowmap_passes[1]->SetEnabled(true);
@@ -1919,7 +1919,7 @@ namespace RayGene3D
       present_pass->SetEnabled(true);
       break;
     }
-    case SW_TRACE_SHADOW:
+    case SW_TRACED_SHADOW:
     {
       shadowmap_passes[0]->SetEnabled(false);
       shadowmap_passes[1]->SetEnabled(false);

@@ -86,6 +86,11 @@ namespace RayGene3D
     std::shared_ptr<Resource> depth_target;
     std::shared_ptr<Resource> shadow_map;
 
+    std::shared_ptr<Resource> gbuffer_0_target; // 8-8-8-8 - albedo / metallic
+    std::shared_ptr<Resource> gbuffer_1_target; // 8-8-8-8 - normal / smoothness
+    std::shared_ptr<Resource> gbuffer_2_target; // 10-10-10-2 - color (GI+occlusion / material)
+    std::shared_ptr<Resource> gbuffer_3_target; // 32 - depth
+
     std::shared_ptr<Resource> screen_data;
     std::shared_ptr<Resource> camera_data;
     std::shared_ptr<Resource> shadow_data;
@@ -161,10 +166,10 @@ namespace RayGene3D
   public:
     enum ShadowType
     {
-      NO_SHADOW = 0,
-      SHADOW_CUBEMAP = 1,
-      SW_TRACE_SHADOW = 2,
-      HW_TRACE_SHADOW = 3,
+      DISABLED_SHADOW = 0,
+      CUBEMAP_SHADOW = 1,
+      SW_TRACED_SHADOW = 2,
+      HW_TRACED_SHADOW = 3,
     };
 
     enum ShadingSubpass
@@ -175,7 +180,7 @@ namespace RayGene3D
     };
 
   protected:
-    ShadowType shadows{ NO_SHADOW };
+    ShadowType shadows{ DISABLED_SHADOW };
 
   public:
     void SetShadowType(ShadowType shadows) { this->shadows = shadows; }
