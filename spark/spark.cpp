@@ -1248,6 +1248,10 @@ namespace RayGene3D
       deferred_color_target,
     };
 
+    const Layout::Sampler samplers[] = {
+      { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+    };
+
     shadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_shadowed_layout",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
@@ -1255,7 +1259,7 @@ namespace RayGene3D
       { wi_views, uint32_t(std::size(wi_views)) },
       {},
       {},
-      {},
+      { samplers, uint32_t(std::size(samplers)) },
       {}
     );
   }
@@ -1844,17 +1848,17 @@ namespace RayGene3D
     }
     case CUBEMAP_SHADOW:
     {
-      //shadowmap_passes[0]->SetEnabled(true);
-      //shadowmap_passes[1]->SetEnabled(true);
-      //shadowmap_passes[2]->SetEnabled(true);
-      //shadowmap_passes[3]->SetEnabled(true);
-      //shadowmap_passes[4]->SetEnabled(true);
-      //shadowmap_passes[5]->SetEnabled(true);
-      //gbuffer_pass->SetEnabled(true);
-      //unshadowed_pass->SetEnabled(false);
-      //shadowed_pass->SetEnabled(true);
-      //sw_traced_pass->SetEnabled(false);
-      //present_pass->SetEnabled(true);
+      shadowmap_passes[0]->SetEnabled(true);
+      shadowmap_passes[1]->SetEnabled(true);
+      shadowmap_passes[2]->SetEnabled(true);
+      shadowmap_passes[3]->SetEnabled(true);
+      shadowmap_passes[4]->SetEnabled(true);
+      shadowmap_passes[5]->SetEnabled(true);
+      gbuffer_pass->SetEnabled(true);
+      unshadowed_pass->SetEnabled(false);
+      shadowed_pass->SetEnabled(true);
+      sw_traced_pass->SetEnabled(false);
+      present_pass->SetEnabled(true);
       break;
     }
     case SW_TRACED_SHADOW:
@@ -2124,18 +2128,14 @@ namespace RayGene3D
     CreateSceneTextures2();
     CreateSceneTextures3();
 
-    CreateLightMaps();
-
     CreateSkyboxVertices();
     CreateSkyboxTriangles();
     CreateSkyboxTexture();
 
+    CreateLightMaps();
+
     CreateGraphicArguments();
     CreateComputeArguments();
-
-    CreateSkyboxLayout();
-    CreateSkyboxConfig();
-    //CreateSkyboxPass();
 
     CreateShadowmapLayout();
     CreateShadowmapConfig(); 
@@ -2145,6 +2145,10 @@ namespace RayGene3D
     CreateShadowmapPass(3);
     CreateShadowmapPass(4);
     CreateShadowmapPass(5);
+
+    CreateGBufferLayout();
+    CreateGBufferConfig();
+    CreateGBufferPass();
 
     CreateShadowedLayout();
     CreateShadowedConfig();
@@ -2162,9 +2166,9 @@ namespace RayGene3D
     CreateUnshadowedConfig();
     CreateUnshadowedPass();
 
-    CreateGBufferLayout();
-    CreateGBufferConfig();
-    CreateGBufferPass();
+    CreateSkyboxLayout();
+    CreateSkyboxConfig();
+    CreateSkyboxPass();
 
     CreatePresentLayout();    
     CreatePresentConfig();

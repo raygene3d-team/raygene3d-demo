@@ -257,10 +257,9 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   const float3 normal = UnpackNormal(w_nrm_s.rgb);
 
   const float depth = depth_texture[pixel_id];
-  float4 ndc_coord = float4(2.0 * pixel_id / float2(extent_x, extent_y) - 1.0, depth, 1.0);
-  ndc_coord.y *= -1;
-  const float4 view_pos = mul(camera_proj_inv, ndc_coord);
-  const float3 surface_pos = mul(camera_view_inv, float4(view_pos.xyz / view_pos.w, 1.0)).xyz;
+  const float2 screen_coords = 2.0 * (float2(pixel_id.x, extent_y - pixel_id.y) + float2(0.5, -0.5)) / float2(extent_x, extent_y) - 1.0;
+  float4 world_pos = mul(camera_view_inv, mul(camera_proj_inv, float4(screen_coords, depth, 1.0)));
+  float3 surface_pos = world_pos.xyz / world_pos.w;
 
   const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
   const float camera_dst = length(camera_pos - surface_pos);
@@ -281,7 +280,7 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   ray.tmax = shadow_dst;
   const float attenuation = OccludeScene(ray) ? 0.0 : 1.0;
 
-  const float3 color = float3(attenuation, attenuation, attenuation);// ambient + diffuse * attenuation;
+  const float3 color =  ambient + diffuse * attenuation;
 
-  out_buffer[pixel_id] = float4(surface_pos, 1);
+  out_buffer[pixel_id] = float4(color, 1);
 }
