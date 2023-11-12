@@ -134,6 +134,7 @@ namespace RayGene3D
     std::shared_ptr<Layout> shadowed_layout;
     std::shared_ptr<Layout> sw_traced_layout;
     std::shared_ptr<Layout> hw_traced_layout;
+    std::shared_ptr<Layout> gbuffer_layout;
     std::shared_ptr<Layout> skybox_layout;
     std::shared_ptr<Layout> present_layout;
 
@@ -144,6 +145,7 @@ namespace RayGene3D
     std::shared_ptr<Config> shadowed_config;
     std::shared_ptr<Config> sw_traced_config;
     std::shared_ptr<Config> hw_traced_config;
+    std::shared_ptr<Config> gbuffer_config;
     std::shared_ptr<Config> skybox_config;
     std::shared_ptr<Config> present_config;
 
@@ -154,6 +156,7 @@ namespace RayGene3D
     std::shared_ptr<Pass> shadowed_pass;
     std::shared_ptr<Pass> sw_traced_pass;
     std::shared_ptr<Pass> hw_traced_pass;
+    std::shared_ptr<Pass> gbuffer_pass;
     std::shared_ptr<Pass> skybox_pass;
     std::shared_ptr<Pass> present_pass;
    
@@ -240,6 +243,10 @@ namespace RayGene3D
     void CreateUnshadowedConfig();
     void CreateUnshadowedPass();
 
+    void CreateGBufferLayout();
+    void CreateGBufferConfig();
+    void CreateGBufferPass();
+
     void CreateSkyboxLayout();
     void CreateSkyboxConfig();
     void CreateSkyboxPass();
@@ -252,6 +259,11 @@ namespace RayGene3D
     void DestroyColorTarget();
     void DestroyDepthTarget();
     void DestroyShadowMap();
+
+    void DestroyGBufferTarget0();
+    void DestroyGBufferTarget1();
+    void DestroyGBufferTarget2();
+    void DestroyGBufferTarget3();
 
     void DestroyScreenData();
     void DestroyCameraData();

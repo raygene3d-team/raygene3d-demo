@@ -45,7 +45,7 @@ constexpr float def_fov_y{ 60.0f };
 constexpr float def_n_plane{ 0.1f };
 constexpr float def_f_plane{ 100.0f };
 constexpr uint32_t def_device_ordinal{ 0 };
-constexpr bool def_device_debug{ false };
+constexpr bool def_device_debug{ true };
 
 constexpr char setup_name[] = { "setup.json" };
 
@@ -125,7 +125,7 @@ std::shared_ptr<RayGene3D::Property> LoadSetup(const std::string& setup_name)
   const auto prop_d_debug = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_BOOL));
   {
     const auto device_debug = property->HasObjectItem("device_debug") ? property->GetObjectItem("device_debug")->GetBool() : def_device_debug;
-    prop_d_debug->SetBool(device_debug);
+    prop_d_debug->SetBool(device_debug || true);
   }
   property->SetObjectItem("device_debug", prop_d_debug);
 
