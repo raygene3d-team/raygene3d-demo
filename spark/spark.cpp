@@ -101,7 +101,7 @@ namespace RayGene3D
 
   void Spark::CreateDepthTarget()
   {
-    depth_target = wrap.GetCore()->GetDevice()->CreateResource("spark_depth_target",
+    gbuffer_3_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_3_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
@@ -776,7 +776,7 @@ namespace RayGene3D
     auto gbuffer_2_texture = gbuffer_2_target->CreateView("spark_sw_traced_gbuffer_2_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto gbuffer_3_texture = depth_target->CreateView("spark_sw_traced_gbuffer_3_texture",
+    auto gbuffer_3_texture = gbuffer_3_target->CreateView("spark_sw_traced_gbuffer_3_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -1086,7 +1086,7 @@ namespace RayGene3D
       { fill_gbuffer_2_target, std::array<float, 4>{ NAN, NAN, 0.0f, 0.0f } },
     };
 
-    auto gbuffer_depth_target = depth_target->CreateView("spark_gbuffer_depth_target",
+    auto gbuffer_depth_target = gbuffer_3_target->CreateView("spark_fill_gbuffer_3_target",
       Usage(USAGE_DEPTH_STENCIL)
     );
     const Pass::DSAttachment ds_attachments[] = {
@@ -1128,7 +1128,7 @@ namespace RayGene3D
     auto deferred_gi_emission_texture = gbuffer_2_target->CreateView("spark_deferred_gi_emission_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto deferred_depth_texture = depth_target->CreateView("spark_deferred_depth",
+    auto deferred_depth_texture = gbuffer_3_target->CreateView("spark_deferred_depth",
       Usage(USAGE_SHADER_RESOURCE));
     const std::shared_ptr<View> ri_views[] = {
       deferred_albedo_metallic_texture,
@@ -1226,7 +1226,7 @@ namespace RayGene3D
     auto gbuffer_2_texture = gbuffer_2_target->CreateView("spark_shadowed_gbuffer_2_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto gbuffer_3_texture = depth_target->CreateView("spark_shadowed_gbuffer_3_texture",
+    auto gbuffer_3_texture = gbuffer_3_target->CreateView("spark_shadowed_gbuffer_3_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
     auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
@@ -1437,7 +1437,7 @@ namespace RayGene3D
       skybox_color_target, std::nullopt,
     };
 
-    auto skybox_depth_target = depth_target->CreateView("spark_skybox_depth_target",
+    auto skybox_depth_target = gbuffer_3_target->CreateView("spark_skybox_depth_target",
       Usage(USAGE_DEPTH_STENCIL)
     );
     const Pass::DSAttachment ds_attachments[] = {
@@ -1697,6 +1697,24 @@ namespace RayGene3D
   {
     wrap.GetCore()->GetDevice()->DestroyResource(compute_arguments);
     compute_arguments.reset();
+  }
+
+  void Spark::DestroyGBufferPass()
+  {
+    wrap.GetCore()->GetDevice()->DestroyPass(gbuffer_pass);
+    gbuffer_pass.reset();
+  }
+
+  void Spark::DestroyGBufferLayout()
+  {
+    wrap.GetCore()->GetDevice()->DestroyLayout(gbuffer_layout);
+    gbuffer_layout.reset();
+  }
+
+  void Spark::DestroyGBufferConfig()
+  {
+    wrap.GetCore()->GetDevice()->DestroyConfig(gbuffer_config);
+    gbuffer_config.reset();
   }
 
   void Spark::DestroyShadowmapLayout()
@@ -2207,6 +2225,10 @@ namespace RayGene3D
     DestroyShadowmapPass(0);
     DestroyShadowmapConfig();
     DestroyShadowmapLayout();
+
+    DestroyGBufferPass();
+    DestroyGBufferConfig();
+    DestroyGBufferLayout();
 
     DestroySkyboxConfig();
     DestroySkyboxLayout();

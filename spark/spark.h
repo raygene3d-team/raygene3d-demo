@@ -135,6 +135,7 @@ namespace RayGene3D
     std::shared_ptr<Layout> sw_traced_layout;
     std::shared_ptr<Layout> hw_traced_layout;
     std::shared_ptr<Layout> gbuffer_layout;
+    std::shared_ptr<Layout> deferred_layout;
     std::shared_ptr<Layout> skybox_layout;
     std::shared_ptr<Layout> present_layout;
 
@@ -146,6 +147,7 @@ namespace RayGene3D
     std::shared_ptr<Config> sw_traced_config;
     std::shared_ptr<Config> hw_traced_config;
     std::shared_ptr<Config> gbuffer_config;
+    std::shared_ptr<Config> deferred_config;
     std::shared_ptr<Config> skybox_config;
     std::shared_ptr<Config> present_config;
 
@@ -293,6 +295,10 @@ namespace RayGene3D
 
     void DestroyGraphicArguments();
     void DestroyComputeArguments();
+
+    void DestroyGBufferLayout();
+    void DestroyGBufferConfig();
+    void DestroyGBufferPass();
 
     void DestroyShadowmapLayout();
     void DestroyShadowmapConfig();
