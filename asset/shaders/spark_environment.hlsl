@@ -57,8 +57,6 @@ struct PSInput
 struct PSOutput
 {
   float4 target_0 : SV_Target0;
-  //float4 target_1 : SV_Target1;
-  //float4 target_2 : SV_Target2;
 };
 
 PSOutput ps_main(PSInput input)
@@ -78,7 +76,5 @@ PSOutput ps_main(PSInput input)
   //const float4 env_value = environment_texture.Sample(sampler0, normalize(camera_dir));
 
   output.target_0 = env_value;
-  //output.target_1 = float4(0, 0, 0, 0);
-  //output.target_2 = float4(0, 0, 0, 0);
   return output;
 }

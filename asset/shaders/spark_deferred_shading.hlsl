@@ -1,0 +1,112 @@
+#ifdef USE_SPIRV
+#define VK_BINDING(x) [[vk::binding(x)]]
+#define VK_LOCATION(x) [[vk::location(x)]]
+#else
+#define VK_BINDING(x)
+#define VK_LOCATION(x)
+#endif
+
+#include "packing.hlsl"
+
+VK_BINDING(0) sampler sampler0 : register(s0);
+
+VK_BINDING(1) cbuffer constant0 : register(b0)
+{
+  uint extent_x       : packoffset(c0.x);
+  uint extent_y       : packoffset(c0.y);
+  uint rnd_base       : packoffset(c0.z);
+  uint rnd_seed       : packoffset(c0.w);
+}
+
+VK_BINDING(2) cbuffer constant1 : register(b1)
+{
+  float4x4 camera_view     : packoffset(c0.x);
+  float4x4 camera_proj     : packoffset(c4.x);
+  float4x4 camera_view_inv : packoffset(c8.x);
+  float4x4 camera_proj_inv : packoffset(c12.x);
+}
+
+VK_BINDING(3) cbuffer constant2 : register(b2)
+{
+  float4x4 shadow_view     : packoffset(c0.x);
+  float4x4 shadow_proj     : packoffset(c4.x);
+  float4x4 shadow_view_inv : packoffset(c8.x);
+  float4x4 shadow_proj_inv : packoffset(c12.x);
+}
+
+VK_BINDING(4) Texture2D<float4> render_target_0 : register(t0);
+VK_BINDING(5) Texture2D<float4> render_target_1 : register(t1);
+VK_BINDING(6) Texture2D<float4> render_target_2 : register(t2);
+VK_BINDING(7) Texture2D<float> depth_texture : register(t3);
+
+struct VSInput
+{
+  VK_LOCATION(0) float2 pos : register0;
+  VK_LOCATION(1) float2 uv : register1;
+};
+
+struct VSOutput
+{
+  VK_LOCATION(0) float4 pos : SV_Position;
+  VK_LOCATION(1) float2 uv : register0;
+};
+
+VSOutput vs_main(VSInput input)
+{
+  VSOutput output;
+  output.pos = float4(input.pos, 1.0, 1.0);
+  output.uv = input.uv;
+  return output;
+}
+
+struct PSInput
+{
+  VK_LOCATION(0) float4 pos : SV_Position;
+  VK_LOCATION(1) float2 uv : register0;
+};
+
+struct PSOutput
+{
+  float4 target_0 : SV_Target0;
+};
+
+PSOutput ps_main(PSInput input)
+{
+  PSOutput output;
+
+  const float rx = ((input.pos.x + 0.5) / extent_x);
+  const float ry = ((input.pos.y + 0.5) / extent_y);
+  const float2 screen_coords = float2(rx, ry);
+
+  const float4 w_alb_m = render_target_0.Sample(sampler0, screen_coords);
+  const float4 w_nrm_s = render_target_1.Sample(sampler0, screen_coords);
+  const float4 w_ems_a = render_target_2.Sample(sampler0, screen_coords);
+
+  const float3 normal = UnpackNormal(w_nrm_s.rgb);
+
+  const float ndcx = 2.0 * ((input.pos.x + 0.5) / extent_x) - 1.0;
+  const float ndcy = 2.0 * ((input.pos.y + 0.5) / extent_y) - 1.0;
+  const float depth = depth_texture.Sample(sampler0, screen_coords);
+  float4 world_pos = mul(camera_view_inv, mul(camera_proj_inv, float4(ndcx, -ndcy, depth, 1.0)));
+  
+  float3 surface_pos = world_pos.xyz / world_pos.w;
+
+  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
+  const float camera_dst = length(camera_pos - surface_pos);
+  const float3 camera_dir = (camera_pos - surface_pos) / camera_dst;
+
+  const float3 shadow_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
+  const float shadow_dst = length(shadow_pos - surface_pos);
+  const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
+
+  const float3 diffuse = max(0.0, dot(shadow_dir, normal)) * w_alb_m.xyz;
+  const float3 specular = pow(max(0.0, dot(normalize(camera_dir + shadow_dir), normal)), w_nrm_s.a);
+  const float3 ambient = 0.025 * w_alb_m.xyz;
+  const float attenuation = 1.0;
+
+  const float3 color = ambient + diffuse * attenuation;
+
+  
+  output.target_0 = float4(color, 1.0);
+  return output;
+}

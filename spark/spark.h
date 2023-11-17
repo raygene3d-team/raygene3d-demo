@@ -134,8 +134,7 @@ namespace RayGene3D
     std::shared_ptr<Layout> shadowed_layout;
     std::shared_ptr<Layout> sw_traced_layout;
     std::shared_ptr<Layout> hw_traced_layout;
-    std::shared_ptr<Layout> gbuffer_layout;
-    std::shared_ptr<Layout> deferred_layout;
+    std::shared_ptr<Layout> geometry_layout;
     std::shared_ptr<Layout> skybox_layout;
     std::shared_ptr<Layout> present_layout;
 
@@ -146,8 +145,7 @@ namespace RayGene3D
     std::shared_ptr<Config> shadowed_config;
     std::shared_ptr<Config> sw_traced_config;
     std::shared_ptr<Config> hw_traced_config;
-    std::shared_ptr<Config> gbuffer_config;
-    std::shared_ptr<Config> deferred_config;
+    std::shared_ptr<Config> geometry_config;
     std::shared_ptr<Config> skybox_config;
     std::shared_ptr<Config> present_config;
 
@@ -158,7 +156,7 @@ namespace RayGene3D
     std::shared_ptr<Pass> shadowed_pass;
     std::shared_ptr<Pass> sw_traced_pass;
     std::shared_ptr<Pass> hw_traced_pass;
-    std::shared_ptr<Pass> gbuffer_pass;
+    std::shared_ptr<Pass> geometry_pass;
     std::shared_ptr<Pass> skybox_pass;
     std::shared_ptr<Pass> present_pass;
    
@@ -193,8 +191,12 @@ namespace RayGene3D
 
   protected:
     void CreateColorTarget();
-    void CreateDepthTarget();
     void CreateShadowMap();
+
+    void CreateGBufferTarget0();
+    void CreateGBufferTarget1();
+    void CreateGBufferTarget2();
+    void CreateGBufferTarget3();
 
     void CreateScreenData();
     void CreateCameraData();
@@ -245,9 +247,9 @@ namespace RayGene3D
     void CreateUnshadowedConfig();
     void CreateUnshadowedPass();
 
-    void CreateGBufferLayout();
-    void CreateGBufferConfig();
-    void CreateGBufferPass();
+    void CreateGeometryLayout();
+    void CreateGeometryConfig();
+    void CreateGeometryPass();
 
     void CreateSkyboxLayout();
     void CreateSkyboxConfig();
@@ -296,9 +298,9 @@ namespace RayGene3D
     void DestroyGraphicArguments();
     void DestroyComputeArguments();
 
-    void DestroyGBufferLayout();
-    void DestroyGBufferConfig();
-    void DestroyGBufferPass();
+    void DestroyGeometryLayout();
+    void DestroyGeometryConfig();
+    void DestroyGeometryPass();
 
     void DestroyShadowmapLayout();
     void DestroyShadowmapConfig();
