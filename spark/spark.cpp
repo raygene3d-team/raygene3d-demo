@@ -830,7 +830,7 @@ namespace RayGene3D
   void Spark::CreateSWTracedConfig()
   {
     std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_sw_traced_deferred.hlsl", std::fstream::in);
+    shader_fs.open("./asset/shaders/spark_sw_traced.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
@@ -1147,7 +1147,7 @@ namespace RayGene3D
   void Spark::CreateUnshadowedConfig()
   {
     std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_unshadowed_deferred.hlsl", std::fstream::in);
+    shader_fs.open("./asset/shaders/spark_unshadowed.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
@@ -1255,7 +1255,7 @@ namespace RayGene3D
   void Spark::CreateShadowedConfig()
   {
     std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_shadowed_deferred.hlsl", std::fstream::in);
+    shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
