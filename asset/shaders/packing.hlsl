@@ -39,15 +39,15 @@ float3 UnpackNormalOctQuadEncode(float2 f)
   return normalize(n);
 }
 
-float3 PackNormal(float3 n)
+uint3 PackNormal(float3 n)
 {
   float2 compressed_normal = 0.5 * PackNormalOctQuadEncode(n) + 0.5;
-  return float3(PackFloat2To888UInt(compressed_normal)) / 255.0;
+  return PackFloat2To888UInt(compressed_normal);
 }
 
-float3 UnpackNormal(float3 packed_normal)
+float3 UnpackNormal(uint3 packed_normal)
 {
-  float2 compressed_normal = 2.0 * Unpack888UIntToFloat2(uint3(packed_normal * 255.0)) - 1.0;
+  float2 compressed_normal = 2.0 * Unpack888UIntToFloat2(packed_normal) - 1.0;
   return UnpackNormalOctQuadEncode(compressed_normal);
 }
 

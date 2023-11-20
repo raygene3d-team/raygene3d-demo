@@ -125,8 +125,8 @@ struct PSInput
 struct PSOutput
 {
   float4 target_0 : SV_Target0;
-  float4 target_1 : SV_Target1;
-  float4 target_2 : SV_Target2;
+  uint4  target_1 : SV_Target1;
+  float3 target_2 : SV_Target2;
 };
 
 PSOutput ps_main(PSInput input)
@@ -161,11 +161,16 @@ PSOutput ps_main(PSInput input)
   n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
 #endif
 
-  float3 packed_normal = PackNormal(n);
+  const uint metallic = uint(saturate(surface.metallic) * 255.0);
+  const uint3 packed_normal = PackNormal(n);
+  const float smoothness = surface.shininess;
+  const float3 albedo = surface.diffuse;
 
-  output.target_0 = float4(surface.diffuse, surface.metallic);
-  output.target_1 = float4(packed_normal, surface.shininess);
-  output.target_2 = float4(surface.emission, 1.0);
+  const float3 global_illumination = 0.025 * albedo;
+
+  output.target_0 = float4(albedo, smoothness);
+  output.target_1 = uint4(packed_normal, metallic);
+  output.target_2 = float3(surface.emission + global_illumination);
 
 #ifdef TEST
 #endif

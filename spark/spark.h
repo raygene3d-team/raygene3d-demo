@@ -82,7 +82,6 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_reflection_probe;
 
   protected:
-    std::shared_ptr<Resource> color_target;
     std::shared_ptr<Resource> depth_target;
     std::shared_ptr<Resource> shadow_map;
 
@@ -121,8 +120,9 @@ namespace RayGene3D
 
     std::shared_ptr<Resource> reflection_probe;
 
-    std::shared_ptr<Resource> skybox_vertices;
-    std::shared_ptr<Resource> skybox_triangles;
+    std::shared_ptr<Resource> screen_quad_vertices;
+    std::shared_ptr<Resource> screen_quad_triangles;
+
     std::shared_ptr<Resource> skybox_texture;
 
     std::shared_ptr<Resource> graphic_arguments;
@@ -190,7 +190,6 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   protected:
-    void CreateColorTarget();
     void CreateShadowMap();
 
     void CreateGBufferTarget0();
@@ -220,8 +219,8 @@ namespace RayGene3D
 
     void CreateLightMaps();
 
-    void CreateSkyboxVertices();
-    void CreateSkyboxTriangles();
+    void CreateScreenQuadVertices();
+    void CreateScreenQuadTriangles();
     void CreateSkyboxTexture();
 
     void CreateGraphicArguments();
@@ -260,7 +259,6 @@ namespace RayGene3D
     void CreatePresentPass();
 
   protected:
-    void DestroyColorTarget();
     void DestroyDepthTarget();
     void DestroyShadowMap();
 
@@ -291,8 +289,8 @@ namespace RayGene3D
 
     void DestroyLightMaps();
 
-    void DestroySkyboxVertices();
-    void DestroySkyboxTriangles();
+    void DestroyScreenQuadVertices();
+    void DestroyScreenQuadTriangles();
     void DestroySkyboxTexture();
 
     void DestroyGraphicArguments();

@@ -16,7 +16,7 @@ VK_BINDING(0) cbuffer constant0 : register(b0)
 }
 
 
-VK_BINDING(1) Texture2D<float4> render_target_0 : register(t0);
+VK_BINDING(1) Texture2D<float3> render_target_0 : register(t0);
 VK_BINDING(2) RWTexture2D<float4> presentation_buffer : register(u0);
 
 
@@ -26,6 +26,6 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   const uint2 pixel_id = { dispatch_id.x, dispatch_id.y };
   const uint item_id = extent_x * dispatch_id.y + dispatch_id.x;
 
-  const float4 pixel_color = render_target_0[pixel_id];
+  const float4 pixel_color = float4(render_target_0[pixel_id], 1.0);
   presentation_buffer[pixel_id] = pow(max(0.0, pixel_color), 1.0 / 2.2);
 }
