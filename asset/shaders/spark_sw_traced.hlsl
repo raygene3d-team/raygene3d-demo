@@ -6,6 +6,8 @@
 #define VK_LOCATION(x)
 #endif
 
+#define USE_NORMAL_OCT_QUAD_ENCODING
+
 #include "packing.hlsl"
 #include "traverse.hlsl"
 
@@ -42,7 +44,7 @@ VK_BINDING(7) StructuredBuffer<Primitive> 	prim_items : register(t3);
 VK_BINDING(8) StructuredBuffer<Vertex> 		vert_items : register(t4);
 
 VK_BINDING(9) Texture2D<float4> gbuffer_0_texture : register(t5);
-VK_BINDING(10) Texture2D<uint4> gbuffer_1_texture : register(t6);
+VK_BINDING(10) Texture2D<float4> gbuffer_1_texture : register(t6);
 VK_BINDING(11) Texture2D<float> depth_texture : register(t8);
 
 Hit IntersectScene(in Ray ray, out float dist)
@@ -282,14 +284,25 @@ PSOutput ps_main(PSInput input)
   const float ry = (input.pos.y + 0.0) / extent_y;
   const float2 tex_coord = float2(rx, ry);
 
-  const float4 albedo_smoothness = gbuffer_0_texture.Sample(sampler0, tex_coord);
-  const uint4 normal_metallic = gbuffer_1_texture.Sample(sampler0, tex_coord);
+  const float depth = depth_texture.Sample(sampler0, tex_coord);
 
-  const float3 normal = UnpackNormal(normal_metallic.rgb);
+  if (depth == 1.0)
+  {
+    discard;
+  }
+
+  const float4 albedo_smoothness = gbuffer_0_texture.Sample(sampler0, tex_coord);
+  const float4 normal_metallic = gbuffer_1_texture.Sample(sampler0, tex_coord);
+
   const float metallic = float(normal_metallic.a) / 255.0;
   const float smoothness = albedo_smoothness.a;
 
-  const float depth = depth_texture.Sample(sampler0, tex_coord);
+#ifdef USE_NORMAL_OCT_QUAD_ENCODING
+  const float3 normal = UnpackNormal(uint3(normal_metallic.rgb * 255.0));
+#else
+  const float3 normal = normal_metallic.rgb;
+#endif
+
   const float4 ndc_coord = float4(2.0 * tex_coord.x - 1.0, 1.0 - 2.0 * tex_coord.y, depth, 1.0);
   const float4 view_pos = mul(camera_proj_inv, ndc_coord);
   const float3 surface_pos = mul(camera_view_inv, float4(view_pos.xyz / view_pos.w, 1.0)).xyz;

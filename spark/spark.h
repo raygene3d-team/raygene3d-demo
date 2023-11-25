@@ -82,13 +82,12 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_reflection_probe;
 
   protected:
-    std::shared_ptr<Resource> depth_target;
+    std::shared_ptr<Resource> color_target; // 10-10-10-2 - color (GI+occlusion / material)
+    std::shared_ptr<Resource> depth_target; // 32 - depth
     std::shared_ptr<Resource> shadow_map;
 
     std::shared_ptr<Resource> gbuffer_0_target; // 8-8-8-8 - albedo / metallic
     std::shared_ptr<Resource> gbuffer_1_target; // 8-8-8-8 - normal / smoothness
-    std::shared_ptr<Resource> gbuffer_2_target; // 10-10-10-2 - color (GI+occlusion / material)
-    std::shared_ptr<Resource> gbuffer_3_target; // 32 - depth
 
     std::shared_ptr<Resource> screen_data;
     std::shared_ptr<Resource> camera_data;
@@ -157,7 +156,6 @@ namespace RayGene3D
     std::shared_ptr<Pass> sw_traced_pass;
     std::shared_ptr<Pass> hw_traced_pass;
     std::shared_ptr<Pass> geometry_pass;
-    std::shared_ptr<Pass> skybox_pass;
     std::shared_ptr<Pass> present_pass;
    
 
@@ -190,12 +188,12 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   protected:
+    void CreateColorTarget();
+    void CreateDepthTarget();
     void CreateShadowMap();
 
     void CreateGBufferTarget0();
     void CreateGBufferTarget1();
-    void CreateGBufferTarget2();
-    void CreateGBufferTarget3();
 
     void CreateScreenData();
     void CreateCameraData();
@@ -252,20 +250,18 @@ namespace RayGene3D
 
     void CreateSkyboxLayout();
     void CreateSkyboxConfig();
-    void CreateSkyboxPass();
 
     void CreatePresentLayout();
     void CreatePresentConfig();
     void CreatePresentPass();
 
   protected:
+    void DestroyColorTarget();
     void DestroyDepthTarget();
     void DestroyShadowMap();
 
     void DestroyGBufferTarget0();
     void DestroyGBufferTarget1();
-    void DestroyGBufferTarget2();
-    void DestroyGBufferTarget3();
 
     void DestroyScreenData();
     void DestroyCameraData();
@@ -322,7 +318,6 @@ namespace RayGene3D
 
     void DestroySkyboxLayout();
     void DestroySkyboxConfig();
-    void DestroySkyboxPass();
 
     void DestroyPresentLayout();
     void DestroyPresentConfig();
