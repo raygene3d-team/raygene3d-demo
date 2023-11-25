@@ -82,14 +82,12 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_reflection_probe;
 
   protected:
-    std::shared_ptr<Resource> color_target;
-    std::shared_ptr<Resource> depth_target;
+    std::shared_ptr<Resource> color_target; // 10-10-10-2 - color (GI+occlusion / material)
+    std::shared_ptr<Resource> depth_target; // 32 - depth
     std::shared_ptr<Resource> shadow_map;
 
     std::shared_ptr<Resource> gbuffer_0_target; // 8-8-8-8 - albedo / metallic
     std::shared_ptr<Resource> gbuffer_1_target; // 8-8-8-8 - normal / smoothness
-    std::shared_ptr<Resource> gbuffer_2_target; // 10-10-10-2 - color (GI+occlusion / material)
-    std::shared_ptr<Resource> gbuffer_3_target; // 32 - depth
 
     std::shared_ptr<Resource> screen_data;
     std::shared_ptr<Resource> camera_data;
@@ -121,8 +119,9 @@ namespace RayGene3D
 
     std::shared_ptr<Resource> reflection_probe;
 
-    std::shared_ptr<Resource> skybox_vertices;
-    std::shared_ptr<Resource> skybox_triangles;
+    std::shared_ptr<Resource> screen_quad_vertices;
+    std::shared_ptr<Resource> screen_quad_triangles;
+
     std::shared_ptr<Resource> skybox_texture;
 
     std::shared_ptr<Resource> graphic_arguments;
@@ -134,6 +133,7 @@ namespace RayGene3D
     std::shared_ptr<Layout> shadowed_layout;
     std::shared_ptr<Layout> sw_traced_layout;
     std::shared_ptr<Layout> hw_traced_layout;
+    std::shared_ptr<Layout> geometry_layout;
     std::shared_ptr<Layout> skybox_layout;
     std::shared_ptr<Layout> present_layout;
 
@@ -144,6 +144,7 @@ namespace RayGene3D
     std::shared_ptr<Config> shadowed_config;
     std::shared_ptr<Config> sw_traced_config;
     std::shared_ptr<Config> hw_traced_config;
+    std::shared_ptr<Config> geometry_config;
     std::shared_ptr<Config> skybox_config;
     std::shared_ptr<Config> present_config;
 
@@ -154,7 +155,7 @@ namespace RayGene3D
     std::shared_ptr<Pass> shadowed_pass;
     std::shared_ptr<Pass> sw_traced_pass;
     std::shared_ptr<Pass> hw_traced_pass;
-    std::shared_ptr<Pass> skybox_pass;
+    std::shared_ptr<Pass> geometry_pass;
     std::shared_ptr<Pass> present_pass;
    
 
@@ -191,6 +192,9 @@ namespace RayGene3D
     void CreateDepthTarget();
     void CreateShadowMap();
 
+    void CreateGBufferTarget0();
+    void CreateGBufferTarget1();
+
     void CreateScreenData();
     void CreateCameraData();
     void CreateShadowData();
@@ -213,8 +217,8 @@ namespace RayGene3D
 
     void CreateLightMaps();
 
-    void CreateSkyboxVertices();
-    void CreateSkyboxTriangles();
+    void CreateScreenQuadVertices();
+    void CreateScreenQuadTriangles();
     void CreateSkyboxTexture();
 
     void CreateGraphicArguments();
@@ -240,9 +244,12 @@ namespace RayGene3D
     void CreateUnshadowedConfig();
     void CreateUnshadowedPass();
 
+    void CreateGeometryLayout();
+    void CreateGeometryConfig();
+    void CreateGeometryPass();
+
     void CreateSkyboxLayout();
     void CreateSkyboxConfig();
-    void CreateSkyboxPass();
 
     void CreatePresentLayout();
     void CreatePresentConfig();
@@ -252,6 +259,9 @@ namespace RayGene3D
     void DestroyColorTarget();
     void DestroyDepthTarget();
     void DestroyShadowMap();
+
+    void DestroyGBufferTarget0();
+    void DestroyGBufferTarget1();
 
     void DestroyScreenData();
     void DestroyCameraData();
@@ -275,12 +285,16 @@ namespace RayGene3D
 
     void DestroyLightMaps();
 
-    void DestroySkyboxVertices();
-    void DestroySkyboxTriangles();
+    void DestroyScreenQuadVertices();
+    void DestroyScreenQuadTriangles();
     void DestroySkyboxTexture();
 
     void DestroyGraphicArguments();
     void DestroyComputeArguments();
+
+    void DestroyGeometryLayout();
+    void DestroyGeometryConfig();
+    void DestroyGeometryPass();
 
     void DestroyShadowmapLayout();
     void DestroyShadowmapConfig();
@@ -304,7 +318,6 @@ namespace RayGene3D
 
     void DestroySkyboxLayout();
     void DestroySkyboxConfig();
-    void DestroySkyboxPass();
 
     void DestroyPresentLayout();
     void DestroyPresentConfig();
