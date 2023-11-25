@@ -291,16 +291,16 @@ PSOutput ps_main(PSInput input)
     discard;
   }
 
-  const float4 albedo_smoothness = gbuffer_0_texture.Sample(sampler0, tex_coord);
-  const float4 normal_metallic = gbuffer_1_texture.Sample(sampler0, tex_coord);
+  const float4 albedo_metallic = gbuffer_0_texture.Sample(sampler0, tex_coord);
+  const float4 normal_smoothness = gbuffer_1_texture.Sample(sampler0, tex_coord);
 
-  const float metallic = float(normal_metallic.a) / 255.0;
-  const float smoothness = albedo_smoothness.a;
+  const float metallic = albedo_metallic.a;
+  const float smoothness = normal_smoothness.a;
 
 #ifdef USE_NORMAL_OCT_QUAD_ENCODING
-  const float3 normal = UnpackNormal(uint3(normal_metallic.rgb * 255.0));
+  const float3 normal = UnpackNormal(uint3(normal_smoothness.rgb * 255.0));
 #else
-  const float3 normal = normal_metallic.rgb;
+  const float3 normal = normal_smoothness.rgb;
 #endif
 
   const float4 ndc_coord = float4(2.0 * tex_coord.x - 1.0, 1.0 - 2.0 * tex_coord.y, depth, 1.0);
@@ -321,7 +321,7 @@ PSOutput ps_main(PSInput input)
   ray.dir = shadow_dir;
   ray.tmax = shadow_dst;
 
-  const float3 diffuse = max(0.0, dot(shadow_dir, normal)) * albedo_smoothness.xyz;
+  const float3 diffuse = max(0.0, dot(shadow_dir, normal)) * albedo_metallic.xyz;
   const float3 specular = pow(max(0.0, dot(normalize(camera_dir + shadow_dir), normal)), smoothness);
   const float attenuation = OccludeScene(ray) ? 0.0 : 1.0;
 

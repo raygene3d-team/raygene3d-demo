@@ -176,8 +176,8 @@ PSOutput ps_main(PSInput input)
 
   const float3 global_illumination = 0.025 * albedo;
 
-  output.target_0 = float4(albedo, smoothness);
-  output.target_1 = float4(packed_normal, metallic);
+  output.target_0 = float4(albedo, metallic);
+  output.target_1 = float4(packed_normal, smoothness);
   output.target_2 = float3(surface.emission + global_illumination);
 
 #ifdef TEST
