@@ -1979,7 +1979,6 @@ namespace RayGene3D
     }
     }
 
-
     {
       auto graphic_arg = reinterpret_cast<Pass::Argument*>(graphic_arguments->Map());
 
