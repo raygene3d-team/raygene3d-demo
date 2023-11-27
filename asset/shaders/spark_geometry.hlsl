@@ -103,7 +103,7 @@ struct VSOutput
 
 VSOutput vs_main(VSInput input)
 {
-  VSOutput output;
+  VSOutput output = (VSOutput)0;
 
   output.pos = mul(camera_proj, mul(camera_view, float4(input.pos, 1.0)));
   output.w_pos_d = float4(input.pos, input.sgn);
@@ -127,12 +127,12 @@ struct PSOutput
 {
   float4 target_0 : SV_Target0;
   float4 target_1 : SV_Target1;
-  float3 target_2 : SV_Target2;
+  float4 target_2 : SV_Target2;
 };
 
 PSOutput ps_main(PSInput input)
 {
-  PSOutput output;
+  PSOutput output = (PSOutput)0;
 
   float3 n = normalize(input.w_nrm_u.xyz);
   float3 t = normalize(input.w_tng_v.xyz);
@@ -176,9 +176,10 @@ PSOutput ps_main(PSInput input)
 
   const float3 global_illumination = 0.025 * albedo;
 
-  output.target_0 = float4(albedo, metallic);
-  output.target_1 = float4(packed_normal, smoothness);
-  output.target_2 = float3(surface.emission + global_illumination);
+  output.target_0 = float4(surface.emission + global_illumination, 1.0);
+  output.target_1 = float4(albedo, metallic);
+  output.target_2 = float4(packed_normal, smoothness);
+  
 
 #ifdef TEST
 #endif

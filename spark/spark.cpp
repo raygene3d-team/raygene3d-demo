@@ -937,19 +937,20 @@ namespace RayGene3D
       };
     }
 
+    auto geometry_color_target = color_target->CreateView("spark_geometry_color_target",
+      Usage(USAGE_RENDER_TARGET)
+    );
     auto geometry_gbuffer_0_target = gbuffer_0_target->CreateView("spark_geometry_gbuffer_0_target",
       Usage(USAGE_RENDER_TARGET)
     );
     auto geometry_gbuffer_1_target = gbuffer_1_target->CreateView("spark_geometry_gbuffer_1_target",
       Usage(USAGE_RENDER_TARGET)
     );
-    auto geometry_gbuffer_2_target = color_target->CreateView("spark_geometry_color_target",
-      Usage(USAGE_RENDER_TARGET)
-    );
+
     const Pass::RTAttachment rt_attachments[] = {
+      { geometry_color_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
       { geometry_gbuffer_0_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
       { geometry_gbuffer_1_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
-      { geometry_gbuffer_2_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
     };
 
     auto geometry_depth_target = depth_target->CreateView("spark_geometry_depth_target",
@@ -999,10 +1000,6 @@ namespace RayGene3D
       unshadowed_depth_texture
     };
 
-    const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_NEAREST, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    };
-
     unshadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_unshadowed_layout",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
@@ -1010,7 +1007,7 @@ namespace RayGene3D
       {},
       {},
       {},
-      { samplers, uint32_t(std::size(samplers)) },
+      {},
       {}
     );
   }
@@ -1133,13 +1130,13 @@ namespace RayGene3D
       shadowed_shadow_data
     };
 
-    auto gbuffer_0_texture = gbuffer_0_target->CreateView("spark_shadowed_gbuffer_0_texture",
+    auto shadowed_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_shadowed_gbuffer_0_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto gbuffer_1_texture = gbuffer_1_target->CreateView("spark_shadowed_gbuffer_1_texture",
+    auto shadowed_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_shadowed_gbuffer_1_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto gbuffer_3_texture = depth_target->CreateView("spark_shadowed_depth_texture",
+    auto shadowed_depth_texture = depth_target->CreateView("spark_shadowed_depth_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
     auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
@@ -1147,14 +1144,13 @@ namespace RayGene3D
       View::Bind(View::BIND_CUBEMAP_LAYER)
     );
     const std::shared_ptr<View> ri_views[] = {
-      gbuffer_0_texture,
-      gbuffer_1_texture,
-      gbuffer_3_texture,
+      shadowed_gbuffer_0_texture,
+      shadowed_gbuffer_1_texture,
+      shadowed_depth_texture,
       shadowed_shadow_map,
     };
 
     const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
       { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
     };
 
@@ -1314,23 +1310,19 @@ namespace RayGene3D
       sw_traced_trace_vertices,
     };
 
-    auto gbuffer_0_texture = gbuffer_0_target->CreateView("spark_sw_traced_gbuffer_0_texture",
+    auto sw_traced_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_sw_traced_gbuffer_0_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto gbuffer_1_texture = gbuffer_1_target->CreateView("spark_sw_traced_gbuffer_1_texture",
+    auto sw_traced_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_sw_traced_gbuffer_1_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto gbuffer_3_texture = depth_target->CreateView("spark_sw_traced_depth_texture",
+    auto sw_traced_depth_texture = depth_target->CreateView("spark_sw_traced_depth_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
-      gbuffer_0_texture,
-      gbuffer_1_texture,
-      gbuffer_3_texture,
-    };
-
-    const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_NEAREST, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+      sw_traced_gbuffer_0_texture,
+      sw_traced_gbuffer_1_texture,
+      sw_traced_depth_texture,
     };
 
     sw_traced_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_sw_traced_layout",
@@ -1340,7 +1332,7 @@ namespace RayGene3D
       {},
       { rb_views, uint32_t(std::size(rb_views)) },
       {},
-      { samplers, uint32_t(std::size(samplers)) },
+      {},
       {}
     );
   }
