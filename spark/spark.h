@@ -188,6 +188,9 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   protected:
+    bool use_normal_oct_quad_encoding{ false };
+
+  protected:
     void CreateColorTarget();
     void CreateDepthTarget();
     void CreateShadowMap();

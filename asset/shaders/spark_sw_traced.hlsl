@@ -6,8 +6,6 @@
 #define VK_LOCATION(x)
 #endif
 
-#define USE_NORMAL_OCT_QUAD_ENCODING
-
 #include "packing.hlsl"
 #include "traverse.hlsl"
 
@@ -292,7 +290,7 @@ PSOutput ps_main(PSInput input)
 #ifdef USE_NORMAL_OCT_QUAD_ENCODING
   const float3 normal = UnpackNormal(uint3(normal_smoothness.rgb * 255.0));
 #else
-  const float3 normal = normal_smoothness.rgb;
+  const float3 normal = 2.0 * normal_smoothness.rgb - 1.0;
 #endif
 
   const float rx = 2.0 * input.pos.x / extent_x - 1.0;

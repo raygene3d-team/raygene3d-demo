@@ -809,10 +809,8 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    std::pair<std::string, std::string> defines[] =
-    {
-      {"TEST", "1"},
-    };
+    std::vector<std::pair<std::string, std::string>> defines;
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
 
     const Config::IAState ia_state =
     {
@@ -859,7 +857,7 @@ namespace RayGene3D
     geometry_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_geometry_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-      { defines, uint32_t(std::size(defines)) },
+      { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
       ds_state,
@@ -1019,10 +1017,8 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    std::pair<std::string, std::string> defines[] =
-    {
-      { "TEST", "1" },
-    };
+    std::vector<std::pair<std::string, std::string>> defines;
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
 
     const Config::IAState ia_state =
     {
@@ -1061,7 +1057,7 @@ namespace RayGene3D
     unshadowed_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_unshadowed_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-      { defines, uint32_t(std::size(defines)) },
+      { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
       ds_state,
@@ -1174,10 +1170,8 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    std::pair<std::string, std::string> defines[] =
-    {
-      { "TEST", "1" },
-    };
+    std::vector<std::pair<std::string, std::string>> defines;
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
 
     const Config::IAState ia_state =
     {
@@ -1216,7 +1210,7 @@ namespace RayGene3D
     shadowed_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_shadowed_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-      { defines, uint32_t(std::size(defines)) },
+      { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
       ds_state,
@@ -1344,10 +1338,8 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    std::pair<std::string, std::string> defines[] =
-    {
-      { "TEST", "1" },
-    };
+    std::vector<std::pair<std::string, std::string>> defines;
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
 
     const Config::IAState ia_state =
     {
@@ -1386,7 +1378,7 @@ namespace RayGene3D
     sw_traced_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_sw_traced_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-      { defines, uint32_t(std::size(defines)) },
+      { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
       ds_state,

@@ -9,7 +9,6 @@
 #define USE_NORMAL_MAP
 //#define USE_ALPHA_CLIP
 #define USE_SPECULAR_SETUP
-#define USE_NORMAL_OCT_QUAD_ENCODING
 
 #include "common.hlsl"
 #include "surface.hlsl"
@@ -171,7 +170,7 @@ PSOutput ps_main(PSInput input)
 #ifdef USE_NORMAL_OCT_QUAD_ENCODING
   const float3 packed_normal = float3(PackNormal(n)) / 255.0;
 #else
-  const float3 packed_normal = n; 
+  const float3 packed_normal = 0.5 * n + 0.5; 
 #endif
 
   const float3 global_illumination = 0.025 * albedo;
