@@ -6,14 +6,11 @@
 #define VK_LOCATION(x)
 #endif
 
-#define USE_NORMAL_OCT_QUAD_ENCODING
-
 #include "packing.hlsl"
 
 VK_BINDING(0) sampler sampler0 : register(s0);
-VK_BINDING(1) sampler sampler1 : register(s1);
 
-VK_BINDING(2) cbuffer constant0 : register(b0)
+VK_BINDING(1) cbuffer constant0 : register(b0)
 {
   uint extent_x       : packoffset(c0.x);
   uint extent_y       : packoffset(c0.y);
@@ -21,7 +18,7 @@ VK_BINDING(2) cbuffer constant0 : register(b0)
   uint rnd_seed       : packoffset(c0.w);
 }
 
-VK_BINDING(3) cbuffer constant1 : register(b1)
+VK_BINDING(2) cbuffer constant1 : register(b1)
 {
   float4x4 camera_view     : packoffset(c0.x);
   float4x4 camera_proj     : packoffset(c4.x);
@@ -29,7 +26,7 @@ VK_BINDING(3) cbuffer constant1 : register(b1)
   float4x4 camera_proj_inv : packoffset(c12.x);
 }
 
-VK_BINDING(4) cbuffer constant2 : register(b2)
+VK_BINDING(3) cbuffer constant2 : register(b2)
 {
   float4x4 shadow_view     : packoffset(c0.x);
   float4x4 shadow_proj     : packoffset(c4.x);
@@ -38,10 +35,10 @@ VK_BINDING(4) cbuffer constant2 : register(b2)
 }
 
 
-VK_BINDING(5) Texture2D<float4> gbuffer_0_texture : register(t0);
-VK_BINDING(6) Texture2D<float4> gbuffer_1_texture : register(t1);
-VK_BINDING(7) Texture2D<float> depth_texture : register(t2);
-VK_BINDING(8) TextureCube<float> shadow_map  : register(t3);
+VK_BINDING(4) Texture2D<float4> gbuffer_0_texture : register(t0);
+VK_BINDING(5) Texture2D<float4> gbuffer_1_texture : register(t1);
+VK_BINDING(6) Texture2D<float> depth_texture : register(t2);
+VK_BINDING(7) TextureCube<float> shadow_map  : register(t3);
 
 
 static const float4x4 poisson_disk = float4x4(
@@ -70,7 +67,7 @@ float Shadow(const float3 w_pos)
   const float3 dx = normalize(cross(tc, w_pos - view_pos));
   const float3 dy = normalize(cross(tc, dx));
 
-  const float d = shadow_map.Sample(sampler1, normalize(tc));
+  const float d = shadow_map.Sample(sampler0, normalize(tc));
 
   const float cd = far * (1.0 - near / (dot(tk, atc))) / (far - near);
   const float blur_radius = 0.005;
@@ -79,7 +76,7 @@ float Shadow(const float3 w_pos)
   for (uint x = 0; x < 8; ++x)
   {
     const float3 offset = (dx * poisson_disk[x / 2][2 * (x % 2)] + dy * poisson_disk[x / 2][2 * (x % 2) + 1]) * blur_radius;
-    const float d = shadow_map.Sample(sampler1, normalize(tc) + offset);
+    const float d = shadow_map.Sample(sampler0, normalize(tc) + offset);
     shadow += step(d, cd);
   }
   shadow /= 9.0;
@@ -92,51 +89,45 @@ float Shadow(const float3 w_pos)
 struct VSInput
 {
   VK_LOCATION(0) float2 pos : register0;
-  VK_LOCATION(1) float2 uv : register1;
 };
 
 struct VSOutput
 {
   VK_LOCATION(0) float4 pos : SV_Position;
-  VK_LOCATION(1) float2 uv : register0;
 };
 
 VSOutput vs_main(VSInput input)
 {
-  VSOutput output;
+  VSOutput output = (VSOutput)0;
+
   output.pos = float4(input.pos, 1.0, 1.0);
-  output.uv = input.uv;
+
   return output;
 }
 
 struct PSInput
 {
   VK_LOCATION(0) float4 pos : SV_Position;
-  VK_LOCATION(1) float2 uv : register0;
 };
 
 struct PSOutput
 {
-  float3 target_0 : SV_Target0;
+  float4 target_0 : SV_Target0;
 };
 
 PSOutput ps_main(PSInput input)
 {
-  PSOutput output;
+  PSOutput output = (PSOutput)0;
 
-  const float rx = (input.pos.x + 0.0) / extent_x;
-  const float ry = (input.pos.y + 0.0) / extent_y;
-  const float2 tex_coord = float2(rx, ry);
-
-  const float depth = depth_texture.Sample(sampler0, tex_coord);
+  const float depth = depth_texture.Load(int3(input.pos.xy, 0));
 
   if (depth == 1.0)
   {
     discard;
   }
 
-  const float4 albedo_metallic = gbuffer_0_texture.Sample(sampler0, tex_coord);
-  const float4 normal_smoothness = gbuffer_1_texture.Sample(sampler0, tex_coord);
+  const float4 albedo_metallic = gbuffer_0_texture.Load(int3(input.pos.xy, 0));
+  const float4 normal_smoothness = gbuffer_1_texture.Load(int3(input.pos.xy, 0));
 
   const float metallic = albedo_metallic.a;
   const float smoothness = normal_smoothness.a;
@@ -144,10 +135,13 @@ PSOutput ps_main(PSInput input)
 #ifdef USE_NORMAL_OCT_QUAD_ENCODING
   const float3 normal = UnpackNormal(uint3(normal_smoothness.rgb * 255.0));
 #else
-  const float3 normal = normal_smoothness.rgb;
+  const float3 normal = 2.0 * normal_smoothness.rgb - 1.0;
 #endif
 
-  const float4 ndc_coord = float4(2.0 * tex_coord.x - 1.0, 1.0 - 2.0 * tex_coord.y, depth, 1.0);
+  const float rx = 2.0 * input.pos.x / extent_x - 1.0;
+  const float ry = 2.0 * input.pos.y / extent_y - 1.0;
+
+  const float4 ndc_coord = float4(rx, -ry, depth, 1.0);
   const float4 view_pos = mul(camera_proj_inv, ndc_coord);
   const float3 surface_pos = mul(camera_view_inv, float4(view_pos.xyz / view_pos.w, 1.0)).xyz;
 
@@ -164,7 +158,7 @@ PSOutput ps_main(PSInput input)
   const float attenuation = Shadow(surface_pos);
 
   const float3 color = diffuse * attenuation;
-
-  output.target_0 = float3(color);
+  output.target_0 = float4(color, 1.0);
+  
   return output;
 }
