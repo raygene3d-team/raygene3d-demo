@@ -188,7 +188,10 @@ namespace RayGene3D
     ShadowType GetShadowType() const { return shadows; }
 
   protected:
-    bool use_normal_oct_quad_encoding{ false };
+    // "0" - none packing
+    // "1" - octquad packing
+    // "2" - spheremap packing
+    std::string normal_encoding_method{ "0" };
 
   protected:
     void CreateColorTarget();

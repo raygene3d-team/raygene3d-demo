@@ -810,7 +810,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
     const Config::IAState ia_state =
     {
@@ -1018,7 +1018,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
     const Config::IAState ia_state =
     {
@@ -1171,7 +1171,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
     const Config::IAState ia_state =
     {
@@ -1339,7 +1339,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
     const Config::IAState ia_state =
     {

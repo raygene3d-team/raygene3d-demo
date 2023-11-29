@@ -167,17 +167,11 @@ PSOutput ps_main(PSInput input)
   const float3 albedo = surface.diffuse;
   const float metallic = surface.metallic;
 
-#ifdef USE_NORMAL_OCT_QUAD_ENCODING
-  const float3 packed_normal = float3(PackNormal(n)) / 255.0;
-#else
-  const float3 packed_normal = 0.5 * n + 0.5; 
-#endif
-
   const float3 global_illumination = 0.025 * albedo;
 
   output.target_0 = float4(surface.emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);
-  output.target_2 = float4(packed_normal, smoothness);
+  output.target_2 = PackNormalAndSmoothness(n, smoothness);
   
 
 #ifdef TEST
