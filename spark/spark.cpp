@@ -719,13 +719,155 @@ namespace RayGene3D
   }
 
   void Spark::CreateHWTracedLayout()
-  {}
+  {
+    std::fstream shader_fs;
+    shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
+    std::stringstream shader_ss;
+    shader_ss << shader_fs.rdbuf();
+
+    std::vector<std::pair<std::string, std::string>> defines;
+    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
+
+    //const Config::IAState ia_state =
+    //{
+    //  Config::TOPOLOGY_TRIANGLELIST,
+    //  Config::INDEXER_32_BIT,
+    //  {
+    //    { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
+    //    { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+    //  }
+    //};
+
+    //const Config::RCState rc_state =
+    //{
+    //  Config::FILL_SOLID,
+    //  Config::CULL_BACK,
+    //  {
+    //    { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
+    //  },
+    //};
+
+    //const Config::DSState ds_state =
+    //{
+    //  false, //depth_enabled
+    //  false, //depth_write
+    //  Config::COMPARISON_ALWAYS //depth_comparison
+    //};
+
+    //const Config::OMState om_state =
+    //{
+    //  false,
+    //  {
+    //    { true, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, 0xF },
+    //  }
+    //};
+
+    hw_traced_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_hw_traced_config",
+      shader_ss.str(),
+      Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
+      { defines.data(), uint32_t(defines.size()) },
+      {},
+      {},
+      {},
+      {}
+    );
+  }
 
   void Spark::CreateHWTracedConfig()
-  {}
+  {
+    auto hw_traced_screen_data = screen_data->CreateView("spark_sw_traced_screen_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
+    auto hw_traced_camera_data = camera_data->CreateView("spark_sw_traced_camera_data",
+      Usage(USAGE_CONSTANT_DATA)
+    );
+    auto hw_traced_shadow_data = shadow_data->CreateView("spark_sw_traced_shadow_data",
+      Usage(USAGE_CONSTANT_DATA),
+      { 0, sizeof(Frustum) }
+    );
+    const std::shared_ptr<View> ub_views[] = {
+      hw_traced_screen_data,
+      hw_traced_camera_data,
+      hw_traced_shadow_data,
+    };
+
+    auto hw_traced_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_sw_traced_gbuffer_0_texture",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+    auto hw_traced_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_sw_traced_gbuffer_1_texture",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+    auto hw_traced_depth_texture = depth_target->CreateView("spark_sw_traced_depth_texture",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+    const std::shared_ptr<View> ri_views[] = {
+      hw_traced_gbuffer_0_texture,
+      hw_traced_gbuffer_1_texture,
+      hw_traced_depth_texture,
+    };
+
+    auto sw_traced_color_texture = color_target->CreateView("spark_hw_traced_color_texture",
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+    const std::shared_ptr<View> wi_views[] = {
+      sw_traced_color_texture,
+    };
+
+    auto hw_traced_scene_vertices = scene_vertices->CreateView("spark_geometry_scene_vertices",
+      Usage(USAGE_VERTEX_ARRAY)
+    );
+    auto hw_traced_scene_triangles = scene_triangles->CreateView("spark_geometry_scene_triangles",
+      Usage(USAGE_INDEX_ARRAY)
+    );
+
+    
+    const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
+    std::vector<Layout::RTXEntity> rtx_entities(instance_count);
+    for (uint32_t i = 0; i < instance_count; ++i)
+    {
+      rtx_entities[i] = {
+      {
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0
+      },
+      hw_traced_scene_vertices,
+      instance_data[i].vert_offset,
+      instance_data[i].vert_count,
+      hw_traced_scene_triangles,
+      instance_data[i].prim_offset,
+      instance_data[i].prim_count,
+      };
+    }
+
+
+
+    hw_traced_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_hw_traced_layout",
+      { ub_views, uint32_t(std::size(ub_views)) },
+      {},
+      { ri_views, uint32_t(std::size(ri_views)) },
+      { wi_views, uint32_t(std::size(wi_views)) },
+      {},
+      {},
+      {},
+      { rtx_entities.data(), uint32_t(rtx_entities.size()) }
+    );
+  }
 
   void Spark::CreateHWTracedPass()
-  {}
+  {
+    Pass::Subpass subpasses[] =
+    {
+      hw_traced_config, hw_traced_layout,
+    };
+
+    hw_traced_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_hw_traced_pass",
+      Pass::TYPE_RAYTRACING,
+      { subpasses, uint32_t(std::size(subpasses)) },
+      {},
+      {}
+    );
+  }
 
   void Spark::CreateGeometryLayout()
   {
@@ -810,7 +952,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
     const Config::IAState ia_state =
     {
@@ -1018,7 +1160,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
     const Config::IAState ia_state =
     {
@@ -1171,7 +1313,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
     const Config::IAState ia_state =
     {
@@ -1339,7 +1481,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
     const Config::IAState ia_state =
     {
