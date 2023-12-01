@@ -171,8 +171,7 @@ PSOutput ps_main(PSInput input)
 
   output.target_0 = float4(surface.emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);
-  output.target_2 = PackNormalAndSmoothness(n, smoothness);
-  
+  output.target_2 = float4(PackNormal(n), smoothness);
 
 #ifdef TEST
 #endif

@@ -57,6 +57,8 @@ struct PSInput
 struct PSOutput
 {
   float4 target_0 : SV_Target0;
+  float4 target_1 : SV_Target1;
+  float4 target_2 : SV_Target2;
 };
 
 PSOutput ps_main(PSInput input)

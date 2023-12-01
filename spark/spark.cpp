@@ -810,7 +810,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
+    defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1"});
 
     const Config::IAState ia_state =
     {
@@ -850,7 +850,7 @@ namespace RayGene3D
       {
         { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
         { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
+        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
       }
     };
 
@@ -991,11 +991,12 @@ namespace RayGene3D
       Usage(USAGE_SHADER_RESOURCE)
     );
     auto unshadowed_depth_texture = depth_target->CreateView("spark_unshadowed_depth_target",
-      Usage(USAGE_SHADER_RESOURCE));
+      Usage(USAGE_SHADER_RESOURCE)
+    );
     const std::shared_ptr<View> ri_views[] = {
       unshadowed_gbuffer_0_texture,
       unshadowed_gbuffer_1_texture,
-      unshadowed_depth_texture
+      unshadowed_depth_texture,
     };
 
     unshadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_unshadowed_layout",
@@ -1018,7 +1019,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
+    defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
@@ -1171,7 +1172,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
+    defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
@@ -1339,7 +1340,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
+    defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
