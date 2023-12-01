@@ -31,27 +31,23 @@ VK_BINDING(3) Texture2D<float4> environment_texture : register(t0);
 struct VSInput
 {
   VK_LOCATION(0) float2 pos : register0;
-  VK_LOCATION(1) float2 uv : register1;
 };
 
 struct VSOutput
 {
   VK_LOCATION(0) float4 pos : SV_Position;
-  VK_LOCATION(1) float2 uv : register0;
 };
 
 VSOutput vs_main(VSInput input)
 {
   VSOutput output;
   output.pos = float4(input.pos, 1.0, 1.0);
-  output.uv = input.uv;
   return output;
 }
 
 struct PSInput
 {
   VK_LOCATION(0) float4 pos : SV_Position;
-  VK_LOCATION(1) float2 uv : register0;
 };
 
 struct PSOutput

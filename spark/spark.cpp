@@ -481,22 +481,22 @@ namespace RayGene3D
 
   void Spark::CreateScreenQuadVertices()
   {
-    static const std::array<glm::f32vec4, 4> quad_vtx = {
-      glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
-      glm::f32vec4(1.0f, 1.0f, 1.0f, 0.0f),
-      glm::f32vec4(-1.0f,-1.0f, 0.0f, 1.0f),
-      glm::f32vec4(1.0f,-1.0f, 1.0f, 1.0f),
+    static const std::array<glm::f32vec2, 4> quad_vtx = {
+      glm::f32vec2(-1.0f, 1.0f),
+      glm::f32vec2(1.0f, 1.0f),
+      glm::f32vec2(-1.0f,-1.0f),
+      glm::f32vec2(1.0f,-1.0f),
     };
 
     std::pair<const void*, uint32_t> interops[] = {
-      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec4)) },
+      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec2)) },
     };
 
     screen_quad_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_quad_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(glm::f32vec4)),
+        uint32_t(sizeof(glm::f32vec2)),
         uint32_t(quad_vtx.size()),
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
@@ -1026,8 +1026,7 @@ namespace RayGene3D
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
@@ -1179,8 +1178,7 @@ namespace RayGene3D
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
@@ -1347,8 +1345,7 @@ namespace RayGene3D
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
@@ -1483,8 +1480,7 @@ namespace RayGene3D
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
