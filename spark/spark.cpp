@@ -810,7 +810,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1"});
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1"});
 
     const Config::IAState ia_state =
     {
@@ -1019,7 +1019,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
@@ -1171,7 +1171,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
@@ -1338,7 +1338,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
