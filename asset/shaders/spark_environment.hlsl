@@ -31,32 +31,30 @@ VK_BINDING(3) Texture2D<float4> environment_texture : register(t0);
 struct VSInput
 {
   VK_LOCATION(0) float2 pos : register0;
-  VK_LOCATION(1) float2 uv : register1;
 };
 
 struct VSOutput
 {
   VK_LOCATION(0) float4 pos : SV_Position;
-  VK_LOCATION(1) float2 uv : register0;
 };
 
 VSOutput vs_main(VSInput input)
 {
   VSOutput output;
   output.pos = float4(input.pos, 1.0, 1.0);
-  output.uv = input.uv;
   return output;
 }
 
 struct PSInput
 {
   VK_LOCATION(0) float4 pos : SV_Position;
-  VK_LOCATION(1) float2 uv : register0;
 };
 
 struct PSOutput
 {
   float4 target_0 : SV_Target0;
+  float4 target_1 : SV_Target1;
+  float4 target_2 : SV_Target2;
 };
 
 PSOutput ps_main(PSInput input)
@@ -76,5 +74,7 @@ PSOutput ps_main(PSInput input)
   //const float4 env_value = environment_texture.Sample(sampler0, normalize(camera_dir));
 
   output.target_0 = env_value;
+  output.target_1 = float4(0.0, 0.0, 0.0, 0.0);
+  output.target_2 = float4(0.0, 0.0, 0.0, 0.0);
   return output;
 }

@@ -481,22 +481,22 @@ namespace RayGene3D
 
   void Spark::CreateScreenQuadVertices()
   {
-    static const std::array<glm::f32vec4, 4> quad_vtx = {
-      glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
-      glm::f32vec4(1.0f, 1.0f, 1.0f, 0.0f),
-      glm::f32vec4(-1.0f,-1.0f, 0.0f, 1.0f),
-      glm::f32vec4(1.0f,-1.0f, 1.0f, 1.0f),
+    static const std::array<glm::f32vec2, 4> quad_vtx = {
+      glm::f32vec2(-1.0f, 1.0f),
+      glm::f32vec2(1.0f, 1.0f),
+      glm::f32vec2(-1.0f,-1.0f),
+      glm::f32vec2(1.0f,-1.0f),
     };
 
     std::pair<const void*, uint32_t> interops[] = {
-      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec4)) },
+      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec2)) },
     };
 
     screen_quad_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_quad_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(glm::f32vec4)),
+        uint32_t(sizeof(glm::f32vec2)),
         uint32_t(quad_vtx.size()),
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
@@ -810,7 +810,7 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1"});
 
     const Config::IAState ia_state =
     {
@@ -850,7 +850,7 @@ namespace RayGene3D
       {
         { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
         { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
+        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
       }
     };
 
@@ -991,11 +991,12 @@ namespace RayGene3D
       Usage(USAGE_SHADER_RESOURCE)
     );
     auto unshadowed_depth_texture = depth_target->CreateView("spark_unshadowed_depth_target",
-      Usage(USAGE_SHADER_RESOURCE));
+      Usage(USAGE_SHADER_RESOURCE)
+    );
     const std::shared_ptr<View> ri_views[] = {
       unshadowed_gbuffer_0_texture,
       unshadowed_gbuffer_1_texture,
-      unshadowed_depth_texture
+      unshadowed_depth_texture,
     };
 
     unshadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_unshadowed_layout",
@@ -1018,15 +1019,14 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
@@ -1171,15 +1171,14 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
@@ -1339,15 +1338,14 @@ namespace RayGene3D
     shader_ss << shader_fs.rdbuf();
 
     std::vector<std::pair<std::string, std::string>> defines;
-    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_ENCODING", "1" });
+    if (use_normal_oct_quad_encoding) defines.push_back({ "USE_NORMAL_OCT_QUAD_PACKING", "1" });
 
     const Config::IAState ia_state =
     {
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
@@ -1482,8 +1480,7 @@ namespace RayGene3D
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
       {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 

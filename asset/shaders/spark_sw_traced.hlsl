@@ -284,14 +284,9 @@ PSOutput ps_main(PSInput input)
   const float4 albedo_metallic = gbuffer_0_texture.Load(int3(input.pos.xy, 0));
   const float4 normal_smoothness = gbuffer_1_texture.Load(int3(input.pos.xy, 0));
 
+  const float3 normal = UnpackNormal(normal_smoothness.rgb);
   const float metallic = albedo_metallic.a;
   const float smoothness = normal_smoothness.a;
-
-#ifdef USE_NORMAL_OCT_QUAD_ENCODING
-  const float3 normal = UnpackNormal(uint3(normal_smoothness.rgb * 255.0));
-#else
-  const float3 normal = 2.0 * normal_smoothness.rgb - 1.0;
-#endif
 
   const float rx = 2.0 * input.pos.x / extent_x - 1.0;
   const float ry = 2.0 * input.pos.y / extent_y - 1.0;
