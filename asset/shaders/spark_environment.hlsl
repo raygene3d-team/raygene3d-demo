@@ -74,5 +74,7 @@ PSOutput ps_main(PSInput input)
   //const float4 env_value = environment_texture.Sample(sampler0, normalize(camera_dir));
 
   output.target_0 = env_value;
+  output.target_1 = float4(0.0, 0.0, 0.0, 0.0);
+  output.target_2 = float4(0.0, 0.0, 0.0, 0.0);
   return output;
 }
