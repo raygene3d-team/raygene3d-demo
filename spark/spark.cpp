@@ -52,7 +52,7 @@ namespace RayGene3D
     color_target = wrap.GetCore()->GetDevice()->CreateResource("spark_color_target",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
+        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE | USAGE_UNORDERED_ACCESS),
         1,
         1,
         FORMAT_R11G11B10_FLOAT,
@@ -85,7 +85,7 @@ namespace RayGene3D
         Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
         1,
         1,
-        FORMAT_R8G8B8A8_UNORM,
+        FORMAT_R32G32B32A32_FLOAT, //FORMAT_R8G8B8A8_UNORM,
         prop_extent_x->GetUint(),
         prop_extent_y->GetUint(),
       }
@@ -270,11 +270,11 @@ namespace RayGene3D
     trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_triangles",
       Resource::BufferDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
         uint32_t(sizeof(Triangle)),
         count,
       },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
       { interops, uint32_t(std::size(interops)) }
     );
   }
@@ -289,11 +289,11 @@ namespace RayGene3D
     trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_vertices",
       Resource::BufferDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
         uint32_t(sizeof(Vertex)),
         count,
       },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
       { interops, uint32_t(std::size(interops)) }
     );
   }
@@ -775,13 +775,17 @@ namespace RayGene3D
 
   void Spark::CreateHWTracedConfig()
   {
-    auto hw_traced_screen_data = screen_data->CreateView("spark_sw_traced_screen_data",
+    const Layout::Sampler samplers[] = {
+      { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    };
+
+    auto hw_traced_screen_data = screen_data->CreateView("spark_hw_traced_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
-    auto hw_traced_camera_data = camera_data->CreateView("spark_sw_traced_camera_data",
+    auto hw_traced_camera_data = camera_data->CreateView("spark_hw_traced_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
-    auto hw_traced_shadow_data = shadow_data->CreateView("spark_sw_traced_shadow_data",
+    auto hw_traced_shadow_data = shadow_data->CreateView("spark_hw_traced_shadow_data",
       Usage(USAGE_CONSTANT_DATA),
       { 0, sizeof(Frustum) }
     );
@@ -791,13 +795,13 @@ namespace RayGene3D
       hw_traced_shadow_data,
     };
 
-    auto hw_traced_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_sw_traced_gbuffer_0_texture",
+    auto hw_traced_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_hw_traced_gbuffer_0_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto hw_traced_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_sw_traced_gbuffer_1_texture",
+    auto hw_traced_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_hw_traced_gbuffer_1_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto hw_traced_depth_texture = depth_target->CreateView("spark_sw_traced_depth_texture",
+    auto hw_traced_depth_texture = depth_target->CreateView("spark_hw_traced_depth_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -806,20 +810,19 @@ namespace RayGene3D
       hw_traced_depth_texture,
     };
 
-    auto sw_traced_color_texture = color_target->CreateView("spark_hw_traced_color_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+    auto hw_traced_color_texture = color_target->CreateView("spark_hw_traced_color_texture",
+      Usage(USAGE_UNORDERED_ACCESS)
     );
     const std::shared_ptr<View> wi_views[] = {
-      sw_traced_color_texture,
+      hw_traced_color_texture,
     };
 
-    auto hw_traced_scene_vertices = scene_vertices->CreateView("spark_geometry_scene_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
+    auto hw_traced_trace_vertices = trace_vertices->CreateView("spark_hw_traced_trace_vertices",
+      Usage(USAGE_SHADER_RESOURCE)
     );
-    auto hw_traced_scene_triangles = scene_triangles->CreateView("spark_geometry_scene_triangles",
-      Usage(USAGE_INDEX_ARRAY)
+    auto hw_traced_trace_triangles = trace_triangles->CreateView("spark_hw_traced_trace_triangles",
+      Usage(USAGE_SHADER_RESOURCE)
     );
-
     
     const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
     std::vector<Layout::RTXEntity> rtx_entities(instance_count);
@@ -831,10 +834,10 @@ namespace RayGene3D
         0.0, 1.0, 0.0, 0.0,
         0.0, 0.0, 1.0, 0.0
       },
-      hw_traced_scene_vertices,
+      hw_traced_trace_vertices,
       instance_data[i].vert_offset,
       instance_data[i].vert_count,
-      hw_traced_scene_triangles,
+      hw_traced_trace_triangles,
       instance_data[i].prim_offset,
       instance_data[i].prim_count,
       };
@@ -849,7 +852,7 @@ namespace RayGene3D
       { wi_views, uint32_t(std::size(wi_views)) },
       {},
       {},
-      {},
+      { samplers, uint32_t(std::size(samplers)) },
       { rtx_entities.data(), uint32_t(rtx_entities.size()) }
     );
   }
@@ -2055,7 +2058,7 @@ namespace RayGene3D
       unshadowed_pass->SetEnabled(true);
       shadowed_pass->SetEnabled(false);
       sw_traced_pass->SetEnabled(false);
-      //hw_traced_pass->SetEnabled(false);
+      hw_traced_pass->SetEnabled(false);
       present_pass->SetEnabled(true);
       break;
     }
@@ -2071,6 +2074,7 @@ namespace RayGene3D
       unshadowed_pass->SetEnabled(false);
       shadowed_pass->SetEnabled(true);
       sw_traced_pass->SetEnabled(false);
+      hw_traced_pass->SetEnabled(false);
       present_pass->SetEnabled(true);
       break;
     }
@@ -2086,6 +2090,23 @@ namespace RayGene3D
       unshadowed_pass->SetEnabled(false);
       shadowed_pass->SetEnabled(false);
       sw_traced_pass->SetEnabled(true);
+      hw_traced_pass->SetEnabled(false);
+      present_pass->SetEnabled(true);
+      break;
+    }
+    case HW_TRACED_SHADOW:
+    {
+      shadowmap_passes[0]->SetEnabled(false);
+      shadowmap_passes[1]->SetEnabled(false);
+      shadowmap_passes[2]->SetEnabled(false);
+      shadowmap_passes[3]->SetEnabled(false);
+      shadowmap_passes[4]->SetEnabled(false);
+      shadowmap_passes[5]->SetEnabled(false);
+      geometry_pass->SetEnabled(true);
+      unshadowed_pass->SetEnabled(false);
+      shadowed_pass->SetEnabled(false);
+      sw_traced_pass->SetEnabled(false);
+      hw_traced_pass->SetEnabled(true);
       present_pass->SetEnabled(true);
       break;
     }
@@ -2100,6 +2121,7 @@ namespace RayGene3D
       unshadowed_pass->SetEnabled(false);
       shadowed_pass->SetEnabled(false);
       sw_traced_pass->SetEnabled(false);
+      hw_traced_pass->SetEnabled(false);
       present_pass->SetEnabled(false);
       break;
     }
