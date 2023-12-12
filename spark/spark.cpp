@@ -728,40 +728,6 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    //const Config::IAState ia_state =
-    //{
-    //  Config::TOPOLOGY_TRIANGLELIST,
-    //  Config::INDEXER_32_BIT,
-    //  {
-    //    { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-    //    { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
-    //  }
-    //};
-
-    //const Config::RCState rc_state =
-    //{
-    //  Config::FILL_SOLID,
-    //  Config::CULL_BACK,
-    //  {
-    //    { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
-    //  },
-    //};
-
-    //const Config::DSState ds_state =
-    //{
-    //  false, //depth_enabled
-    //  false, //depth_write
-    //  Config::COMPARISON_ALWAYS //depth_comparison
-    //};
-
-    //const Config::OMState om_state =
-    //{
-    //  false,
-    //  {
-    //    { true, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, 0xF },
-    //  }
-    //};
-
     hw_traced_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_hw_traced_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
