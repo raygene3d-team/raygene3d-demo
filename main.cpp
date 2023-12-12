@@ -591,6 +591,11 @@ namespace RayGene3D
           }
           else if (shadow_type == Spark::SW_TRACED_SHADOW)
           {
+            shadow_type = Spark::HW_TRACED_SHADOW;
+            mode_name = "HW Traced Shadow";
+          }
+          else if (shadow_type == Spark::HW_TRACED_SHADOW)
+          {
             shadow_type = Spark::DISABLED_SHADOW;
             mode_name = "Disabled Shadow";
           }
