@@ -35,8 +35,8 @@ namespace RayGene3D
   class Spark : public Broker
   {
   protected:
-    std::shared_ptr<View> backbuffer_uav;
-    std::shared_ptr<View> backbuffer_rtv;
+    SPtrView backbuffer_uav;
+    SPtrView backbuffer_rtv;
 
   protected:
     std::shared_ptr<Property> prop_scene;
@@ -82,81 +82,81 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_reflection_probe;
 
   protected:
-    std::shared_ptr<Resource> color_target; // 10-10-10-2 - color (GI+occlusion / material)
-    std::shared_ptr<Resource> depth_target; // 32 - depth
-    std::shared_ptr<Resource> shadow_map;
+    SPtrResource color_target; // 10-10-10-2 - color (GI+occlusion / material)
+    SPtrResource depth_target; // 32 - depth
+    SPtrResource shadow_map;
 
-    std::shared_ptr<Resource> gbuffer_0_target; // 8-8-8-8 - albedo / metallic
-    std::shared_ptr<Resource> gbuffer_1_target; // 8-8-8-8 - normal / smoothness
+    SPtrResource gbuffer_0_target; // 8-8-8-8 - albedo / metallic
+    SPtrResource gbuffer_1_target; // 8-8-8-8 - normal / smoothness
 
-    std::shared_ptr<Resource> screen_data;
-    std::shared_ptr<Resource> camera_data;
-    std::shared_ptr<Resource> shadow_data;
-    std::shared_ptr<Resource> reflection_probe_data;
+    SPtrResource screen_data;
+    SPtrResource camera_data;
+    SPtrResource shadow_data;
+    SPtrResource reflection_probe_data;
 
-    std::shared_ptr<Resource> scene_instances;
-    std::shared_ptr<Resource> scene_triangles;
-    std::shared_ptr<Resource> scene_vertices;
-    //std::shared_ptr<Resource> scene_vertices0;
-    //std::shared_ptr<Resource> scene_vertices1;
-    //std::shared_ptr<Resource> scene_vertices2;
-    //std::shared_ptr<Resource> scene_vertices3;
+    SPtrResource scene_instances;
+    SPtrResource scene_triangles;
+    SPtrResource scene_vertices;
+    //SPtrResource scene_vertices0;
+    //SPtrResource scene_vertices1;
+    //SPtrResource scene_vertices2;
+    //SPtrResource scene_vertices3;
 
-    std::shared_ptr<Resource> scene_t_boxes;
-    std::shared_ptr<Resource> scene_b_boxes;
+    SPtrResource scene_t_boxes;
+    SPtrResource scene_b_boxes;
 
     //Copies of original resources bacause of DX11 limitations
-    std::shared_ptr<Resource> trace_instances;
-    std::shared_ptr<Resource> trace_triangles;
-    std::shared_ptr<Resource> trace_vertices;
+    SPtrResource trace_instances;
+    SPtrResource trace_triangles;
+    SPtrResource trace_vertices;
 
-    std::shared_ptr<Resource> scene_textures0;
-    std::shared_ptr<Resource> scene_textures1;
-    std::shared_ptr<Resource> scene_textures2;
-    std::shared_ptr<Resource> scene_textures3;
+    SPtrResource scene_textures0;
+    SPtrResource scene_textures1;
+    SPtrResource scene_textures2;
+    SPtrResource scene_textures3;
 
-    std::shared_ptr<Resource> light_maps;
+    SPtrResource light_maps;
 
-    std::shared_ptr<Resource> reflection_probe;
+    SPtrResource reflection_probe;
 
-    std::shared_ptr<Resource> screen_quad_vertices;
-    std::shared_ptr<Resource> screen_quad_triangles;
+    SPtrResource screen_quad_vertices;
+    SPtrResource screen_quad_triangles;
 
-    std::shared_ptr<Resource> skybox_texture;
+    SPtrResource skybox_texture;
 
-    std::shared_ptr<Resource> graphic_arguments;
-    std::shared_ptr<Resource> compute_arguments;
-
-  protected:
-    std::shared_ptr<Layout> shadowmap_layout;
-    std::shared_ptr<Layout> unshadowed_layout;
-    std::shared_ptr<Layout> shadowed_layout;
-    std::shared_ptr<Layout> sw_traced_layout;
-    std::shared_ptr<Layout> hw_traced_layout;
-    std::shared_ptr<Layout> geometry_layout;
-    std::shared_ptr<Layout> skybox_layout;
-    std::shared_ptr<Layout> present_layout;
+    SPtrResource graphic_arguments;
+    SPtrResource compute_arguments;
 
   protected:
-    std::shared_ptr<Config> reflection_probe_configs[7];
-    std::shared_ptr<Config> shadowmap_config;
-    std::shared_ptr<Config> unshadowed_config;
-    std::shared_ptr<Config> shadowed_config;
-    std::shared_ptr<Config> sw_traced_config;
-    std::shared_ptr<Config> hw_traced_config;
-    std::shared_ptr<Config> geometry_config;
-    std::shared_ptr<Config> skybox_config;
-    std::shared_ptr<Config> present_config;
+    SPtrBatch shadowmap_batches[6];
+    SPtrBatch unshadowed_batch;
+    SPtrBatch shadowed_batch;
+    SPtrBatch sw_traced_batch;
+    SPtrBatch hw_traced_batch;
+    SPtrBatch geometry_batch;
+    SPtrBatch skybox_batch;
+    SPtrBatch present_batch;
 
   protected:
-    std::shared_ptr<Pass> reflection_probe_passes[7];
-    std::shared_ptr<Pass> shadowmap_passes[6];
-    std::shared_ptr<Pass> unshadowed_pass;
-    std::shared_ptr<Pass> shadowed_pass;
-    std::shared_ptr<Pass> sw_traced_pass;
-    std::shared_ptr<Pass> hw_traced_pass;
-    std::shared_ptr<Pass> geometry_pass;
-    std::shared_ptr<Pass> present_pass;
+    SPtrTechnique reflection_probe_techniques[7];
+    SPtrTechnique shadowmap_techniques[6];
+    SPtrTechnique unshadowed_technique;
+    SPtrTechnique shadowed_technique;
+    SPtrTechnique sw_traced_technique;
+    SPtrTechnique hw_traced_technique;
+    SPtrTechnique geometry_technique;
+    SPtrTechnique skybox_technique;
+    SPtrTechnique present_technique;
+
+  protected:
+    SPtrPass reflection_probe_passes[7];
+    SPtrPass shadowmap_passes[6];
+    SPtrPass unshadowed_pass;
+    SPtrPass shadowed_pass;
+    SPtrPass sw_traced_pass;
+    SPtrPass hw_traced_pass;
+    SPtrPass geometry_pass;
+    SPtrPass present_pass;
    
 
   protected:
@@ -227,37 +227,37 @@ namespace RayGene3D
     void CreateGraphicArguments();
     void CreateComputeArguments();
 
-    void CreateShadowmapLayout();
-    void CreateShadowmapConfig();
     void CreateShadowmapPass(uint32_t index);
-
-    void CreateShadowedLayout();
-    void CreateShadowedConfig();
+    void CreateShadowmapTechnique(uint32_t index);
+    void CreateShadowmapBatch(uint32_t index);
+    
     void CreateShadowedPass();
-
-    void CreateSWTracedLayout();
-    void CreateSWTracedConfig();
+    void CreateShadowedTechnique();
+    void CreateShadowedBatch();
+    
     void CreateSWTracedPass();
-
-    void CreateHWTracedLayout();
-    void CreateHWTracedConfig();
+    void CreateSWTracedTechnique();
+    void CreateSWTracedBatch();
+    
     void CreateHWTracedPass();
-
-    void CreateUnshadowedLayout();
-    void CreateUnshadowedConfig();
+    void CreateHWTracedTechnique();
+    void CreateHWTracedBatch();
+    
     void CreateUnshadowedPass();
-
-    void CreateGeometryLayout();
-    void CreateGeometryConfig();
+    void CreateUnshadowedTechnique();
+    void CreateUnshadowedBatch();
+   
     void CreateGeometryPass();
-
-    void CreateSkyboxLayout();
-    void CreateSkyboxConfig();
-
-    void CreatePresentLayout();
-    void CreatePresentConfig();
+    void CreateGeometryTechnique();
+    void CreateGeometryBatch();
+    
+    void CreateSkyboxTechnique();
+    void CreateSkyboxBatch();
+    
     void CreatePresentPass();
-
+    void CreatePresentTechnique();
+    void CreatePresentBatch();
+    
   protected:
     void DestroyColorTarget();
     void DestroyDepthTarget();
@@ -295,35 +295,35 @@ namespace RayGene3D
     void DestroyGraphicArguments();
     void DestroyComputeArguments();
 
-    void DestroyGeometryLayout();
-    void DestroyGeometryConfig();
+    void DestroyGeometryBatch();
+    void DestroyGeometryTechnique();
     void DestroyGeometryPass();
 
-    void DestroyShadowmapLayout();
-    void DestroyShadowmapConfig();
+    void DestroyShadowmapBatch(uint32_t index);
+    void DestroyShadowmapTechnique(uint32_t index);
     void DestroyShadowmapPass(uint32_t index);
 
-    void DestroyShadowedLayout();
-    void DestroyShadowedConfig();
+    void DestroyShadowedBatch();
+    void DestroyShadowedTechnique();
     void DestroyShadowedPass();
 
-    void DestroySWTracedLayout();
-    void DestroySWTracedConfig();
+    void DestroySWTracedBatch();
+    void DestroySWTracedTechnique();
     void DestroySWTracedPass();
 
-    void DestroyHWTracedLayout();
-    void DestroyHWTracedConfig();
+    void DestroyHWTracedBatch();
+    void DestroyHWTracedTechnique();
     void DestroyHWTracedPass();
 
-    void DestroyUnshadowedLayout();
-    void DestroyUnshadowedConfig();
+    void DestroyUnshadowedBatch();
+    void DestroyUnshadowedTechnique();
     void DestroyUnshadowedPass();
 
-    void DestroySkyboxLayout();
-    void DestroySkyboxConfig();
+    void DestroySkyboxBatch();
+    void DestroySkyboxTechnique();
 
-    void DestroyPresentLayout();
-    void DestroyPresentConfig();
+    void DestroyPresentBatch();
+    void DestroyPresentTechnique();
     void DestroyPresentPass();
 
   public:

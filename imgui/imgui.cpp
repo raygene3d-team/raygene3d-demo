@@ -352,10 +352,10 @@ namespace RayGene3D
         return output; \
       }";
 
-      const Config::IAState ia_state =
+      const Technique::IAState ia_state =
       {
-        Config::TOPOLOGY_TRIANGLELIST,
-        Config::INDEXER_16_BIT,
+        Technique::TOPOLOGY_TRIANGLELIST,
+        Technique::INDEXER_16_BIT,
         {
           { 0, 0, 20, FORMAT_R32G32_FLOAT, false },
           { 0, 8, 20, FORMAT_R32G32_FLOAT, false },
@@ -363,33 +363,33 @@ namespace RayGene3D
         }
       };
 
-      const Config::RCState rc_state =
+      const Technique::RCState rc_state =
       {
-        Config::FILL_SOLID,
-        Config::CULL_NONE,
+        Technique::FILL_SOLID,
+        Technique::CULL_NONE,
         {
           { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
         },
       };
 
-      const Config::DSState ds_state =
+      const Technique::DSState ds_state =
       {
         false,
         false,
-        Config::COMPARISON_ALWAYS
+        Technique::COMPARISON_ALWAYS
       };
 
-      const Config::OMState om_state =
+      const Technique::OMState om_state =
       {
         false,
         {
-          { true, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
+          { true, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF }
         }
       };
 
-      config = device->CreateConfig("imgui_config",
+      technique = device->CreateTechnique("imgui_config",
         source,
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+        Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
         {},
         ia_state,
         rc_state,
@@ -414,11 +414,11 @@ namespace RayGene3D
           font_view,
       };
 
-      const Layout::Sampler samplers[] = {
-        { Layout::Sampler::FILTERING_LINEAR, 0, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+      const Batch::Sampler samplers[] = {
+        { Batch::Sampler::FILTERING_LINEAR, 0, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
       };
 
-      layout = device->CreateLayout("imgui_layout",
+      batch = device->CreateBatch("imgui_layout",
         { ub_views, uint32_t(std::size(ub_views)) },
         {},
         { ri_views, uint32_t(std::size(ri_views)) },
@@ -462,7 +462,7 @@ namespace RayGene3D
 
         subpasses[i] =
         {
-          config, layout,
+          technique, batch,
           { commands, commands + std::size(commands) },
           { va_views, va_views + std::size(va_views) },
           { ia_views, ia_views + std::size(ia_views) }
@@ -508,11 +508,11 @@ namespace RayGene3D
     wrap.GetCore()->GetDevice()->DestroyPass(pass);
     pass.reset();
 
-    wrap.GetCore()->GetDevice()->DestroyLayout(layout);
-    layout.reset();
+    wrap.GetCore()->GetDevice()->DestroyBatch(batch);
+    batch.reset();
 
-    wrap.GetCore()->GetDevice()->DestroyConfig(config);
-    config.reset();
+    wrap.GetCore()->GetDevice()->DestroyTechnique(technique);
+    technique.reset();
 
     wrap.GetCore()->GetDevice()->DestroyResource(proj_resource);
     proj_resource.reset();

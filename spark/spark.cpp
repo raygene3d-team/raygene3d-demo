@@ -591,7 +591,61 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateShadowmapLayout()
+
+
+
+  void Spark::CreateShadowmapTechnique(uint32_t index)
+  {
+    std::fstream shader_fs;
+    shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
+    std::stringstream shader_ss;
+    shader_ss << shader_fs.rdbuf();
+
+    const Technique::IAState ia_state =
+    {
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
+      {
+        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false }
+      }
+    };
+
+    const Technique::RCState rc_state =
+    {
+      Technique::FILL_SOLID,
+      Technique::CULL_FRONT,
+      {
+        { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f }
+      },
+    };
+
+    const Technique::DSState ds_state =
+    {
+      true, //depth_enabled
+      true, //depth_write
+      Technique::COMPARISON_LESS //depth_comparison
+    };
+
+    const Technique::OMState om_state =
+    {
+      false,
+      {
+        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF }
+      }
+    };
+
+    shadowmap_techniques[index] = shadowmap_passes[index]->CreateTechnique("spark_shadowmap_technique",
+      shader_ss.str(),
+      Technique::Compilation(Technique::COMPILATION_VS),
+      {},
+      ia_state,
+      rc_state,
+      ds_state,
+      om_state
+    );
+  }
+
+  void Spark::CreateShadowmapBatch(uint32_t index)
   {
     auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
       USAGE_CONSTANT_DATA,
@@ -602,7 +656,7 @@ namespace RayGene3D
       shadowmap_shadow_data,
     };
 
-    shadowmap_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_shadowmap_layout",
+    shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch",
       {},
       { sb_views, uint32_t(std::size(sb_views)) },
       {},
@@ -614,56 +668,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateShadowmapConfig()
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
 
-    const Config::IAState ia_state =
-    {
-      Config::TOPOLOGY_TRIANGLELIST,
-      Config::INDEXER_32_BIT,
-      {
-        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false }
-      }
-    };
-
-    const Config::RCState rc_state =
-    {
-      Config::FILL_SOLID,
-      Config::CULL_FRONT,
-      {
-        { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f }
-      },
-    };
-
-    const Config::DSState ds_state =
-    {
-      true, //depth_enabled
-      true, //depth_write
-      Config::COMPARISON_LESS //depth_comparison
-    };
-
-    const Config::OMState om_state =
-    {
-      false,
-      {
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF }
-      }
-    };
-
-    shadowmap_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_shadowmap_config",
-      shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_VS),
-      {},
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
-    );
-  }
 
   void Spark::CreateShadowmapPass(uint32_t index)
   {
@@ -698,7 +703,7 @@ namespace RayGene3D
     };
 
     const Pass::Subpass subpasses[] = {
-      { shadowmap_config, shadowmap_layout, std::move(commands), {va_views, va_views + std::size(va_views)}, {ia_views, ia_views + std::size(ia_views)} }
+      { shadowmap_techniques[index], shadowmap_batches[index], std::move(commands), {va_views, va_views + std::size(va_views)}, {ia_views, ia_views + std::size(ia_views)} }
     };
 
     auto shadowmap_shadow_map = shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index),
@@ -718,7 +723,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateHWTracedLayout()
+  void Spark::CreateHWTracedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
@@ -728,9 +733,9 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    hw_traced_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_hw_traced_config",
+    hw_traced_technique = hw_traced_pass->CreateTechnique("spark_hw_traced_technique",
       shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
+      Technique::Compilation(Technique::COMPILATION_RGEN | Technique::COMPILATION_MISS),
       { defines.data(), uint32_t(defines.size()) },
       {},
       {},
@@ -739,10 +744,10 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateHWTracedConfig()
+  void Spark::CreateHWTracedBatch()
   {
-    const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    const Batch::Sampler samplers[] = {
+      { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
     auto hw_traced_screen_data = screen_data->CreateView("spark_hw_traced_screen_data",
@@ -791,7 +796,7 @@ namespace RayGene3D
     );
     
     const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::vector<Layout::RTXEntity> rtx_entities(instance_count);
+    std::vector<Batch::RTXEntity> rtx_entities(instance_count);
     for (uint32_t i = 0; i < instance_count; ++i)
     {
       rtx_entities[i] = {
@@ -811,7 +816,7 @@ namespace RayGene3D
 
 
 
-    hw_traced_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_hw_traced_layout",
+    hw_traced_batch = hw_traced_technique->CreateBatch("spark_hw_traced_batch",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -827,7 +832,7 @@ namespace RayGene3D
   {
     Pass::Subpass subpasses[] =
     {
-      hw_traced_config, hw_traced_layout,
+      hw_traced_technique, hw_traced_batch,
     };
 
     hw_traced_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_hw_traced_pass",
@@ -838,7 +843,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateGeometryLayout()
+  void Spark::CreateGeometryBatch()
   {
     auto geometry_screen_data = screen_data->CreateView("spark_geometry_screen_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -897,11 +902,11 @@ namespace RayGene3D
       geometry_scene_textures3,
     };
 
-    const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    const Batch::Sampler samplers[] = {
+      { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    geometry_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_geometry_layout",
+    geometry_batch = geometry_technique->CreateBatch("spark_geometry_batch",
       { ub_views, uint32_t(std::size(ub_views)) },
       { ue_views, uint32_t(std::size(ue_views)) },
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -913,7 +918,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateGeometryConfig()
+  void Spark::CreateGeometryTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
@@ -923,10 +928,10 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Config::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      Config::TOPOLOGY_TRIANGLELIST,
-      Config::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
         { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
@@ -939,35 +944,35 @@ namespace RayGene3D
       }
     };
 
-    const Config::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      Config::FILL_SOLID,
-      Config::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Config::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       true, //depth_enabled
       true, //depth_write
-      Config::COMPARISON_LESS //depth_comparison
+      Technique::COMPARISON_LESS //depth_comparison
     };
 
-    const Config::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
       }
     };
 
-    geometry_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_geometry_config",
+    geometry_technique = geometry_pass->CreateTechnique("spark_geometry_technique",
       shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -1012,7 +1017,7 @@ namespace RayGene3D
 
       subpasses[ShadingSubpass::SUBPASS_OPAQUE] =
       {
-        geometry_config, geometry_layout,
+        geometry_technique, geometry_batch,
         std::move(geometry_commands),
         std::move(geometry_va_views),
         std::move(geometry_ia_views)
@@ -1039,7 +1044,7 @@ namespace RayGene3D
 
       subpasses[ShadingSubpass::SUBPASS_SKYBOX] =
       {
-        skybox_config, skybox_layout,
+        skybox_technique, skybox_batch,
         { skybox_commands, skybox_commands + std::size(skybox_commands) },
         { skybox_va_views, skybox_va_views + std::size(skybox_va_views) },
         { skybox_ia_views, skybox_ia_views + std::size(skybox_ia_views) }
@@ -1077,7 +1082,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateUnshadowedLayout()
+  void Spark::CreateUnshadowedBatch()
   {
     auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -1110,7 +1115,7 @@ namespace RayGene3D
       unshadowed_depth_texture,
     };
 
-    unshadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_unshadowed_layout",
+    unshadowed_batch = unshadowed_technique->CreateBatch("spark_unshadowed_batch",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -1122,7 +1127,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateUnshadowedConfig()
+  void Spark::CreateUnshadowedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_unshadowed.hlsl", std::fstream::in);
@@ -1132,42 +1137,42 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Config::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      Config::TOPOLOGY_TRIANGLELIST,
-      Config::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Config::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      Config::FILL_SOLID,
-      Config::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Config::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       false, //depth_enabled
       false, //depth_write
-      Config::COMPARISON_ALWAYS //depth_comparison
+      Technique::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Config::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { true, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, 0xF },
+        { true, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, 0xF },
       }
     };
 
-    unshadowed_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_unshadowed_config",
+    unshadowed_technique = unshadowed_pass->CreateTechnique("spark_unshadowed_technique",
       shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -1198,7 +1203,7 @@ namespace RayGene3D
 
     Pass::Subpass subpasses[] =
     {
-      unshadowed_config, unshadowed_layout,
+      unshadowed_technique, unshadowed_batch,
       { unshadowed_commands, unshadowed_commands + std::size(unshadowed_commands) },
       { unshadowed_va_views, unshadowed_va_views + std::size(unshadowed_va_views) },
       { unshadowed_ia_views, unshadowed_ia_views + std::size(unshadowed_ia_views) }
@@ -1219,7 +1224,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateShadowedLayout()
+  void Spark::CreateShadowedBatch()
   {
     auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -1257,11 +1262,11 @@ namespace RayGene3D
       shadowed_shadow_map,
     };
 
-    const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_NEAREST, 1, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+    const Batch::Sampler samplers[] = {
+      { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
     };
 
-    shadowed_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_shadowed_layout",
+    shadowed_batch = shadowed_technique->CreateBatch("spark_shadowed_batch",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -1273,7 +1278,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateShadowedConfig()
+  void Spark::CreateShadowedTechnique()
   {
 
     std::fstream shader_fs;
@@ -1284,42 +1289,42 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Config::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      Config::TOPOLOGY_TRIANGLELIST,
-      Config::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Config::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      Config::FILL_SOLID,
-      Config::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Config::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       false, //depth_enabled
       false, //depth_write
-      Config::COMPARISON_ALWAYS //depth_comparison
+      Technique::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Config::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { true, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, 0xF },
+        { true, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, 0xF },
       }
     };
 
-    shadowed_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_shadowed_config",
+    shadowed_technique = shadowed_pass->CreateTechnique("spark_shadowed_technique",
       shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -1351,7 +1356,7 @@ namespace RayGene3D
 
     Pass::Subpass subpasses[] =
     {
-      shadowed_config, shadowed_layout,
+      shadowed_technique, shadowed_batch,
       { shadowed_commands, shadowed_commands + std::size(shadowed_commands) },
       { shadowed_va_views, shadowed_va_views + std::size(shadowed_va_views) },
       { shadowed_ia_views, shadowed_ia_views + std::size(shadowed_ia_views) }
@@ -1372,7 +1377,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSWTracedLayout()
+  void Spark::CreateSWTracedBatch()
   {
     auto sw_traced_screen_data = screen_data->CreateView("spark_sw_traced_screen_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -1429,7 +1434,7 @@ namespace RayGene3D
       sw_traced_depth_texture,
     };
 
-    sw_traced_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_sw_traced_layout",
+    sw_traced_batch = sw_traced_technique->CreateBatch("spark_sw_traced_batch",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -1441,7 +1446,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSWTracedConfig()
+  void Spark::CreateSWTracedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_sw_traced.hlsl", std::fstream::in);
@@ -1451,42 +1456,42 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Config::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      Config::TOPOLOGY_TRIANGLELIST,
-      Config::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Config::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      Config::FILL_SOLID,
-      Config::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Config::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       false, //depth_enabled
       false, //depth_write
-      Config::COMPARISON_ALWAYS //depth_comparison
+      Technique::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Config::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { true, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, Config::ARGUMENT_ONE, Config::ARGUMENT_ONE, Config::OPERATION_ADD, 0xF },
+        { true, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, 0xF },
       }
     };
 
-    sw_traced_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_sw_traced_config",
+    sw_traced_technique = sw_traced_pass->CreateTechnique("spark_sw_traced_technique",
       shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -1517,7 +1522,7 @@ namespace RayGene3D
 
     Pass::Subpass subpasses[] =
     {
-      sw_traced_config, sw_traced_layout,
+      sw_traced_technique, sw_traced_batch,
       { sw_traced_commands, sw_traced_commands + std::size(sw_traced_commands) },
       { sw_traced_va_views, sw_traced_va_views + std::size(sw_traced_va_views) },
       { sw_traced_ia_views, sw_traced_ia_views + std::size(sw_traced_ia_views) }
@@ -1538,7 +1543,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSkyboxLayout()
+  void Spark::CreateSkyboxBatch()
   {
     auto skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -1558,11 +1563,11 @@ namespace RayGene3D
       skybox_skybox_texture,
     };
 
-    const Layout::Sampler samplers[] = {
-      { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    const Batch::Sampler samplers[] = {
+      { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    skybox_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_skybox_layout",
+    skybox_batch = skybox_technique->CreateBatch("spark_skybox_batch",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -1574,7 +1579,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSkyboxConfig()
+  void Spark::CreateSkyboxTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
@@ -1586,44 +1591,44 @@ namespace RayGene3D
       { "TEST", "1" },
     };
 
-    const Config::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      Config::TOPOLOGY_TRIANGLELIST,
-      Config::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Config::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      Config::FILL_SOLID,
-      Config::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Config::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       true, //depth_enabled
       false, //depth_write
-      Config::COMPARISON_EQUAL //depth_comparison
+      Technique::COMPARISON_EQUAL //depth_comparison
     };
 
-    const Config::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
-        { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
       }
     };
 
-    skybox_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_skybox_config",
+    skybox_technique = geometry_pass->CreateTechnique("spark_skybox_technique",
       shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
       ia_state,
       rc_state,
@@ -1632,7 +1637,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreatePresentLayout()
+  void Spark::CreatePresentBatch()
   {
     auto present_camera_data = camera_data->CreateView("spark_present_camera_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -1652,7 +1657,7 @@ namespace RayGene3D
       backbuffer_uav,
     };
 
-    present_layout = wrap.GetCore()->GetDevice()->CreateLayout("spark_present_layout",
+    present_batch = present_technique->CreateBatch("spark_present_batch",
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) },
@@ -1664,16 +1669,16 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreatePresentConfig()
+  void Spark::CreatePresentTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    present_config = wrap.GetCore()->GetDevice()->CreateConfig("spark_present_config",
+    present_technique = present_pass->CreateTechnique("spark_present_technique",
       shader_ss.str(),
-      Config::COMPILATION_CS,
+      Technique::COMPILATION_CS,
       {},
       {},
       {},
@@ -1693,7 +1698,7 @@ namespace RayGene3D
 
     Pass::Subpass subpasses[] =
     {
-      present_config, present_layout,
+      present_technique, present_batch,
       { present_commands, present_commands + std::size(present_commands) },
       {},
       {}
@@ -1873,28 +1878,28 @@ namespace RayGene3D
     geometry_pass.reset();
   }
 
-  void Spark::DestroyGeometryLayout()
+  void Spark::DestroyGeometryBatch()
   {
-    wrap.GetCore()->GetDevice()->DestroyLayout(geometry_layout);
-    geometry_layout.reset();
+    geometry_technique->DestroyBatch(geometry_batch);
+    geometry_batch.reset();
   }
 
-  void Spark::DestroyGeometryConfig()
+  void Spark::DestroyGeometryTechnique()
   {
-    wrap.GetCore()->GetDevice()->DestroyConfig(geometry_config);
-    geometry_config.reset();
+    geometry_pass->DestroyTechnique(geometry_technique);
+    geometry_technique.reset();
   }
 
-  void Spark::DestroyShadowmapLayout()
+  void Spark::DestroyShadowmapBatch(uint32_t index)
   {
-    wrap.GetCore()->GetDevice()->DestroyLayout(shadowmap_layout);
-    shadowmap_layout.reset();
+    shadowmap_techniques[index]->DestroyBatch(shadowmap_batches[index]);
+    shadowmap_batches[index].reset();
   }
 
-  void Spark::DestroyShadowmapConfig()
+  void Spark::DestroyShadowmapTechnique(uint32_t index)
   {
-    wrap.GetCore()->GetDevice()->DestroyConfig(shadowmap_config);
-    shadowmap_config.reset();
+    shadowmap_passes[index]->DestroyTechnique(shadowmap_techniques[index]);
+    shadowmap_techniques[index].reset();
   }
 
   void Spark::DestroyShadowmapPass(uint32_t index)
@@ -1903,16 +1908,16 @@ namespace RayGene3D
     shadowmap_passes[index].reset();
   }
 
-  void Spark::DestroyShadowedLayout()
+  void Spark::DestroyShadowedBatch()
   {
-    wrap.GetCore()->GetDevice()->DestroyLayout(shadowed_layout);
-    shadowed_layout.reset();
+    shadowed_technique->DestroyBatch(shadowed_batch);
+    shadowed_batch.reset();
   }
 
-  void Spark::DestroyShadowedConfig()
+  void Spark::DestroyShadowedTechnique()
   {
-    wrap.GetCore()->GetDevice()->DestroyConfig(shadowed_config);
-    shadowed_config.reset();
+    shadowed_pass->DestroyTechnique(shadowed_technique);
+    shadowed_technique.reset();
   }
 
   void Spark::DestroyShadowedPass()
@@ -1921,16 +1926,16 @@ namespace RayGene3D
     shadowed_pass.reset();
   }
 
-  void Spark::DestroySWTracedLayout()
+  void Spark::DestroySWTracedBatch()
   {
-    wrap.GetCore()->GetDevice()->DestroyLayout(sw_traced_layout);
-    sw_traced_layout.reset();
+    sw_traced_technique->DestroyBatch(sw_traced_batch);
+    sw_traced_batch.reset();
   }
 
-  void Spark::DestroySWTracedConfig()
+  void Spark::DestroySWTracedTechnique()
   {
-    wrap.GetCore()->GetDevice()->DestroyConfig(sw_traced_config);
-    sw_traced_config.reset();
+    sw_traced_pass->DestroyTechnique(sw_traced_technique);
+    sw_traced_technique.reset();
   }
 
   void Spark::DestroySWTracedPass()
@@ -1939,16 +1944,16 @@ namespace RayGene3D
     sw_traced_pass.reset();
   }
 
-  void Spark::DestroyHWTracedLayout()
+  void Spark::DestroyHWTracedBatch()
   {
-    wrap.GetCore()->GetDevice()->DestroyLayout(hw_traced_layout);
-    hw_traced_layout.reset();
+    hw_traced_technique->DestroyBatch(hw_traced_batch);
+    hw_traced_batch.reset();
   }
 
-  void Spark::DestroyHWTracedConfig()
+  void Spark::DestroyHWTracedTechnique()
   {
-    wrap.GetCore()->GetDevice()->DestroyConfig(hw_traced_config);
-    hw_traced_config.reset();
+    hw_traced_pass->DestroyTechnique(hw_traced_technique);
+    hw_traced_technique.reset();
   }
 
   void Spark::DestroyHWTracedPass()
@@ -1957,16 +1962,16 @@ namespace RayGene3D
     hw_traced_pass.reset();
   }
 
-  void Spark::DestroyUnshadowedLayout()
+  void Spark::DestroyUnshadowedBatch()
   {
-    wrap.GetCore()->GetDevice()->DestroyLayout(unshadowed_layout);
-    unshadowed_layout.reset();
+    unshadowed_technique->DestroyBatch(unshadowed_batch);
+    unshadowed_batch.reset();
   }
 
-  void Spark::DestroyUnshadowedConfig()
+  void Spark::DestroyUnshadowedTechnique()
   {
-    wrap.GetCore()->GetDevice()->DestroyConfig(unshadowed_config);
-    unshadowed_config.reset();
+    unshadowed_pass->DestroyTechnique(unshadowed_technique);
+    unshadowed_technique.reset();
   }
 
   void Spark::DestroyUnshadowedPass()
@@ -1975,28 +1980,28 @@ namespace RayGene3D
     unshadowed_pass.reset();
   }
 
-  void Spark::DestroySkyboxLayout()
+  void Spark::DestroySkyboxBatch()
   {
-    wrap.GetCore()->GetDevice()->DestroyLayout(skybox_layout);
-    skybox_layout.reset();
+    skybox_technique->DestroyBatch(skybox_batch);
+    skybox_batch.reset();
   }
 
-  void Spark::DestroySkyboxConfig()
+  void Spark::DestroySkyboxTechnique()
   {
-    wrap.GetCore()->GetDevice()->DestroyConfig(skybox_config);
-    skybox_config.reset();
+    geometry_pass->DestroyTechnique(skybox_technique);
+    skybox_technique.reset();
   }
 
-  void Spark::DestroyPresentLayout()
+  void Spark::DestroyPresentBatch()
   {
-    wrap.GetCore()->GetDevice()->DestroyLayout(present_layout);
-    present_layout.reset();
+    present_technique->DestroyBatch(present_batch);
+    present_batch.reset();
   }
 
-  void Spark::DestroyPresentConfig()
+  void Spark::DestroyPresentTechnique()
   {
-    wrap.GetCore()->GetDevice()->DestroyConfig(present_config);
-    present_config.reset();
+    present_pass->DestroyTechnique(present_technique);
+    present_technique.reset();
   }
 
   void Spark::DestroyPresentPass()
@@ -2300,6 +2305,8 @@ namespace RayGene3D
 
     prop_skybox = tree->GetObjectItem("environment_property");
 
+    auto* device = wrap.GetCore()->GetDevice().get();
+
     CreateColorTarget();
     CreateDepthTarget();
     CreateShadowMap();
@@ -2336,80 +2343,100 @@ namespace RayGene3D
     CreateGraphicArguments();
     CreateComputeArguments();
 
-    CreateShadowmapLayout();
-    CreateShadowmapConfig(); 
     CreateShadowmapPass(0);
+    CreateShadowmapTechnique( 0);
+    CreateShadowmapBatch(0);
     CreateShadowmapPass(1);
+    CreateShadowmapTechnique(1);
+    CreateShadowmapBatch(1);
     CreateShadowmapPass(2);
+    CreateShadowmapTechnique(2);
+    CreateShadowmapBatch(2);
     CreateShadowmapPass(3);
+    CreateShadowmapTechnique(3);
+    CreateShadowmapBatch(3);
     CreateShadowmapPass(4);
+    CreateShadowmapTechnique(4);
+    CreateShadowmapBatch(4);
     CreateShadowmapPass(5);
+    CreateShadowmapTechnique(5);
+    CreateShadowmapBatch(5);
 
-    CreateSkyboxLayout();
-    CreateSkyboxConfig();
-
-    CreateGeometryLayout();
-    CreateGeometryConfig();
     CreateGeometryPass();
-
-    CreateShadowedLayout();
-    CreateShadowedConfig();
+    CreateGeometryTechnique();
+    CreateGeometryBatch();
+    CreateSkyboxTechnique();
+    CreateSkyboxBatch();
+  
     CreateShadowedPass();
+    CreateShadowedTechnique();
+    CreateShadowedBatch();    
 
-    CreateSWTracedLayout();
-    CreateSWTracedConfig();
     CreateSWTracedPass();
+    CreateSWTracedTechnique();
+    CreateSWTracedBatch();
 
-    CreateHWTracedLayout();
-    CreateHWTracedConfig();
     CreateHWTracedPass();
-
-    CreateUnshadowedLayout();
-    CreateUnshadowedConfig();
+    CreateHWTracedTechnique();
+    CreateHWTracedBatch();
+    
     CreateUnshadowedPass();
+    CreateUnshadowedTechnique();
+    CreateUnshadowedBatch();
 
-    CreatePresentLayout();    
-    CreatePresentConfig();
     CreatePresentPass();
+    CreatePresentTechnique();
+    CreatePresentBatch();    
   }
 
   Spark::~Spark()
   {
+    auto* device = wrap.GetCore()->GetDevice().get();
+
     DestroyPresentPass();
-    DestroyPresentConfig();
-    DestroyPresentLayout();
+    DestroyPresentTechnique();
+    DestroyPresentBatch();
     
     DestroyUnshadowedPass();
-    DestroyUnshadowedConfig();
-    DestroyUnshadowedLayout();
+    DestroyUnshadowedTechnique();
+    DestroyUnshadowedBatch();
 
     DestroyHWTracedPass();
-    DestroyHWTracedConfig();
-    DestroyHWTracedLayout();
+    DestroyHWTracedTechnique();
+    DestroyHWTracedBatch();
 
     DestroySWTracedPass();
-    DestroySWTracedConfig();
-    DestroySWTracedLayout();
+    DestroySWTracedTechnique();
+    DestroySWTracedBatch();
     
     DestroyShadowedPass();
-    DestroyShadowedConfig();
-    DestroyShadowedLayout();
+    DestroyShadowedTechnique();
+    DestroyShadowedBatch();
 
     DestroyShadowmapPass(5);
+    DestroyShadowmapTechnique(5);
+    DestroyShadowmapBatch(5);
     DestroyShadowmapPass(4);
+    DestroyShadowmapTechnique(4);
+    DestroyShadowmapBatch(4);
     DestroyShadowmapPass(3);
+    DestroyShadowmapTechnique(3);
+    DestroyShadowmapBatch(3);
     DestroyShadowmapPass(2);
+    DestroyShadowmapTechnique(2);
+    DestroyShadowmapBatch(2);
     DestroyShadowmapPass(1);
+    DestroyShadowmapTechnique(1);
+    DestroyShadowmapBatch(1);
     DestroyShadowmapPass(0);
-    DestroyShadowmapConfig();
-    DestroyShadowmapLayout();
+    DestroyShadowmapTechnique(0);
+    DestroyShadowmapBatch(0);
 
     DestroyGeometryPass();
-    DestroyGeometryConfig();
-    DestroyGeometryLayout();
-
-    DestroySkyboxConfig();
-    DestroySkyboxLayout();
+    DestroyGeometryTechnique();
+    DestroyGeometryBatch();
+    DestroySkyboxTechnique();
+    DestroySkyboxBatch();
 
     DestroyGraphicArguments();
     DestroyComputeArguments();
