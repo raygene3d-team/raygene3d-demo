@@ -29,9 +29,11 @@ namespace RayGene3D
     static const uint32_t sub_limit{ 10 };
     static const uint32_t arg_limit{ 10 };
 
-    std::shared_ptr<Technique> technique;
-    std::shared_ptr<Batch> batch;
     std::shared_ptr<Pass> pass;
+    std::shared_ptr<Batch> batch;
+    std::shared_ptr<Technique> technique;
+    
+    
 
     std::shared_ptr<Resource> proj_resource;
     std::shared_ptr<Resource> font_resource;

@@ -38,7 +38,7 @@ namespace RayGene3D
       auto idx_mapped = idx_resource->Map();
       auto arg_mapped = arg_resource->Map();
 
-      memset(arg_mapped, 0, sizeof(Pass::Argument) * arg_limit * sub_limit);
+      memset(arg_mapped, 0, sizeof(Batch::Argument) * arg_limit * sub_limit);
 
       ImDrawData* draw_data = ImGui::GetDrawData();
       const auto pass_count = std::min(sub_limit, uint32_t(draw_data->CmdListsCount));
@@ -67,7 +67,7 @@ namespace RayGene3D
         for (uint32_t j = 0; j < arg_count; ++j)
         {
           const auto& draw_data = cmd_list->CmdBuffer[j];
-          auto& graphic_arg = reinterpret_cast<Pass::Argument*>(arg_mapped)[i * arg_limit + j];
+          auto& graphic_arg = reinterpret_cast<Batch::Argument*>(arg_mapped)[i * arg_limit + j];
           graphic_arg = { draw_data.ElemCount, 1, draw_data.IdxOffset, draw_data.VtxOffset, 0 };
         }
       }
@@ -233,10 +233,22 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_COMMAND_INDIRECT),
-          uint32_t(sizeof(Pass::Argument)),
+          uint32_t(sizeof(Batch::Argument)),
           arg_limit * sub_limit,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+      );
+    }
+
+    {
+      const Pass::RTAttachment rt_attachments[] = {
+         backbuffer_rtv, std::nullopt,
+      };
+
+      pass = device->CreatePass("imgui_pass",
+        Pass::TYPE_GRAPHIC,
+        { rt_attachments, uint32_t(std::size(rt_attachments)) },
+        {}
       );
     }
 
@@ -387,7 +399,7 @@ namespace RayGene3D
         }
       };
 
-      technique = device->CreateTechnique("imgui_config",
+      technique = pass->CreateTechnique("imgui_config",
         source,
         Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
         {},
@@ -418,7 +430,7 @@ namespace RayGene3D
         { Batch::Sampler::FILTERING_LINEAR, 0, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
       };
 
-      batch = device->CreateBatch("imgui_layout",
+      technique = device->CreateBatch("imgui_layout",
         { ub_views, uint32_t(std::size(ub_views)) },
         {},
         { ri_views, uint32_t(std::size(ri_views)) },
@@ -454,7 +466,7 @@ namespace RayGene3D
         for (uint32_t j = 0; j < arg_limit; ++j)
         {
           const auto argument_view = arg_resource->CreateView("arg_ci_view_" + std::to_string(j),
-            Usage(USAGE_COMMAND_INDIRECT),
+            Usage(USAGE_COMMAND_ENTITY),
             { (i * arg_limit + j) * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
           );
           commands[j].view = argument_view;
@@ -469,16 +481,7 @@ namespace RayGene3D
         };
       }
 
-      const Pass::RTAttachment rt_attachments[] = {
-        backbuffer_rtv, std::nullopt,
-      };
-
-      pass = device->CreatePass("imgui_pass",
-        Pass::TYPE_GRAPHIC,
-        { subpasses, uint32_t(std::size(subpasses)) },
-        { rt_attachments, uint32_t(std::size(rt_attachments)) },
-        {}
-      );
+     
     }
 
     time = std::chrono::high_resolution_clock::now();
@@ -505,14 +508,14 @@ namespace RayGene3D
 
   Imgui::~Imgui()
   {
-    wrap.GetCore()->GetDevice()->DestroyPass(pass);
-    pass.reset();
-
-    wrap.GetCore()->GetDevice()->DestroyBatch(batch);
+    technique->DestroyBatch(batch);
     batch.reset();
 
-    wrap.GetCore()->GetDevice()->DestroyTechnique(technique);
+    pass->DestroyTechnique(technique);
     technique.reset();
+
+    wrap.GetCore()->GetDevice()->DestroyPass(pass);
+    pass.reset();
 
     wrap.GetCore()->GetDevice()->DestroyResource(proj_resource);
     proj_resource.reset();

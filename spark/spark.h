@@ -230,6 +230,7 @@ namespace RayGene3D
     void CreateShadowmapPass(uint32_t index);
     void CreateShadowmapTechnique(uint32_t index);
     void CreateShadowmapBatch(uint32_t index);
+    void CreateShadowmapMesh(uint32_t index);
     
     void CreateShadowedPass();
     void CreateShadowedTechnique();
