@@ -36,7 +36,7 @@ namespace RayGene3D
     shadow_map = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
+        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_READ),
         1,
         6,
         FORMAT_D16_UNORM,
@@ -52,7 +52,7 @@ namespace RayGene3D
     color_target = wrap.GetCore()->GetDevice()->CreateResource("spark_color_target",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE | USAGE_UNORDERED_ACCESS),
+        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_READ | USAGE_SHADER_WRITE),
         1,
         1,
         FORMAT_R11G11B10_FLOAT,
@@ -67,7 +67,7 @@ namespace RayGene3D
     depth_target = wrap.GetCore()->GetDevice()->CreateResource("spark_depth_target",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
+        Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_READ),
         1,
         1,
         FORMAT_D32_FLOAT,
@@ -82,7 +82,7 @@ namespace RayGene3D
     gbuffer_0_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_0_target",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
+        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_READ),
         1,
         1,
         FORMAT_R8G8B8A8_UNORM,
@@ -97,7 +97,7 @@ namespace RayGene3D
     gbuffer_1_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_1_target",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
+        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_READ),
         1,
         1,
         FORMAT_R8G8B8A8_UNORM,
@@ -112,7 +112,7 @@ namespace RayGene3D
     screen_data = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_data",
       Resource::BufferDesc
       {
-        Usage(USAGE_CONSTANT_DATA),
+        Usage(USAGE_UNIFORM_DATA),
         uint32_t(sizeof(Screen)),
         1,
       },
@@ -125,7 +125,7 @@ namespace RayGene3D
     camera_data = wrap.GetCore()->GetDevice()->CreateResource("spark_camera_data",
       Resource::BufferDesc
       {
-        Usage(USAGE_CONSTANT_DATA),
+        Usage(USAGE_UNIFORM_DATA),
         uint32_t(sizeof(Frustum)),
         1,
       },
@@ -138,7 +138,7 @@ namespace RayGene3D
     shadow_data = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
       Resource::BufferDesc
       {
-        Usage(USAGE_CONSTANT_DATA),
+        Usage(USAGE_UNIFORM_DATA),
         uint32_t(sizeof(Frustum)),
         6,
       },
@@ -156,7 +156,7 @@ namespace RayGene3D
     scene_instances = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
       Resource::BufferDesc
       {
-        Usage(USAGE_CONSTANT_DATA),
+        Usage(USAGE_UNIFORM_DATA),
         uint32_t(sizeof(Instance)),
         count,
       },
@@ -213,7 +213,7 @@ namespace RayGene3D
     scene_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_t_boxes",
       Resource::BufferDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         uint32_t(sizeof(Box)),
         count,
       },
@@ -232,7 +232,7 @@ namespace RayGene3D
     scene_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_b_boxes",
       Resource::BufferDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         uint32_t(sizeof(Box)),
         count,
       },
@@ -251,7 +251,7 @@ namespace RayGene3D
     trace_instances = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_instances",
       Resource::BufferDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         uint32_t(sizeof(Instance)),
         count,
       },
@@ -270,7 +270,7 @@ namespace RayGene3D
     trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_triangles",
       Resource::BufferDesc
       {
-        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
+        Usage(USAGE_SHADER_READ | USAGE_RAYTRACING_INPUT),
         uint32_t(sizeof(Triangle)),
         count,
       },
@@ -289,7 +289,7 @@ namespace RayGene3D
     trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_vertices",
       Resource::BufferDesc
       {
-        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
+        Usage(USAGE_SHADER_READ | USAGE_RAYTRACING_INPUT),
         uint32_t(sizeof(Vertex)),
         count,
       },
@@ -322,7 +322,7 @@ namespace RayGene3D
     scene_textures0 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         mipmaps,
         layers,
         format,
@@ -359,7 +359,7 @@ namespace RayGene3D
       Resource::Tex2DDesc
       {
 
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         mipmaps,
         layers,
         format,
@@ -395,7 +395,7 @@ namespace RayGene3D
     scene_textures2 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         mipmaps,
         layers,
         format,
@@ -431,7 +431,7 @@ namespace RayGene3D
     scene_textures3 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         mipmaps,
         layers,
         format,
@@ -467,7 +467,7 @@ namespace RayGene3D
     light_maps = wrap.GetCore()->GetDevice()->CreateResource("spark_light_maps",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         mipmaps,
         layers,
         format,
@@ -551,7 +551,7 @@ namespace RayGene3D
     skybox_texture = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_texture",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_SHADER_RESOURCE),
+        Usage(USAGE_SHADER_READ),
         mipmaps,
         layers,
         format,
@@ -570,8 +570,8 @@ namespace RayGene3D
     graphic_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
       Resource::BufferDesc
       {
-        Usage(USAGE_COMMAND_INDIRECT),
-        uint32_t(sizeof(Batch::Argument)),
+        Usage(USAGE_ARGUMENT_INDIRECT),
+        5u,
         uint32_t(count),
       },
       Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
@@ -583,8 +583,8 @@ namespace RayGene3D
     compute_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
       Resource::BufferDesc
       {
-        Usage(USAGE_COMMAND_INDIRECT),
-        uint32_t(sizeof(Batch::Argument)),
+        Usage(USAGE_ARGUMENT_INDIRECT),
+        3u,
         1u,
       },
       Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
@@ -648,7 +648,7 @@ namespace RayGene3D
     {
       false,
       {
-        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF }
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF }
       }
     };
 
@@ -665,11 +665,33 @@ namespace RayGene3D
 
   void Spark::CreateShadowmapBatch(uint32_t index)
   {
+    auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
+      USAGE_UNIFORM_DATA,
+      { 0, sizeof(Frustum) }
+    );
 
+    const std::shared_ptr<View> sb_views[] = {
+      shadowmap_shadow_data,
+    };
+
+    shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch",
+      {},
+      { sb_views, uint32_t(std::size(sb_views)) },
+      {},
+      {},
+      {},
+      {},
+      {}
+    );
+  }
+
+  void Spark::CreateShadowmapMesh(uint32_t index)
+  {
+    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
     auto shadowmap_graphic_arguments = graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(index),
-      Usage(USAGE_COMMAND_INDIRECT),
-      { 0u, uint32_t(sizeof(Batch::Argument)) }
+      Usage(USAGE_ARGUMENT_INDIRECT),
+      { 0u, 5u }
     );
 
     auto shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices",
@@ -686,37 +708,13 @@ namespace RayGene3D
       shadowmap_scene_triangles,
     };
 
-    auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
-      USAGE_CONSTANT_DATA,
-      { 0, sizeof(Frustum) }
-    );
-
-    const std::shared_ptr<View> sb_views[] = {
-      shadowmap_shadow_data,
-    };
-
-    shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch",
-      shadowmap_graphic_arguments,
-      {},
-      { va_views, uint32_t(std::size(va_views)) },
-      { ia_views, uint32_t(std::size(ia_views)) },
-      {},
-      { sb_views, uint32_t(std::size(sb_views)) },
-      {},
-      {},
-      {},
-      {},
-      {}
-    );
-  }
-
-  void Spark::CreateShadowmapMesh(uint32_t index)
-  {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-
     for (auto i = 0u; i < count; ++i)
     {
       shadowmap_batches[index]->CreateMesh("spark_shadowmap_mesh_" + std::to_string(index) + "_" + std::to_string(i),
+        //shadowmap_graphic_arguments,
+//{},
+//{ va_views, uint32_t(std::size(va_views)) },
+//{ ia_views, uint32_t(std::size(ia_views)) },
         data[i].vert_count,
         data[i].vert_offset,
         data[i].prim_count * 3,
@@ -762,14 +760,14 @@ namespace RayGene3D
   void Spark::CreateHWTracedBatch()
   {
     auto hw_traced_trace_vertices = trace_vertices->CreateView("spark_hw_traced_trace_vertices",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     const std::shared_ptr<View> va_views[] = {
       hw_traced_trace_vertices,
     };
 
     auto hw_traced_trace_triangles = trace_triangles->CreateView("spark_hw_traced_trace_triangles",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     const std::shared_ptr<View> ia_views[] = {
       hw_traced_trace_triangles,
@@ -780,13 +778,13 @@ namespace RayGene3D
     };
 
     auto hw_traced_screen_data = screen_data->CreateView("spark_hw_traced_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto hw_traced_camera_data = camera_data->CreateView("spark_hw_traced_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto hw_traced_shadow_data = shadow_data->CreateView("spark_hw_traced_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
+      Usage(USAGE_UNIFORM_DATA),
       { 0, sizeof(Frustum) }
     );
     const std::shared_ptr<View> ub_views[] = {
@@ -796,13 +794,13 @@ namespace RayGene3D
     };
 
     auto hw_traced_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_hw_traced_gbuffer_0_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto hw_traced_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_hw_traced_gbuffer_1_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto hw_traced_depth_texture = depth_target->CreateView("spark_hw_traced_depth_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     const std::shared_ptr<View> ri_views[] = {
       hw_traced_gbuffer_0_texture,
@@ -811,7 +809,7 @@ namespace RayGene3D
     };
 
     auto hw_traced_color_texture = color_target->CreateView("spark_hw_traced_color_texture",
-      Usage(USAGE_UNORDERED_ACCESS)
+      Usage(USAGE_SHADER_WRITE)
     );
     const std::shared_ptr<View> wi_views[] = {
       hw_traced_color_texture,
@@ -844,7 +842,7 @@ namespace RayGene3D
     //  for (uint32_t j = 0; j < uint32_t(geometry_graphic_arguments.size()); ++j)
     //  {
     //    geometry_graphic_arguments[j] = graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(j),
-    //      Usage(USAGE_COMMAND_INDIRECT),
+    //      Usage(USAGE_ARGUMENT_INDIRECT),
     //      { j * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
     //    );
     //  }
@@ -981,9 +979,9 @@ namespace RayGene3D
     {
       false,
       {
-        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
       }
     };
 
@@ -1003,7 +1001,7 @@ namespace RayGene3D
   {
     const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
     auto geometry_graphic_arguments = graphic_arguments->CreateView("spark_geometry_graphic_arguments",
-      Usage(USAGE_COMMAND_INDIRECT),
+      Usage(USAGE_ARGUMENT_INDIRECT),
       { 0, uint32_t(sizeof(Batch::Argument)) * instance_count }
     );
 
@@ -1026,15 +1024,15 @@ namespace RayGene3D
     };
 
     auto geometry_screen_data = screen_data->CreateView("spark_geometry_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
 
     auto geometry_camera_data = camera_data->CreateView("spark_geometry_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
 
     auto geometry_shadow_data = shadow_data->CreateView("spark_geometry_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
+      Usage(USAGE_UNIFORM_DATA),
       { 0, uint32_t(sizeof(Frustum)) }
     );
 
@@ -1046,7 +1044,7 @@ namespace RayGene3D
 
 
     auto geometry_scene_instances = scene_instances->CreateView("spark_geometry_scene_instances",
-      Usage(USAGE_CONSTANT_DATA),
+      Usage(USAGE_UNIFORM_DATA),
       { 0, uint32_t(sizeof(Instance)) }
     );
 
@@ -1056,23 +1054,23 @@ namespace RayGene3D
 
 
     auto geometry_scene_textures0 = scene_textures0->CreateView("spark_geometry_scene_textures0",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
 
     auto geometry_scene_textures1 = scene_textures1->CreateView("spark_geometry_scene_textures1",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
 
     auto geometry_scene_textures2 = scene_textures2->CreateView("spark_geometry_scene_textures2",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
 
     auto geometry_scene_textures3 = scene_textures3->CreateView("spark_geometry_scene_textures3",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
 
     auto geometry_light_maps = light_maps->CreateView("spark_geometry_light_maps",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
 
     const std::shared_ptr<View> ri_views[] = {
@@ -1138,9 +1136,9 @@ namespace RayGene3D
     {
       false,
       {
-        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
       }
     };
 
@@ -1177,10 +1175,10 @@ namespace RayGene3D
     };
 
     auto skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto skybox_camera_data = camera_data->CreateView("spark_skybox_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     const std::shared_ptr<View> ub_views[] = {
       skybox_screen_data,
@@ -1188,7 +1186,7 @@ namespace RayGene3D
     };
 
     auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     const std::shared_ptr<View> ri_views[] = {
       skybox_skybox_texture,
@@ -1268,7 +1266,7 @@ namespace RayGene3D
     {
       false,
       {
-        { true, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, 0xF },
+        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
       }
     };
 
@@ -1306,13 +1304,13 @@ namespace RayGene3D
     };
 
     auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto unshadowed_camera_data = camera_data->CreateView("spark_unshadowed_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto unshadowed_shadow_data = shadow_data->CreateView("spark_unshadowed_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
+      Usage(USAGE_UNIFORM_DATA),
       { 0, uint32_t(sizeof(Frustum)) }
     );
     const std::shared_ptr<View> ub_views[] = {
@@ -1322,13 +1320,13 @@ namespace RayGene3D
     };
 
     auto unshadowed_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_unshadowed_gbuffer_0_target",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto unshadowed_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_unshadowed_gbuffer_1_target",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto unshadowed_depth_texture = depth_target->CreateView("spark_unshadowed_depth_target",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     const std::shared_ptr<View> ri_views[] = {
       unshadowed_gbuffer_0_texture,
@@ -1405,7 +1403,7 @@ namespace RayGene3D
     {
       false,
       {
-        { true, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, 0xF },
+        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
       }
     };
 
@@ -1442,13 +1440,13 @@ namespace RayGene3D
     };
 
     auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto shadowed_camera_data = camera_data->CreateView("spark_shadowed_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto shadowed_shadow_data = shadow_data->CreateView("spark_shadowed_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
+      Usage(USAGE_UNIFORM_DATA),
       { 0, uint32_t(sizeof(Frustum)) }
     );
     const std::shared_ptr<View> ub_views[] = {
@@ -1458,16 +1456,16 @@ namespace RayGene3D
     };
 
     auto shadowed_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_shadowed_gbuffer_0_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto shadowed_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_shadowed_gbuffer_1_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto shadowed_depth_texture = depth_target->CreateView("spark_shadowed_depth_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
-      Usage(USAGE_SHADER_RESOURCE),
+      Usage(USAGE_SHADER_READ),
       View::Bind(View::BIND_CUBEMAP_LAYER)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -1550,7 +1548,7 @@ namespace RayGene3D
     {
       false,
       {
-        { true, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, Technique::ARGUMENT_ONE, Technique::ARGUMENT_ONE, Technique::OPERATION_ADD, 0xF },
+        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
       }
     };
 
@@ -1586,13 +1584,13 @@ namespace RayGene3D
     };
 
     auto sw_traced_screen_data = screen_data->CreateView("spark_sw_traced_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto sw_traced_camera_data = camera_data->CreateView("spark_sw_traced_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     auto sw_traced_shadow_data = shadow_data->CreateView("spark_sw_traced_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
+      Usage(USAGE_UNIFORM_DATA),
       { 0, sizeof(Frustum) }
     );
     const std::shared_ptr<View> ub_views[] = {
@@ -1602,19 +1600,19 @@ namespace RayGene3D
     };
 
     auto sw_traced_scene_t_boxes = scene_t_boxes->CreateView("spark_sw_traced_scene_t_boxes",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto sw_traced_scene_b_boxes = scene_b_boxes->CreateView("spark_sw_traced_scene_b_boxes",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto sw_traced_trace_instances = trace_instances->CreateView("spark_sw_traced_trace_instances",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto sw_traced_trace_triangles = trace_triangles->CreateView("spark_sw_traced_trace_triangles",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto sw_traced_trace_vertices = trace_vertices->CreateView("spark_sw_traced_trace_vertices",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
 
     const std::shared_ptr<View> rb_views[] = {
@@ -1626,13 +1624,13 @@ namespace RayGene3D
     };
 
     auto sw_traced_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_sw_traced_gbuffer_0_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto sw_traced_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_sw_traced_gbuffer_1_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     auto sw_traced_depth_texture = depth_target->CreateView("spark_sw_traced_depth_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     const std::shared_ptr<View> ri_views[] = {
       sw_traced_gbuffer_0_texture,
@@ -1688,18 +1686,18 @@ namespace RayGene3D
   void Spark::CreatePresentBatch()
   {
     auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
-      Usage(USAGE_COMMAND_INDIRECT)
+      Usage(USAGE_ARGUMENT_INDIRECT)
     );
 
     auto present_camera_data = camera_data->CreateView("spark_present_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
+      Usage(USAGE_UNIFORM_DATA)
     );
     const std::shared_ptr<View> ub_views[] = {
       present_camera_data,
     };
 
     auto present_color_target = color_target->CreateView("spark_present_color_target",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_READ)
     );
     const std::shared_ptr<View> ri_views[] = {
       present_color_target,
