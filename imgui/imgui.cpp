@@ -509,6 +509,12 @@ namespace RayGene3D
 
   Imgui::~Imgui()
   {
+    for (auto i = 0u; i < arg_limit; ++i)
+    {
+      batch->DestroyMesh(meshes[i]);
+      meshes[i].reset();
+    }
+
     technique->DestroyBatch(batch);
     batch.reset();
 

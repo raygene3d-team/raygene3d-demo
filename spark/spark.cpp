@@ -674,16 +674,16 @@ namespace RayGene3D
   {
     auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
       USAGE_CONSTANT_DATA,
-      { 0, sizeof(Frustum) }
+      { uint32_t(sizeof(Frustum)) * index, uint32_t(sizeof(Frustum)) }
     );
 
-    const std::shared_ptr<View> sb_views[] = {
+    const std::shared_ptr<View> ub_views[] = {
       shadowmap_shadow_data,
     };
 
     shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch",
       {},
-      { sb_views, uint32_t(std::size(sb_views)) },
+      { ub_views, uint32_t(std::size(ub_views)) },
       {},
       {},
       {},
@@ -718,10 +718,10 @@ namespace RayGene3D
         { uint32_t(sizeof(Mesh::Graphic)) * i, uint32_t(sizeof(Mesh::Graphic)) }
       );
 
-      const auto& vtx_range = View::Range{ data[i].vert_count, data[i].vert_offset };
-      const auto& idx_range = View::Range{ data[i].prim_count * 3, data[i].prim_offset * 3 };
-      const auto& ins_range = View::Range{ 1u,  0u };
-      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum)) * i, 0u, 0u, 0u };
+      const auto& vtx_range = View::Range{ data[i].vert_offset, data[i].vert_count };
+      const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
+      const auto& ins_range = View::Range{ 0u,  1u };
+      const auto& sb_offset = std::nullopt;
       const auto& push_data = std::nullopt;
 
       subsets[i] = { nullptr, vtx_range, idx_range, ins_range, 0u, 0u, 0u, sb_offset, push_data };
@@ -1137,13 +1137,13 @@ namespace RayGene3D
         { uint32_t(sizeof(Mesh::Graphic)) * i, uint32_t(sizeof(Mesh::Graphic)) }
       );
 
-      const auto& vtx_range = View::Range{ data[i].vert_count, data[i].vert_offset };
-      const auto& idx_range = View::Range{ data[i].prim_count * 3, data[i].prim_offset * 3 };
-      const auto& ins_range = View::Range{ 1u,  0u };
+      const auto& vtx_range = View::Range{ data[i].vert_offset, data[i].vert_count };
+      const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
+      const auto& ins_range = View::Range{ 0u,  1u };
       const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
       const auto& push_data = std::nullopt;
 
-      subsets[i] = { nullptr, vtx_range, idx_range, ins_range, 0u, 0u, 0u, sb_offset, push_data };
+      subsets[i] = { geometry_graphic_arguments, vtx_range, idx_range, ins_range, 0u, 0u, 0u, sb_offset, push_data };
     }
 
     geometry_mesh = geometry_batch->CreateMesh("spark_geometry_mesh",
@@ -1265,7 +1265,7 @@ namespace RayGene3D
     };
 
     const Mesh::Subset subsets[] = { 
-      {nullptr, { 6u, 0u }, { 6u, 0u }, { 1u, 0u }}
+      {nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
     };
 
     skybox_mesh = skybox_batch->CreateMesh("spark_skybox_mesh",
@@ -1285,7 +1285,7 @@ namespace RayGene3D
       Usage(USAGE_RENDER_TARGET)
     );
     const Pass::RTAttachment rt_attachments[] = {
-      unshadowed_color_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f },
+      unshadowed_color_target, std::nullopt,
     };
 
     unshadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_unshadowed_pass",
@@ -1412,7 +1412,7 @@ namespace RayGene3D
     };
 
     const Mesh::Subset subsets[] = {
-      {nullptr, { 6u, 0u }, { 6u, 0u }, { 1u, 0u }}
+      {nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
     };
 
     unshadowed_mesh = unshadowed_batch->CreateMesh("spark_unshadowed_mesh",
@@ -1434,7 +1434,7 @@ namespace RayGene3D
       Usage(USAGE_RENDER_TARGET)
     );
     const Pass::RTAttachment rt_attachments[] = {
-      shadowed_color_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f },
+      shadowed_color_target, std::nullopt,
     };
 
     shadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowed_pass",
@@ -1545,7 +1545,7 @@ namespace RayGene3D
     };
 
     shadowed_batch = shadowed_technique->CreateBatch("spark_shadowed_batch",
-      {},
+      { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) }
@@ -1569,7 +1569,7 @@ namespace RayGene3D
     };
 
     const Mesh::Subset subsets[] = {
-      {nullptr, { 6u, 0u }, { 6u, 0u }, { 1u, 0u }}
+      {nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
     };
 
     shadowed_mesh = shadowed_batch->CreateMesh("spark_shadowed_mesh",
@@ -1590,7 +1590,7 @@ namespace RayGene3D
       Usage(USAGE_RENDER_TARGET)
     );
     const Pass::RTAttachment rt_attachments[] = {
-      sw_traced_color_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f },
+      sw_traced_color_target, std::nullopt,
     };
 
     sw_traced_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_sw_traced_pass",
@@ -1744,10 +1744,10 @@ namespace RayGene3D
     };
 
     const Mesh::Subset subsets[] = {
-      {nullptr, { 6u, 0u }, { 6u, 0u }, { 1u, 0u }}
+      {nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
     };
 
-    shadowed_mesh = shadowed_batch->CreateMesh("spark_sw_traced_mesh",
+    sw_traced_mesh = sw_traced_batch->CreateMesh("spark_sw_traced_mesh",
       { subsets, uint32_t(std::size(subsets)) },
       { va_views, uint32_t(std::size(va_views)) },
       { ia_views, uint32_t(std::size(ia_views)) }
@@ -1829,7 +1829,7 @@ namespace RayGene3D
       {present_compute_arguments}
     };
 
-    shadowed_mesh = shadowed_batch->CreateMesh("spark_sw_traced_mesh",
+    present_mesh = present_batch->CreateMesh("spark_present_mesh",
       { subsets, uint32_t(std::size(subsets)) }
     );
   }
@@ -2287,11 +2287,11 @@ namespace RayGene3D
       const auto extent_x = prop_extent_x->GetUint();
       const auto extent_y = prop_extent_y->GetUint();
 
-      auto compute_arg = reinterpret_cast<uint32_t*>(compute_arguments->Map());
+      auto compute_arg = reinterpret_cast<Mesh::Compute*>(compute_arguments->Map());
       {
-        compute_arg[3u + 0u] = extent_x / 8u;
-        compute_arg[3u + 1u] = extent_y / 8u;
-        compute_arg[3u + 2u] = 1u;
+        compute_arg[0].grid_x = extent_x / 8u;
+        compute_arg[0].grid_y = extent_y / 8u;
+        compute_arg[0].grid_z = 1u;
       }
       compute_arguments->Unmap();
     }
