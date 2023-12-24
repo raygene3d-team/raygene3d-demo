@@ -128,6 +128,17 @@ namespace RayGene3D
     SPtrResource compute_arguments;
 
   protected:
+    SPtrMesh reflection_probe_meshes[7];
+    SPtrMesh shadowmap_meshes[6];
+    SPtrMesh unshadowed_mesh;
+    SPtrMesh shadowed_mesh;
+    SPtrMesh sw_traced_mesh;
+    SPtrMesh hw_traced_mesh;
+    SPtrMesh geometry_mesh;
+    SPtrMesh skybox_mesh;
+    SPtrMesh present_mesh;
+
+  protected:
     SPtrBatch shadowmap_batches[6];
     SPtrBatch unshadowed_batch;
     SPtrBatch shadowed_batch;
@@ -157,6 +168,8 @@ namespace RayGene3D
     SPtrPass hw_traced_pass;
     SPtrPass geometry_pass;
     SPtrPass present_pass;
+
+
    
 
   protected:
@@ -235,29 +248,36 @@ namespace RayGene3D
     void CreateShadowedPass();
     void CreateShadowedTechnique();
     void CreateShadowedBatch();
+    void CreateShadowedMesh();
     
     void CreateSWTracedPass();
     void CreateSWTracedTechnique();
     void CreateSWTracedBatch();
+    void CreateSWTracedMesh();
     
     void CreateHWTracedPass();
     void CreateHWTracedTechnique();
     void CreateHWTracedBatch();
+    void CreateHWTracedMesh();
     
     void CreateUnshadowedPass();
     void CreateUnshadowedTechnique();
     void CreateUnshadowedBatch();
+    void CreateUnshadowedMesh();
    
     void CreateGeometryPass();
     void CreateGeometryTechnique();
     void CreateGeometryBatch();
+    void CreateGeometryMesh();
     
     void CreateSkyboxTechnique();
     void CreateSkyboxBatch();
+    void CreateSkyboxMesh();
     
     void CreatePresentPass();
     void CreatePresentTechnique();
     void CreatePresentBatch();
+    void CreatePresentMesh();
     
   protected:
     void DestroyColorTarget();
@@ -296,33 +316,41 @@ namespace RayGene3D
     void DestroyGraphicArguments();
     void DestroyComputeArguments();
 
+    void DestroyGeometryMesh();
     void DestroyGeometryBatch();
     void DestroyGeometryTechnique();
     void DestroyGeometryPass();
 
+    void DestroyShadowmapMesh(uint32_t index);
     void DestroyShadowmapBatch(uint32_t index);
     void DestroyShadowmapTechnique(uint32_t index);
     void DestroyShadowmapPass(uint32_t index);
 
+    void DestroyShadowedMesh();
     void DestroyShadowedBatch();
     void DestroyShadowedTechnique();
     void DestroyShadowedPass();
 
+    void DestroySWTracedMesh();
     void DestroySWTracedBatch();
     void DestroySWTracedTechnique();
     void DestroySWTracedPass();
 
+    void DestroyHWTracedMesh();
     void DestroyHWTracedBatch();
     void DestroyHWTracedTechnique();
     void DestroyHWTracedPass();
 
+    void DestroyUnshadowedMesh();
     void DestroyUnshadowedBatch();
     void DestroyUnshadowedTechnique();
     void DestroyUnshadowedPass();
 
+    void DestroySkyboxMesh();
     void DestroySkyboxBatch();
     void DestroySkyboxTechnique();
 
+    void DestroyPresentMesh();
     void DestroyPresentBatch();
     void DestroyPresentTechnique();
     void DestroyPresentPass();

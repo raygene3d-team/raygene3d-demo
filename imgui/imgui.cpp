@@ -38,7 +38,7 @@ namespace RayGene3D
       auto idx_mapped = idx_resource->Map();
       auto arg_mapped = arg_resource->Map();
 
-      memset(arg_mapped, 0, sizeof(Batch::Argument) * arg_limit * sub_limit);
+      memset(arg_mapped, 0, sizeof(Mesh::Graphic) * arg_limit * sub_limit);
 
       ImDrawData* draw_data = ImGui::GetDrawData();
       const auto pass_count = std::min(sub_limit, uint32_t(draw_data->CmdListsCount));
@@ -67,8 +67,8 @@ namespace RayGene3D
         for (uint32_t j = 0; j < arg_count; ++j)
         {
           const auto& draw_data = cmd_list->CmdBuffer[j];
-          auto& graphic_arg = reinterpret_cast<Batch::Argument*>(arg_mapped)[i * arg_limit + j];
-          graphic_arg = { draw_data.ElemCount, 1, draw_data.IdxOffset, draw_data.VtxOffset, 0 };
+          auto& graphic_arg = reinterpret_cast<Mesh::Graphic*>(arg_mapped)[i * arg_limit + j];
+          graphic_arg = { draw_data.ElemCount, 1u, draw_data.IdxOffset, draw_data.VtxOffset, 0u };
         }
       }
 
@@ -232,8 +232,8 @@ namespace RayGene3D
       arg_resource = device->CreateResource("imgui_arg_resource",
         Resource::BufferDesc
         {
-          Usage(USAGE_COMMAND_INDIRECT),
-          uint32_t(sizeof(Batch::Argument)),
+          Usage(USAGE_ARGUMENT_INDIRECT),
+          uint32_t(sizeof(Mesh::Graphic)),
           arg_limit * sub_limit,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -241,12 +241,19 @@ namespace RayGene3D
     }
 
     {
+      const auto extent_x = prop_extent_x->GetUint();
+      const auto extent_y = prop_extent_y->GetUint();
+      const auto extent_z = 0u;
+
       const Pass::RTAttachment rt_attachments[] = {
          backbuffer_rtv, std::nullopt,
       };
 
       pass = device->CreatePass("imgui_pass",
         Pass::TYPE_GRAPHIC,
+        extent_x,
+        extent_y,
+        extent_z,
         { rt_attachments, uint32_t(std::size(rt_attachments)) },
         {}
       );
@@ -395,7 +402,7 @@ namespace RayGene3D
       {
         false,
         {
-          { true, Technique::ARGUMENT_SRC_ALPHA, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::ARGUMENT_INV_SRC_ALPHA, Technique::ARGUMENT_ZERO, Technique::OPERATION_ADD, 0xF }
+          { true, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF }
         }
       };
 
@@ -430,20 +437,18 @@ namespace RayGene3D
         { Batch::Sampler::FILTERING_LINEAR, 0, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
       };
 
-      technique = device->CreateBatch("imgui_layout",
+      batch = technique->CreateBatch("imgui_layout",
+        { samplers, uint32_t(std::size(samplers)) },
         { ub_views, uint32_t(std::size(ub_views)) },
         {},
         { ri_views, uint32_t(std::size(ri_views)) },
         {},
         {},
-        {},
-        { samplers, uint32_t(std::size(samplers)) },
         {}
       );
     }
 
     {
-      Pass::Subpass subpasses[sub_limit];
       for (uint32_t i = 0; i < sub_limit; ++i)
       {
         const auto vtx_view = vtx_resource->CreateView("vtx_view_" + std::to_string(i),
@@ -462,26 +467,22 @@ namespace RayGene3D
           idx_view,
         };
 
-        Pass::Command commands[arg_limit];
+        Mesh::Subset subsets[arg_limit];
         for (uint32_t j = 0; j < arg_limit; ++j)
         {
           const auto argument_view = arg_resource->CreateView("arg_ci_view_" + std::to_string(j),
-            Usage(USAGE_COMMAND_ENTITY),
-            { (i * arg_limit + j) * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
+            Usage(USAGE_ARGUMENT_INDIRECT),
+            { (i * arg_limit + j) * uint32_t(sizeof(Mesh::Graphic)), uint32_t(sizeof(Mesh::Graphic)) }
           );
-          commands[j].view = argument_view;
+          subsets[j] = { argument_view };
         }
 
-        subpasses[i] =
-        {
-          technique, batch,
-          { commands, commands + std::size(commands) },
-          { va_views, va_views + std::size(va_views) },
-          { ia_views, ia_views + std::size(ia_views) }
-        };
-      }
-
-     
+        batch->CreateMesh("imgui_mesh_" + std::to_string(i),
+          { subsets, uint32_t(std::size(subsets)) },
+          { va_views, uint32_t(std::size(va_views)) },
+          { ia_views, uint32_t(std::size(ia_views)) }
+        );
+      }     
     }
 
     time = std::chrono::high_resolution_clock::now();
