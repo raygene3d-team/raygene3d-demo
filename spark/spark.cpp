@@ -674,17 +674,17 @@ namespace RayGene3D
   {
     auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
       USAGE_CONSTANT_DATA,
-      { uint32_t(sizeof(Frustum)) * index, uint32_t(sizeof(Frustum)) }
+      { 0u, uint32_t(sizeof(Frustum)) }
     );
 
-    const std::shared_ptr<View> ub_views[] = {
+    const std::shared_ptr<View> sb_views[] = {
       shadowmap_shadow_data,
     };
 
     shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch",
       {},
-      { ub_views, uint32_t(std::size(ub_views)) },
       {},
+      { sb_views, uint32_t(std::size(sb_views)) },
       {},
       {},
       {},
@@ -721,7 +721,7 @@ namespace RayGene3D
       const auto& vtx_range = View::Range{ data[i].vert_offset, data[i].vert_count };
       const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
       const auto& ins_range = View::Range{ 0u,  1u };
-      const auto& sb_offset = std::nullopt;
+      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum)) * index, 0u, 0u, 0u };
       const auto& push_data = std::nullopt;
 
       subsets[i] = { nullptr, vtx_range, idx_range, ins_range, 0u, 0u, 0u, sb_offset, push_data };

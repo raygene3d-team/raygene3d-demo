@@ -640,6 +640,10 @@ namespace RayGene3D
       spark.reset();
       imgui.reset();
 
+      const auto device = wrap->GetCore()->GetDevice().get();
+      const auto backbuffer_resource = device->GetScreen();
+      device->DestroyResource(backbuffer_resource);
+
       wrap->Discard();
 
       glfwDestroyWindow(glfw);
@@ -655,7 +659,7 @@ namespace RayGene3D
 
     ~GLFWWrapper()
     {
-        wrap.reset();
+      wrap.reset();
 
       glfwTerminate();
     }
