@@ -305,12 +305,12 @@ namespace RayGene3D
     const auto bpp = 4u;
 
     auto mipmaps = 1u;
-    auto size_x = 1u;
-    auto size_y = 1u;
+    auto extent_x = 1u;
+    auto extent_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
-      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
@@ -326,8 +326,8 @@ namespace RayGene3D
         mipmaps,
         layers,
         format,
-        size_x,
-        size_y,
+        extent_x,
+        extent_y,
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -341,12 +341,12 @@ namespace RayGene3D
     const auto bpp = 4u;
 
     auto mipmaps = 1u;
-    auto size_x = 1u;
-    auto size_y = 1u;
+    auto extent_x = 1u;
+    auto extent_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
-      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
@@ -358,13 +358,12 @@ namespace RayGene3D
     scene_textures1 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
       Resource::Tex2DDesc
       {
-
         Usage(USAGE_SHADER_RESOURCE),
         mipmaps,
         layers,
         format,
-        size_x,
-        size_y,
+        extent_x,
+        extent_y,
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -378,12 +377,12 @@ namespace RayGene3D
     const auto bpp = 4u;
 
     auto mipmaps = 1u;
-    auto size_x = 1u;
-    auto size_y = 1u;
+    auto extent_x = 1u;
+    auto extent_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
-      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
@@ -399,8 +398,8 @@ namespace RayGene3D
         mipmaps,
         layers,
         format,
-        size_x,
-        size_y,
+        extent_x,
+        extent_y,
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -414,12 +413,12 @@ namespace RayGene3D
     const auto bpp = 4u;
 
     auto mipmaps = 1u;
-    auto size_x = 1u;
-    auto size_y = 1u;
+    auto extent_x = 1u;
+    auto extent_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
-      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
@@ -435,8 +434,8 @@ namespace RayGene3D
         mipmaps,
         layers,
         format,
-        size_x,
-        size_y,
+        extent_x,
+        extent_y,
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -450,12 +449,12 @@ namespace RayGene3D
     const auto bpp = 4u;
 
     auto mipmaps = 1u;
-    auto size_x = 1u;
-    auto size_y = 1u;
+    auto extent_x = 1u;
+    auto extent_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_lightmaps->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != prop_lightmaps->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
-      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
@@ -471,8 +470,8 @@ namespace RayGene3D
         mipmaps,
         layers,
         format,
-        size_x,
-        size_y,
+        extent_x,
+        extent_y,
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -534,12 +533,12 @@ namespace RayGene3D
     const auto bpp = 16u;
 
     auto mipmaps = 1u;
-    auto size_x = 2u;
-    auto size_y = 1u;
+    auto extent_x = 2u;
+    auto extent_y = 1u;
     auto size = 0u;
-    while ((size += size_x * size_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
-      mipmaps += 1; size_x <<= 1; size_y <<= 1;
+      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
@@ -555,8 +554,8 @@ namespace RayGene3D
         mipmaps,
         layers,
         format,
-        size_x,
-        size_y,
+        extent_x,
+        extent_y,
       },
       Resource::Hint(Resource::HINT_UNKNOWN),
       { interops.data(), uint32_t(interops.size()) }
@@ -597,11 +596,12 @@ namespace RayGene3D
   {
     const auto extent_x = shadow_resolution;
     const auto extent_y = shadow_resolution;
-    const auto extent_z = 0u;
+    const auto extent_z = 1u;
 
     auto shadowmap_shadow_map = shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index),
       Usage(USAGE_DEPTH_STENCIL),
-      { index, 1 }
+      { 0u, uint32_t(-1) },
+      { index, 1u }
     );
 
     const Pass::DSAttachment ds_attachments[] = {
@@ -610,9 +610,9 @@ namespace RayGene3D
 
     shadowmap_passes[index] = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowmap_pass_" + std::to_string(index),
       Pass::TYPE_GRAPHIC,
-      extent_x,
-      extent_y,
-      extent_z,
+      { 0u, extent_x },
+      { 0u, extent_y },
+      { 0u, extent_z },
       {},
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
     );
@@ -659,7 +659,7 @@ namespace RayGene3D
       }
     };
 
-    shadowmap_techniques[index] = shadowmap_passes[index]->CreateTechnique("spark_shadowmap_technique",
+    shadowmap_techniques[index] = shadowmap_passes[index]->CreateTechnique("spark_shadowmap_technique" + std::to_string(index),
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS),
       {},
@@ -672,7 +672,7 @@ namespace RayGene3D
 
   void Spark::CreateShadowmapBatch(uint32_t index)
   {
-    auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data",
+    auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data" + std::to_string(index),
       USAGE_CONSTANT_DATA,
       { 0u, uint32_t(sizeof(Frustum)) }
     );
@@ -681,7 +681,7 @@ namespace RayGene3D
       shadowmap_shadow_data,
     };
 
-    shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch",
+    shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
       {},
       {},
       { sb_views, uint32_t(std::size(sb_views)) },
@@ -695,14 +695,14 @@ namespace RayGene3D
 
   void Spark::CreateShadowmapMesh(uint32_t index)
   {
-    const auto shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices",
+    const auto shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices" + std::to_string(index),
       Usage(USAGE_VERTEX_ARRAY)
     );
     const std::shared_ptr<View> va_views[] = {
       shadowmap_scene_vertices,
     };
 
-    const auto shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles",
+    const auto shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles" + std::to_string(index),
       Usage(USAGE_INDEX_ARRAY)
     );
     const std::shared_ptr<View> ia_views[] = {
@@ -724,7 +724,7 @@ namespace RayGene3D
       const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum)) * index, 0u, 0u, 0u };
       const auto& push_data = std::nullopt;
 
-      subsets[i] = { nullptr, vtx_range, idx_range, ins_range, 0u, 0u, 0u, sb_offset, push_data };
+      subsets[i] = { nullptr, vtx_range, idx_range, ins_range, sb_offset, push_data };
     }
 
     shadowmap_meshes[index] = shadowmap_batches[index]->CreateMesh("spark_shadowmap_mesh_" + std::to_string(index),
@@ -740,13 +740,13 @@ namespace RayGene3D
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 0u;
+    const auto extent_z = 1u;
 
     hw_traced_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_hw_traced_pass",
       Pass::TYPE_RAYTRACING,
-      extent_x,
-      extent_y,
-      extent_z
+      { 0u, extent_x },
+      { 0u, extent_y },
+      { 0u, extent_z }
     );
   }
 
@@ -854,7 +854,7 @@ namespace RayGene3D
       const auto& sb_offset = std::nullopt;
       const auto& push_data = std::nullopt;
 
-      subsets[i] = { nullptr, vtx_range, idx_range, ins_range, 0u, 0u, 0u, sb_offset, push_data };
+      subsets[i] = { nullptr, vtx_range, idx_range, ins_range, sb_offset, push_data };
     }
 
     hw_traced_mesh = hw_traced_batch->CreateMesh("spark_hw_traced_mesh",
@@ -869,77 +869,9 @@ namespace RayGene3D
 
   void Spark::CreateGeometryPass()
   {
-    //Pass::Subpass subpasses[ShadingSubpass::SUBPASS_MAX_COUNT] = {};
-    //{
-    //  const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
-    //  auto geometry_graphic_arguments = std::vector<std::shared_ptr<View>>(instance_count);
-    //  for (uint32_t j = 0; j < uint32_t(geometry_graphic_arguments.size()); ++j)
-    //  {
-    //    geometry_graphic_arguments[j] = graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(j),
-    //      Usage(USAGE_ARGUMENT_INDIRECT),
-    //      { j * uint32_t(sizeof(Pass::Argument)), uint32_t(sizeof(Pass::Argument)) }
-    //    );
-    //  }
-    //  std::vector<Pass::Command> geometry_commands(instance_count);
-    //  for (uint32_t j = 0; j < uint32_t(geometry_commands.size()); ++j)
-    //  {
-    //    geometry_commands[j].view = geometry_graphic_arguments[j];
-    //    geometry_commands[j].offsets = { j * uint32_t(sizeof(Frustum)) };
-    //  }
-
-    //  auto geometry_scene_vertices = scene_vertices->CreateView("spark_geometry_scene_vertices",
-    //    Usage(USAGE_VERTEX_ARRAY)
-    //  );
-    //  std::vector<std::shared_ptr<View>> geometry_va_views = {
-    //    geometry_scene_vertices,
-    //  };
-
-    //  auto geometry_scene_triangles = scene_triangles->CreateView("spark_geometry_scene_triangles",
-    //    Usage(USAGE_INDEX_ARRAY)
-    //  );
-    //  std::vector<std::shared_ptr<View>> geometry_ia_views = {
-    //    geometry_scene_triangles,
-    //  };
-
-    //  subpasses[ShadingSubpass::SUBPASS_OPAQUE] =
-    //  {
-    //    geometry_technique, geometry_batch,
-    //    std::move(geometry_commands),
-    //    std::move(geometry_va_views),
-    //    std::move(geometry_ia_views)
-    //  };
-    //}
-    //{
-    //  const Pass::Command skybox_commands[] = {
-    //    {nullptr, {6, 1, 0, 0, 0, 0, 0, 0}},
-    //  };
-
-    //  auto skybox_skybox_vertices = screen_quad_vertices->CreateView("spark_skybox_vertices",
-    //    Usage(USAGE_VERTEX_ARRAY)
-    //  );
-    //  const std::shared_ptr<View> skybox_va_views[] = {
-    //    skybox_skybox_vertices,
-    //  };
-
-    //  auto skybox_skybox_triangles = screen_quad_triangles->CreateView("spark_skybox_triangles",
-    //    Usage(USAGE_INDEX_ARRAY)
-    //  );
-    //  const std::shared_ptr<View> skybox_ia_views[] = {
-    //    skybox_skybox_triangles,
-    //  };
-
-    //  subpasses[ShadingSubpass::SUBPASS_SKYBOX] =
-    //  {
-    //    skybox_technique, skybox_batch,
-    //    { skybox_commands, skybox_commands + std::size(skybox_commands) },
-    //    { skybox_va_views, skybox_va_views + std::size(skybox_va_views) },
-    //    { skybox_ia_views, skybox_ia_views + std::size(skybox_ia_views) }
-    //  };
-    //}
-
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 0u;
+    const auto extent_z = 1u;
 
     auto geometry_color_target = color_target->CreateView("spark_geometry_color_target",
       Usage(USAGE_RENDER_TARGET)
@@ -966,9 +898,9 @@ namespace RayGene3D
 
     geometry_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_geometry_pass",
       Pass::TYPE_GRAPHIC,
-      extent_x,
-      extent_y,
-      extent_z,
+      { 0u, extent_x },
+      { 0u, extent_y },
+      { 0u, extent_z },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
     );
@@ -1143,7 +1075,7 @@ namespace RayGene3D
       const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
       const auto& push_data = std::nullopt;
 
-      subsets[i] = { geometry_graphic_arguments, vtx_range, idx_range, ins_range, 0u, 0u, 0u, sb_offset, push_data };
+      subsets[i] = { geometry_graphic_arguments, vtx_range, idx_range, ins_range, sb_offset, push_data };
     }
 
     geometry_mesh = geometry_batch->CreateMesh("spark_geometry_mesh",
@@ -1279,7 +1211,7 @@ namespace RayGene3D
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 0u;
+    const auto extent_z = 1u;
 
     auto unshadowed_color_target = color_target->CreateView("spark_unshadowed_color_target",
       Usage(USAGE_RENDER_TARGET)
@@ -1290,9 +1222,9 @@ namespace RayGene3D
 
     unshadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_unshadowed_pass",
       Pass::TYPE_GRAPHIC,
-      extent_x,
-      extent_y,
-      extent_z,
+      { 0u, extent_x },
+      { 0u, extent_y },
+      { 0u, extent_z },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       {}
     );
@@ -1428,7 +1360,7 @@ namespace RayGene3D
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 0u;
+    const auto extent_z = 1u;
 
     auto shadowed_color_target = color_target->CreateView("spark_shadowed_color_target",
       Usage(USAGE_RENDER_TARGET)
@@ -1439,9 +1371,9 @@ namespace RayGene3D
 
     shadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowed_pass",
       Pass::TYPE_GRAPHIC,
-      extent_x,
-      extent_y,
-      extent_z,
+      { 0u, extent_x },
+      { 0u, extent_y },
+      { 0u, extent_z },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       {}
     );
@@ -1531,6 +1463,8 @@ namespace RayGene3D
     );
     auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
       Usage(USAGE_SHADER_RESOURCE),
+      { 0u, uint32_t(-1) },
+      { 0u, uint32_t(-1) },
       View::Bind(View::BIND_CUBEMAP_LAYER)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -1584,7 +1518,7 @@ namespace RayGene3D
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 0u;
+    const auto extent_z = 1u;
 
     auto sw_traced_color_target = color_target->CreateView("spark_sw_traced_color_target",
       Usage(USAGE_RENDER_TARGET)
@@ -1595,9 +1529,9 @@ namespace RayGene3D
 
     sw_traced_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_sw_traced_pass",
       Pass::TYPE_GRAPHIC,
-      extent_x,
-      extent_y,
-      extent_z,
+      { 0u, extent_x },
+      { 0u, extent_y },
+      { 0u, extent_z },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       {}
     );
@@ -1758,15 +1692,15 @@ namespace RayGene3D
 
   void Spark::CreatePresentPass()
   {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 0u;
+    const auto grid_x = prop_extent_x->GetUint() / 8u;
+    const auto grid_y = prop_extent_y->GetUint() / 8u;
+    const auto grid_z = 1u;
 
     present_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_present_pass",
       Pass::TYPE_COMPUTE,
-      extent_x,
-      extent_y,
-      extent_z
+      { 0u, grid_x },
+      { 0u, grid_y },
+      { 0u, grid_z }
     );
   }
 

@@ -54,7 +54,7 @@ namespace RayGene3D
         const auto idx_count = static_cast<uint32_t>(cmd_list->IdxBuffer.Size);
         const auto idx_data = cmd_list->IdxBuffer.Data;
 
-        if (vtx_count > vtx_resource->GetCount() || idx_count > idx_resource->GetCount())
+        if (vtx_count > vtx_resource->GetMipmapsOrCount() || idx_count > idx_resource->GetMipmapsOrCount())
           continue;
 
         auto vtx_aligned = &reinterpret_cast<ImDrawVert*>(vtx_mapped)[i * vtx_limit];
@@ -243,7 +243,7 @@ namespace RayGene3D
     {
       const auto extent_x = prop_extent_x->GetUint();
       const auto extent_y = prop_extent_y->GetUint();
-      const auto extent_z = 0u;
+      const auto extent_z = 1u;
 
       const Pass::RTAttachment rt_attachments[] = {
          backbuffer_rtv, std::nullopt,
@@ -251,9 +251,9 @@ namespace RayGene3D
 
       pass = device->CreatePass("imgui_pass",
         Pass::TYPE_GRAPHIC,
-        extent_x,
-        extent_y,
-        extent_z,
+        { 0u, extent_x },
+        { 0u, extent_y },
+        { 0u, extent_z },
         { rt_attachments, uint32_t(std::size(rt_attachments)) },
         {}
       );
