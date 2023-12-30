@@ -570,7 +570,7 @@ namespace RayGene3D
       Resource::BufferDesc
       {
         Usage(USAGE_ARGUMENT_INDIRECT),
-        uint32_t(sizeof(Mesh::Graphic)),
+        uint32_t(sizeof(Batch::Graphic)),
         uint32_t(count),
       },
       Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
@@ -583,7 +583,7 @@ namespace RayGene3D
       Resource::BufferDesc
       {
         Usage(USAGE_ARGUMENT_INDIRECT),
-        uint32_t(sizeof(Mesh::Compute)),
+        uint32_t(sizeof(Batch::Compute)),
         1u,
       },
       Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
@@ -672,6 +672,41 @@ namespace RayGene3D
 
   void Spark::CreateShadowmapBatch(uint32_t index)
   {
+    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    auto entities = std::vector<Batch::Entity>(count);
+    for (auto i = 0u; i < count; ++i)
+    {
+      const auto shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices_" + std::to_string(index) + "_" + std::to_string(i),
+        Usage(USAGE_VERTEX_ARRAY)
+      );
+
+      const auto shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles_" + std::to_string(index) + "_" + std::to_string(i),
+        Usage(USAGE_INDEX_ARRAY)
+      );
+
+      const auto shadowmap_graphic_arguments = graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(index) + "_" + std::to_string(i),
+        Usage(USAGE_ARGUMENT_INDIRECT),
+        { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
+      );
+
+      const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
+      const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
+      const auto& ins_range = View::Range{ 0u,  1u };
+      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* index, 0u, 0u, 0u };
+      const auto& push_data = std::nullopt;
+
+      entities[i] = { 
+        { shadowmap_scene_vertices },
+        { shadowmap_scene_triangles },
+        shadowmap_graphic_arguments,
+        vtx_range,
+        idx_range,
+        ins_range,
+        sb_offset,
+        push_data
+      };
+    }
+
     auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data" + std::to_string(index),
       USAGE_CONSTANT_DATA,
       { 0u, uint32_t(sizeof(Frustum)) }
@@ -682,6 +717,7 @@ namespace RayGene3D
     };
 
     shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
+      { entities.data(), uint32_t(entities.size()) },
       {},
       {},
       { sb_views, uint32_t(std::size(sb_views)) },
@@ -691,49 +727,6 @@ namespace RayGene3D
       {}
     );
   }
-
-
-  void Spark::CreateShadowmapMesh(uint32_t index)
-  {
-    const auto shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices" + std::to_string(index),
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    const std::shared_ptr<View> va_views[] = {
-      shadowmap_scene_vertices,
-    };
-
-    const auto shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles" + std::to_string(index),
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const std::shared_ptr<View> ia_views[] = {
-      shadowmap_scene_triangles,
-    };
-
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    auto subsets = std::vector<Mesh::Subset>(count);
-    for (auto i = 0u; i < count; ++i)
-    {
-      const auto shadowmap_graphic_arguments = graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(index) + "_" + std::to_string(i),
-        Usage(USAGE_ARGUMENT_INDIRECT),
-        { uint32_t(sizeof(Mesh::Graphic)) * i, uint32_t(sizeof(Mesh::Graphic)) }
-      );
-
-      const auto& vtx_range = View::Range{ data[i].vert_offset, data[i].vert_count };
-      const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& ins_range = View::Range{ 0u,  1u };
-      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum)) * index, 0u, 0u, 0u };
-      const auto& push_data = std::nullopt;
-
-      subsets[i] = { nullptr, vtx_range, idx_range, ins_range, sb_offset, push_data };
-    }
-
-    shadowmap_meshes[index] = shadowmap_batches[index]->CreateMesh("spark_shadowmap_mesh_" + std::to_string(index),
-      { subsets.data(), uint32_t(subsets.size()) },
-      { va_views, uint32_t(std::size(va_views)) },
-      { ia_views, uint32_t(std::size(ia_views)) }
-    ); 
-  }
-
 
 
   void Spark::CreateHWTracedPass()
@@ -774,6 +767,42 @@ namespace RayGene3D
 
   void Spark::CreateHWTracedBatch()
   {
+    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    auto entities = std::vector<Batch::Entity>(count);
+    for (auto i = 0u; i < count; ++i)
+    {
+      auto hw_traced_trace_vertices = trace_vertices->CreateView("spark_hw_traced_trace_vertices_" + std::to_string(i),
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      const std::shared_ptr<View> va_views[] = {
+        hw_traced_trace_vertices,
+      };
+
+      auto hw_traced_trace_triangles = trace_triangles->CreateView("spark_hw_traced_trace_triangles_" + std::to_string(i),
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      const std::shared_ptr<View> ia_views[] = {
+        hw_traced_trace_triangles,
+      };
+
+      const auto& vtx_range = View::Range{ data[i].vert_count * 1, data[i].vert_offset * 1 };
+      const auto& idx_range = View::Range{ data[i].prim_count * 3, data[i].prim_offset * 3 };
+      const auto& ins_range = View::Range{ 1u,  0u };
+      const auto& sb_offset = std::nullopt;
+      const auto& push_data = std::nullopt;
+
+      entities[i] = { 
+        { va_views, va_views + uint32_t(std::size(va_views)) },
+        { ia_views, ia_views + uint32_t(std::size(ia_views)) },
+        nullptr, 
+        vtx_range, 
+        idx_range, 
+        ins_range, 
+        sb_offset, 
+        push_data
+      };
+    }
+
     const Batch::Sampler samplers[] = {
       { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
@@ -817,6 +846,7 @@ namespace RayGene3D
     };
 
     hw_traced_batch = hw_traced_technique->CreateBatch("spark_hw_traced_batch",
+      { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
@@ -824,43 +854,6 @@ namespace RayGene3D
       { wi_views, uint32_t(std::size(wi_views)) },
       {},
       {}
-    );
-  }
-
-
-  void Spark::CreateHWTracedMesh()
-  {
-    auto hw_traced_trace_vertices = trace_vertices->CreateView("spark_hw_traced_trace_vertices",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    const std::shared_ptr<View> va_views[] = {
-      hw_traced_trace_vertices,
-    };
-
-    auto hw_traced_trace_triangles = trace_triangles->CreateView("spark_hw_traced_trace_triangles",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    const std::shared_ptr<View> ia_views[] = {
-      hw_traced_trace_triangles,
-    };
-
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    auto subsets = std::vector<Mesh::Subset>(count);
-    for (auto i = 0u; i < count; ++i)
-    {
-      const auto& vtx_range = View::Range{ data[i].vert_count, data[i].vert_offset };
-      const auto& idx_range = View::Range{ data[i].prim_count * 3, data[i].prim_offset * 3 };
-      const auto& ins_range = View::Range{ 1u,  0u };
-      const auto& sb_offset = std::nullopt;
-      const auto& push_data = std::nullopt;
-
-      subsets[i] = { nullptr, vtx_range, idx_range, ins_range, sb_offset, push_data };
-    }
-
-    hw_traced_mesh = hw_traced_batch->CreateMesh("spark_hw_traced_mesh",
-      { subsets.data(), uint32_t(subsets.size()) },
-      { va_views, uint32_t(std::size(va_views)) },
-      { ia_views, uint32_t(std::size(ia_views)) }
     );
   }
 
@@ -972,8 +965,49 @@ namespace RayGene3D
 
   void Spark::CreateGeometryBatch()
   {
+    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    auto entities = std::vector<Batch::Entity>(count);
+    for (auto i = 0u; i < count; ++i)
+    {
+      auto geometry_vertices = scene_vertices->CreateView("spark_geometry_vertices_" + std::to_string(i),
+        Usage(USAGE_VERTEX_ARRAY)
+      );
+      const std::shared_ptr<View> va_views[] = {
+        geometry_vertices,
+      };
+
+      auto geometry_triangles = scene_triangles->CreateView("spark_geometry_triangles_" + std::to_string(i),
+        Usage(USAGE_INDEX_ARRAY)
+      );
+      const std::shared_ptr<View> ia_views[] = {
+        geometry_triangles,
+      };
+
+      const auto geometry_graphic_arguments = graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
+        Usage(USAGE_ARGUMENT_INDIRECT),
+        { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
+      );
+
+      const auto& vtx_range = View::Range{ data[i].vert_count * 1, data[i].vert_offset * 1 };
+      const auto& idx_range = View::Range{ data[i].prim_count * 3, data[i].prim_offset * 3 };
+      const auto& ins_range = View::Range{ 1u,  0u };
+      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum)) * i, 0u, 0u, 0u };
+      const auto& push_data = std::nullopt;
+
+      entities[i] = {
+        { va_views, va_views + uint32_t(std::size(va_views)) },
+        { ia_views, ia_views + uint32_t(std::size(ia_views)) },
+        geometry_graphic_arguments,
+        vtx_range,
+        idx_range,
+        ins_range,
+        sb_offset,
+        push_data
+      };
+    }
+
     const Batch::Sampler samplers[] = {
-  { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+      { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
     auto geometry_screen_data = screen_data->CreateView("spark_geometry_screen_data",
@@ -1034,6 +1068,7 @@ namespace RayGene3D
     };
 
     geometry_batch = geometry_technique->CreateBatch("spark_geometry_batch",
+      { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
       { sb_views, uint32_t(std::size(sb_views)) },
@@ -1041,47 +1076,6 @@ namespace RayGene3D
       {},
       {},
       {}
-    );
-  }
-
-  void Spark::CreateGeometryMesh()
-  {
-    const auto geometry_scene_vertices = scene_vertices->CreateView("spark_geometry_scene_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    std::shared_ptr<View> va_views[] = {
-      geometry_scene_vertices,
-    };
-
-    const auto geometry_scene_triangles = scene_triangles->CreateView("spark_geometry_scene_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    std::shared_ptr<View> ia_views[] = {
-      geometry_scene_triangles,
-    };
-
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    auto subsets = std::vector<Mesh::Subset>(count);
-    for (auto i = 0u; i < count; ++i)
-    {
-      const auto geometry_graphic_arguments = graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
-        Usage(USAGE_ARGUMENT_INDIRECT),
-        { uint32_t(sizeof(Mesh::Graphic)) * i, uint32_t(sizeof(Mesh::Graphic)) }
-      );
-
-      const auto& vtx_range = View::Range{ data[i].vert_offset, data[i].vert_count };
-      const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& ins_range = View::Range{ 0u,  1u };
-      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
-      const auto& push_data = std::nullopt;
-
-      subsets[i] = { geometry_graphic_arguments, vtx_range, idx_range, ins_range, sb_offset, push_data };
-    }
-
-    geometry_mesh = geometry_batch->CreateMesh("spark_geometry_mesh",
-      { subsets.data(), uint32_t(subsets.size()) },
-      { va_views, uint32_t(std::size(va_views)) },
-      { ia_views, uint32_t(std::size(ia_views)) }
     );
   }
 
@@ -1147,6 +1141,16 @@ namespace RayGene3D
 
   void Spark::CreateSkyboxBatch()
   {
+    auto skybox_screen_quad_vertices = screen_quad_vertices->CreateView("spark_skybox_screen_quad_vertices",
+      Usage(USAGE_VERTEX_ARRAY)
+    );
+    auto skybox_screen_quad_triangles = screen_quad_triangles->CreateView("spark_skybox_screen_quad_triangles",
+      Usage(USAGE_INDEX_ARRAY)
+    );
+    const Batch::Entity entities[] = {
+      {{skybox_screen_quad_vertices}, {skybox_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
+    };
+
     auto skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
@@ -1170,6 +1174,7 @@ namespace RayGene3D
     };
 
     skybox_batch = skybox_technique->CreateBatch("spark_skybox_batch",
+      { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
@@ -1180,32 +1185,6 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSkyboxMesh()
-  {
-    auto skybox_screen_quad_vertices = screen_quad_vertices->CreateView("spark_skybox_screen_quad_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    const std::shared_ptr<View> va_views[] = {
-      skybox_screen_quad_vertices,
-    };
-
-    auto skybox_screen_quad_triangles = screen_quad_triangles->CreateView("spark_skybox_screen_quad_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const std::shared_ptr<View> ia_views[] = {
-      skybox_screen_quad_triangles,
-    };
-
-    const Mesh::Subset subsets[] = { 
-      {nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
-    };
-
-    skybox_mesh = skybox_batch->CreateMesh("spark_skybox_mesh",
-      { subsets, uint32_t(std::size(subsets)) },
-      { va_views, uint32_t(std::size(va_views)) },
-      { ia_views, uint32_t(std::size(ia_views)) }
-    );
-  }
 
   void Spark::CreateUnshadowedPass()
   {
@@ -1288,6 +1267,16 @@ namespace RayGene3D
 
   void Spark::CreateUnshadowedBatch()
   {
+    auto unshadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_unshadowed_screen_quad_vertices",
+      Usage(USAGE_VERTEX_ARRAY)
+    );
+    auto unshadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_unshadowed_screen_quad_triangles",
+      Usage(USAGE_INDEX_ARRAY)
+    );
+    const Batch::Entity entities[] = {
+      {{unshadowed_screen_quad_vertices}, {unshadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u } }
+    };
+
     auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
@@ -1320,40 +1309,13 @@ namespace RayGene3D
     };
 
     unshadowed_batch = unshadowed_technique->CreateBatch("spark_unshadowed_batch",
+      { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) }
     );
   }
-
-  void Spark::CreateUnshadowedMesh()
-  {
-    auto unshadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_unshadowed_screen_quad_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    const std::shared_ptr<View> va_views[] = {
-      unshadowed_screen_quad_vertices,
-    };
-
-    auto unshadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_unshadowed_screen_quad_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const std::shared_ptr<View> ia_views[] = {
-      unshadowed_screen_quad_triangles,
-    };
-
-    const Mesh::Subset subsets[] = {
-      {nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
-    };
-
-    unshadowed_mesh = unshadowed_batch->CreateMesh("spark_unshadowed_mesh",
-      { subsets, uint32_t(std::size(subsets)) },
-      { va_views, uint32_t(std::size(va_views)) },
-      { ia_views, uint32_t(std::size(ia_views)) }
-    );
-  }
-
 
 
   void Spark::CreateShadowedPass()
@@ -1436,6 +1398,16 @@ namespace RayGene3D
 
   void Spark::CreateShadowedBatch()
   {
+    auto shadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_shadowed_screen_quad_vertices",
+      Usage(USAGE_VERTEX_ARRAY)
+    );
+    auto shadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_shadowed_screen_quad_triangles",
+      Usage(USAGE_INDEX_ARRAY)
+    );
+    const Batch::Entity entities[] = {
+      {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u } }
+    };
+
     auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
@@ -1479,37 +1451,11 @@ namespace RayGene3D
     };
 
     shadowed_batch = shadowed_technique->CreateBatch("spark_shadowed_batch",
+      { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
       { ri_views, uint32_t(std::size(ri_views)) }
-    );
-  }
-
-  void Spark::CreateShadowedMesh()
-  {
-    auto shadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_shadowed_screen_quad_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    const std::shared_ptr<View> va_views[] = {
-      shadowed_screen_quad_vertices,
-    };
-
-    auto shadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_shadowed_screen_quad_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const std::shared_ptr<View> ia_views[] = {
-      shadowed_screen_quad_triangles,
-    };
-
-    const Mesh::Subset subsets[] = {
-      {nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
-    };
-
-    shadowed_mesh = shadowed_batch->CreateMesh("spark_shadowed_mesh",
-      { subsets, uint32_t(std::size(subsets)) },
-      { va_views, uint32_t(std::size(va_views)) },
-      { ia_views, uint32_t(std::size(ia_views)) }
     );
   }
 
@@ -1594,6 +1540,16 @@ namespace RayGene3D
 
   void Spark::CreateSWTracedBatch()
   {
+    auto shadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_sw_traced_screen_quad_vertices",
+      Usage(USAGE_VERTEX_ARRAY)
+    );
+    auto shadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_sw_traced_screen_quad_triangles",
+      Usage(USAGE_INDEX_ARRAY)
+    );
+    const Batch::Entity entities[] = {
+      {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
+    };
+
     auto sw_traced_screen_data = screen_data->CreateView("spark_sw_traced_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
@@ -1650,6 +1606,7 @@ namespace RayGene3D
     };
 
     sw_traced_batch = sw_traced_technique->CreateBatch("spark_sw_traced_batch",
+      { entities, uint32_t(std::size(entities))},
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
@@ -1657,34 +1614,6 @@ namespace RayGene3D
       {},
       { rb_views, uint32_t(std::size(rb_views)) },
       {}
-    );
-  }
-
-
-  void Spark::CreateSWTracedMesh()
-  {
-    auto shadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_sw_traced_screen_quad_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    const std::shared_ptr<View> va_views[] = {
-      shadowed_screen_quad_vertices,
-    };
-
-    auto shadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_sw_traced_screen_quad_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const std::shared_ptr<View> ia_views[] = {
-      shadowed_screen_quad_triangles,
-    };
-
-    const Mesh::Subset subsets[] = {
-      {nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
-    };
-
-    sw_traced_mesh = sw_traced_batch->CreateMesh("spark_sw_traced_mesh",
-      { subsets, uint32_t(std::size(subsets)) },
-      { va_views, uint32_t(std::size(va_views)) },
-      { ia_views, uint32_t(std::size(ia_views)) }
     );
   }
 
@@ -1724,6 +1653,13 @@ namespace RayGene3D
 
   void Spark::CreatePresentBatch()
   {
+    auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
+      Usage(USAGE_ARGUMENT_INDIRECT)
+    );
+    const Batch::Entity entities[] = {
+      {{}, {}, present_compute_arguments}
+    };
+
     auto present_camera_data = camera_data->CreateView("spark_present_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
@@ -1743,6 +1679,7 @@ namespace RayGene3D
     };
 
     present_batch = present_technique->CreateBatch("spark_present_batch",
+      { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
       {},
@@ -1750,21 +1687,6 @@ namespace RayGene3D
       { wi_views, uint32_t(std::size(wi_views)) },
       {},
       {}
-    );
-  }
-
-  void Spark::CreatePresentMesh()
-  {
-    auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
-      Usage(USAGE_ARGUMENT_INDIRECT)
-    );
-
-    const Mesh::Subset subsets[] = {
-      {present_compute_arguments}
-    };
-
-    present_mesh = present_batch->CreateMesh("spark_present_mesh",
-      { subsets, uint32_t(std::size(subsets)) }
     );
   }
 
@@ -1948,12 +1870,6 @@ namespace RayGene3D
     geometry_technique.reset();
   }
 
-  void Spark::DestroyGeometryMesh()
-  {
-    geometry_batch->DestroyMesh(geometry_mesh);
-    geometry_mesh.reset();
-  }
-
   void Spark::DestroyShadowmapBatch(uint32_t index)
   {
     shadowmap_techniques[index]->DestroyBatch(shadowmap_batches[index]);
@@ -1970,12 +1886,6 @@ namespace RayGene3D
   {
     wrap.GetCore()->GetDevice()->DestroyPass(shadowmap_passes[index]);
     shadowmap_passes[index].reset();
-  }
-
-  void Spark::DestroyShadowmapMesh(uint32_t index)
-  {
-    shadowmap_batches[index]->DestroyMesh(shadowmap_meshes[index]);
-    shadowmap_meshes[index].reset();
   }
 
   void Spark::DestroyShadowedBatch()
@@ -1996,12 +1906,6 @@ namespace RayGene3D
     shadowed_pass.reset();
   }
 
-  void Spark::DestroyShadowedMesh()
-  {
-    shadowed_batch->DestroyMesh(shadowed_mesh);
-    shadowed_mesh.reset();
-  }
-
   void Spark::DestroySWTracedBatch()
   {
     sw_traced_technique->DestroyBatch(sw_traced_batch);
@@ -2018,12 +1922,6 @@ namespace RayGene3D
   {
     wrap.GetCore()->GetDevice()->DestroyPass(sw_traced_pass);
     sw_traced_pass.reset();
-  }
-
-  void Spark::DestroySWTracedMesh()
-  {
-    sw_traced_batch->DestroyMesh(sw_traced_mesh);
-    sw_traced_mesh.reset();
   }
 
   void Spark::DestroyHWTracedBatch()
@@ -2044,12 +1942,6 @@ namespace RayGene3D
     hw_traced_pass.reset();
   }
 
-  void Spark::DestroyHWTracedMesh()
-  {
-    hw_traced_batch->DestroyMesh(hw_traced_mesh);
-    hw_traced_mesh.reset();
-  }
-
   void Spark::DestroyUnshadowedBatch()
   {
     unshadowed_technique->DestroyBatch(unshadowed_batch);
@@ -2068,12 +1960,6 @@ namespace RayGene3D
     unshadowed_pass.reset();
   }
 
-  void Spark::DestroyUnshadowedMesh()
-  {
-    unshadowed_batch->DestroyMesh(unshadowed_mesh);
-    unshadowed_mesh.reset();
-  }
-
   void Spark::DestroySkyboxBatch()
   {
     skybox_technique->DestroyBatch(skybox_batch);
@@ -2084,12 +1970,6 @@ namespace RayGene3D
   {
     geometry_pass->DestroyTechnique(skybox_technique);
     skybox_technique.reset();
-  }
-
-  void Spark::DestroySkyboxMesh()
-  {
-    skybox_batch->DestroyMesh(skybox_mesh);
-    skybox_mesh.reset();
   }
 
   void Spark::DestroyPresentBatch()
@@ -2108,12 +1988,6 @@ namespace RayGene3D
   {
     wrap.GetCore()->GetDevice()->DestroyPass(present_pass);
     present_pass.reset();
-  }
-
-  void Spark::DestroyPresentMesh()
-  {
-    present_batch->DestroyMesh(present_mesh);
-    present_mesh.reset();
   }
 
   void Spark::Use()
@@ -2202,7 +2076,7 @@ namespace RayGene3D
     }
 
     {
-      auto graphic_arg = reinterpret_cast<Mesh::Graphic*>(graphic_arguments->Map());
+      auto graphic_arg = reinterpret_cast<Batch::Graphic*>(graphic_arguments->Map());
 
       const auto [instance_data, instance_count] = prop_instances->GetTypedBytes<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
@@ -2221,7 +2095,7 @@ namespace RayGene3D
       const auto extent_x = prop_extent_x->GetUint();
       const auto extent_y = prop_extent_y->GetUint();
 
-      auto compute_arg = reinterpret_cast<Mesh::Compute*>(compute_arguments->Map());
+      auto compute_arg = reinterpret_cast<Batch::Compute*>(compute_arguments->Map());
       {
         compute_arg[0].grid_x = extent_x / 8u;
         compute_arg[0].grid_y = extent_y / 8u;
@@ -2455,84 +2329,68 @@ namespace RayGene3D
       CreateShadowmapPass(i);
       CreateShadowmapTechnique(i);
       CreateShadowmapBatch(i);
-      CreateShadowmapMesh(i);
     }
 
     CreateGeometryPass();
     CreateGeometryTechnique();
     CreateGeometryBatch();
-    CreateGeometryMesh();
     CreateSkyboxTechnique();
     CreateSkyboxBatch();
-    CreateSkyboxMesh();
-  
+
     CreateShadowedPass();
     CreateShadowedTechnique();
     CreateShadowedBatch();
-    CreateShadowedMesh();
 
     CreateSWTracedPass();
     CreateSWTracedTechnique();
     CreateSWTracedBatch();
-    CreateSWTracedMesh();
-
+    
     CreateHWTracedPass();
     CreateHWTracedTechnique();
     CreateHWTracedBatch();
-    CreateHWTracedMesh();
-    
+
     CreateUnshadowedPass();
     CreateUnshadowedTechnique();
     CreateUnshadowedBatch();
-    CreateUnshadowedMesh();
 
     CreatePresentPass();
     CreatePresentTechnique();
     CreatePresentBatch();
-    CreatePresentMesh();
   }
 
   Spark::~Spark()
   {
     auto* device = wrap.GetCore()->GetDevice().get();
 
-    DestroyPresentMesh();
     DestroyPresentBatch();
     DestroyPresentTechnique();
     DestroyPresentPass();
-    
-    DestroyUnshadowedMesh();
+
     DestroyUnshadowedBatch(); 
     DestroyUnshadowedTechnique();
     DestroyUnshadowedPass();
 
-    DestroyHWTracedMesh();
     DestroyHWTracedBatch();
     DestroyHWTracedTechnique();
     DestroyHWTracedPass();
 
-    DestroySWTracedMesh();
     DestroySWTracedBatch();
     DestroySWTracedTechnique();
     DestroySWTracedPass();
     
-    DestroyShadowedMesh();
     DestroyShadowedBatch();
     DestroyShadowedTechnique();
     DestroyShadowedPass();
 
     for (auto i = 0u; i < 6u; ++i)
     {
-      DestroyShadowmapMesh(i);
       DestroyShadowmapBatch(i);
       DestroyShadowmapTechnique(i);
       DestroyShadowmapPass(i);
     }
 
-    DestroySkyboxMesh();
     DestroySkyboxBatch();
     DestroySkyboxTechnique();
-    DestroyGeometryMesh();
     DestroyGeometryBatch();
     DestroyGeometryTechnique();
     DestroyGeometryPass();

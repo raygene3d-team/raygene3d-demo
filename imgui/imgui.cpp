@@ -38,7 +38,7 @@ namespace RayGene3D
       auto idx_mapped = idx_resource->Map();
       auto arg_mapped = arg_resource->Map();
 
-      memset(arg_mapped, 0, sizeof(Mesh::Graphic) * arg_limit * sub_limit);
+      memset(arg_mapped, 0, sizeof(Batch::Graphic) * arg_limit * sub_limit);
 
       ImDrawData* draw_data = ImGui::GetDrawData();
       const auto pass_count = std::min(sub_limit, uint32_t(draw_data->CmdListsCount));
@@ -67,7 +67,7 @@ namespace RayGene3D
         for (uint32_t j = 0; j < arg_count; ++j)
         {
           const auto& draw_data = cmd_list->CmdBuffer[j];
-          auto& graphic_arg = reinterpret_cast<Mesh::Graphic*>(arg_mapped)[i * arg_limit + j];
+          auto& graphic_arg = reinterpret_cast<Batch::Graphic*>(arg_mapped)[i * arg_limit + j];
           graphic_arg = { draw_data.ElemCount, 1u, draw_data.IdxOffset, draw_data.VtxOffset, 0u };
         }
       }
@@ -233,7 +233,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_ARGUMENT_INDIRECT),
-          uint32_t(sizeof(Mesh::Graphic)),
+          uint32_t(sizeof(Batch::Graphic)),
           arg_limit * sub_limit,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -419,6 +419,34 @@ namespace RayGene3D
 
 
     {
+
+      Batch::Entity entities[sub_limit * arg_limit];
+      for (uint32_t i = 0; i < sub_limit; ++i)
+      {
+        const auto vtx_view = vtx_resource->CreateView("vtx_view_" + std::to_string(i),
+          Usage(USAGE_VERTEX_ARRAY),
+          { i * uint32_t(sizeof(ImDrawVert)) * vtx_limit, uint32_t(sizeof(ImDrawVert)) * vtx_limit }
+        );
+
+        const auto idx_view = idx_resource->CreateView("idx_view_" + std::to_string(i),
+          Usage(USAGE_INDEX_ARRAY),
+          { i * uint32_t(sizeof(ImDrawIdx)) * idx_limit, uint32_t(sizeof(ImDrawIdx)) * idx_limit }
+        );
+
+        for (uint32_t j = 0; j < arg_limit; ++j)
+        {
+          const auto argument_view = arg_resource->CreateView("arg_ci_view_" + std::to_string(j),
+            Usage(USAGE_ARGUMENT_INDIRECT),
+            { (i * arg_limit + j) * uint32_t(sizeof(Batch::Graphic)), uint32_t(sizeof(Batch::Graphic)) }
+          );
+          entities[i * arg_limit + j] = { {vtx_view}, {idx_view}, argument_view };
+        }
+      }
+
+      const Batch::Sampler samplers[] = {
+        { Batch::Sampler::FILTERING_LINEAR, 0, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+      };
+
       auto proj_view = proj_resource->CreateView("imgui_proj_view",
         Usage(USAGE_CONSTANT_DATA)
       );
@@ -433,11 +461,8 @@ namespace RayGene3D
           font_view,
       };
 
-      const Batch::Sampler samplers[] = {
-        { Batch::Sampler::FILTERING_LINEAR, 0, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
-      };
-
       batch = technique->CreateBatch("imgui_layout",
+        { entities, uint32_t(std::size(entities)) },
         { samplers, uint32_t(std::size(samplers)) },
         { ub_views, uint32_t(std::size(ub_views)) },
         {},
@@ -446,43 +471,6 @@ namespace RayGene3D
         {},
         {}
       );
-    }
-
-    {
-      for (uint32_t i = 0; i < sub_limit; ++i)
-      {
-        const auto vtx_view = vtx_resource->CreateView("vtx_view_" + std::to_string(i),
-          Usage(USAGE_VERTEX_ARRAY),
-          { i * uint32_t(sizeof(ImDrawVert)) * vtx_limit, uint32_t(sizeof(ImDrawVert)) * vtx_limit }
-        );
-        const std::shared_ptr<View> va_views[] = {
-          vtx_view
-        };
-
-        const auto idx_view = idx_resource->CreateView("idx_view_" + std::to_string(i),
-          Usage(USAGE_INDEX_ARRAY),
-          { i * uint32_t(sizeof(ImDrawIdx)) * idx_limit, uint32_t(sizeof(ImDrawIdx)) * idx_limit }
-        );
-        const std::shared_ptr<View> ia_views[] = {
-          idx_view,
-        };
-
-        Mesh::Subset subsets[arg_limit];
-        for (uint32_t j = 0; j < arg_limit; ++j)
-        {
-          const auto argument_view = arg_resource->CreateView("arg_ci_view_" + std::to_string(j),
-            Usage(USAGE_ARGUMENT_INDIRECT),
-            { (i * arg_limit + j) * uint32_t(sizeof(Mesh::Graphic)), uint32_t(sizeof(Mesh::Graphic)) }
-          );
-          subsets[j] = { argument_view };
-        }
-
-        batch->CreateMesh("imgui_mesh_" + std::to_string(i),
-          { subsets, uint32_t(std::size(subsets)) },
-          { va_views, uint32_t(std::size(va_views)) },
-          { ia_views, uint32_t(std::size(ia_views)) }
-        );
-      }     
     }
 
     time = std::chrono::high_resolution_clock::now();
@@ -509,12 +497,6 @@ namespace RayGene3D
 
   Imgui::~Imgui()
   {
-    for (auto i = 0u; i < arg_limit; ++i)
-    {
-      batch->DestroyMesh(meshes[i]);
-      meshes[i].reset();
-    }
-
     technique->DestroyBatch(batch);
     batch.reset();
 
