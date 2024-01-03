@@ -3,7 +3,7 @@
 
 namespace RayGene3D
 {
-  class Imgui : public Broker
+  class RenderUIBroker : public Broker
   {
   protected:
     std::shared_ptr<View> backbuffer_rtv;
@@ -61,7 +61,7 @@ namespace RayGene3D
     void OnChar(unsigned int glyph);
 
   public:
-    Imgui(Wrap& wrap);
-    virtual ~Imgui();
+    RenderUIBroker(Wrap& wrap);
+    virtual ~RenderUIBroker();
   };
 }

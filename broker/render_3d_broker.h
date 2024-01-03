@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  class Spark : public Broker
+  class Render3DBroker : public Broker
   {
   protected:
     SPtrView backbuffer_uav;
@@ -361,7 +361,7 @@ namespace RayGene3D
     void Discard() override;
 
   public:
-    Spark(Wrap& wrap);
-    virtual ~Spark();
+    Render3DBroker(Wrap& wrap);
+    virtual ~Render3DBroker();
   };
 }

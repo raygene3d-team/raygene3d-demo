@@ -1,17 +1,17 @@
-#include "imgui.h"
+#include "render_ui_broker.h"
 
 #include <imgui/imgui.h>
 
 namespace RayGene3D
 {
-  const uint32_t Imgui::sub_limit;
-  const uint32_t Imgui::arg_limit;
+  const uint32_t RenderUIBroker::sub_limit;
+  const uint32_t RenderUIBroker::arg_limit;
 
-  void Imgui::Initialize()
+  void RenderUIBroker::Initialize()
   {
   }
 
-  void Imgui::Use()
+  void RenderUIBroker::Use()
   {
     ImGuiIO& io = ImGui::GetIO();
 
@@ -79,41 +79,41 @@ namespace RayGene3D
   }
 
 
-  void Imgui::Discard()
+  void RenderUIBroker::Discard()
   {
   }
 
-  void Imgui::OnCursor(double xpos, double ypos)
+  void RenderUIBroker::OnCursor(double xpos, double ypos)
   {
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2((float)xpos, (float)ypos);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
   }
 
-  void Imgui::OnKeyboard(int key, int scancode, int action, int mods)
+  void RenderUIBroker::OnKeyboard(int key, int scancode, int action, int mods)
   {
     ImGuiIO& io = ImGui::GetIO();
     io.KeysDown[key] = action == 1 ? true : false;
   }
 
-  void Imgui::OnMouse(int button, int action, int mods)
+  void RenderUIBroker::OnMouse(int button, int action, int mods)
   {
     ImGuiIO& io = ImGui::GetIO();
     io.MouseDown[button] = action == 1 ? true : false;
   }
 
-  void Imgui::OnScroll(double xoffset, double yoffset)
+  void RenderUIBroker::OnScroll(double xoffset, double yoffset)
   {
     ImGuiIO& io = ImGui::GetIO();
     io.MouseWheel += (float)yoffset;
   }
 
-  void Imgui::OnChar(unsigned int glyph)
+  void RenderUIBroker::OnChar(unsigned int glyph)
   {
     ImGuiIO& io = ImGui::GetIO();
     io.AddInputCharacter(glyph);
   }
 
-  Imgui::Imgui(Wrap& wrap)
+  RenderUIBroker::RenderUIBroker(Wrap& wrap)
     : Broker("imgui_broker", wrap)
   {
     const auto find_view_fn = [this](const std::shared_ptr<View>& view)
@@ -495,7 +495,7 @@ namespace RayGene3D
     io.ImeWindowHandle = nullptr;
   }
 
-  Imgui::~Imgui()
+  RenderUIBroker::~RenderUIBroker()
   {
     technique->DestroyBatch(batch);
     batch.reset();

@@ -27,11 +27,11 @@ THE SOFTWARE.
 ================================================================================*/
 
 
-#include "spark.h"
+#include "render_3d_broker.h"
 
 namespace RayGene3D
 {
-  void Spark::CreateShadowMap()
+  void Render3DBroker::CreateShadowMap()
   {
     shadow_map = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
       Resource::Tex2DDesc
@@ -47,7 +47,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateColorTarget()
+  void Render3DBroker::CreateColorTarget()
   {
     color_target = wrap.GetCore()->GetDevice()->CreateResource("spark_color_target",
       Resource::Tex2DDesc
@@ -62,7 +62,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateDepthTarget()
+  void Render3DBroker::CreateDepthTarget()
   {
     depth_target = wrap.GetCore()->GetDevice()->CreateResource("spark_depth_target",
       Resource::Tex2DDesc
@@ -77,7 +77,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateGBufferTarget0()
+  void Render3DBroker::CreateGBufferTarget0()
   {
     gbuffer_0_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_0_target",
       Resource::Tex2DDesc
@@ -92,7 +92,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateGBufferTarget1()
+  void Render3DBroker::CreateGBufferTarget1()
   {
     gbuffer_1_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_1_target",
       Resource::Tex2DDesc
@@ -107,7 +107,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateScreenData()
+  void Render3DBroker::CreateScreenData()
   {
     screen_data = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_data",
       Resource::BufferDesc
@@ -120,7 +120,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateCameraData()
+  void Render3DBroker::CreateCameraData()
   {
     camera_data = wrap.GetCore()->GetDevice()->CreateResource("spark_camera_data",
       Resource::BufferDesc
@@ -133,7 +133,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateShadowData()
+  void Render3DBroker::CreateShadowData()
   {
     shadow_data = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
       Resource::BufferDesc
@@ -146,7 +146,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneInstances()
+  void Render3DBroker::CreateSceneInstances()
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
@@ -165,7 +165,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneTriangles()
+  void Render3DBroker::CreateSceneTriangles()
   {
     const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
@@ -184,7 +184,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneVertices()
+  void Render3DBroker::CreateSceneVertices()
   {
     const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
@@ -203,7 +203,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneTBoxes()
+  void Render3DBroker::CreateSceneTBoxes()
   {
     const auto [data, count] = prop_t_boxes->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
@@ -222,7 +222,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneBBoxes()
+  void Render3DBroker::CreateSceneBBoxes()
   {
     const auto [data, count] = prop_b_boxes->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
@@ -241,7 +241,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateTraceInstances()
+  void Render3DBroker::CreateTraceInstances()
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
@@ -260,7 +260,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateTraceTriangles()
+  void Render3DBroker::CreateTraceTriangles()
   {
     const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
@@ -279,7 +279,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateTraceVertices()
+  void Render3DBroker::CreateTraceVertices()
   {
     const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
@@ -298,7 +298,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneTextures0()
+  void Render3DBroker::CreateSceneTextures0()
   {
     const auto layers = prop_textures0->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_SRGB;
@@ -334,7 +334,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneTextures1()
+  void Render3DBroker::CreateSceneTextures1()
   {
     const auto layers = prop_textures1->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -370,7 +370,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneTextures2()
+  void Render3DBroker::CreateSceneTextures2()
   {
     const auto layers = prop_textures2->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -406,7 +406,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSceneTextures3()
+  void Render3DBroker::CreateSceneTextures3()
   {
     const auto layers = prop_textures3->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
@@ -442,7 +442,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateLightMaps()
+  void Render3DBroker::CreateLightMaps()
   {
     const auto layers = prop_lightmaps->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_SRGB;
@@ -478,7 +478,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateScreenQuadVertices()
+  void Render3DBroker::CreateScreenQuadVertices()
   {
     static const std::array<glm::f32vec2, 4> quad_vtx = {
       glm::f32vec2(-1.0f, 1.0f),
@@ -503,7 +503,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateScreenQuadTriangles()
+  void Render3DBroker::CreateScreenQuadTriangles()
   {
     static const std::array<glm::u32vec3, 2> quad_idx = {
       glm::u32vec3(0u, 1u, 2u),
@@ -526,7 +526,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSkyboxTexture()
+  void Render3DBroker::CreateSkyboxTexture()
   {
     const auto layers = prop_skybox->GetArraySize();
     const auto format = FORMAT_R32G32B32A32_FLOAT;
@@ -562,7 +562,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateGraphicArguments()
+  void Render3DBroker::CreateGraphicArguments()
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
 
@@ -577,7 +577,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateComputeArguments()
+  void Render3DBroker::CreateComputeArguments()
   {
     compute_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
       Resource::BufferDesc
@@ -592,7 +592,7 @@ namespace RayGene3D
 
 
 
-  void Spark::CreateShadowmapPass(uint32_t index)
+  void Render3DBroker::CreateShadowmapPass(uint32_t index)
   {
     const auto extent_x = shadow_resolution;
     const auto extent_y = shadow_resolution;
@@ -619,7 +619,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateShadowmapTechnique(uint32_t index)
+  void Render3DBroker::CreateShadowmapTechnique(uint32_t index)
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
@@ -670,7 +670,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateShadowmapBatch(uint32_t index)
+  void Render3DBroker::CreateShadowmapBatch(uint32_t index)
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     auto entities = std::vector<Batch::Entity>(count);
@@ -729,7 +729,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateHWTracedPass()
+  void Render3DBroker::CreateHWTracedPass()
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
@@ -744,7 +744,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateHWTracedTechnique()
+  void Render3DBroker::CreateHWTracedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
@@ -765,7 +765,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateHWTracedBatch()
+  void Render3DBroker::CreateHWTracedBatch()
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     auto entities = std::vector<Batch::Entity>(count);
@@ -860,7 +860,7 @@ namespace RayGene3D
 
 
 
-  void Spark::CreateGeometryPass()
+  void Render3DBroker::CreateGeometryPass()
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
@@ -899,7 +899,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateGeometryTechnique()
+  void Render3DBroker::CreateGeometryTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
@@ -963,7 +963,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateGeometryBatch()
+  void Render3DBroker::CreateGeometryBatch()
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     auto entities = std::vector<Batch::Entity>(count);
@@ -1080,7 +1080,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateSkyboxTechnique()
+  void Render3DBroker::CreateSkyboxTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
@@ -1139,7 +1139,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateSkyboxBatch()
+  void Render3DBroker::CreateSkyboxBatch()
   {
     auto skybox_screen_quad_vertices = screen_quad_vertices->CreateView("spark_skybox_screen_quad_vertices",
       Usage(USAGE_VERTEX_ARRAY)
@@ -1186,7 +1186,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateUnshadowedPass()
+  void Render3DBroker::CreateUnshadowedPass()
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
@@ -1209,7 +1209,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateUnshadowedTechnique()
+  void Render3DBroker::CreateUnshadowedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_unshadowed.hlsl", std::fstream::in);
@@ -1265,7 +1265,7 @@ namespace RayGene3D
 
 
 
-  void Spark::CreateUnshadowedBatch()
+  void Render3DBroker::CreateUnshadowedBatch()
   {
     auto unshadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_unshadowed_screen_quad_vertices",
       Usage(USAGE_VERTEX_ARRAY)
@@ -1318,7 +1318,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateShadowedPass()
+  void Render3DBroker::CreateShadowedPass()
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
@@ -1341,7 +1341,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateShadowedTechnique()
+  void Render3DBroker::CreateShadowedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
@@ -1396,7 +1396,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateShadowedBatch()
+  void Render3DBroker::CreateShadowedBatch()
   {
     auto shadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_shadowed_screen_quad_vertices",
       Usage(USAGE_VERTEX_ARRAY)
@@ -1460,7 +1460,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateSWTracedPass()
+  void Render3DBroker::CreateSWTracedPass()
   {
     const auto extent_x = prop_extent_x->GetUint();
     const auto extent_y = prop_extent_y->GetUint();
@@ -1484,7 +1484,7 @@ namespace RayGene3D
   }
 
 
-  void Spark::CreateSWTracedTechnique()
+  void Render3DBroker::CreateSWTracedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_sw_traced.hlsl", std::fstream::in);
@@ -1538,7 +1538,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreateSWTracedBatch()
+  void Render3DBroker::CreateSWTracedBatch()
   {
     auto shadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_sw_traced_screen_quad_vertices",
       Usage(USAGE_VERTEX_ARRAY)
@@ -1619,7 +1619,7 @@ namespace RayGene3D
 
 
 
-  void Spark::CreatePresentPass()
+  void Render3DBroker::CreatePresentPass()
   {
     const auto grid_x = prop_extent_x->GetUint() / 8u;
     const auto grid_y = prop_extent_y->GetUint() / 8u;
@@ -1633,7 +1633,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreatePresentTechnique()
+  void Render3DBroker::CreatePresentTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
@@ -1651,7 +1651,7 @@ namespace RayGene3D
     );
   }
 
-  void Spark::CreatePresentBatch()
+  void Render3DBroker::CreatePresentBatch()
   {
     auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
       Usage(USAGE_ARGUMENT_INDIRECT)
@@ -1692,305 +1692,305 @@ namespace RayGene3D
 
 
 
-  void Spark::Initialize()
+  void Render3DBroker::Initialize()
   {
   }
 
-  void Spark::DestroyColorTarget()
+  void Render3DBroker::DestroyColorTarget()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(color_target);
     color_target.reset();
   }
 
-  void Spark::DestroyDepthTarget()
+  void Render3DBroker::DestroyDepthTarget()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(depth_target);
     depth_target.reset();
   }
 
-  void Spark::DestroyShadowMap()
+  void Render3DBroker::DestroyShadowMap()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(shadow_map);
     shadow_map.reset();
   }
 
-  void Spark::DestroyGBufferTarget0()
+  void Render3DBroker::DestroyGBufferTarget0()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(gbuffer_0_target);
     gbuffer_0_target.reset();
   }
 
-  void Spark::DestroyGBufferTarget1()
+  void Render3DBroker::DestroyGBufferTarget1()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(gbuffer_1_target);
     gbuffer_1_target.reset();
   }
 
-  void Spark::DestroyScreenData()
+  void Render3DBroker::DestroyScreenData()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(screen_data);
     screen_data.reset();
   }
 
-  void Spark::DestroyCameraData()
+  void Render3DBroker::DestroyCameraData()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(camera_data);
     camera_data.reset();
   }
 
-  void Spark::DestroyShadowData()
+  void Render3DBroker::DestroyShadowData()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(shadow_data);
     shadow_data.reset();
   }
 
-  void Spark::DestroySceneInstances()
+  void Render3DBroker::DestroySceneInstances()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_instances);
     scene_instances.reset();
   }
 
-  void Spark::DestroySceneTriangles()
+  void Render3DBroker::DestroySceneTriangles()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_triangles);
     scene_triangles.reset();
   }
 
-  void Spark::DestroySceneVertices()
+  void Render3DBroker::DestroySceneVertices()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_vertices);
     scene_vertices.reset();
   }
 
-  void Spark::DestroySceneTBoxes()
+  void Render3DBroker::DestroySceneTBoxes()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_t_boxes);
     scene_t_boxes.reset();
   }
 
-  void Spark::DestroySceneBBoxes()
+  void Render3DBroker::DestroySceneBBoxes()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_b_boxes);
     scene_b_boxes.reset();
   }
 
-  void Spark::DestroyTraceInstances()
+  void Render3DBroker::DestroyTraceInstances()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(trace_instances);
     trace_instances.reset();
   }
 
-  void Spark::DestroyTraceTriangles()
+  void Render3DBroker::DestroyTraceTriangles()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(trace_triangles);
     trace_triangles.reset();
   }
 
-  void Spark::DestroyTraceVertices()
+  void Render3DBroker::DestroyTraceVertices()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(trace_vertices);
     trace_vertices.reset();
   }
   
-  void Spark::DestroySceneTextures0()
+  void Render3DBroker::DestroySceneTextures0()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_textures0);
     scene_textures0.reset();
   }
 
-  void Spark::DestroySceneTextures1()
+  void Render3DBroker::DestroySceneTextures1()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_textures1);
     scene_textures1.reset();
   }
 
-  void Spark::DestroySceneTextures2()
+  void Render3DBroker::DestroySceneTextures2()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_textures2);
     scene_textures2.reset();
   }
 
-  void Spark::DestroySceneTextures3()
+  void Render3DBroker::DestroySceneTextures3()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_textures3);
     scene_textures3.reset();
   }
 
-  void Spark::DestroyLightMaps()
+  void Render3DBroker::DestroyLightMaps()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(light_maps);
     light_maps.reset();
   }
 
-  void Spark::DestroyScreenQuadVertices()
+  void Render3DBroker::DestroyScreenQuadVertices()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(screen_quad_vertices);
     screen_quad_vertices.reset();
   }
 
-  void Spark::DestroyScreenQuadTriangles()
+  void Render3DBroker::DestroyScreenQuadTriangles()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(screen_quad_triangles);
     screen_quad_triangles.reset();
   }
 
-  void Spark::DestroySkyboxTexture()
+  void Render3DBroker::DestroySkyboxTexture()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(skybox_texture);
     skybox_texture.reset();
   }
 
-  void Spark::DestroyGraphicArguments()
+  void Render3DBroker::DestroyGraphicArguments()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(graphic_arguments);
     graphic_arguments.reset();
   }
 
-  void Spark::DestroyComputeArguments()
+  void Render3DBroker::DestroyComputeArguments()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(compute_arguments);
     compute_arguments.reset();
   }
 
-  void Spark::DestroyGeometryPass()
+  void Render3DBroker::DestroyGeometryPass()
   {
     wrap.GetCore()->GetDevice()->DestroyPass(geometry_pass);
     geometry_pass.reset();
   }
 
-  void Spark::DestroyGeometryBatch()
+  void Render3DBroker::DestroyGeometryBatch()
   {
     geometry_technique->DestroyBatch(geometry_batch);
     geometry_batch.reset();
   }
 
-  void Spark::DestroyGeometryTechnique()
+  void Render3DBroker::DestroyGeometryTechnique()
   {
     geometry_pass->DestroyTechnique(geometry_technique);
     geometry_technique.reset();
   }
 
-  void Spark::DestroyShadowmapBatch(uint32_t index)
+  void Render3DBroker::DestroyShadowmapBatch(uint32_t index)
   {
     shadowmap_techniques[index]->DestroyBatch(shadowmap_batches[index]);
     shadowmap_batches[index].reset();
   }
 
-  void Spark::DestroyShadowmapTechnique(uint32_t index)
+  void Render3DBroker::DestroyShadowmapTechnique(uint32_t index)
   {
     shadowmap_passes[index]->DestroyTechnique(shadowmap_techniques[index]);
     shadowmap_techniques[index].reset();
   }
 
-  void Spark::DestroyShadowmapPass(uint32_t index)
+  void Render3DBroker::DestroyShadowmapPass(uint32_t index)
   {
     wrap.GetCore()->GetDevice()->DestroyPass(shadowmap_passes[index]);
     shadowmap_passes[index].reset();
   }
 
-  void Spark::DestroyShadowedBatch()
+  void Render3DBroker::DestroyShadowedBatch()
   {
     shadowed_technique->DestroyBatch(shadowed_batch);
     shadowed_batch.reset();
   }
 
-  void Spark::DestroyShadowedTechnique()
+  void Render3DBroker::DestroyShadowedTechnique()
   {
     shadowed_pass->DestroyTechnique(shadowed_technique);
     shadowed_technique.reset();
   }
 
-  void Spark::DestroyShadowedPass()
+  void Render3DBroker::DestroyShadowedPass()
   {
     wrap.GetCore()->GetDevice()->DestroyPass(shadowed_pass);
     shadowed_pass.reset();
   }
 
-  void Spark::DestroySWTracedBatch()
+  void Render3DBroker::DestroySWTracedBatch()
   {
     sw_traced_technique->DestroyBatch(sw_traced_batch);
     sw_traced_batch.reset();
   }
 
-  void Spark::DestroySWTracedTechnique()
+  void Render3DBroker::DestroySWTracedTechnique()
   {
     sw_traced_pass->DestroyTechnique(sw_traced_technique);
     sw_traced_technique.reset();
   }
 
-  void Spark::DestroySWTracedPass()
+  void Render3DBroker::DestroySWTracedPass()
   {
     wrap.GetCore()->GetDevice()->DestroyPass(sw_traced_pass);
     sw_traced_pass.reset();
   }
 
-  void Spark::DestroyHWTracedBatch()
+  void Render3DBroker::DestroyHWTracedBatch()
   {
     hw_traced_technique->DestroyBatch(hw_traced_batch);
     hw_traced_batch.reset();
   }
 
-  void Spark::DestroyHWTracedTechnique()
+  void Render3DBroker::DestroyHWTracedTechnique()
   {
     hw_traced_pass->DestroyTechnique(hw_traced_technique);
     hw_traced_technique.reset();
   }
 
-  void Spark::DestroyHWTracedPass()
+  void Render3DBroker::DestroyHWTracedPass()
   {
     wrap.GetCore()->GetDevice()->DestroyPass(hw_traced_pass);
     hw_traced_pass.reset();
   }
 
-  void Spark::DestroyUnshadowedBatch()
+  void Render3DBroker::DestroyUnshadowedBatch()
   {
     unshadowed_technique->DestroyBatch(unshadowed_batch);
     unshadowed_batch.reset();
   }
 
-  void Spark::DestroyUnshadowedTechnique()
+  void Render3DBroker::DestroyUnshadowedTechnique()
   {
     unshadowed_pass->DestroyTechnique(unshadowed_technique);
     unshadowed_technique.reset();
   }
 
-  void Spark::DestroyUnshadowedPass()
+  void Render3DBroker::DestroyUnshadowedPass()
   {
     wrap.GetCore()->GetDevice()->DestroyPass(unshadowed_pass);
     unshadowed_pass.reset();
   }
 
-  void Spark::DestroySkyboxBatch()
+  void Render3DBroker::DestroySkyboxBatch()
   {
     skybox_technique->DestroyBatch(skybox_batch);
     skybox_batch.reset();
   }
 
-  void Spark::DestroySkyboxTechnique()
+  void Render3DBroker::DestroySkyboxTechnique()
   {
     geometry_pass->DestroyTechnique(skybox_technique);
     skybox_technique.reset();
   }
 
-  void Spark::DestroyPresentBatch()
+  void Render3DBroker::DestroyPresentBatch()
   {
     present_technique->DestroyBatch(present_batch);
     present_batch.reset();
   }
 
-  void Spark::DestroyPresentTechnique()
+  void Render3DBroker::DestroyPresentTechnique()
   {
     present_pass->DestroyTechnique(present_technique);
     present_technique.reset();
   }
 
-  void Spark::DestroyPresentPass()
+  void Render3DBroker::DestroyPresentPass()
   {
     wrap.GetCore()->GetDevice()->DestroyPass(present_pass);
     present_pass.reset();
   }
 
-  void Spark::Use()
+  void Render3DBroker::Use()
   {
     switch (shadows)
     {
@@ -2203,11 +2203,11 @@ namespace RayGene3D
     }
   }
 
-  void Spark::Discard()
+  void Render3DBroker::Discard()
   {
   }
 
-  Spark::Spark(Wrap& wrap)
+  Render3DBroker::Render3DBroker(Wrap& wrap)
     : Broker("spark_broker", wrap)
   {
     const auto find_view_fn = [this](const std::shared_ptr<View>& view)
@@ -2358,7 +2358,7 @@ namespace RayGene3D
     CreatePresentBatch();
   }
 
-  Spark::~Spark()
+  Render3DBroker::~Render3DBroker()
   {
     auto* device = wrap.GetCore()->GetDevice().get();
 
