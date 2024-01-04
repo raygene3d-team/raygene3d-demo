@@ -662,11 +662,6 @@ namespace RayGene3D
   };
 }
 
-
-
-
-
-
 int main(int argc, char** argv)
 {
   //LogSystem::Init();

@@ -127,17 +127,6 @@ namespace RayGene3D
     SPtrResource graphic_arguments;
     SPtrResource compute_arguments;
 
-  //protected:
-  //  SPtrMesh reflection_probe_meshes[7];
-  //  SPtrMesh shadowmap_meshes[6];
-  //  SPtrMesh unshadowed_mesh;
-  //  SPtrMesh shadowed_mesh;
-  //  SPtrMesh sw_traced_mesh;
-  //  SPtrMesh hw_traced_mesh;
-  //  SPtrMesh geometry_mesh;
-  //  SPtrMesh skybox_mesh;
-  //  SPtrMesh present_mesh;
-
   protected:
     SPtrBatch shadowmap_batches[6];
     SPtrBatch unshadowed_batch;
@@ -149,15 +138,15 @@ namespace RayGene3D
     SPtrBatch present_batch;
 
   protected:
-    SPtrTechnique reflection_probe_effects[7];
-    SPtrTechnique shadowmap_effects[6];
-    SPtrTechnique unshadowed_effect;
-    SPtrTechnique shadowed_effect;
-    SPtrTechnique sw_traced_effect;
-    SPtrTechnique hw_traced_effect;
-    SPtrTechnique geometry_effect;
-    SPtrTechnique skybox_effect;
-    SPtrTechnique present_effect;
+    SPtrState reflection_probe_states[7];
+    SPtrState shadowmap_states[6];
+    SPtrState unshadowed_state;
+    SPtrState shadowed_state;
+    SPtrState sw_traced_state;
+    SPtrState hw_traced_state;
+    SPtrState geometry_state;
+    SPtrState skybox_state;
+    SPtrState present_state;
 
   protected:
     SPtrPass reflection_probe_passes[7];
@@ -168,9 +157,6 @@ namespace RayGene3D
     SPtrPass hw_traced_pass;
     SPtrPass geometry_pass;
     SPtrPass present_pass;
-
-
-   
 
   protected:
     uint32_t shadow_resolution { 1024 };
@@ -241,41 +227,41 @@ namespace RayGene3D
     void CreateComputeArguments();
 
     void CreateShadowmapPass(uint32_t index);
-    void CreateShadowmapTechnique(uint32_t index);
+    void CreateShadowmapState(uint32_t index);
     void CreateShadowmapBatch(uint32_t index);
     //void CreateShadowmapMesh(uint32_t index);
     
     void CreateShadowedPass();
-    void CreateShadowedTechnique();
+    void CreateShadowedState();
     void CreateShadowedBatch();
     //void CreateShadowedMesh();
     
     void CreateSWTracedPass();
-    void CreateSWTracedTechnique();
+    void CreateSWTracedState();
     void CreateSWTracedBatch();
     //void CreateSWTracedMesh();
     
     void CreateHWTracedPass();
-    void CreateHWTracedTechnique();
+    void CreateHWTracedState();
     void CreateHWTracedBatch();
     //void CreateHWTracedMesh();
     
     void CreateUnshadowedPass();
-    void CreateUnshadowedTechnique();
+    void CreateUnshadowedState();
     void CreateUnshadowedBatch();
     //void CreateUnshadowedMesh();
    
     void CreateGeometryPass();
-    void CreateGeometryTechnique();
+    void CreateGeometryState();
     void CreateGeometryBatch();
     //void CreateGeometryMesh();
     
-    void CreateSkyboxTechnique();
+    void CreateSkyboxState();
     void CreateSkyboxBatch();
     //void CreateSkyboxMesh();
     
     void CreatePresentPass();
-    void CreatePresentTechnique();
+    void CreatePresentState();
     void CreatePresentBatch();
     //void CreatePresentMesh();
     
@@ -318,41 +304,41 @@ namespace RayGene3D
 
     //void DestroyGeometryMesh();
     void DestroyGeometryBatch();
-    void DestroyGeometryTechnique();
+    void DestroyGeometryState();
     void DestroyGeometryPass();
 
     //void DestroyShadowmapMesh(uint32_t index);
     void DestroyShadowmapBatch(uint32_t index);
-    void DestroyShadowmapTechnique(uint32_t index);
+    void DestroyShadowmapState(uint32_t index);
     void DestroyShadowmapPass(uint32_t index);
 
     //void DestroyShadowedMesh();
     void DestroyShadowedBatch();
-    void DestroyShadowedTechnique();
+    void DestroyShadowedState();
     void DestroyShadowedPass();
 
     //void DestroySWTracedMesh();
     void DestroySWTracedBatch();
-    void DestroySWTracedTechnique();
+    void DestroySWTracedState();
     void DestroySWTracedPass();
 
     //void DestroyHWTracedMesh();
     void DestroyHWTracedBatch();
-    void DestroyHWTracedTechnique();
+    void DestroyHWTracedState();
     void DestroyHWTracedPass();
 
     //void DestroyUnshadowedMesh();
     void DestroyUnshadowedBatch();
-    void DestroyUnshadowedTechnique();
+    void DestroyUnshadowedState();
     void DestroyUnshadowedPass();
 
     //void DestroySkyboxMesh();
     void DestroySkyboxBatch();
-    void DestroySkyboxTechnique();
+    void DestroySkyboxState();
 
     //void DestroyPresentMesh();
     void DestroyPresentBatch();
-    void DestroyPresentTechnique();
+    void DestroyPresentState();
     void DestroyPresentPass();
 
   public:

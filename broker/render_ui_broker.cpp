@@ -371,10 +371,10 @@ namespace RayGene3D
         return output; \
       }";
 
-      const Technique::IAState ia_state =
+      const State::IAState ia_state =
       {
-        Technique::TOPOLOGY_TRIANGLELIST,
-        Technique::INDEXER_16_BIT,
+        State::TOPOLOGY_TRIANGLELIST,
+        State::INDEXER_16_BIT,
         {
           { 0, 0, 20, FORMAT_R32G32_FLOAT, false },
           { 0, 8, 20, FORMAT_R32G32_FLOAT, false },
@@ -382,33 +382,33 @@ namespace RayGene3D
         }
       };
 
-      const Technique::RCState rc_state =
+      const State::RCState rc_state =
       {
-        Technique::FILL_SOLID,
-        Technique::CULL_NONE,
+        State::FILL_SOLID,
+        State::CULL_NONE,
         {
           { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
         },
       };
 
-      const Technique::DSState ds_state =
+      const State::DSState ds_state =
       {
         false,
         false,
-        Technique::COMPARISON_ALWAYS
+        State::COMPARISON_ALWAYS
       };
 
-      const Technique::OMState om_state =
+      const State::OMState om_state =
       {
         false,
         {
-          { true, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF }
+          { true, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF }
         }
       };
 
-      effect = pass->CreateTechnique("imgui_config",
+      effect = pass->CreateState("imgui_config",
         source,
-        Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+        State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
         {},
         ia_state,
         rc_state,
@@ -500,7 +500,7 @@ namespace RayGene3D
     effect->DestroyBatch(batch);
     batch.reset();
 
-    pass->DestroyTechnique(effect);
+    pass->DestroyState(effect);
     effect.reset();
 
     wrap.GetCore()->GetDevice()->DestroyPass(pass);

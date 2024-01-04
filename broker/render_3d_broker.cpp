@@ -619,49 +619,49 @@ namespace RayGene3D
   }
 
 
-  void Render3DBroker::CreateShadowmapTechnique(uint32_t index)
+  void Render3DBroker::CreateShadowmapState(uint32_t index)
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    const Technique::IAState ia_state =
+    const State::IAState ia_state =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      State::TOPOLOGY_TRIANGLELIST,
+      State::INDEXER_32_BIT,
       {
         { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false }
       }
     };
 
-    const Technique::RCState rc_state =
+    const State::RCState rc_state =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_FRONT,
+      State::FILL_SOLID,
+      State::CULL_FRONT,
       {
         { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_state =
+    const State::DSState ds_state =
     {
       true, //depth_enabled
       true, //depth_write
-      Technique::COMPARISON_LESS //depth_comparison
+      State::COMPARISON_LESS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const State::OMState om_state =
     {
       false,
       {
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF }
+        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF }
       }
     };
 
-    shadowmap_effects[index] = shadowmap_passes[index]->CreateTechnique("spark_shadowmap_effect" + std::to_string(index),
+    shadowmap_states[index] = shadowmap_passes[index]->CreateState("spark_shadowmap_state" + std::to_string(index),
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS),
+      State::Compilation(State::COMPILATION_VS),
       {},
       ia_state,
       rc_state,
@@ -716,7 +716,7 @@ namespace RayGene3D
       shadowmap_shadow_data,
     };
 
-    shadowmap_batches[index] = shadowmap_effects[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
+    shadowmap_batches[index] = shadowmap_states[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
       { entities.data(), uint32_t(entities.size()) },
       {},
       {},
@@ -744,7 +744,7 @@ namespace RayGene3D
   }
 
 
-  void Render3DBroker::CreateHWTracedTechnique()
+  void Render3DBroker::CreateHWTracedState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
@@ -754,9 +754,9 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    hw_traced_effect = hw_traced_pass->CreateTechnique("spark_hw_traced_effect",
+    hw_traced_state = hw_traced_pass->CreateState("spark_hw_traced_state",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_RGEN | Technique::COMPILATION_MISS),
+      State::Compilation(State::COMPILATION_RGEN | State::COMPILATION_MISS),
       { defines.data(), uint32_t(defines.size()) },
       {},
       {},
@@ -845,7 +845,7 @@ namespace RayGene3D
       hw_traced_color_texture,
     };
 
-    hw_traced_batch = hw_traced_effect->CreateBatch("spark_hw_traced_batch",
+    hw_traced_batch = hw_traced_state->CreateBatch("spark_hw_traced_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -899,7 +899,7 @@ namespace RayGene3D
     );
   }
 
-  void Render3DBroker::CreateGeometryTechnique()
+  void Render3DBroker::CreateGeometryState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
@@ -909,10 +909,10 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_state =
+    const State::IAState ia_state =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      State::TOPOLOGY_TRIANGLELIST,
+      State::INDEXER_32_BIT,
       {
         { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
         { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
@@ -925,35 +925,35 @@ namespace RayGene3D
       }
     };
 
-    const Technique::RCState rc_state =
+    const State::RCState rc_state =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      State::FILL_SOLID,
+      State::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_state =
+    const State::DSState ds_state =
     {
       true, //depth_enabled
       true, //depth_write
-      Technique::COMPARISON_LESS //depth_comparison
+      State::COMPARISON_LESS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const State::OMState om_state =
     {
       false,
       {
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
+        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
+        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
       }
     };
 
-    geometry_effect = geometry_pass->CreateTechnique("spark_geometry_effect",
+    geometry_state = geometry_pass->CreateState("spark_geometry_state",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -1067,7 +1067,7 @@ namespace RayGene3D
       geometry_scene_textures3,
     };
 
-    geometry_batch = geometry_effect->CreateBatch("spark_geometry_batch",
+    geometry_batch = geometry_state->CreateBatch("spark_geometry_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1080,7 +1080,7 @@ namespace RayGene3D
   }
 
 
-  void Render3DBroker::CreateSkyboxTechnique()
+  void Render3DBroker::CreateSkyboxState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
@@ -1092,44 +1092,44 @@ namespace RayGene3D
       { "TEST", "1" },
     };
 
-    const Technique::IAState ia_state =
+    const State::IAState ia_state =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      State::TOPOLOGY_TRIANGLELIST,
+      State::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Technique::RCState rc_state =
+    const State::RCState rc_state =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      State::FILL_SOLID,
+      State::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_state =
+    const State::DSState ds_state =
     {
       true, //depth_enabled
       false, //depth_write
-      Technique::COMPARISON_EQUAL //depth_comparison
+      State::COMPARISON_EQUAL //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const State::OMState om_state =
     {
       false,
       {
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
+        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
+        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
       }
     };
 
-    skybox_effect = geometry_pass->CreateTechnique("spark_skybox_effect",
+    skybox_state = geometry_pass->CreateState("spark_skybox_state",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
       ia_state,
       rc_state,
@@ -1173,7 +1173,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    skybox_batch = skybox_effect->CreateBatch("spark_skybox_batch",
+    skybox_batch = skybox_state->CreateBatch("spark_skybox_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1209,7 +1209,7 @@ namespace RayGene3D
     );
   }
 
-  void Render3DBroker::CreateUnshadowedTechnique()
+  void Render3DBroker::CreateUnshadowedState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_unshadowed.hlsl", std::fstream::in);
@@ -1219,42 +1219,42 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_state =
+    const State::IAState ia_state =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      State::TOPOLOGY_TRIANGLELIST,
+      State::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Technique::RCState rc_state =
+    const State::RCState rc_state =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      State::FILL_SOLID,
+      State::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_state =
+    const State::DSState ds_state =
     {
       false, //depth_enabled
       false, //depth_write
-      Technique::COMPARISON_ALWAYS //depth_comparison
+      State::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const State::OMState om_state =
     {
       false,
       {
-        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
+        { true, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, 0xF },
       }
     };
 
-    unshadowed_effect = unshadowed_pass->CreateTechnique("spark_unshadowed_effect",
+    unshadowed_state = unshadowed_pass->CreateState("spark_unshadowed_state",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -1308,7 +1308,7 @@ namespace RayGene3D
       unshadowed_depth_texture,
     };
 
-    unshadowed_batch = unshadowed_effect->CreateBatch("spark_unshadowed_batch",
+    unshadowed_batch = unshadowed_state->CreateBatch("spark_unshadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1341,7 +1341,7 @@ namespace RayGene3D
     );
   }
 
-  void Render3DBroker::CreateShadowedTechnique()
+  void Render3DBroker::CreateShadowedState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
@@ -1351,42 +1351,42 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_state =
+    const State::IAState ia_state =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      State::TOPOLOGY_TRIANGLELIST,
+      State::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Technique::RCState rc_state =
+    const State::RCState rc_state =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      State::FILL_SOLID,
+      State::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_state =
+    const State::DSState ds_state =
     {
       false, //depth_enabled
       false, //depth_write
-      Technique::COMPARISON_ALWAYS //depth_comparison
+      State::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const State::OMState om_state =
     {
       false,
       {
-        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
+        { true, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, 0xF },
       }
     };
 
-    shadowed_effect = shadowed_pass->CreateTechnique("spark_shadowed_effect",
+    shadowed_state = shadowed_pass->CreateState("spark_shadowed_state",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -1450,7 +1450,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
     };
 
-    shadowed_batch = shadowed_effect->CreateBatch("spark_shadowed_batch",
+    shadowed_batch = shadowed_state->CreateBatch("spark_shadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1484,7 +1484,7 @@ namespace RayGene3D
   }
 
 
-  void Render3DBroker::CreateSWTracedTechnique()
+  void Render3DBroker::CreateSWTracedState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_sw_traced.hlsl", std::fstream::in);
@@ -1494,42 +1494,42 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_state =
+    const State::IAState ia_state =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      State::TOPOLOGY_TRIANGLELIST,
+      State::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Technique::RCState rc_state =
+    const State::RCState rc_state =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      State::FILL_SOLID,
+      State::CULL_BACK,
       {
         { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_state =
+    const State::DSState ds_state =
     {
       false, //depth_enabled
       false, //depth_write
-      Technique::COMPARISON_ALWAYS //depth_comparison
+      State::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const State::OMState om_state =
     {
       false,
       {
-        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
+        { true, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, 0xF },
       }
     };
 
-    sw_traced_effect = sw_traced_pass->CreateTechnique("spark_sw_traced_effect",
+    sw_traced_state = sw_traced_pass->CreateState("spark_sw_traced_state",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -1605,7 +1605,7 @@ namespace RayGene3D
       sw_traced_depth_texture,
     };
 
-    sw_traced_batch = sw_traced_effect->CreateBatch("spark_sw_traced_batch",
+    sw_traced_batch = sw_traced_state->CreateBatch("spark_sw_traced_batch",
       { entities, uint32_t(std::size(entities))},
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1633,16 +1633,16 @@ namespace RayGene3D
     );
   }
 
-  void Render3DBroker::CreatePresentTechnique()
+  void Render3DBroker::CreatePresentState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    present_effect = present_pass->CreateTechnique("spark_present_effect",
+    present_state = present_pass->CreateState("spark_present_state",
       shader_ss.str(),
-      Technique::COMPILATION_CS,
+      State::COMPILATION_CS,
       {},
       {},
       {},
@@ -1678,7 +1678,7 @@ namespace RayGene3D
       backbuffer_uav,
     };
 
-    present_batch = present_effect->CreateBatch("spark_present_batch",
+    present_batch = present_state->CreateBatch("spark_present_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1860,26 +1860,26 @@ namespace RayGene3D
 
   void Render3DBroker::DestroyGeometryBatch()
   {
-    geometry_effect->DestroyBatch(geometry_batch);
+    geometry_state->DestroyBatch(geometry_batch);
     geometry_batch.reset();
   }
 
-  void Render3DBroker::DestroyGeometryTechnique()
+  void Render3DBroker::DestroyGeometryState()
   {
-    geometry_pass->DestroyTechnique(geometry_effect);
-    geometry_effect.reset();
+    geometry_pass->DestroyState(geometry_state);
+    geometry_state.reset();
   }
 
   void Render3DBroker::DestroyShadowmapBatch(uint32_t index)
   {
-    shadowmap_effects[index]->DestroyBatch(shadowmap_batches[index]);
+    shadowmap_states[index]->DestroyBatch(shadowmap_batches[index]);
     shadowmap_batches[index].reset();
   }
 
-  void Render3DBroker::DestroyShadowmapTechnique(uint32_t index)
+  void Render3DBroker::DestroyShadowmapState(uint32_t index)
   {
-    shadowmap_passes[index]->DestroyTechnique(shadowmap_effects[index]);
-    shadowmap_effects[index].reset();
+    shadowmap_passes[index]->DestroyState(shadowmap_states[index]);
+    shadowmap_states[index].reset();
   }
 
   void Render3DBroker::DestroyShadowmapPass(uint32_t index)
@@ -1890,14 +1890,14 @@ namespace RayGene3D
 
   void Render3DBroker::DestroyShadowedBatch()
   {
-    shadowed_effect->DestroyBatch(shadowed_batch);
+    shadowed_state->DestroyBatch(shadowed_batch);
     shadowed_batch.reset();
   }
 
-  void Render3DBroker::DestroyShadowedTechnique()
+  void Render3DBroker::DestroyShadowedState()
   {
-    shadowed_pass->DestroyTechnique(shadowed_effect);
-    shadowed_effect.reset();
+    shadowed_pass->DestroyState(shadowed_state);
+    shadowed_state.reset();
   }
 
   void Render3DBroker::DestroyShadowedPass()
@@ -1908,14 +1908,14 @@ namespace RayGene3D
 
   void Render3DBroker::DestroySWTracedBatch()
   {
-    sw_traced_effect->DestroyBatch(sw_traced_batch);
+    sw_traced_state->DestroyBatch(sw_traced_batch);
     sw_traced_batch.reset();
   }
 
-  void Render3DBroker::DestroySWTracedTechnique()
+  void Render3DBroker::DestroySWTracedState()
   {
-    sw_traced_pass->DestroyTechnique(sw_traced_effect);
-    sw_traced_effect.reset();
+    sw_traced_pass->DestroyState(sw_traced_state);
+    sw_traced_state.reset();
   }
 
   void Render3DBroker::DestroySWTracedPass()
@@ -1926,14 +1926,14 @@ namespace RayGene3D
 
   void Render3DBroker::DestroyHWTracedBatch()
   {
-    hw_traced_effect->DestroyBatch(hw_traced_batch);
+    hw_traced_state->DestroyBatch(hw_traced_batch);
     hw_traced_batch.reset();
   }
 
-  void Render3DBroker::DestroyHWTracedTechnique()
+  void Render3DBroker::DestroyHWTracedState()
   {
-    hw_traced_pass->DestroyTechnique(hw_traced_effect);
-    hw_traced_effect.reset();
+    hw_traced_pass->DestroyState(hw_traced_state);
+    hw_traced_state.reset();
   }
 
   void Render3DBroker::DestroyHWTracedPass()
@@ -1944,14 +1944,14 @@ namespace RayGene3D
 
   void Render3DBroker::DestroyUnshadowedBatch()
   {
-    unshadowed_effect->DestroyBatch(unshadowed_batch);
+    unshadowed_state->DestroyBatch(unshadowed_batch);
     unshadowed_batch.reset();
   }
 
-  void Render3DBroker::DestroyUnshadowedTechnique()
+  void Render3DBroker::DestroyUnshadowedState()
   {
-    unshadowed_pass->DestroyTechnique(unshadowed_effect);
-    unshadowed_effect.reset();
+    unshadowed_pass->DestroyState(unshadowed_state);
+    unshadowed_state.reset();
   }
 
   void Render3DBroker::DestroyUnshadowedPass()
@@ -1962,26 +1962,26 @@ namespace RayGene3D
 
   void Render3DBroker::DestroySkyboxBatch()
   {
-    skybox_effect->DestroyBatch(skybox_batch);
+    skybox_state->DestroyBatch(skybox_batch);
     skybox_batch.reset();
   }
 
-  void Render3DBroker::DestroySkyboxTechnique()
+  void Render3DBroker::DestroySkyboxState()
   {
-    geometry_pass->DestroyTechnique(skybox_effect);
-    skybox_effect.reset();
+    geometry_pass->DestroyState(skybox_state);
+    skybox_state.reset();
   }
 
   void Render3DBroker::DestroyPresentBatch()
   {
-    present_effect->DestroyBatch(present_batch);
+    present_state->DestroyBatch(present_batch);
     present_batch.reset();
   }
 
-  void Render3DBroker::DestroyPresentTechnique()
+  void Render3DBroker::DestroyPresentState()
   {
-    present_pass->DestroyTechnique(present_effect);
-    present_effect.reset();
+    present_pass->DestroyState(present_state);
+    present_state.reset();
   }
 
   void Render3DBroker::DestroyPresentPass()
@@ -2327,34 +2327,34 @@ namespace RayGene3D
     {
 
       CreateShadowmapPass(i);
-      CreateShadowmapTechnique(i);
+      CreateShadowmapState(i);
       CreateShadowmapBatch(i);
     }
 
     CreateGeometryPass();
-    CreateGeometryTechnique();
+    CreateGeometryState();
     CreateGeometryBatch();
-    CreateSkyboxTechnique();
+    CreateSkyboxState();
     CreateSkyboxBatch();
 
     CreateShadowedPass();
-    CreateShadowedTechnique();
+    CreateShadowedState();
     CreateShadowedBatch();
 
     CreateSWTracedPass();
-    CreateSWTracedTechnique();
+    CreateSWTracedState();
     CreateSWTracedBatch();
     
     CreateHWTracedPass();
-    CreateHWTracedTechnique();
+    CreateHWTracedState();
     CreateHWTracedBatch();
 
     CreateUnshadowedPass();
-    CreateUnshadowedTechnique();
+    CreateUnshadowedState();
     CreateUnshadowedBatch();
 
     CreatePresentPass();
-    CreatePresentTechnique();
+    CreatePresentState();
     CreatePresentBatch();
   }
 
@@ -2363,36 +2363,36 @@ namespace RayGene3D
     auto* device = wrap.GetCore()->GetDevice().get();
 
     DestroyPresentBatch();
-    DestroyPresentTechnique();
+    DestroyPresentState();
     DestroyPresentPass();
 
     DestroyUnshadowedBatch(); 
-    DestroyUnshadowedTechnique();
+    DestroyUnshadowedState();
     DestroyUnshadowedPass();
 
     DestroyHWTracedBatch();
-    DestroyHWTracedTechnique();
+    DestroyHWTracedState();
     DestroyHWTracedPass();
 
     DestroySWTracedBatch();
-    DestroySWTracedTechnique();
+    DestroySWTracedState();
     DestroySWTracedPass();
     
     DestroyShadowedBatch();
-    DestroyShadowedTechnique();
+    DestroyShadowedState();
     DestroyShadowedPass();
 
     for (auto i = 0u; i < 6u; ++i)
     {
       DestroyShadowmapBatch(i);
-      DestroyShadowmapTechnique(i);
+      DestroyShadowmapState(i);
       DestroyShadowmapPass(i);
     }
 
     DestroySkyboxBatch();
-    DestroySkyboxTechnique();
+    DestroySkyboxState();
     DestroyGeometryBatch();
-    DestroyGeometryTechnique();
+    DestroyGeometryState();
     DestroyGeometryPass();
 
     DestroyGraphicArguments();
