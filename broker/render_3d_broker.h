@@ -149,15 +149,15 @@ namespace RayGene3D
     SPtrBatch present_batch;
 
   protected:
-    SPtrTechnique reflection_probe_techniques[7];
-    SPtrTechnique shadowmap_techniques[6];
-    SPtrTechnique unshadowed_technique;
-    SPtrTechnique shadowed_technique;
-    SPtrTechnique sw_traced_technique;
-    SPtrTechnique hw_traced_technique;
-    SPtrTechnique geometry_technique;
-    SPtrTechnique skybox_technique;
-    SPtrTechnique present_technique;
+    SPtrTechnique reflection_probe_effects[7];
+    SPtrTechnique shadowmap_effects[6];
+    SPtrTechnique unshadowed_effect;
+    SPtrTechnique shadowed_effect;
+    SPtrTechnique sw_traced_effect;
+    SPtrTechnique hw_traced_effect;
+    SPtrTechnique geometry_effect;
+    SPtrTechnique skybox_effect;
+    SPtrTechnique present_effect;
 
   protected:
     SPtrPass reflection_probe_passes[7];

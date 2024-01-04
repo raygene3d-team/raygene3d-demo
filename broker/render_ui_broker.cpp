@@ -406,7 +406,7 @@ namespace RayGene3D
         }
       };
 
-      technique = pass->CreateTechnique("imgui_config",
+      effect = pass->CreateTechnique("imgui_config",
         source,
         Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
         {},
@@ -461,7 +461,7 @@ namespace RayGene3D
           font_view,
       };
 
-      batch = technique->CreateBatch("imgui_layout",
+      batch = effect->CreateBatch("imgui_layout",
         { entities, uint32_t(std::size(entities)) },
         { samplers, uint32_t(std::size(samplers)) },
         { ub_views, uint32_t(std::size(ub_views)) },
@@ -497,11 +497,11 @@ namespace RayGene3D
 
   RenderUIBroker::~RenderUIBroker()
   {
-    technique->DestroyBatch(batch);
+    effect->DestroyBatch(batch);
     batch.reset();
 
-    pass->DestroyTechnique(technique);
-    technique.reset();
+    pass->DestroyTechnique(effect);
+    effect.reset();
 
     wrap.GetCore()->GetDevice()->DestroyPass(pass);
     pass.reset();

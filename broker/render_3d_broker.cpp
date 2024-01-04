@@ -659,7 +659,7 @@ namespace RayGene3D
       }
     };
 
-    shadowmap_techniques[index] = shadowmap_passes[index]->CreateTechnique("spark_shadowmap_technique" + std::to_string(index),
+    shadowmap_effects[index] = shadowmap_passes[index]->CreateTechnique("spark_shadowmap_effect" + std::to_string(index),
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS),
       {},
@@ -716,7 +716,7 @@ namespace RayGene3D
       shadowmap_shadow_data,
     };
 
-    shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
+    shadowmap_batches[index] = shadowmap_effects[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
       { entities.data(), uint32_t(entities.size()) },
       {},
       {},
@@ -754,7 +754,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    hw_traced_technique = hw_traced_pass->CreateTechnique("spark_hw_traced_technique",
+    hw_traced_effect = hw_traced_pass->CreateTechnique("spark_hw_traced_effect",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_RGEN | Technique::COMPILATION_MISS),
       { defines.data(), uint32_t(defines.size()) },
@@ -845,7 +845,7 @@ namespace RayGene3D
       hw_traced_color_texture,
     };
 
-    hw_traced_batch = hw_traced_technique->CreateBatch("spark_hw_traced_batch",
+    hw_traced_batch = hw_traced_effect->CreateBatch("spark_hw_traced_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -951,7 +951,7 @@ namespace RayGene3D
       }
     };
 
-    geometry_technique = geometry_pass->CreateTechnique("spark_geometry_technique",
+    geometry_effect = geometry_pass->CreateTechnique("spark_geometry_effect",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -1067,7 +1067,7 @@ namespace RayGene3D
       geometry_scene_textures3,
     };
 
-    geometry_batch = geometry_technique->CreateBatch("spark_geometry_batch",
+    geometry_batch = geometry_effect->CreateBatch("spark_geometry_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1127,7 +1127,7 @@ namespace RayGene3D
       }
     };
 
-    skybox_technique = geometry_pass->CreateTechnique("spark_skybox_technique",
+    skybox_effect = geometry_pass->CreateTechnique("spark_skybox_effect",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
@@ -1173,7 +1173,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    skybox_batch = skybox_technique->CreateBatch("spark_skybox_batch",
+    skybox_batch = skybox_effect->CreateBatch("spark_skybox_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1252,7 +1252,7 @@ namespace RayGene3D
       }
     };
 
-    unshadowed_technique = unshadowed_pass->CreateTechnique("spark_unshadowed_technique",
+    unshadowed_effect = unshadowed_pass->CreateTechnique("spark_unshadowed_effect",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -1308,7 +1308,7 @@ namespace RayGene3D
       unshadowed_depth_texture,
     };
 
-    unshadowed_batch = unshadowed_technique->CreateBatch("spark_unshadowed_batch",
+    unshadowed_batch = unshadowed_effect->CreateBatch("spark_unshadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1384,7 +1384,7 @@ namespace RayGene3D
       }
     };
 
-    shadowed_technique = shadowed_pass->CreateTechnique("spark_shadowed_technique",
+    shadowed_effect = shadowed_pass->CreateTechnique("spark_shadowed_effect",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -1450,7 +1450,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
     };
 
-    shadowed_batch = shadowed_technique->CreateBatch("spark_shadowed_batch",
+    shadowed_batch = shadowed_effect->CreateBatch("spark_shadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1527,7 +1527,7 @@ namespace RayGene3D
       }
     };
 
-    sw_traced_technique = sw_traced_pass->CreateTechnique("spark_sw_traced_technique",
+    sw_traced_effect = sw_traced_pass->CreateTechnique("spark_sw_traced_effect",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -1605,7 +1605,7 @@ namespace RayGene3D
       sw_traced_depth_texture,
     };
 
-    sw_traced_batch = sw_traced_technique->CreateBatch("spark_sw_traced_batch",
+    sw_traced_batch = sw_traced_effect->CreateBatch("spark_sw_traced_batch",
       { entities, uint32_t(std::size(entities))},
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1640,7 +1640,7 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    present_technique = present_pass->CreateTechnique("spark_present_technique",
+    present_effect = present_pass->CreateTechnique("spark_present_effect",
       shader_ss.str(),
       Technique::COMPILATION_CS,
       {},
@@ -1678,7 +1678,7 @@ namespace RayGene3D
       backbuffer_uav,
     };
 
-    present_batch = present_technique->CreateBatch("spark_present_batch",
+    present_batch = present_effect->CreateBatch("spark_present_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -1860,26 +1860,26 @@ namespace RayGene3D
 
   void Render3DBroker::DestroyGeometryBatch()
   {
-    geometry_technique->DestroyBatch(geometry_batch);
+    geometry_effect->DestroyBatch(geometry_batch);
     geometry_batch.reset();
   }
 
   void Render3DBroker::DestroyGeometryTechnique()
   {
-    geometry_pass->DestroyTechnique(geometry_technique);
-    geometry_technique.reset();
+    geometry_pass->DestroyTechnique(geometry_effect);
+    geometry_effect.reset();
   }
 
   void Render3DBroker::DestroyShadowmapBatch(uint32_t index)
   {
-    shadowmap_techniques[index]->DestroyBatch(shadowmap_batches[index]);
+    shadowmap_effects[index]->DestroyBatch(shadowmap_batches[index]);
     shadowmap_batches[index].reset();
   }
 
   void Render3DBroker::DestroyShadowmapTechnique(uint32_t index)
   {
-    shadowmap_passes[index]->DestroyTechnique(shadowmap_techniques[index]);
-    shadowmap_techniques[index].reset();
+    shadowmap_passes[index]->DestroyTechnique(shadowmap_effects[index]);
+    shadowmap_effects[index].reset();
   }
 
   void Render3DBroker::DestroyShadowmapPass(uint32_t index)
@@ -1890,14 +1890,14 @@ namespace RayGene3D
 
   void Render3DBroker::DestroyShadowedBatch()
   {
-    shadowed_technique->DestroyBatch(shadowed_batch);
+    shadowed_effect->DestroyBatch(shadowed_batch);
     shadowed_batch.reset();
   }
 
   void Render3DBroker::DestroyShadowedTechnique()
   {
-    shadowed_pass->DestroyTechnique(shadowed_technique);
-    shadowed_technique.reset();
+    shadowed_pass->DestroyTechnique(shadowed_effect);
+    shadowed_effect.reset();
   }
 
   void Render3DBroker::DestroyShadowedPass()
@@ -1908,14 +1908,14 @@ namespace RayGene3D
 
   void Render3DBroker::DestroySWTracedBatch()
   {
-    sw_traced_technique->DestroyBatch(sw_traced_batch);
+    sw_traced_effect->DestroyBatch(sw_traced_batch);
     sw_traced_batch.reset();
   }
 
   void Render3DBroker::DestroySWTracedTechnique()
   {
-    sw_traced_pass->DestroyTechnique(sw_traced_technique);
-    sw_traced_technique.reset();
+    sw_traced_pass->DestroyTechnique(sw_traced_effect);
+    sw_traced_effect.reset();
   }
 
   void Render3DBroker::DestroySWTracedPass()
@@ -1926,14 +1926,14 @@ namespace RayGene3D
 
   void Render3DBroker::DestroyHWTracedBatch()
   {
-    hw_traced_technique->DestroyBatch(hw_traced_batch);
+    hw_traced_effect->DestroyBatch(hw_traced_batch);
     hw_traced_batch.reset();
   }
 
   void Render3DBroker::DestroyHWTracedTechnique()
   {
-    hw_traced_pass->DestroyTechnique(hw_traced_technique);
-    hw_traced_technique.reset();
+    hw_traced_pass->DestroyTechnique(hw_traced_effect);
+    hw_traced_effect.reset();
   }
 
   void Render3DBroker::DestroyHWTracedPass()
@@ -1944,14 +1944,14 @@ namespace RayGene3D
 
   void Render3DBroker::DestroyUnshadowedBatch()
   {
-    unshadowed_technique->DestroyBatch(unshadowed_batch);
+    unshadowed_effect->DestroyBatch(unshadowed_batch);
     unshadowed_batch.reset();
   }
 
   void Render3DBroker::DestroyUnshadowedTechnique()
   {
-    unshadowed_pass->DestroyTechnique(unshadowed_technique);
-    unshadowed_technique.reset();
+    unshadowed_pass->DestroyTechnique(unshadowed_effect);
+    unshadowed_effect.reset();
   }
 
   void Render3DBroker::DestroyUnshadowedPass()
@@ -1962,26 +1962,26 @@ namespace RayGene3D
 
   void Render3DBroker::DestroySkyboxBatch()
   {
-    skybox_technique->DestroyBatch(skybox_batch);
+    skybox_effect->DestroyBatch(skybox_batch);
     skybox_batch.reset();
   }
 
   void Render3DBroker::DestroySkyboxTechnique()
   {
-    geometry_pass->DestroyTechnique(skybox_technique);
-    skybox_technique.reset();
+    geometry_pass->DestroyTechnique(skybox_effect);
+    skybox_effect.reset();
   }
 
   void Render3DBroker::DestroyPresentBatch()
   {
-    present_technique->DestroyBatch(present_batch);
+    present_effect->DestroyBatch(present_batch);
     present_batch.reset();
   }
 
   void Render3DBroker::DestroyPresentTechnique()
   {
-    present_pass->DestroyTechnique(present_technique);
-    present_technique.reset();
+    present_pass->DestroyTechnique(present_effect);
+    present_effect.reset();
   }
 
   void Render3DBroker::DestroyPresentPass()
