@@ -28,12 +28,15 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../raygene3d-wrap/wrap.h"
+#include "render_3d_technique.h"
 
 namespace RayGene3D
 {
   class Render3DBroker : public Broker
   {
+  public:
+    friend class Render3DTechnique;
+
   protected:
     SPtrView backbuffer_uav;
     SPtrView backbuffer_rtv;
