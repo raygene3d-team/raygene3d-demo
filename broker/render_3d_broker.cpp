@@ -33,7 +33,7 @@ namespace RayGene3D
 {
   void Render3DBroker::CreateShadowMap()
   {
-    shadow_map = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
+    scope.shadow_map = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_map",
       Resource::Tex2DDesc
       {
         Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
@@ -49,67 +49,67 @@ namespace RayGene3D
 
   void Render3DBroker::CreateColorTarget()
   {
-    color_target = wrap.GetCore()->GetDevice()->CreateResource("spark_color_target",
+    scope.color_target = wrap.GetCore()->GetDevice()->CreateResource("spark_color_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE | USAGE_UNORDERED_ACCESS),
         1,
         1,
         FORMAT_R11G11B10_FLOAT,
-        prop_extent_x->GetUint(),
-        prop_extent_y->GetUint(),
+        scope.prop_extent_x->GetUint(),
+        scope.prop_extent_y->GetUint(),
       }
     );
   }
 
   void Render3DBroker::CreateDepthTarget()
   {
-    depth_target = wrap.GetCore()->GetDevice()->CreateResource("spark_depth_target",
+    scope.depth_target = wrap.GetCore()->GetDevice()->CreateResource("spark_depth_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
         1,
         1,
         FORMAT_D32_FLOAT,
-        prop_extent_x->GetUint(),
-        prop_extent_y->GetUint(),
+        scope.prop_extent_x->GetUint(),
+        scope.prop_extent_y->GetUint(),
       }
     );
   }
 
   void Render3DBroker::CreateGBufferTarget0()
   {
-    gbuffer_0_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_0_target",
+    scope.gbuffer_0_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_0_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
         1,
         1,
         FORMAT_R8G8B8A8_UNORM,
-        prop_extent_x->GetUint(),
-        prop_extent_y->GetUint(),
+        scope.prop_extent_x->GetUint(),
+        scope.prop_extent_y->GetUint(),
       }
     );
   }
 
   void Render3DBroker::CreateGBufferTarget1()
   {
-    gbuffer_1_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_1_target",
+    scope.gbuffer_1_target = wrap.GetCore()->GetDevice()->CreateResource("spark_gbuffer_1_target",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
         1,
         1,
         FORMAT_R8G8B8A8_UNORM,
-        prop_extent_x->GetUint(),
-        prop_extent_y->GetUint(),
+        scope.prop_extent_x->GetUint(),
+        scope.prop_extent_y->GetUint(),
       }
     );
   }
 
   void Render3DBroker::CreateScreenData()
   {
-    screen_data = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_data",
+    scope.screen_data = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -122,7 +122,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateCameraData()
   {
-    camera_data = wrap.GetCore()->GetDevice()->CreateResource("spark_camera_data",
+    scope.camera_data = wrap.GetCore()->GetDevice()->CreateResource("spark_camera_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -135,7 +135,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateShadowData()
   {
-    shadow_data = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
+    scope.shadow_data = wrap.GetCore()->GetDevice()->CreateResource("spark_shadow_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -148,12 +148,12 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneInstances()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_instances->GetRawBytes(0),
+      scope.prop_instances->GetRawBytes(0),
     };
 
-    scene_instances = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
+    scope.scene_instances = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_instances",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -167,12 +167,12 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneTriangles()
   {
-    const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
+    const auto [data, count] = scope.prop_triangles->GetTypedBytes<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_triangles->GetRawBytes(0),
+      scope.prop_triangles->GetRawBytes(0),
     };
 
-    scene_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_triangles",
+    scope.scene_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
@@ -186,12 +186,12 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneVertices()
   {
-    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
+    const auto [data, count] = scope.prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices->GetRawBytes(0),
+      scope.prop_vertices->GetRawBytes(0),
     };
 
-    scene_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_vertices",
+    scope.scene_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
@@ -205,12 +205,12 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneTBoxes()
   {
-    const auto [data, count] = prop_t_boxes->GetTypedBytes<Box>(0);
+    const auto [data, count] = scope.prop_t_boxes->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_t_boxes->GetRawBytes(0),
+      scope.prop_t_boxes->GetRawBytes(0),
     };
 
-    scene_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_t_boxes",
+    scope.scene_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_t_boxes",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -224,12 +224,12 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneBBoxes()
   {
-    const auto [data, count] = prop_b_boxes->GetTypedBytes<Box>(0);
+    const auto [data, count] = scope.prop_b_boxes->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_b_boxes->GetRawBytes(0),
+      scope.prop_b_boxes->GetRawBytes(0),
     };
 
-    scene_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_b_boxes",
+    scope.scene_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_b_boxes",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -243,12 +243,12 @@ namespace RayGene3D
 
   void Render3DBroker::CreateTraceInstances()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_instances->GetRawBytes(0),
+      scope.prop_instances->GetRawBytes(0),
     };
 
-    trace_instances = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_instances",
+    scope.trace_instances = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_instances",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -262,12 +262,12 @@ namespace RayGene3D
 
   void Render3DBroker::CreateTraceTriangles()
   {
-    const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
+    const auto [data, count] = scope.prop_triangles->GetTypedBytes<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_triangles->GetRawBytes(0),
+      scope.prop_triangles->GetRawBytes(0),
     };
 
-    trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_triangles",
+    scope.trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
@@ -281,12 +281,12 @@ namespace RayGene3D
 
   void Render3DBroker::CreateTraceVertices()
   {
-    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
+    const auto [data, count] = scope.prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices->GetRawBytes(0),
+      scope.prop_vertices->GetRawBytes(0),
     };
 
-    trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_vertices",
+    scope.trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_trace_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
@@ -300,7 +300,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneTextures0()
   {
-    const auto layers = prop_textures0->GetArraySize();
+    const auto layers = scope.prop_textures0->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_SRGB;
     const auto bpp = 4u;
 
@@ -308,18 +308,18 @@ namespace RayGene3D
     auto extent_x = 1u;
     auto extent_y = 1u;
     auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != scope.prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
       mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures0->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < scope.prop_textures0->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_textures0->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(scope.prop_textures0->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    scene_textures0 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
+    scope.scene_textures0 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures0",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -336,7 +336,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneTextures1()
   {
-    const auto layers = prop_textures1->GetArraySize();
+    const auto layers = scope.prop_textures1->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
     const auto bpp = 4u;
 
@@ -344,18 +344,18 @@ namespace RayGene3D
     auto extent_x = 1u;
     auto extent_y = 1u;
     auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != scope.prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
       mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures1->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < scope.prop_textures1->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_textures1->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(scope.prop_textures1->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    scene_textures1 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
+    scope.scene_textures1 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures1",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -372,7 +372,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneTextures2()
   {
-    const auto layers = prop_textures2->GetArraySize();
+    const auto layers = scope.prop_textures2->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
     const auto bpp = 4u;
 
@@ -380,18 +380,18 @@ namespace RayGene3D
     auto extent_x = 1u;
     auto extent_y = 1u;
     auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != scope.prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
       mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures2->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < scope.prop_textures2->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_textures2->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(scope.prop_textures2->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    scene_textures2 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
+    scope.scene_textures2 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures2",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -408,7 +408,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSceneTextures3()
   {
-    const auto layers = prop_textures3->GetArraySize();
+    const auto layers = scope.prop_textures3->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_UNORM;
     const auto bpp = 4u;
 
@@ -416,18 +416,18 @@ namespace RayGene3D
     auto extent_x = 1u;
     auto extent_y = 1u;
     auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != scope.prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
       mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures3->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < scope.prop_textures3->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_textures3->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(scope.prop_textures3->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    scene_textures3 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
+    scope.scene_textures3 = wrap.GetCore()->GetDevice()->CreateResource("spark_scene_textures3",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -444,7 +444,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateLightMaps()
   {
-    const auto layers = prop_lightmaps->GetArraySize();
+    const auto layers = scope.prop_lightmaps->GetArraySize();
     const auto format = FORMAT_R8G8B8A8_SRGB;
     const auto bpp = 4u;
 
@@ -452,18 +452,18 @@ namespace RayGene3D
     auto extent_x = 1u;
     auto extent_y = 1u;
     auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_lightmaps->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != scope.prop_lightmaps->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
       mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_lightmaps->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < scope.prop_lightmaps->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_lightmaps->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(scope.prop_lightmaps->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    light_maps = wrap.GetCore()->GetDevice()->CreateResource("spark_light_maps",
+    scope.light_maps = wrap.GetCore()->GetDevice()->CreateResource("spark_light_maps",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -491,7 +491,7 @@ namespace RayGene3D
       { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec2)) },
     };
 
-    screen_quad_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_quad_vertices",
+    scope.screen_quad_vertices = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_quad_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
@@ -514,7 +514,7 @@ namespace RayGene3D
       { quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3)) },
     };
 
-    screen_quad_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_quad_triangles",
+    scope.screen_quad_triangles = wrap.GetCore()->GetDevice()->CreateResource("spark_screen_quad_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
@@ -528,7 +528,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateSkyboxTexture()
   {
-    const auto layers = prop_skybox->GetArraySize();
+    const auto layers = scope.prop_skybox->GetArraySize();
     const auto format = FORMAT_R32G32B32A32_FLOAT;
     const auto bpp = 16u;
 
@@ -536,18 +536,18 @@ namespace RayGene3D
     auto extent_x = 2u;
     auto extent_y = 1u;
     auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    while ((size += extent_x * extent_y * bpp) != scope.prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
     {
       mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
     }
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_skybox->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < scope.prop_skybox->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_skybox->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(scope.prop_skybox->GetArrayItem(i)->GetRawBytes(0));
     }
 
-    skybox_texture = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_texture",
+    scope.skybox_texture = wrap.GetCore()->GetDevice()->CreateResource("spark_skybox_texture",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -564,9 +564,9 @@ namespace RayGene3D
 
   void Render3DBroker::CreateGraphicArguments()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
 
-    graphic_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
+    scope.graphic_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_graphic_arguments",
       Resource::BufferDesc
       {
         Usage(USAGE_ARGUMENT_INDIRECT),
@@ -579,7 +579,7 @@ namespace RayGene3D
 
   void Render3DBroker::CreateComputeArguments()
   {
-    compute_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
+    scope.compute_arguments = wrap.GetCore()->GetDevice()->CreateResource("spark_compute_arguments",
       Resource::BufferDesc
       {
         Usage(USAGE_ARGUMENT_INDIRECT),
@@ -592,1103 +592,12 @@ namespace RayGene3D
 
 
 
-  void Render3DBroker::CreateShadowmapPass(uint32_t index)
-  {
-    const auto extent_x = shadow_resolution;
-    const auto extent_y = shadow_resolution;
-    const auto extent_z = 1u;
 
-    auto shadowmap_shadow_map = shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index),
-      Usage(USAGE_DEPTH_STENCIL),
-      { 0u, uint32_t(-1) },
-      { index, 1u }
-    );
 
-    const Pass::DSAttachment ds_attachments[] = {
-      { shadowmap_shadow_map, { 1.0f, std::nullopt }},
-    };
 
-    shadowmap_passes[index] = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowmap_pass_" + std::to_string(index),
-      Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
-      {},
-      { ds_attachments, uint32_t(std::size(ds_attachments)) }
-    );
-  }
 
 
-  void Render3DBroker::CreateShadowmapState(uint32_t index)
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
 
-    const State::IAState ia_state =
-    {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
-      {
-        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false }
-      }
-    };
-
-    const State::RCState rc_state =
-    {
-      State::FILL_SOLID,
-      State::CULL_FRONT,
-      {
-        { 0.0f, 0.0f, float(shadow_resolution), float(shadow_resolution), 0.0f, 1.0f }
-      },
-    };
-
-    const State::DSState ds_state =
-    {
-      true, //depth_enabled
-      true, //depth_write
-      State::COMPARISON_LESS //depth_comparison
-    };
-
-    const State::OMState om_state =
-    {
-      false,
-      {
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF }
-      }
-    };
-
-    shadowmap_states[index] = shadowmap_passes[index]->CreateState("spark_shadowmap_state" + std::to_string(index),
-      shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS),
-      {},
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
-    );
-  }
-
-  void Render3DBroker::CreateShadowmapBatch(uint32_t index)
-  {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    auto entities = std::vector<Batch::Entity>(count);
-    for (auto i = 0u; i < count; ++i)
-    {
-      const auto shadowmap_scene_vertices = scene_vertices->CreateView("spark_shadowmap_scene_vertices_" + std::to_string(index) + "_" + std::to_string(i),
-        Usage(USAGE_VERTEX_ARRAY)
-      );
-
-      const auto shadowmap_scene_triangles = scene_triangles->CreateView("spark_shadowmap_scene_triangles_" + std::to_string(index) + "_" + std::to_string(i),
-        Usage(USAGE_INDEX_ARRAY)
-      );
-
-      const auto shadowmap_graphic_arguments = graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(index) + "_" + std::to_string(i),
-        Usage(USAGE_ARGUMENT_INDIRECT),
-        { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
-      );
-
-      const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-      const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& ins_range = View::Range{ 0u,  1u };
-      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* index, 0u, 0u, 0u };
-      const auto& push_data = std::nullopt;
-
-      entities[i] = { 
-        { shadowmap_scene_vertices },
-        { shadowmap_scene_triangles },
-        nullptr, //shadowmap_graphic_arguments,
-        vtx_range,
-        idx_range,
-        ins_range,
-        sb_offset,
-        push_data
-      };
-    }
-
-    auto shadowmap_shadow_data = shadow_data->CreateView("spark_shadowmap_shadow_data" + std::to_string(index),
-      USAGE_CONSTANT_DATA,
-      { 0u, uint32_t(sizeof(Frustum)) }
-    );
-
-    const std::shared_ptr<View> sb_views[] = {
-      shadowmap_shadow_data,
-    };
-
-    shadowmap_batches[index] = shadowmap_states[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
-      { entities.data(), uint32_t(entities.size()) },
-      {},
-      {},
-      { sb_views, uint32_t(std::size(sb_views)) },
-      {},
-      {},
-      {},
-      {}
-    );
-  }
-
-
-  void Render3DBroker::CreateHWTracedPass()
-  {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 1u;
-
-    hw_traced_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_hw_traced_pass",
-      Pass::TYPE_RAYTRACING,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z }
-    );
-  }
-
-
-  void Render3DBroker::CreateHWTracedState()
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-
-    std::vector<std::pair<std::string, std::string>> defines;
-    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
-
-    hw_traced_state = hw_traced_pass->CreateState("spark_hw_traced_state",
-      shader_ss.str(),
-      State::Compilation(State::COMPILATION_RGEN | State::COMPILATION_MISS),
-      { defines.data(), uint32_t(defines.size()) },
-      {},
-      {},
-      {},
-      {}
-    );
-  }
-
-  void Render3DBroker::CreateHWTracedBatch()
-  {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    auto entities = std::vector<Batch::Entity>(count);
-    for (auto i = 0u; i < count; ++i)
-    {
-      auto hw_traced_trace_vertices = trace_vertices->CreateView("spark_hw_traced_trace_vertices_" + std::to_string(i),
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-      const std::shared_ptr<View> va_views[] = {
-        hw_traced_trace_vertices,
-      };
-
-      auto hw_traced_trace_triangles = trace_triangles->CreateView("spark_hw_traced_trace_triangles_" + std::to_string(i),
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-      const std::shared_ptr<View> ia_views[] = {
-        hw_traced_trace_triangles,
-      };
-
-      const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-      const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& ins_range = View::Range{ 1u,  0u };
-      const auto& sb_offset = std::nullopt;
-      const auto& push_data = std::nullopt;
-
-      entities[i] = { 
-        { va_views, va_views + uint32_t(std::size(va_views)) },
-        { ia_views, ia_views + uint32_t(std::size(ia_views)) },
-        nullptr, 
-        vtx_range, 
-        idx_range, 
-        ins_range, 
-        sb_offset, 
-        push_data
-      };
-    }
-
-    const Batch::Sampler samplers[] = {
-      { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    };
-
-    auto hw_traced_screen_data = screen_data->CreateView("spark_hw_traced_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto hw_traced_camera_data = camera_data->CreateView("spark_hw_traced_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto hw_traced_shadow_data = shadow_data->CreateView("spark_hw_traced_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
-      { 0, sizeof(Frustum) }
-    );
-    const std::shared_ptr<View> ub_views[] = {
-      hw_traced_screen_data,
-      hw_traced_camera_data,
-      hw_traced_shadow_data,
-    };
-
-    auto hw_traced_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_hw_traced_gbuffer_0_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto hw_traced_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_hw_traced_gbuffer_1_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto hw_traced_depth_texture = depth_target->CreateView("spark_hw_traced_depth_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    const std::shared_ptr<View> ri_views[] = {
-      hw_traced_gbuffer_0_texture,
-      hw_traced_gbuffer_1_texture,
-      hw_traced_depth_texture,
-    };
-
-    auto hw_traced_color_texture = color_target->CreateView("spark_hw_traced_color_texture",
-      Usage(USAGE_UNORDERED_ACCESS)
-    );
-    const std::shared_ptr<View> wi_views[] = {
-      hw_traced_color_texture,
-    };
-
-    hw_traced_batch = hw_traced_state->CreateBatch("spark_hw_traced_batch",
-      { entities.data(), uint32_t(entities.size()) },
-      { samplers, uint32_t(std::size(samplers)) },
-      { ub_views, uint32_t(std::size(ub_views)) },
-      {},
-      { ri_views, uint32_t(std::size(ri_views)) },
-      { wi_views, uint32_t(std::size(wi_views)) },
-      {},
-      {}
-    );
-  }
-
-
-
-
-  void Render3DBroker::CreateGeometryPass()
-  {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 1u;
-
-    auto geometry_color_target = color_target->CreateView("spark_geometry_color_target",
-      Usage(USAGE_RENDER_TARGET)
-    );
-    auto geometry_gbuffer_0_target = gbuffer_0_target->CreateView("spark_geometry_gbuffer_0_target",
-      Usage(USAGE_RENDER_TARGET)
-    );
-    auto geometry_gbuffer_1_target = gbuffer_1_target->CreateView("spark_geometry_gbuffer_1_target",
-      Usage(USAGE_RENDER_TARGET)
-    );
-
-    const Pass::RTAttachment rt_attachments[] = {
-      { geometry_color_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
-      { geometry_gbuffer_0_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
-      { geometry_gbuffer_1_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
-    };
-
-    auto geometry_depth_target = depth_target->CreateView("spark_geometry_depth_target",
-      Usage(USAGE_DEPTH_STENCIL)
-    );
-    const Pass::DSAttachment ds_attachments[] = {
-      geometry_depth_target, { 1.0f, std::nullopt },
-    };
-
-    geometry_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_geometry_pass",
-      Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
-      { rt_attachments, uint32_t(std::size(rt_attachments)) },
-      { ds_attachments, uint32_t(std::size(ds_attachments)) }
-    );
-  }
-
-  void Render3DBroker::CreateGeometryState()
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-
-    std::vector<std::pair<std::string, std::string>> defines;
-    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
-
-    const State::IAState ia_state =
-    {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
-      {
-        { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
-        { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 28, 64, FORMAT_R32_UINT, false },
-        { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-        { 0, 44, 64, FORMAT_R32_FLOAT, false },
-        { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-        { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
-      }
-    };
-
-    const State::RCState rc_state =
-    {
-      State::FILL_SOLID,
-      State::CULL_BACK,
-      {
-        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
-      },
-    };
-
-    const State::DSState ds_state =
-    {
-      true, //depth_enabled
-      true, //depth_write
-      State::COMPARISON_LESS //depth_comparison
-    };
-
-    const State::OMState om_state =
-    {
-      false,
-      {
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-      }
-    };
-
-    geometry_state = geometry_pass->CreateState("spark_geometry_state",
-      shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
-      { defines.data(), uint32_t(defines.size()) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
-    );
-  }
-
-
-  void Render3DBroker::CreateGeometryBatch()
-  {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    auto entities = std::vector<Batch::Entity>(count);
-    for (auto i = 0u; i < count; ++i)
-    {
-      auto geometry_vertices = scene_vertices->CreateView("spark_geometry_vertices_" + std::to_string(i),
-        Usage(USAGE_VERTEX_ARRAY)
-      );
-      const std::shared_ptr<View> va_views[] = {
-        geometry_vertices,
-      };
-
-      auto geometry_triangles = scene_triangles->CreateView("spark_geometry_triangles_" + std::to_string(i),
-        Usage(USAGE_INDEX_ARRAY)
-      );
-      const std::shared_ptr<View> ia_views[] = {
-        geometry_triangles,
-      };
-
-      const auto geometry_graphic_arguments = graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
-        Usage(USAGE_ARGUMENT_INDIRECT),
-        { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
-      );
-
-      const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-      const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& ins_range = View::Range{ 1u,  0u };
-      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum)) * i, 0u, 0u, 0u };
-      const auto& push_data = std::nullopt;
-
-      entities[i] = {
-        { va_views, va_views + uint32_t(std::size(va_views)) },
-        { ia_views, ia_views + uint32_t(std::size(ia_views)) },
-        nullptr, // geometry_graphic_arguments,
-        vtx_range,
-        idx_range,
-        ins_range,
-        sb_offset,
-        push_data
-      };
-    }
-
-    const Batch::Sampler samplers[] = {
-      { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    };
-
-    auto geometry_screen_data = screen_data->CreateView("spark_geometry_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-
-    auto geometry_camera_data = camera_data->CreateView("spark_geometry_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-
-    auto geometry_shadow_data = shadow_data->CreateView("spark_geometry_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
-      { 0, uint32_t(sizeof(Frustum)) }
-    );
-
-    const std::shared_ptr<View> ub_views[] = {
-      geometry_screen_data,
-      geometry_camera_data,
-      geometry_shadow_data,
-    };
-
-
-    auto geometry_scene_instances = scene_instances->CreateView("spark_geometry_scene_instances",
-      Usage(USAGE_CONSTANT_DATA),
-      { 0, uint32_t(sizeof(Instance)) }
-    );
-
-    const std::shared_ptr<View> sb_views[] = {
-      geometry_scene_instances
-    };
-
-
-    auto geometry_scene_textures0 = scene_textures0->CreateView("spark_geometry_scene_textures0",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-
-    auto geometry_scene_textures1 = scene_textures1->CreateView("spark_geometry_scene_textures1",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-
-    auto geometry_scene_textures2 = scene_textures2->CreateView("spark_geometry_scene_textures2",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-
-    auto geometry_scene_textures3 = scene_textures3->CreateView("spark_geometry_scene_textures3",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-
-    auto geometry_light_maps = light_maps->CreateView("spark_geometry_light_maps",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-
-    const std::shared_ptr<View> ri_views[] = {
-      geometry_scene_textures0,
-      geometry_scene_textures1,
-      geometry_scene_textures2,
-      geometry_scene_textures3,
-    };
-
-    geometry_batch = geometry_state->CreateBatch("spark_geometry_batch",
-      { entities.data(), uint32_t(entities.size()) },
-      { samplers, uint32_t(std::size(samplers)) },
-      { ub_views, uint32_t(std::size(ub_views)) },
-      { sb_views, uint32_t(std::size(sb_views)) },
-      { ri_views, uint32_t(std::size(ri_views)) },
-      {},
-      {},
-      {}
-    );
-  }
-
-
-  void Render3DBroker::CreateSkyboxState()
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-
-    std::pair<std::string, std::string> defines[] =
-    {
-      { "TEST", "1" },
-    };
-
-    const State::IAState ia_state =
-    {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
-      {
-        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
-      }
-    };
-
-    const State::RCState rc_state =
-    {
-      State::FILL_SOLID,
-      State::CULL_BACK,
-      {
-        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
-      },
-    };
-
-    const State::DSState ds_state =
-    {
-      true, //depth_enabled
-      false, //depth_write
-      State::COMPARISON_EQUAL //depth_comparison
-    };
-
-    const State::OMState om_state =
-    {
-      false,
-      {
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-      }
-    };
-
-    skybox_state = geometry_pass->CreateState("spark_skybox_state",
-      shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
-      { defines, uint32_t(std::size(defines)) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
-    );
-  }
-
-
-  void Render3DBroker::CreateSkyboxBatch()
-  {
-    auto skybox_screen_quad_vertices = screen_quad_vertices->CreateView("spark_skybox_screen_quad_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    auto skybox_screen_quad_triangles = screen_quad_triangles->CreateView("spark_skybox_screen_quad_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const Batch::Entity entities[] = {
-      {{skybox_screen_quad_vertices}, {skybox_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
-    };
-
-    auto skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto skybox_camera_data = camera_data->CreateView("spark_skybox_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    const std::shared_ptr<View> ub_views[] = {
-      skybox_screen_data,
-      skybox_camera_data,
-    };
-
-    auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    const std::shared_ptr<View> ri_views[] = {
-      skybox_skybox_texture,
-    };
-
-    const Batch::Sampler samplers[] = {
-      { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    };
-
-    skybox_batch = skybox_state->CreateBatch("spark_skybox_batch",
-      { entities, uint32_t(std::size(entities)) },
-      { samplers, uint32_t(std::size(samplers)) },
-      { ub_views, uint32_t(std::size(ub_views)) },
-      {},
-      { ri_views, uint32_t(std::size(ri_views)) },
-      {},
-      {},
-      {}
-    );
-  }
-
-
-  void Render3DBroker::CreateUnshadowedPass()
-  {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 1u;
-
-    auto unshadowed_color_target = color_target->CreateView("spark_unshadowed_color_target",
-      Usage(USAGE_RENDER_TARGET)
-    );
-    const Pass::RTAttachment rt_attachments[] = {
-      unshadowed_color_target, std::nullopt,
-    };
-
-    unshadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_unshadowed_pass",
-      Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
-      { rt_attachments, uint32_t(std::size(rt_attachments)) },
-      {}
-    );
-  }
-
-  void Render3DBroker::CreateUnshadowedState()
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_unshadowed.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-
-    std::vector<std::pair<std::string, std::string>> defines;
-    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
-
-    const State::IAState ia_state =
-    {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
-      {
-        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
-      }
-    };
-
-    const State::RCState rc_state =
-    {
-      State::FILL_SOLID,
-      State::CULL_BACK,
-      {
-        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
-      },
-    };
-
-    const State::DSState ds_state =
-    {
-      false, //depth_enabled
-      false, //depth_write
-      State::COMPARISON_ALWAYS //depth_comparison
-    };
-
-    const State::OMState om_state =
-    {
-      false,
-      {
-        { true, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, 0xF },
-      }
-    };
-
-    unshadowed_state = unshadowed_pass->CreateState("spark_unshadowed_state",
-      shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
-      { defines.data(), uint32_t(defines.size()) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
-    );
-  }
-
-
-
-  void Render3DBroker::CreateUnshadowedBatch()
-  {
-    auto unshadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_unshadowed_screen_quad_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    auto unshadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_unshadowed_screen_quad_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const Batch::Entity entities[] = {
-      {{unshadowed_screen_quad_vertices}, {unshadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u } }
-    };
-
-    auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto unshadowed_camera_data = camera_data->CreateView("spark_unshadowed_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto unshadowed_shadow_data = shadow_data->CreateView("spark_unshadowed_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
-      { 0, uint32_t(sizeof(Frustum)) }
-    );
-    const std::shared_ptr<View> ub_views[] = {
-      unshadowed_screen_data,
-      unshadowed_camera_data,
-      unshadowed_shadow_data
-    };
-
-    auto unshadowed_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_unshadowed_gbuffer_0_target",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto unshadowed_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_unshadowed_gbuffer_1_target",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto unshadowed_depth_texture = depth_target->CreateView("spark_unshadowed_depth_target",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    const std::shared_ptr<View> ri_views[] = {
-      unshadowed_gbuffer_0_texture,
-      unshadowed_gbuffer_1_texture,
-      unshadowed_depth_texture,
-    };
-
-    unshadowed_batch = unshadowed_state->CreateBatch("spark_unshadowed_batch",
-      { entities, uint32_t(std::size(entities)) },
-      {},
-      { ub_views, uint32_t(std::size(ub_views)) },
-      {},
-      { ri_views, uint32_t(std::size(ri_views)) }
-    );
-  }
-
-
-  void Render3DBroker::CreateShadowedPass()
-  {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 1u;
-
-    auto shadowed_color_target = color_target->CreateView("spark_shadowed_color_target",
-      Usage(USAGE_RENDER_TARGET)
-    );
-    const Pass::RTAttachment rt_attachments[] = {
-      shadowed_color_target, std::nullopt,
-    };
-
-    shadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_shadowed_pass",
-      Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
-      { rt_attachments, uint32_t(std::size(rt_attachments)) },
-      {}
-    );
-  }
-
-  void Render3DBroker::CreateShadowedState()
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-
-    std::vector<std::pair<std::string, std::string>> defines;
-    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
-
-    const State::IAState ia_state =
-    {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
-      {
-        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
-      }
-    };
-
-    const State::RCState rc_state =
-    {
-      State::FILL_SOLID,
-      State::CULL_BACK,
-      {
-        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
-      },
-    };
-
-    const State::DSState ds_state =
-    {
-      false, //depth_enabled
-      false, //depth_write
-      State::COMPARISON_ALWAYS //depth_comparison
-    };
-
-    const State::OMState om_state =
-    {
-      false,
-      {
-        { true, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, 0xF },
-      }
-    };
-
-    shadowed_state = shadowed_pass->CreateState("spark_shadowed_state",
-      shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
-      { defines.data(), uint32_t(defines.size()) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
-    );
-  }
-
-
-  void Render3DBroker::CreateShadowedBatch()
-  {
-    auto shadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_shadowed_screen_quad_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    auto shadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_shadowed_screen_quad_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const Batch::Entity entities[] = {
-      {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u } }
-    };
-
-    auto shadowed_screen_data = screen_data->CreateView("spark_shadowed_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto shadowed_camera_data = camera_data->CreateView("spark_shadowed_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto shadowed_shadow_data = shadow_data->CreateView("spark_shadowed_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
-      { 0, uint32_t(sizeof(Frustum)) }
-    );
-    const std::shared_ptr<View> ub_views[] = {
-      shadowed_screen_data,
-      shadowed_camera_data,
-      shadowed_shadow_data
-    };
-
-    auto shadowed_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_shadowed_gbuffer_0_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto shadowed_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_shadowed_gbuffer_1_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto shadowed_depth_texture = depth_target->CreateView("spark_shadowed_depth_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto shadowed_shadow_map = shadow_map->CreateView("spark_shadowed_shadow_map",
-      Usage(USAGE_SHADER_RESOURCE),
-      { 0u, uint32_t(-1) },
-      { 0u, uint32_t(-1) },
-      View::Bind(View::BIND_CUBEMAP_LAYER)
-    );
-    const std::shared_ptr<View> ri_views[] = {
-      shadowed_gbuffer_0_texture,
-      shadowed_gbuffer_1_texture,
-      shadowed_depth_texture,
-      shadowed_shadow_map,
-    };
-
-    const Batch::Sampler samplers[] = {
-      { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
-    };
-
-    shadowed_batch = shadowed_state->CreateBatch("spark_shadowed_batch",
-      { entities, uint32_t(std::size(entities)) },
-      { samplers, uint32_t(std::size(samplers)) },
-      { ub_views, uint32_t(std::size(ub_views)) },
-      {},
-      { ri_views, uint32_t(std::size(ri_views)) }
-    );
-  }
-
-
-  void Render3DBroker::CreateSWTracedPass()
-  {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
-    const auto extent_z = 1u;
-
-    auto sw_traced_color_target = color_target->CreateView("spark_sw_traced_color_target",
-      Usage(USAGE_RENDER_TARGET)
-    );
-    const Pass::RTAttachment rt_attachments[] = {
-      sw_traced_color_target, std::nullopt,
-    };
-
-    sw_traced_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_sw_traced_pass",
-      Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
-      { rt_attachments, uint32_t(std::size(rt_attachments)) },
-      {}
-    );
-  }
-
-
-  void Render3DBroker::CreateSWTracedState()
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_sw_traced.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-
-    std::vector<std::pair<std::string, std::string>> defines;
-    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
-
-    const State::IAState ia_state =
-    {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
-      {
-        { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
-      }
-    };
-
-    const State::RCState rc_state =
-    {
-      State::FILL_SOLID,
-      State::CULL_BACK,
-      {
-        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
-      },
-    };
-
-    const State::DSState ds_state =
-    {
-      false, //depth_enabled
-      false, //depth_write
-      State::COMPARISON_ALWAYS //depth_comparison
-    };
-
-    const State::OMState om_state =
-    {
-      false,
-      {
-        { true, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, 0xF },
-      }
-    };
-
-    sw_traced_state = sw_traced_pass->CreateState("spark_sw_traced_state",
-      shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
-      { defines.data(), uint32_t(defines.size()) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
-    );
-  }
-
-  void Render3DBroker::CreateSWTracedBatch()
-  {
-    auto shadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_sw_traced_screen_quad_vertices",
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    auto shadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_sw_traced_screen_quad_triangles",
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const Batch::Entity entities[] = {
-      {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
-    };
-
-    auto sw_traced_screen_data = screen_data->CreateView("spark_sw_traced_screen_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto sw_traced_camera_data = camera_data->CreateView("spark_sw_traced_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    auto sw_traced_shadow_data = shadow_data->CreateView("spark_sw_traced_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
-      { 0, sizeof(Frustum) }
-    );
-    const std::shared_ptr<View> ub_views[] = {
-      sw_traced_screen_data,
-      sw_traced_camera_data,
-      sw_traced_shadow_data,
-    };
-
-    auto sw_traced_scene_t_boxes = scene_t_boxes->CreateView("spark_sw_traced_scene_t_boxes",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto sw_traced_scene_b_boxes = scene_b_boxes->CreateView("spark_sw_traced_scene_b_boxes",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto sw_traced_trace_instances = trace_instances->CreateView("spark_sw_traced_trace_instances",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto sw_traced_trace_triangles = trace_triangles->CreateView("spark_sw_traced_trace_triangles",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto sw_traced_trace_vertices = trace_vertices->CreateView("spark_sw_traced_trace_vertices",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-
-    const std::shared_ptr<View> rb_views[] = {
-      sw_traced_scene_t_boxes,
-      sw_traced_scene_b_boxes,
-      sw_traced_trace_instances,
-      sw_traced_trace_triangles,
-      sw_traced_trace_vertices,
-    };
-
-    auto sw_traced_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_sw_traced_gbuffer_0_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto sw_traced_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_sw_traced_gbuffer_1_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    auto sw_traced_depth_texture = depth_target->CreateView("spark_sw_traced_depth_texture",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    const std::shared_ptr<View> ri_views[] = {
-      sw_traced_gbuffer_0_texture,
-      sw_traced_gbuffer_1_texture,
-      sw_traced_depth_texture,
-    };
-
-    sw_traced_batch = sw_traced_state->CreateBatch("spark_sw_traced_batch",
-      { entities, uint32_t(std::size(entities))},
-      {},
-      { ub_views, uint32_t(std::size(ub_views)) },
-      {},
-      { ri_views, uint32_t(std::size(ri_views)) },
-      {},
-      { rb_views, uint32_t(std::size(rb_views)) },
-      {}
-    );
-  }
-
-
-
-  void Render3DBroker::CreatePresentPass()
-  {
-    const auto grid_x = prop_extent_x->GetUint() / 8u;
-    const auto grid_y = prop_extent_y->GetUint() / 8u;
-    const auto grid_z = 1u;
-
-    present_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_present_pass",
-      Pass::TYPE_COMPUTE,
-      { 0u, grid_x },
-      { 0u, grid_y },
-      { 0u, grid_z }
-    );
-  }
-
-  void Render3DBroker::CreatePresentState()
-  {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-
-    present_state = present_pass->CreateState("spark_present_state",
-      shader_ss.str(),
-      State::COMPILATION_CS,
-      {},
-      {},
-      {},
-      {},
-      {}
-    );
-  }
-
-  void Render3DBroker::CreatePresentBatch()
-  {
-    auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
-      Usage(USAGE_ARGUMENT_INDIRECT)
-    );
-    const Batch::Entity entities[] = {
-      {{}, {}, present_compute_arguments}
-    };
-
-    auto present_camera_data = camera_data->CreateView("spark_present_camera_data",
-      Usage(USAGE_CONSTANT_DATA)
-    );
-    const std::shared_ptr<View> ub_views[] = {
-      present_camera_data,
-    };
-
-    auto present_color_target = color_target->CreateView("spark_present_color_target",
-      Usage(USAGE_SHADER_RESOURCE)
-    );
-    const std::shared_ptr<View> ri_views[] = {
-      present_color_target,
-    };
-
-    const std::shared_ptr<View> wi_views[] = {
-      backbuffer_uav,
-    };
-
-    present_batch = present_state->CreateBatch("spark_present_batch",
-      { entities, uint32_t(std::size(entities)) },
-      {},
-      { ub_views, uint32_t(std::size(ub_views)) },
-      {},
-      { ri_views, uint32_t(std::size(ri_views)) },
-      { wi_views, uint32_t(std::size(wi_views)) },
-      {},
-      {}
-    );
-  }
 
 
 
@@ -1852,143 +761,7 @@ namespace RayGene3D
     compute_arguments.reset();
   }
 
-  void Render3DBroker::DestroyGeometryPass()
-  {
-    wrap.GetCore()->GetDevice()->DestroyPass(geometry_pass);
-    geometry_pass.reset();
-  }
 
-  void Render3DBroker::DestroyGeometryBatch()
-  {
-    geometry_state->DestroyBatch(geometry_batch);
-    geometry_batch.reset();
-  }
-
-  void Render3DBroker::DestroyGeometryState()
-  {
-    geometry_pass->DestroyState(geometry_state);
-    geometry_state.reset();
-  }
-
-  void Render3DBroker::DestroyShadowmapBatch(uint32_t index)
-  {
-    shadowmap_states[index]->DestroyBatch(shadowmap_batches[index]);
-    shadowmap_batches[index].reset();
-  }
-
-  void Render3DBroker::DestroyShadowmapState(uint32_t index)
-  {
-    shadowmap_passes[index]->DestroyState(shadowmap_states[index]);
-    shadowmap_states[index].reset();
-  }
-
-  void Render3DBroker::DestroyShadowmapPass(uint32_t index)
-  {
-    wrap.GetCore()->GetDevice()->DestroyPass(shadowmap_passes[index]);
-    shadowmap_passes[index].reset();
-  }
-
-  void Render3DBroker::DestroyShadowedBatch()
-  {
-    shadowed_state->DestroyBatch(shadowed_batch);
-    shadowed_batch.reset();
-  }
-
-  void Render3DBroker::DestroyShadowedState()
-  {
-    shadowed_pass->DestroyState(shadowed_state);
-    shadowed_state.reset();
-  }
-
-  void Render3DBroker::DestroyShadowedPass()
-  {
-    wrap.GetCore()->GetDevice()->DestroyPass(shadowed_pass);
-    shadowed_pass.reset();
-  }
-
-  void Render3DBroker::DestroySWTracedBatch()
-  {
-    sw_traced_state->DestroyBatch(sw_traced_batch);
-    sw_traced_batch.reset();
-  }
-
-  void Render3DBroker::DestroySWTracedState()
-  {
-    sw_traced_pass->DestroyState(sw_traced_state);
-    sw_traced_state.reset();
-  }
-
-  void Render3DBroker::DestroySWTracedPass()
-  {
-    wrap.GetCore()->GetDevice()->DestroyPass(sw_traced_pass);
-    sw_traced_pass.reset();
-  }
-
-  void Render3DBroker::DestroyHWTracedBatch()
-  {
-    hw_traced_state->DestroyBatch(hw_traced_batch);
-    hw_traced_batch.reset();
-  }
-
-  void Render3DBroker::DestroyHWTracedState()
-  {
-    hw_traced_pass->DestroyState(hw_traced_state);
-    hw_traced_state.reset();
-  }
-
-  void Render3DBroker::DestroyHWTracedPass()
-  {
-    wrap.GetCore()->GetDevice()->DestroyPass(hw_traced_pass);
-    hw_traced_pass.reset();
-  }
-
-  void Render3DBroker::DestroyUnshadowedBatch()
-  {
-    unshadowed_state->DestroyBatch(unshadowed_batch);
-    unshadowed_batch.reset();
-  }
-
-  void Render3DBroker::DestroyUnshadowedState()
-  {
-    unshadowed_pass->DestroyState(unshadowed_state);
-    unshadowed_state.reset();
-  }
-
-  void Render3DBroker::DestroyUnshadowedPass()
-  {
-    wrap.GetCore()->GetDevice()->DestroyPass(unshadowed_pass);
-    unshadowed_pass.reset();
-  }
-
-  void Render3DBroker::DestroySkyboxBatch()
-  {
-    skybox_state->DestroyBatch(skybox_batch);
-    skybox_batch.reset();
-  }
-
-  void Render3DBroker::DestroySkyboxState()
-  {
-    geometry_pass->DestroyState(skybox_state);
-    skybox_state.reset();
-  }
-
-  void Render3DBroker::DestroyPresentBatch()
-  {
-    present_state->DestroyBatch(present_batch);
-    present_batch.reset();
-  }
-
-  void Render3DBroker::DestroyPresentState()
-  {
-    present_pass->DestroyState(present_state);
-    present_state.reset();
-  }
-
-  void Render3DBroker::DestroyPresentPass()
-  {
-    wrap.GetCore()->GetDevice()->DestroyPass(present_pass);
-    present_pass.reset();
-  }
 
   void Render3DBroker::Use()
   {
@@ -2241,9 +1014,6 @@ namespace RayGene3D
       prop_t_boxes = prop_scene->GetObjectItem("t_boxes");
       prop_b_boxes = prop_scene->GetObjectItem("b_boxes");
 
-      prop_instances = prop_scene->GetObjectItem("instances");
-      prop_triangles = prop_scene->GetObjectItem("triangles");
-
       prop_textures0 = prop_scene->GetObjectItem("textures0");
       prop_textures1 = prop_scene->GetObjectItem("textures1");
       prop_textures2 = prop_scene->GetObjectItem("textures2");
@@ -2323,77 +1093,14 @@ namespace RayGene3D
     CreateGraphicArguments();
     CreateComputeArguments();
 
-    for(auto i = 0u; i < 6u; ++i)
-    {
 
-      CreateShadowmapPass(i);
-      CreateShadowmapState(i);
-      CreateShadowmapBatch(i);
-    }
 
-    CreateGeometryPass();
-    CreateGeometryState();
-    CreateGeometryBatch();
-    CreateSkyboxState();
-    CreateSkyboxBatch();
 
-    CreateShadowedPass();
-    CreateShadowedState();
-    CreateShadowedBatch();
-
-    CreateSWTracedPass();
-    CreateSWTracedState();
-    CreateSWTracedBatch();
-    
-    CreateHWTracedPass();
-    CreateHWTracedState();
-    CreateHWTracedBatch();
-
-    CreateUnshadowedPass();
-    CreateUnshadowedState();
-    CreateUnshadowedBatch();
-
-    CreatePresentPass();
-    CreatePresentState();
-    CreatePresentBatch();
   }
 
   Render3DBroker::~Render3DBroker()
   {
     auto* device = wrap.GetCore()->GetDevice().get();
-
-    DestroyPresentBatch();
-    DestroyPresentState();
-    DestroyPresentPass();
-
-    DestroyUnshadowedBatch(); 
-    DestroyUnshadowedState();
-    DestroyUnshadowedPass();
-
-    DestroyHWTracedBatch();
-    DestroyHWTracedState();
-    DestroyHWTracedPass();
-
-    DestroySWTracedBatch();
-    DestroySWTracedState();
-    DestroySWTracedPass();
-    
-    DestroyShadowedBatch();
-    DestroyShadowedState();
-    DestroyShadowedPass();
-
-    for (auto i = 0u; i < 6u; ++i)
-    {
-      DestroyShadowmapBatch(i);
-      DestroyShadowmapState(i);
-      DestroyShadowmapPass(i);
-    }
-
-    DestroySkyboxBatch();
-    DestroySkyboxState();
-    DestroyGeometryBatch();
-    DestroyGeometryState();
-    DestroyGeometryPass();
 
     DestroyGraphicArguments();
     DestroyComputeArguments();

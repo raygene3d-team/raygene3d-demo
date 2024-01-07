@@ -34,132 +34,8 @@ namespace RayGene3D
 {
   class Render3DBroker : public Broker
   {
-  public:
-    friend class Render3DTechnique;
-
   protected:
-    SPtrView backbuffer_uav;
-    SPtrView backbuffer_rtv;
-
-  protected:
-    std::shared_ptr<Property> prop_scene;
-    std::shared_ptr<Property> prop_camera;
-    //std::shared_ptr<Property> prop_environment;
-
-  protected:
-    std::shared_ptr<Property> prop_eye;
-    std::shared_ptr<Property> prop_lookat;
-    std::shared_ptr<Property> prop_up;
-
-    std::shared_ptr<Property> prop_fov_x;
-    std::shared_ptr<Property> prop_fov_y;
-
-    std::shared_ptr<Property> prop_extent_x;
-    std::shared_ptr<Property> prop_extent_y;
-
-    std::shared_ptr<Property> prop_n_plane;
-    std::shared_ptr<Property> prop_f_plane;
-
-    std::shared_ptr<Property> prop_counter;
-
-    std::shared_ptr<Property> prop_instances;
-    std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
-
-    //std::shared_ptr<Property> prop_vertices0;
-    //std::shared_ptr<Property> prop_vertices1;
-    //std::shared_ptr<Property> prop_vertices2;
-    //std::shared_ptr<Property> prop_vertices3;
-
-    std::shared_ptr<Property> prop_t_boxes;
-    std::shared_ptr<Property> prop_b_boxes;
-
-    std::shared_ptr<Property> prop_textures0;
-    std::shared_ptr<Property> prop_textures1;
-    std::shared_ptr<Property> prop_textures2;
-    std::shared_ptr<Property> prop_textures3;
-
-    std::shared_ptr<Property> prop_lightmaps;
-
-    std::shared_ptr<Property> prop_skybox;
-    std::shared_ptr<Property> prop_reflection_probe;
-
-  protected:
-    SPtrResource color_target; // 10-10-10-2 - color (GI+occlusion / material)
-    SPtrResource depth_target; // 32 - depth
-    SPtrResource shadow_map;
-
-    SPtrResource gbuffer_0_target; // 8-8-8-8 - albedo / metallic
-    SPtrResource gbuffer_1_target; // 8-8-8-8 - normal / smoothness
-
-    SPtrResource screen_data;
-    SPtrResource camera_data;
-    SPtrResource shadow_data;
-    SPtrResource reflection_probe_data;
-
-    SPtrResource scene_instances;
-    SPtrResource scene_triangles;
-    SPtrResource scene_vertices;
-    //SPtrResource scene_vertices0;
-    //SPtrResource scene_vertices1;
-    //SPtrResource scene_vertices2;
-    //SPtrResource scene_vertices3;
-
-    SPtrResource scene_t_boxes;
-    SPtrResource scene_b_boxes;
-
-    //Copies of original resources bacause of DX11 limitations
-    SPtrResource trace_instances;
-    SPtrResource trace_triangles;
-    SPtrResource trace_vertices;
-
-    SPtrResource scene_textures0;
-    SPtrResource scene_textures1;
-    SPtrResource scene_textures2;
-    SPtrResource scene_textures3;
-
-    SPtrResource light_maps;
-
-    SPtrResource reflection_probe;
-
-    SPtrResource screen_quad_vertices;
-    SPtrResource screen_quad_triangles;
-
-    SPtrResource skybox_texture;
-
-    SPtrResource graphic_arguments;
-    SPtrResource compute_arguments;
-
-  protected:
-    SPtrBatch shadowmap_batches[6];
-    SPtrBatch unshadowed_batch;
-    SPtrBatch shadowed_batch;
-    SPtrBatch sw_traced_batch;
-    SPtrBatch hw_traced_batch;
-    SPtrBatch geometry_batch;
-    SPtrBatch skybox_batch;
-    SPtrBatch present_batch;
-
-  protected:
-    SPtrState reflection_probe_states[7];
-    SPtrState shadowmap_states[6];
-    SPtrState unshadowed_state;
-    SPtrState shadowed_state;
-    SPtrState sw_traced_state;
-    SPtrState hw_traced_state;
-    SPtrState geometry_state;
-    SPtrState skybox_state;
-    SPtrState present_state;
-
-  protected:
-    SPtrPass reflection_probe_passes[7];
-    SPtrPass shadowmap_passes[6];
-    SPtrPass unshadowed_pass;
-    SPtrPass shadowed_pass;
-    SPtrPass sw_traced_pass;
-    SPtrPass hw_traced_pass;
-    SPtrPass geometry_pass;
-    SPtrPass present_pass;
+    Render3DScope scope;
 
   protected:
     uint32_t shadow_resolution { 1024 };
@@ -228,45 +104,6 @@ namespace RayGene3D
 
     void CreateGraphicArguments();
     void CreateComputeArguments();
-
-    void CreateShadowmapPass(uint32_t index);
-    void CreateShadowmapState(uint32_t index);
-    void CreateShadowmapBatch(uint32_t index);
-    //void CreateShadowmapMesh(uint32_t index);
-    
-    void CreateShadowedPass();
-    void CreateShadowedState();
-    void CreateShadowedBatch();
-    //void CreateShadowedMesh();
-    
-    void CreateSWTracedPass();
-    void CreateSWTracedState();
-    void CreateSWTracedBatch();
-    //void CreateSWTracedMesh();
-    
-    void CreateHWTracedPass();
-    void CreateHWTracedState();
-    void CreateHWTracedBatch();
-    //void CreateHWTracedMesh();
-    
-    void CreateUnshadowedPass();
-    void CreateUnshadowedState();
-    void CreateUnshadowedBatch();
-    //void CreateUnshadowedMesh();
-   
-    void CreateGeometryPass();
-    void CreateGeometryState();
-    void CreateGeometryBatch();
-    //void CreateGeometryMesh();
-    
-    void CreateSkyboxState();
-    void CreateSkyboxBatch();
-    //void CreateSkyboxMesh();
-    
-    void CreatePresentPass();
-    void CreatePresentState();
-    void CreatePresentBatch();
-    //void CreatePresentMesh();
     
   protected:
     void DestroyColorTarget();
@@ -305,44 +142,6 @@ namespace RayGene3D
     void DestroyGraphicArguments();
     void DestroyComputeArguments();
 
-    //void DestroyGeometryMesh();
-    void DestroyGeometryBatch();
-    void DestroyGeometryState();
-    void DestroyGeometryPass();
-
-    //void DestroyShadowmapMesh(uint32_t index);
-    void DestroyShadowmapBatch(uint32_t index);
-    void DestroyShadowmapState(uint32_t index);
-    void DestroyShadowmapPass(uint32_t index);
-
-    //void DestroyShadowedMesh();
-    void DestroyShadowedBatch();
-    void DestroyShadowedState();
-    void DestroyShadowedPass();
-
-    //void DestroySWTracedMesh();
-    void DestroySWTracedBatch();
-    void DestroySWTracedState();
-    void DestroySWTracedPass();
-
-    //void DestroyHWTracedMesh();
-    void DestroyHWTracedBatch();
-    void DestroyHWTracedState();
-    void DestroyHWTracedPass();
-
-    //void DestroyUnshadowedMesh();
-    void DestroyUnshadowedBatch();
-    void DestroyUnshadowedState();
-    void DestroyUnshadowedPass();
-
-    //void DestroySkyboxMesh();
-    void DestroySkyboxBatch();
-    void DestroySkyboxState();
-
-    //void DestroyPresentMesh();
-    void DestroyPresentBatch();
-    void DestroyPresentState();
-    void DestroyPresentPass();
 
   public:
     void Initialize() override;

@@ -32,4 +32,25 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
+  class HWTracedShadow : public Render3DTechnique
+  {
+  protected:
+    SPtrPass hw_traced_pass;
+    SPtrState hw_traced_state;
+    SPtrBatch hw_traced_batch;
+
+  protected:
+    void CreateHWTracedPass();
+    void CreateHWTracedState();
+    void CreateHWTracedBatch();
+
+  protected:
+    void DestroyHWTracedBatch();
+    void DestroyHWTracedState();
+    void DestroyHWTracedPass();
+
+  public:
+    HWTracedShadow(const Render3DTechnique& scope);
+    virtual ~HWTracedShadow();
+  };
 }

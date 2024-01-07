@@ -34,12 +34,47 @@ namespace RayGene3D
 {
   class Render3DTechnique
   {
+  protected:
     const Render3DScope& scope;
 
+  protected:
+    SPtrPass geometry_pass;
+    SPtrState geometry_state;
+    SPtrBatch geometry_batch;
+
+    SPtrState skybox_state;
+    SPtrBatch skybox_batch;
+
+    SPtrPass present_pass;
+    SPtrState present_state;
+    SPtrBatch present_batch;
+
+  protected:
+    void CreateGeometryPass();
+    void CreateGeometryState();
+    void CreateGeometryBatch();
+
+    void CreateSkyboxState();
+    void CreateSkyboxBatch();
+
+    void CreatePresentPass();
+    void CreatePresentState();
+    void CreatePresentBatch();
+
+  protected:
+    void DestroyGeometryBatch();
+    void DestroyGeometryState();
+    void DestroyGeometryPass();
+
+    void DestroySkyboxBatch();
+    void DestroySkyboxState();
+
+    void DestroyPresentBatch();
+    void DestroyPresentState();
+    void DestroyPresentPass();
+
   public:
-    Render3DTechnique(const Render3DScope& scope)
-      : scope(scope)
-    {}
+    Render3DTechnique(const Render3DScope& scope);
     virtual ~Render3DTechnique();
   };
 }

@@ -32,4 +32,25 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
+  class NoShadow : public Render3DTechnique
+  {
+  protected:
+    SPtrPass unshadowed_pass;
+    SPtrState unshadowed_state;
+    SPtrBatch unshadowed_batch;
+
+  protected:
+    void CreateUnshadowedPass();
+    void CreateUnshadowedState();
+    void CreateUnshadowedBatch();
+
+  protected:
+    void DestroyUnshadowedBatch();
+    void DestroyUnshadowedState();
+    void DestroyUnshadowedPass();
+
+  public:
+    NoShadow(const Render3DTechnique& scope);
+    virtual ~NoShadow();
+  };
 }
