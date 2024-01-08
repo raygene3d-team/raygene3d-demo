@@ -50,7 +50,11 @@ namespace RayGene3D
     void DestroySWTracedPass();
 
   public:
-    SWTracedShadow(const Render3DTechnique& scope);
+    void Enable() override;
+    void Disable() override;
+
+  public:
+    SWTracedShadow(const Render3DScope& scope);
     virtual ~SWTracedShadow();
   };
 }

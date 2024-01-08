@@ -28,7 +28,10 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "render_3d_technique.h"
+#include "render_3d/no_shadow.h"
+#include "render_3d/cubemap_shadow.h"
+#include "render_3d/sw_traced_shadow.h"
+#include "render_3d/hw_traced_shadow.h"
 
 namespace RayGene3D
 {
@@ -38,110 +41,29 @@ namespace RayGene3D
     Render3DScope scope;
 
   protected:
-    uint32_t shadow_resolution { 1024 };
-    uint32_t reflection_probe_size { 1024 };
-    glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
+    std::unique_ptr<Render3DTechnique> no_shadow;
+    std::unique_ptr<Render3DTechnique> cubemap_shadow;
+    std::unique_ptr<Render3DTechnique> sw_traced_shadow;
+    std::unique_ptr<Render3DTechnique> hw_traced_shadow;
 
   public:
-    enum ShadowType
+    enum ShadingMode
     {
-      DISABLED_SHADOW = 0,
+      NO_SHADOW = 0,
       CUBEMAP_SHADOW = 1,
       SW_TRACED_SHADOW = 2,
       HW_TRACED_SHADOW = 3,
     };
 
-    enum ShadingSubpass
-    {
-      SUBPASS_OPAQUE,
-      SUBPASS_SKYBOX,
-      SUBPASS_MAX_COUNT
-    };
-
   protected:
-    ShadowType shadows{ DISABLED_SHADOW };
+    ShadingMode mode{ NO_SHADOW };
 
   public:
-    void SetShadowType(ShadowType shadows) { this->shadows = shadows; }
-    ShadowType GetShadowType() const { return shadows; }
+    void SetShadingMode(ShadingMode mode) { this->mode = mode; }
+    ShadingMode GetShadingMode() const { return mode; }
 
   protected:
     bool use_normal_oct_quad_encoding{ false };
-
-  protected:
-    void CreateColorTarget();
-    void CreateDepthTarget();
-    void CreateShadowMap();
-
-    void CreateGBufferTarget0();
-    void CreateGBufferTarget1();
-
-    void CreateScreenData();
-    void CreateCameraData();
-    void CreateShadowData();
-
-    void CreateSceneInstances();
-    void CreateSceneTriangles();
-    void CreateSceneVertices();
-
-    void CreateSceneTBoxes();
-    void CreateSceneBBoxes();
-
-    void CreateTraceInstances();
-    void CreateTraceTriangles();
-    void CreateTraceVertices();
-
-    void CreateSceneTextures0();
-    void CreateSceneTextures1();
-    void CreateSceneTextures2();
-    void CreateSceneTextures3();
-
-    void CreateLightMaps();
-
-    void CreateScreenQuadVertices();
-    void CreateScreenQuadTriangles();
-    void CreateSkyboxTexture();
-
-    void CreateGraphicArguments();
-    void CreateComputeArguments();
-    
-  protected:
-    void DestroyColorTarget();
-    void DestroyDepthTarget();
-    void DestroyShadowMap();
-
-    void DestroyGBufferTarget0();
-    void DestroyGBufferTarget1();
-
-    void DestroyScreenData();
-    void DestroyCameraData();
-    void DestroyShadowData();
-
-    void DestroySceneInstances();
-    void DestroySceneTriangles();
-    void DestroySceneVertices();
-
-    void DestroySceneTBoxes();
-    void DestroySceneBBoxes();
-
-    void DestroyTraceInstances();
-    void DestroyTraceTriangles();
-    void DestroyTraceVertices();
-
-    void DestroySceneTextures0();
-    void DestroySceneTextures1();
-    void DestroySceneTextures2();
-    void DestroySceneTextures3();
-
-    void DestroyLightMaps();
-
-    void DestroyScreenQuadVertices();
-    void DestroyScreenQuadTriangles();
-    void DestroySkyboxTexture();
-
-    void DestroyGraphicArguments();
-    void DestroyComputeArguments();
-
 
   public:
     void Initialize() override;

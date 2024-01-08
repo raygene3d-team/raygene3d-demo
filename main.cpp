@@ -143,7 +143,7 @@ namespace RayGene3D
     std::unique_ptr<RayGene3D::Wrap> wrap;
 
   protected:
-    std::string mode_name{"Disabled Shadow"};
+    std::string shading_name{"No Shadow"};
 
   protected:
     std::shared_ptr<RayGene3D::Render3DBroker> render_3d_broker;
@@ -489,7 +489,7 @@ namespace RayGene3D
 
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
-      render_3d_broker->SetShadowType(Render3DBroker::DISABLED_SHADOW);
+      render_3d_broker->SetShadingMode(Render3DBroker::NO_SHADOW);
 
       render_ui_broker = std::shared_ptr<RayGene3D::RenderUIBroker>(new RayGene3D::RenderUIBroker(*wrap));
       render_ui_broker->SetShowTestWindow(false);
@@ -578,28 +578,28 @@ namespace RayGene3D
 
         if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
         {
-          auto shadow_type = render_3d_broker->GetShadowType();
-          if (shadow_type == Render3DBroker::DISABLED_SHADOW)
+          auto shading_mode = render_3d_broker->GetShadingMode();
+          if (shading_mode == Render3DBroker::NO_SHADOW)
           {
-            shadow_type = Render3DBroker::CUBEMAP_SHADOW;
-            mode_name = "Cubemap Shadow";
+            shading_mode = Render3DBroker::CUBEMAP_SHADOW;
+            shading_name = "Cubemap Shadow";
           }
-          else if (shadow_type == Render3DBroker::CUBEMAP_SHADOW)
+          else if (shading_mode == Render3DBroker::CUBEMAP_SHADOW)
           {
-            shadow_type = Render3DBroker::SW_TRACED_SHADOW;
-            mode_name = "SW Traced Shadow";
+            shading_mode = Render3DBroker::SW_TRACED_SHADOW;
+            shading_name = "SW Traced Shadow";
           }
-          else if (shadow_type == Render3DBroker::SW_TRACED_SHADOW)
+          else if (shading_mode == Render3DBroker::SW_TRACED_SHADOW)
           {
-            shadow_type = Render3DBroker::HW_TRACED_SHADOW;
-            mode_name = "HW Traced Shadow";
+            shading_mode = Render3DBroker::HW_TRACED_SHADOW;
+            shading_name = "HW Traced Shadow";
           }
-          else if (shadow_type == Render3DBroker::HW_TRACED_SHADOW)
+          else if (shading_mode == Render3DBroker::HW_TRACED_SHADOW)
           {
-            shadow_type = Render3DBroker::DISABLED_SHADOW;
-            mode_name = "Disabled Shadow";
+            shading_mode = Render3DBroker::NO_SHADOW;
+            shading_name = "No Shadow";
           }
-          render_3d_broker->SetShadowType(shadow_type);
+          render_3d_broker->SetShadingMode(shading_mode);
           change_spark = false;
         }
 
@@ -622,7 +622,7 @@ namespace RayGene3D
           const auto adapter_name = wrap->GetCore()->GetDevice()->GetName();
 
           std::stringstream ss;
-          ss << app_name << " [" << mode_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
+          ss << app_name << " [" << shading_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
           glfwSetWindowTitle(glfw, ss.str().c_str());
 
           frame_counter = 0;

@@ -31,20 +31,19 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-
   void Render3DTechnique::CreateGeometryPass()
   {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
+    const auto extent_x = scope.prop_extent_x->GetUint();
+    const auto extent_y = scope.prop_extent_y->GetUint();
     const auto extent_z = 1u;
 
-    auto geometry_color_target = color_target->CreateView("spark_geometry_color_target",
+    auto geometry_color_target = scope.color_target->CreateView("spark_geometry_color_target",
       Usage(USAGE_RENDER_TARGET)
     );
-    auto geometry_gbuffer_0_target = gbuffer_0_target->CreateView("spark_geometry_gbuffer_0_target",
+    auto geometry_gbuffer_0_target = scope.gbuffer_0_target->CreateView("spark_geometry_gbuffer_0_target",
       Usage(USAGE_RENDER_TARGET)
     );
-    auto geometry_gbuffer_1_target = gbuffer_1_target->CreateView("spark_geometry_gbuffer_1_target",
+    auto geometry_gbuffer_1_target = scope.gbuffer_1_target->CreateView("spark_geometry_gbuffer_1_target",
       Usage(USAGE_RENDER_TARGET)
     );
 
@@ -54,14 +53,14 @@ namespace RayGene3D
       { geometry_gbuffer_1_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
     };
 
-    auto geometry_depth_target = depth_target->CreateView("spark_geometry_depth_target",
+    auto geometry_depth_target = scope.depth_target->CreateView("spark_geometry_depth_target",
       Usage(USAGE_DEPTH_STENCIL)
     );
     const Pass::DSAttachment ds_attachments[] = {
       geometry_depth_target, { 1.0f, std::nullopt },
     };
 
-    geometry_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_geometry_pass",
+    geometry_pass = scope.core->GetDevice()->CreatePass("spark_geometry_pass",
       Pass::TYPE_GRAPHIC,
       { 0u, extent_x },
       { 0u, extent_y },
@@ -102,7 +101,7 @@ namespace RayGene3D
       State::FILL_SOLID,
       State::CULL_BACK,
       {
-        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
+        { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
@@ -137,25 +136,25 @@ namespace RayGene3D
 
   void Render3DTechnique::CreateGeometryBatch()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
     auto entities = std::vector<Batch::Entity>(count);
     for (auto i = 0u; i < count; ++i)
     {
-      auto geometry_vertices = scene_vertices->CreateView("spark_geometry_vertices_" + std::to_string(i),
+      auto geometry_vertices = scope.scene_vertices->CreateView("spark_geometry_vertices_" + std::to_string(i),
         Usage(USAGE_VERTEX_ARRAY)
       );
       const std::shared_ptr<View> va_views[] = {
         geometry_vertices,
       };
 
-      auto geometry_triangles = scene_triangles->CreateView("spark_geometry_triangles_" + std::to_string(i),
+      auto geometry_triangles = scope.scene_triangles->CreateView("spark_geometry_triangles_" + std::to_string(i),
         Usage(USAGE_INDEX_ARRAY)
       );
       const std::shared_ptr<View> ia_views[] = {
         geometry_triangles,
       };
 
-      const auto geometry_graphic_arguments = graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
+      const auto geometry_graphic_arguments = scope.graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
         Usage(USAGE_ARGUMENT_INDIRECT),
         { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
       );
@@ -182,15 +181,15 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    auto geometry_screen_data = screen_data->CreateView("spark_geometry_screen_data",
+    auto geometry_screen_data = scope.screen_data->CreateView("spark_geometry_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
 
-    auto geometry_camera_data = camera_data->CreateView("spark_geometry_camera_data",
+    auto geometry_camera_data = scope.camera_data->CreateView("spark_geometry_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
 
-    auto geometry_shadow_data = shadow_data->CreateView("spark_geometry_shadow_data",
+    auto geometry_shadow_data = scope.shadow_data->CreateView("spark_geometry_shadow_data",
       Usage(USAGE_CONSTANT_DATA),
       { 0, uint32_t(sizeof(Frustum)) }
     );
@@ -202,7 +201,7 @@ namespace RayGene3D
     };
 
 
-    auto geometry_scene_instances = scene_instances->CreateView("spark_geometry_scene_instances",
+    auto geometry_scene_instances = scope.scene_instances->CreateView("spark_geometry_scene_instances",
       Usage(USAGE_CONSTANT_DATA),
       { 0, uint32_t(sizeof(Instance)) }
     );
@@ -212,23 +211,23 @@ namespace RayGene3D
     };
 
 
-    auto geometry_scene_textures0 = scene_textures0->CreateView("spark_geometry_scene_textures0",
+    auto geometry_scene_textures0 = scope.scene_textures0->CreateView("spark_geometry_scene_textures0",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    auto geometry_scene_textures1 = scene_textures1->CreateView("spark_geometry_scene_textures1",
+    auto geometry_scene_textures1 = scope.scene_textures1->CreateView("spark_geometry_scene_textures1",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    auto geometry_scene_textures2 = scene_textures2->CreateView("spark_geometry_scene_textures2",
+    auto geometry_scene_textures2 = scope.scene_textures2->CreateView("spark_geometry_scene_textures2",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    auto geometry_scene_textures3 = scene_textures3->CreateView("spark_geometry_scene_textures3",
+    auto geometry_scene_textures3 = scope.scene_textures3->CreateView("spark_geometry_scene_textures3",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    auto geometry_light_maps = light_maps->CreateView("spark_geometry_light_maps",
+    auto geometry_light_maps = scope.light_maps->CreateView("spark_geometry_light_maps",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
@@ -278,7 +277,7 @@ namespace RayGene3D
       State::FILL_SOLID,
       State::CULL_BACK,
       {
-        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
+        { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
@@ -313,20 +312,20 @@ namespace RayGene3D
 
   void Render3DTechnique::CreateSkyboxBatch()
   {
-    auto skybox_screen_quad_vertices = screen_quad_vertices->CreateView("spark_skybox_screen_quad_vertices",
+    auto skybox_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_skybox_screen_quad_vertices",
       Usage(USAGE_VERTEX_ARRAY)
     );
-    auto skybox_screen_quad_triangles = screen_quad_triangles->CreateView("spark_skybox_screen_quad_triangles",
+    auto skybox_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_skybox_screen_quad_triangles",
       Usage(USAGE_INDEX_ARRAY)
     );
     const Batch::Entity entities[] = {
       {{skybox_screen_quad_vertices}, {skybox_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
     };
 
-    auto skybox_screen_data = screen_data->CreateView("spark_skybox_screen_data",
+    auto skybox_screen_data = scope.screen_data->CreateView("spark_skybox_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
-    auto skybox_camera_data = camera_data->CreateView("spark_skybox_camera_data",
+    auto skybox_camera_data = scope.camera_data->CreateView("spark_skybox_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
     const std::shared_ptr<View> ub_views[] = {
@@ -334,7 +333,7 @@ namespace RayGene3D
       skybox_camera_data,
     };
 
-    auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture",
+    auto skybox_skybox_texture = scope.skybox_texture->CreateView("spark_skybox_skybox_texture",
       Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -363,11 +362,11 @@ namespace RayGene3D
 
   void Render3DTechnique::CreatePresentPass()
   {
-    const auto grid_x = prop_extent_x->GetUint() / 8u;
-    const auto grid_y = prop_extent_y->GetUint() / 8u;
+    const auto grid_x = scope.prop_extent_x->GetUint() / 8u;
+    const auto grid_y = scope.prop_extent_y->GetUint() / 8u;
     const auto grid_z = 1u;
 
-    present_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_present_pass",
+    present_pass = scope.core->GetDevice()->CreatePass("spark_present_pass",
       Pass::TYPE_COMPUTE,
       { 0u, grid_x },
       { 0u, grid_y },
@@ -395,21 +394,21 @@ namespace RayGene3D
 
   void Render3DTechnique::CreatePresentBatch()
   {
-    auto present_compute_arguments = compute_arguments->CreateView("spark_present_compute_arguments",
+    auto present_compute_arguments = scope.compute_arguments->CreateView("spark_present_compute_arguments",
       Usage(USAGE_ARGUMENT_INDIRECT)
     );
     const Batch::Entity entities[] = {
       {{}, {}, present_compute_arguments}
     };
 
-    auto present_camera_data = camera_data->CreateView("spark_present_camera_data",
+    auto present_camera_data = scope.camera_data->CreateView("spark_present_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
     const std::shared_ptr<View> ub_views[] = {
       present_camera_data,
     };
 
-    auto present_color_target = color_target->CreateView("spark_present_color_target",
+    auto present_color_target = scope.color_target->CreateView("spark_present_color_target",
       Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -417,7 +416,7 @@ namespace RayGene3D
     };
 
     const std::shared_ptr<View> wi_views[] = {
-      backbuffer_uav,
+      scope.backbuffer_uav,
     };
 
     present_batch = present_state->CreateBatch("spark_present_batch",
@@ -434,7 +433,7 @@ namespace RayGene3D
 
   void Render3DTechnique::DestroyGeometryPass()
   {
-    wrap.GetCore()->GetDevice()->DestroyPass(geometry_pass);
+    scope.core->GetDevice()->DestroyPass(geometry_pass);
     geometry_pass.reset();
   }
 
@@ -476,36 +475,16 @@ namespace RayGene3D
 
   void Render3DTechnique::DestroyPresentPass()
   {
-    wrap.GetCore()->GetDevice()->DestroyPass(present_pass);
+    scope.core->GetDevice()->DestroyPass(present_pass);
     present_pass.reset();
   }
 
   Render3DTechnique::Render3DTechnique(const Render3DScope& scope)
     : scope(scope)
   {
-    CreateGeometryPass();
-    CreateGeometryState();
-    CreateGeometryBatch();
-
-    CreateSkyboxState();
-    CreateSkyboxBatch();
-
-    CreatePresentPass();
-    CreatePresentState();
-    CreatePresentBatch();
   }
   
   Render3DTechnique::~Render3DTechnique()
   {
-    DestroyPresentBatch();
-    DestroyPresentState();
-    DestroyPresentPass();
-
-    DestroySkyboxBatch();
-    DestroySkyboxState();
-
-    DestroyGeometryBatch();
-    DestroyGeometryState();
-    DestroyGeometryPass();
   }
 }

@@ -74,6 +74,10 @@ namespace RayGene3D
     void DestroyPresentPass();
 
   public:
+    virtual void Enable() = 0;
+    virtual void Disable() = 0;
+
+  public:
     Render3DTechnique(const Render3DScope& scope);
     virtual ~Render3DTechnique();
   };

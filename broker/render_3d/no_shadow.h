@@ -50,7 +50,11 @@ namespace RayGene3D
     void DestroyUnshadowedPass();
 
   public:
-    NoShadow(const Render3DTechnique& scope);
+    void Enable() override;
+    void Disable() override;
+
+  public:
+    NoShadow(const Render3DScope& scope);
     virtual ~NoShadow();
   };
 }

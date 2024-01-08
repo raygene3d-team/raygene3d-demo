@@ -33,18 +33,18 @@ namespace RayGene3D
 {
   void NoShadow::CreateUnshadowedPass()
   {
-    const auto extent_x = prop_extent_x->GetUint();
-    const auto extent_y = prop_extent_y->GetUint();
+    const auto extent_x = scope.prop_extent_x->GetUint();
+    const auto extent_y = scope.prop_extent_y->GetUint();
     const auto extent_z = 1u;
 
-    auto unshadowed_color_target = color_target->CreateView("spark_unshadowed_color_target",
+    auto unshadowed_color_target = scope.color_target->CreateView("spark_unshadowed_color_target",
       Usage(USAGE_RENDER_TARGET)
     );
     const Pass::RTAttachment rt_attachments[] = {
       unshadowed_color_target, std::nullopt,
     };
 
-    unshadowed_pass = wrap.GetCore()->GetDevice()->CreatePass("spark_unshadowed_pass",
+    unshadowed_pass = scope.core->GetDevice()->CreatePass("spark_unshadowed_pass",
       Pass::TYPE_GRAPHIC,
       { 0u, extent_x },
       { 0u, extent_y },
@@ -78,7 +78,7 @@ namespace RayGene3D
       State::FILL_SOLID,
       State::CULL_BACK,
       {
-        { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
+        { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
@@ -112,23 +112,23 @@ namespace RayGene3D
 
   void NoShadow::CreateUnshadowedBatch()
   {
-    auto unshadowed_screen_quad_vertices = screen_quad_vertices->CreateView("spark_unshadowed_screen_quad_vertices",
+    auto unshadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_unshadowed_screen_quad_vertices",
       Usage(USAGE_VERTEX_ARRAY)
     );
-    auto unshadowed_screen_quad_triangles = screen_quad_triangles->CreateView("spark_unshadowed_screen_quad_triangles",
+    auto unshadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_unshadowed_screen_quad_triangles",
       Usage(USAGE_INDEX_ARRAY)
     );
     const Batch::Entity entities[] = {
       {{unshadowed_screen_quad_vertices}, {unshadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u } }
     };
 
-    auto unshadowed_screen_data = screen_data->CreateView("spark_unshadowed_screen_data",
+    auto unshadowed_screen_data = scope.screen_data->CreateView("spark_unshadowed_screen_data",
       Usage(USAGE_CONSTANT_DATA)
     );
-    auto unshadowed_camera_data = camera_data->CreateView("spark_unshadowed_camera_data",
+    auto unshadowed_camera_data = scope.camera_data->CreateView("spark_unshadowed_camera_data",
       Usage(USAGE_CONSTANT_DATA)
     );
-    auto unshadowed_shadow_data = shadow_data->CreateView("spark_unshadowed_shadow_data",
+    auto unshadowed_shadow_data = scope.shadow_data->CreateView("spark_unshadowed_shadow_data",
       Usage(USAGE_CONSTANT_DATA),
       { 0, uint32_t(sizeof(Frustum)) }
     );
@@ -138,13 +138,13 @@ namespace RayGene3D
       unshadowed_shadow_data
     };
 
-    auto unshadowed_gbuffer_0_texture = gbuffer_0_target->CreateView("spark_unshadowed_gbuffer_0_target",
+    auto unshadowed_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_unshadowed_gbuffer_0_target",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto unshadowed_gbuffer_1_texture = gbuffer_1_target->CreateView("spark_unshadowed_gbuffer_1_target",
+    auto unshadowed_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_unshadowed_gbuffer_1_target",
       Usage(USAGE_SHADER_RESOURCE)
     );
-    auto unshadowed_depth_texture = depth_target->CreateView("spark_unshadowed_depth_target",
+    auto unshadowed_depth_texture = scope.depth_target->CreateView("spark_unshadowed_depth_target",
       Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
@@ -176,22 +176,58 @@ namespace RayGene3D
 
   void NoShadow::DestroyUnshadowedPass()
   {
-    wrap.GetCore()->GetDevice()->DestroyPass(unshadowed_pass);
+    scope.core->GetDevice()->DestroyPass(unshadowed_pass);
     unshadowed_pass.reset();
   }
 
-  NoShadow::NoShadow(const Render3DTechnique& scope)
+  void NoShadow::Enable()
+  {
+    geometry_pass->SetEnabled(true);
+    unshadowed_pass->SetEnabled(true);
+    present_pass->SetEnabled(true);
+  }
+
+  void NoShadow::Disable()
+  {
+    geometry_pass->SetEnabled(false);
+    unshadowed_pass->SetEnabled(false);
+    present_pass->SetEnabled(false);
+  }
+
+  NoShadow::NoShadow(const Render3DScope& scope)
     : Render3DTechnique(scope)
   {
+    CreateGeometryPass();
+    CreateGeometryState();
+    CreateGeometryBatch();
+
+    CreateSkyboxState();
+    CreateSkyboxBatch();
+
     CreateUnshadowedPass();
     CreateUnshadowedState();
     CreateUnshadowedBatch();
+
+    CreatePresentPass();
+    CreatePresentState();
+    CreatePresentBatch();
   }
 
   NoShadow::~NoShadow()
   {
+    DestroyPresentBatch();
+    DestroyPresentState();
+    DestroyPresentPass();
+
     DestroyUnshadowedBatch();
     DestroyUnshadowedState();
     DestroyUnshadowedPass();
+
+    DestroySkyboxBatch();
+    DestroySkyboxState();
+
+    DestroyGeometryBatch();
+    DestroyGeometryState();
+    DestroyGeometryPass();
   }
 }

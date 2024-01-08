@@ -32,11 +32,13 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  struct Render3DScope
+  class Render3DScope
   {
-    SPtrView backbuffer_uav;
-    SPtrView backbuffer_rtv;
+  public:
+    const std::unique_ptr<Core>& core;
+    const std::unique_ptr<Util>& util;
 
+  public:
     std::shared_ptr<Property> prop_scene;
     std::shared_ptr<Property> prop_camera;
     //std::shared_ptr<Property> prop_environment;
@@ -78,7 +80,11 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_skybox;
     std::shared_ptr<Property> prop_reflection_probe;
 
+  public:
+    SPtrView backbuffer_uav;
+    SPtrView backbuffer_rtv;
 
+  public:
     SPtrResource color_target; // 10-10-10-2 - color (GI+occlusion / material)
     SPtrResource depth_target; // 32 - depth
     SPtrResource shadow_map;
@@ -123,5 +129,88 @@ namespace RayGene3D
 
     SPtrResource graphic_arguments;
     SPtrResource compute_arguments;
+
+  public:
+    uint32_t shadow_resolution{ 1024 };
+    uint32_t reflection_probe_size{ 1024 };
+    glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
+
+  protected:
+    void CreateColorTarget();
+    void CreateDepthTarget();
+    void CreateShadowMap();
+
+    void CreateGBufferTarget0();
+    void CreateGBufferTarget1();
+
+    void CreateScreenData();
+    void CreateCameraData();
+    void CreateShadowData();
+
+    void CreateSceneInstances();
+    void CreateSceneTriangles();
+    void CreateSceneVertices();
+
+    void CreateSceneTBoxes();
+    void CreateSceneBBoxes();
+
+    void CreateTraceInstances();
+    void CreateTraceTriangles();
+    void CreateTraceVertices();
+
+    void CreateSceneTextures0();
+    void CreateSceneTextures1();
+    void CreateSceneTextures2();
+    void CreateSceneTextures3();
+
+    void CreateLightMaps();
+
+    void CreateScreenQuadVertices();
+    void CreateScreenQuadTriangles();
+    void CreateSkyboxTexture();
+
+    void CreateGraphicArguments();
+    void CreateComputeArguments();
+
+  protected:
+    void DestroyColorTarget();
+    void DestroyDepthTarget();
+    void DestroyShadowMap();
+
+    void DestroyGBufferTarget0();
+    void DestroyGBufferTarget1();
+
+    void DestroyScreenData();
+    void DestroyCameraData();
+    void DestroyShadowData();
+
+    void DestroySceneInstances();
+    void DestroySceneTriangles();
+    void DestroySceneVertices();
+
+    void DestroySceneTBoxes();
+    void DestroySceneBBoxes();
+
+    void DestroyTraceInstances();
+    void DestroyTraceTriangles();
+    void DestroyTraceVertices();
+
+    void DestroySceneTextures0();
+    void DestroySceneTextures1();
+    void DestroySceneTextures2();
+    void DestroySceneTextures3();
+
+    void DestroyLightMaps();
+
+    void DestroyScreenQuadVertices();
+    void DestroyScreenQuadTriangles();
+    void DestroySkyboxTexture();
+
+    void DestroyGraphicArguments();
+    void DestroyComputeArguments();
+
+  public:
+    Render3DScope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util);
+    ~Render3DScope();
   };
 }

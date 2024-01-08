@@ -62,7 +62,11 @@ namespace RayGene3D
     void DestroyShadowedPass();
 
   public:
-    CubemapShadow(const Render3DTechnique& scope);
+    void Enable() override;
+    void Disable() override;
+
+  public:
+    CubemapShadow(const Render3DScope& scope);
     virtual ~CubemapShadow();
   };
 }
