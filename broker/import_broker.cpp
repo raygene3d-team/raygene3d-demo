@@ -565,8 +565,18 @@ namespace RayGene3D
     std::string err, warn;
     BLAST_ASSERT(gltf_ctx.LoadASCIIFromFile(&gltf_model, &err, &warn, (path_name + file_name).c_str()));
 
-    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive,
-      float scale, bool z_up, bool flip_v)
+    const auto gltf_scene = gltf_model.scenes[0];
+    std::stack<int, std::vector<int>> node_indices(gltf_scene.nodes);
+
+    std::vector<int> mesh_indices;
+    while (!node_indices.empty())
+    {
+      const auto& gltf_node = gltf_model.nodes[node_indices.top()]; node_indices.pop();
+      for (const auto& node_index : gltf_node.children) { node_indices.push(node_index); }
+      if (gltf_node.mesh != -1) { mesh_indices.push_back(gltf_node.mesh); }
+    }
+
+    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive, float scale, bool z_up, bool flip_v)
     {
       BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
 
@@ -618,8 +628,6 @@ namespace RayGene3D
       return std::make_tuple(vertices, triangles);
     };
 
-    
-
     std::vector<uint32_t> texture_0_indices;
     std::vector<uint32_t> texture_1_indices;
     std::vector<uint32_t> texture_2_indices;
@@ -641,24 +649,13 @@ namespace RayGene3D
       return tex_index;
     };
 
-    const auto gltf_scene = gltf_model.scenes[0];
-    for (uint32_t i = 0; i < uint32_t(gltf_scene.nodes.size()); ++i)
+    for (uint32_t i = 0; i < uint32_t(mesh_indices.size()); ++i)
     {
-      const auto& gltf_node = gltf_model.nodes[gltf_scene.nodes[i]];
-
-      //while(gltf_node.mesh < 0 )
-
-      //if (gltf_node.mesh < 0) continue;
-
-      //for (uint32_t j = 0; j < uint32_t(gltf_node.children.size()); ++j)
-      //{
-
-      const auto& gltf_mesh = gltf_model.meshes[gltf_node.mesh];
+      const auto& gltf_mesh = gltf_model.meshes[mesh_indices[i]];
       for (uint32_t k = 0; k < uint32_t(gltf_mesh.primitives.size()); ++k)
       {
         const auto& gltf_primitive = gltf_mesh.primitives[k];
-        const auto [instance_vertices, instance_triangles] = instance_convert_fn(gltf_primitive,
-          position_scale, coordinate_flip, false);
+        const auto [instance_vertices, instance_triangles] = instance_convert_fn(gltf_primitive, position_scale, coordinate_flip, false);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
 
