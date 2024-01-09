@@ -565,77 +565,117 @@ namespace RayGene3D
     std::string err, warn;
     BLAST_ASSERT(gltf_ctx.LoadASCIIFromFile(&gltf_model, &err, &warn, (path_name + file_name).c_str()));
 
+    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive,
+      float scale, bool z_up, bool flip_v)
+    {
+      BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
+
+      const auto access_buffer_fn = [&gltf_model](const tinygltf::Accessor& accessor)
+      {
+        const auto& gltf_view = gltf_model.bufferViews[accessor.bufferView];
+        const auto length = gltf_view.byteLength;
+        const auto offset = gltf_view.byteOffset;
+
+        const auto& gltf_buffer = gltf_model.buffers[gltf_view.buffer];
+        const auto data = &gltf_buffer.data[accessor.byteOffset];
+
+        return std::pair{ data + offset, uint32_t(length) };
+      };
+
+      const auto& gltf_positions = gltf_model.accessors[gltf_primitive.attributes.at("POSITION")];
+      BLAST_ASSERT(gltf_positions.type == TINYGLTF_TYPE_VEC3 && gltf_positions.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
+      const auto pos_data = access_buffer_fn(gltf_positions);
+      const auto pos_stride = 12;
+
+      const auto& gltf_normals = gltf_model.accessors[gltf_primitive.attributes.at("NORMAL")];
+      BLAST_ASSERT(gltf_normals.type == TINYGLTF_TYPE_VEC3 && gltf_normals.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
+      const auto nrm_data = access_buffer_fn(gltf_normals);
+      const auto nrm_stride = 12;
+
+      const auto& gltf_texcoords = gltf_model.accessors[gltf_primitive.attributes.at("TEXCOORD_0")];
+      BLAST_ASSERT(gltf_texcoords.type == TINYGLTF_TYPE_VEC2 && gltf_texcoords.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
+      const auto tc0_data = access_buffer_fn(gltf_texcoords);
+      const auto tc0_stride = 8;
+
+      const auto& gltf_indices = gltf_model.accessors[gltf_primitive.indices];
+      BLAST_ASSERT(gltf_indices.type == TINYGLTF_TYPE_SCALAR);
+      const auto idx_data = access_buffer_fn(gltf_indices);
+      const auto idx_stride = gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_INT || gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT ? 4
+        : gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_SHORT || gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT ? 2
+        : gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_BYTE || gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE ? 1
+        : 0;
+      const auto idx_count = gltf_indices.count;
+
+      auto degenerated_geom_tris_count = 0u;
+      auto degenerated_wrap_tris_count = 0u;
+      const auto [vertices, triangles] = PopulateInstance(idx_count, idx_stride,
+        scale, z_up, flip_v,
+        pos_data, pos_stride, idx_data, idx_stride,
+        nrm_data, nrm_stride, idx_data, idx_stride,
+        tc0_data, tc0_stride, idx_data, idx_stride,
+        degenerated_geom_tris_count, degenerated_wrap_tris_count);
+
+      return std::make_tuple(vertices, triangles);
+    };
+
+    
+
     std::vector<uint32_t> texture_0_indices;
     std::vector<uint32_t> texture_1_indices;
     std::vector<uint32_t> texture_2_indices;
     std::vector<uint32_t> texture_3_indices;
 
-    const auto gltf_scene = gltf_model.scenes[0];
+    const auto tex_reindex_fn = [](std::vector<uint32_t>& tex_ids, uint32_t tex_id)
+    {
+      if (tex_id == -1)
+      {
+        return uint32_t(-1);
+      }
 
+      const auto tex_iter = std::find_if(tex_ids.cbegin(), tex_ids.cend(), [&tex_id](const auto& index) { return tex_id == index; });
+      const auto tex_index = tex_iter == tex_ids.cend() ? uint32_t(tex_ids.size()) : uint32_t(tex_iter - tex_ids.cbegin());
+      if (tex_index == tex_ids.size())
+      {
+        tex_ids.push_back(tex_id);
+      }
+      return tex_index;
+    };
+
+    const auto gltf_scene = gltf_model.scenes[0];
     for (uint32_t i = 0; i < uint32_t(gltf_scene.nodes.size()); ++i)
     {
       const auto& gltf_node = gltf_model.nodes[gltf_scene.nodes[i]];
+
+      //while(gltf_node.mesh < 0 )
+
+      //if (gltf_node.mesh < 0) continue;
+
+      //for (uint32_t j = 0; j < uint32_t(gltf_node.children.size()); ++j)
+      //{
+
       const auto& gltf_mesh = gltf_model.meshes[gltf_node.mesh];
-
-      for (uint32_t j = 0; j < uint32_t(gltf_mesh.primitives.size()); ++j)
+      for (uint32_t k = 0; k < uint32_t(gltf_mesh.primitives.size()); ++k)
       {
-        const auto& gltf_primitive = gltf_mesh.primitives[j];
-        BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
-
-        const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
-
-        const auto access_buffer_fn = [&gltf_model](const tinygltf::Accessor& accessor)
-        {
-          const auto& gltf_view = gltf_model.bufferViews[accessor.bufferView];
-          const auto length = gltf_view.byteLength;
-          const auto offset = gltf_view.byteOffset;
-
-          const auto& gltf_buffer = gltf_model.buffers[gltf_view.buffer];
-          const auto data = &gltf_buffer.data[accessor.byteOffset];
-
-          return std::pair{ data + offset, uint32_t(length) };
-        };
-
-        const auto& gltf_positions = gltf_model.accessors[gltf_primitive.attributes.at("POSITION")];
-        BLAST_ASSERT(gltf_positions.type == TINYGLTF_TYPE_VEC3 && gltf_positions.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
-        const auto pos_data = access_buffer_fn(gltf_positions);
-        const auto pos_stride = 12;
-
-        const auto& gltf_normals = gltf_model.accessors[gltf_primitive.attributes.at("NORMAL")];
-        BLAST_ASSERT(gltf_normals.type == TINYGLTF_TYPE_VEC3 && gltf_normals.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
-        const auto nrm_data = access_buffer_fn(gltf_normals);
-        const auto nrm_stride = 12;
-
-        const auto& gltf_texcoords = gltf_model.accessors[gltf_primitive.attributes.at("TEXCOORD_0")];
-        BLAST_ASSERT(gltf_texcoords.type == TINYGLTF_TYPE_VEC2 && gltf_texcoords.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
-        const auto tc0_data = access_buffer_fn(gltf_texcoords);
-        const auto tc0_stride = 8;
-
-        const auto& gltf_indices = gltf_model.accessors[gltf_primitive.indices];
-        BLAST_ASSERT(gltf_indices.type == TINYGLTF_TYPE_SCALAR);
-        const auto idx_data = access_buffer_fn(gltf_indices);
-        const auto idx_stride = gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_INT   || gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT   ? 4
-                              : gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_SHORT || gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT ? 2
-                              : gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_BYTE  || gltf_indices.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE  ? 1
-                              : 0;
-        const auto idx_count = gltf_indices.count;
-
-        const auto [instance_vertices, instance_triangles] = PopulateInstance(idx_count, idx_stride, position_scale, coordinate_flip, false,
-          pos_data, pos_stride, idx_data, idx_stride,
-          nrm_data, nrm_stride, idx_data, idx_stride,
-          tc0_data, tc0_stride, idx_data, idx_stride,
-          degenerated_geom_tris_count, degenerated_wrap_tris_count);
+        const auto& gltf_primitive = gltf_mesh.primitives[k];
+        const auto [instance_vertices, instance_triangles] = instance_convert_fn(gltf_primitive,
+          position_scale, coordinate_flip, false);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
-
-        const auto vertices_count = uint32_t(instance_vertices.size());
-        const auto triangles_count = uint32_t(instance_triangles.size());
-        BLAST_LOG("Instance %d: Added vert/prim: %d/%d", j, vertices_count, triangles_count);
 
         Instance instance;
         instance.transform;
         instance.geometry_idx = uint32_t(instances.size());
         //instance.debug_color{ 0.0f, 0.0f, 0.0f };
+
+        const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
+        const auto texture_0_id = gltf_material.pbrMetallicRoughness.baseColorTexture.index;
+        instance.texture0_idx = texture_0_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_0_indices, texture_0_id);
+        const auto texture_1_id = gltf_material.emissiveTexture.index;
+        instance.texture1_idx == -1 ? uint32_t(-1) : tex_reindex_fn(texture_1_indices, texture_1_id);
+        const auto texture_2_id = gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index;
+        instance.texture2_idx == -1 ? uint32_t(-1) : tex_reindex_fn(texture_2_indices, texture_2_id);
+        const auto texture_3_id = gltf_material.normalTexture.index;
+        instance.texture3_idx = texture_3_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_3_indices, texture_3_id);
 
         instance.vert_count = uint32_t(instance_vertices.size());
         instance.vert_offset = uint32_t(vertices.size());
@@ -645,32 +685,9 @@ namespace RayGene3D
         std::copy(instance_vertices.begin(), instance_vertices.end(), std::back_inserter(vertices));
         std::copy(instance_triangles.begin(), instance_triangles.end(), std::back_inserter(triangles));
 
-        const auto tex_reindex_fn = [](std::vector<uint32_t>& tex_ids, uint32_t tex_id)
-        {
-          if (tex_id == -1)
-          {
-            return uint32_t(-1);
-          }
-
-          const auto tex_iter = std::find_if(tex_ids.cbegin(), tex_ids.cend(), [&tex_id](const auto& index) { return tex_id == index; });
-          const auto tex_index = tex_iter == tex_ids.cend() ? uint32_t(tex_ids.size()) : uint32_t(tex_iter - tex_ids.cbegin());
-          if (tex_index == tex_ids.size())
-          {
-            tex_ids.push_back(tex_id);
-          }
-          return tex_index;
-        };
-
-        const auto texture_0_id = gltf_material.pbrMetallicRoughness.baseColorTexture.index;
-        instance.texture0_idx = texture_0_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_0_indices, texture_0_id);
-        const auto texture_1_id = gltf_material.emissiveTexture.index;
-        instance.texture1_idx = texture_1_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_1_indices, texture_1_id);
-        const auto texture_2_id = gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index;
-        instance.texture2_idx = texture_2_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_2_indices, texture_2_id);
-        const auto texture_3_id = gltf_material.normalTexture.index;
-        instance.texture3_idx = texture_3_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_3_indices, texture_3_id);
-
         instances.push_back(instance);
+
+        BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instance.geometry_idx, instance.vert_count, instance.prim_count);
       }
     }
 
