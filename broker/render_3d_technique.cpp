@@ -62,9 +62,6 @@ namespace RayGene3D
 
     geometry_pass = scope.core->GetDevice()->CreatePass("spark_geometry_pass",
       Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
     );
@@ -159,9 +156,9 @@ namespace RayGene3D
         { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
       );
 
+      const auto& ins_range = View::Range{ 1u,  0u };
       const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
       const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& ins_range = View::Range{ 1u,  0u };
       const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
       const auto& push_data = std::nullopt;
 
@@ -169,9 +166,9 @@ namespace RayGene3D
         { va_views, va_views + uint32_t(std::size(va_views)) },
         { ia_views, ia_views + uint32_t(std::size(ia_views)) },
         nullptr, // geometry_graphic_arguments,
+        ins_range,
         vtx_range,
         idx_range,
-        ins_range,
         sb_offset,
         push_data
       };
@@ -319,7 +316,7 @@ namespace RayGene3D
       Usage(USAGE_INDEX_ARRAY)
     );
     const Batch::Entity entities[] = {
-      {{skybox_screen_quad_vertices}, {skybox_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
+      {{skybox_screen_quad_vertices}, {skybox_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u }}
     };
 
     auto skybox_screen_data = scope.screen_data->CreateView("spark_skybox_screen_data",
@@ -368,9 +365,8 @@ namespace RayGene3D
 
     present_pass = scope.core->GetDevice()->CreatePass("spark_present_pass",
       Pass::TYPE_COMPUTE,
-      { 0u, grid_x },
-      { 0u, grid_y },
-      { 0u, grid_z }
+      {},
+      {}
     );
   }
 

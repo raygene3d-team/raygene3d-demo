@@ -251,9 +251,6 @@ namespace RayGene3D
 
       pass = device->CreatePass("imgui_pass",
         Pass::TYPE_GRAPHIC,
-        { 0u, extent_x },
-        { 0u, extent_y },
-        { 0u, extent_z },
         { rt_attachments, uint32_t(std::size(rt_attachments)) },
         {}
       );

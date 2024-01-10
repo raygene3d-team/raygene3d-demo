@@ -46,9 +46,6 @@ namespace RayGene3D
 
     shadowed_pass = scope.core->GetDevice()->CreatePass("spark_shadowed_pass",
       Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       {}
     );
@@ -118,7 +115,7 @@ namespace RayGene3D
       Usage(USAGE_INDEX_ARRAY)
     );
     const Batch::Entity entities[] = {
-      {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u } }
+      {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u } }
     };
 
     auto shadowed_screen_data = scope.screen_data->CreateView("spark_shadowed_screen_data",
@@ -190,9 +187,6 @@ namespace RayGene3D
 
     shadowmap_passes[index] = scope.core->GetDevice()->CreatePass("spark_shadowmap_pass_" + std::to_string(index),
       Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
       {},
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
     );
@@ -269,9 +263,9 @@ namespace RayGene3D
         { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
       );
 
+      const auto& ins_range = View::Range{ 0u,  1u };
       const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
       const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& ins_range = View::Range{ 0u,  1u };
       const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* index, 0u, 0u, 0u };
       const auto& push_data = std::nullopt;
 
@@ -279,9 +273,9 @@ namespace RayGene3D
         { shadowmap_scene_vertices },
         { shadowmap_scene_triangles },
         nullptr, //shadowmap_graphic_arguments,
+        ins_range,
         vtx_range,
         idx_range,
-        ins_range,
         sb_offset,
         push_data
       };

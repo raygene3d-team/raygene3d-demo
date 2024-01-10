@@ -46,9 +46,6 @@ namespace RayGene3D
 
     sw_traced_pass = scope.core->GetDevice()->CreatePass("spark_sw_traced_pass",
       Pass::TYPE_GRAPHIC,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z },
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       {}
     );
@@ -118,7 +115,7 @@ namespace RayGene3D
       Usage(USAGE_INDEX_ARRAY)
     );
     const Batch::Entity entities[] = {
-      {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 4u }, { 0u, 6u }, { 0u, 1u }}
+      {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u }}
     };
 
     auto sw_traced_screen_data = scope.screen_data->CreateView("spark_sw_traced_screen_data",

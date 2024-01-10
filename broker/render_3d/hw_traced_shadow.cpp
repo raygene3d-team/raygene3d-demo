@@ -39,9 +39,8 @@ namespace RayGene3D
 
     hw_traced_pass = scope.core->GetDevice()->CreatePass("spark_hw_traced_pass",
       Pass::TYPE_RAYTRACING,
-      { 0u, extent_x },
-      { 0u, extent_y },
-      { 0u, extent_z }
+      {},
+      {}
     );
   }
 
@@ -87,9 +86,9 @@ namespace RayGene3D
         hw_traced_trace_triangles,
       };
 
+      const auto& ins_range = View::Range{ 1u,  0u };
       const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
       const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& ins_range = View::Range{ 1u,  0u };
       const auto& sb_offset = std::nullopt;
       const auto& push_data = std::nullopt;
 
@@ -97,9 +96,9 @@ namespace RayGene3D
         { va_views, va_views + uint32_t(std::size(va_views)) },
         { ia_views, ia_views + uint32_t(std::size(ia_views)) },
         nullptr,
+        ins_range,
         vtx_range,
         idx_range,
-        ins_range,
         sb_offset,
         push_data
       };
