@@ -36,17 +36,17 @@ namespace RayGene3D
   {
   protected:
     SPtrPass unshadowed_pass;
-    SPtrState unshadowed_state;
+    SPtrTechnique unshadowed_technique;
     SPtrBatch unshadowed_batch;
 
   protected:
     void CreateUnshadowedPass();
-    void CreateUnshadowedState();
+    void CreateUnshadowedTechnique();
     void CreateUnshadowedBatch();
 
   protected:
     void DestroyUnshadowedBatch();
-    void DestroyUnshadowedState();
+    void DestroyUnshadowedTechnique();
     void DestroyUnshadowedPass();
 
   public:

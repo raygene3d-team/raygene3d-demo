@@ -52,7 +52,7 @@ namespace RayGene3D
   }
 
 
-  void SWTracedShadow::CreateSWTracedState()
+  void SWTracedShadow::CreateSWTracedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_sw_traced.hlsl", std::fstream::in);
@@ -62,7 +62,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_state =
+    const Technique::IAState ia_technique =
     {
       Technique::TOPOLOGY_TRIANGLELIST,
       Technique::INDEXER_32_BIT,
@@ -71,7 +71,7 @@ namespace RayGene3D
       }
     };
 
-    const Technique::RCState rc_state =
+    const Technique::RCState rc_technique =
     {
       Technique::FILL_SOLID,
       Technique::CULL_BACK,
@@ -80,14 +80,14 @@ namespace RayGene3D
       },
     };
 
-    const Technique::DSState ds_state =
+    const Technique::DSState ds_technique =
     {
       false, //depth_enabled
       false, //depth_write
       Technique::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const Technique::OMState om_technique =
     {
       false,
       {
@@ -95,14 +95,14 @@ namespace RayGene3D
       }
     };
 
-    sw_traced_state = sw_traced_pass->CreateState("spark_sw_traced_state",
+    sw_traced_technique = sw_traced_pass->CreateTechnique("spark_sw_traced_technique",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
+      ia_technique,
+      rc_technique,
+      ds_technique,
+      om_technique
     );
   }
 
@@ -173,7 +173,7 @@ namespace RayGene3D
       sw_traced_depth_texture,
     };
 
-    sw_traced_batch = sw_traced_state->CreateBatch("spark_sw_traced_batch",
+    sw_traced_batch = sw_traced_technique->CreateBatch("spark_sw_traced_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -187,14 +187,14 @@ namespace RayGene3D
 
   void SWTracedShadow::DestroySWTracedBatch()
   {
-    sw_traced_state->DestroyBatch(sw_traced_batch);
+    sw_traced_technique->DestroyBatch(sw_traced_batch);
     sw_traced_batch.reset();
   }
 
-  void SWTracedShadow::DestroySWTracedState()
+  void SWTracedShadow::DestroySWTracedTechnique()
   {
-    sw_traced_pass->DestroyState(sw_traced_state);
-    sw_traced_state.reset();
+    sw_traced_pass->DestroyTechnique(sw_traced_technique);
+    sw_traced_technique.reset();
   }
 
   void SWTracedShadow::DestroySWTracedPass()
@@ -221,36 +221,36 @@ namespace RayGene3D
     : Render3DMode(scope)
   {
     CreateGeometryPass();
-    CreateGeometryState();
+    CreateGeometryTechnique();
     CreateGeometryBatch();
 
-    CreateSkyboxState();
+    CreateSkyboxTechnique();
     CreateSkyboxBatch();
 
     CreateSWTracedPass();
-    CreateSWTracedState();
+    CreateSWTracedTechnique();
     CreateSWTracedBatch();
 
     CreatePresentPass();
-    CreatePresentState();
+    CreatePresentTechnique();
     CreatePresentBatch();
   }
 
   SWTracedShadow::~SWTracedShadow()
   {
     DestroyPresentBatch();
-    DestroyPresentState();
+    DestroyPresentTechnique();
     DestroyPresentPass();
 
     DestroySWTracedBatch();
-    DestroySWTracedState();
+    DestroySWTracedTechnique();
     DestroySWTracedPass();
 
     DestroySkyboxBatch();
-    DestroySkyboxState();
+    DestroySkyboxTechnique();
 
     DestroyGeometryBatch();
-    DestroyGeometryState();
+    DestroyGeometryTechnique();
     DestroyGeometryPass();
   }
 }

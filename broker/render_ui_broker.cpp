@@ -368,10 +368,10 @@ namespace RayGene3D
         return output; \
       }";
 
-      const State::IAState ia_state =
+      const Technique::IAState ia_technique =
       {
-        State::TOPOLOGY_TRIANGLELIST,
-        State::INDEXER_16_BIT,
+        Technique::TOPOLOGY_TRIANGLELIST,
+        Technique::INDEXER_16_BIT,
         {
           { 0, 0, 20, FORMAT_R32G32_FLOAT, false },
           { 0, 8, 20, FORMAT_R32G32_FLOAT, false },
@@ -379,38 +379,38 @@ namespace RayGene3D
         }
       };
 
-      const State::RCState rc_state =
+      const Technique::RCState rc_technique =
       {
-        State::FILL_SOLID,
-        State::CULL_NONE,
+        Technique::FILL_SOLID,
+        Technique::CULL_NONE,
         {
           { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
         },
       };
 
-      const State::DSState ds_state =
+      const Technique::DSState ds_technique =
       {
         false,
         false,
-        State::COMPARISON_ALWAYS
+        Technique::COMPARISON_ALWAYS
       };
 
-      const State::OMState om_state =
+      const Technique::OMState om_technique =
       {
         false,
         {
-          { true, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF }
+          { true, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF }
         }
       };
 
-      effect = pass->CreateState("imgui_config",
+      technique = pass->CreateTechnique("imgui_config",
         source,
-        State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
+        Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
         {},
-        ia_state,
-        rc_state,
-        ds_state,
-        om_state
+        ia_technique,
+        rc_technique,
+        ds_technique,
+        om_technique
       );
     }
 
@@ -458,7 +458,7 @@ namespace RayGene3D
           font_view,
       };
 
-      batch = effect->CreateBatch("imgui_layout",
+      batch = technique->CreateBatch("imgui_layout",
         { entities, uint32_t(std::size(entities)) },
         { samplers, uint32_t(std::size(samplers)) },
         { ub_views, uint32_t(std::size(ub_views)) },
@@ -494,11 +494,11 @@ namespace RayGene3D
 
   RenderUIBroker::~RenderUIBroker()
   {
-    effect->DestroyBatch(batch);
+    technique->DestroyBatch(batch);
     batch.reset();
 
-    pass->DestroyState(effect);
-    effect.reset();
+    pass->DestroyTechnique(technique);
+    technique.reset();
 
     wrap.GetCore()->GetDevice()->DestroyPass(pass);
     pass.reset();

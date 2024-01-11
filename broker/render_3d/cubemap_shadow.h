@@ -36,29 +36,29 @@ namespace RayGene3D
   {
   protected:
     SPtrPass shadowmap_passes[6];
-    SPtrState shadowmap_states[6];
+    SPtrTechnique shadowmap_techniques[6];
     SPtrBatch shadowmap_batches[6];
 
     SPtrPass shadowed_pass;
-    SPtrState shadowed_state;
+    SPtrTechnique shadowed_technique;
     SPtrBatch shadowed_batch;
 
   protected:
     void CreateShadowmapPass(uint32_t index);
-    void CreateShadowmapState(uint32_t index);
+    void CreateShadowmapTechnique(uint32_t index);
     void CreateShadowmapBatch(uint32_t index);
 
     void CreateShadowedPass();
-    void CreateShadowedState();
+    void CreateShadowedTechnique();
     void CreateShadowedBatch();
 
   protected:
     void DestroyShadowmapBatch(uint32_t index);
-    void DestroyShadowmapState(uint32_t index);
+    void DestroyShadowmapTechnique(uint32_t index);
     void DestroyShadowmapPass(uint32_t index);
 
     void DestroyShadowedBatch();
-    void DestroyShadowedState();
+    void DestroyShadowedTechnique();
     void DestroyShadowedPass();
 
   public:

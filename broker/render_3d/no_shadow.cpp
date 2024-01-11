@@ -51,7 +51,7 @@ namespace RayGene3D
     );
   }
 
-  void NoShadow::CreateUnshadowedState()
+  void NoShadow::CreateUnshadowedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_unshadowed.hlsl", std::fstream::in);
@@ -61,7 +61,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_state =
+    const Technique::IAState ia_technique =
     {
       Technique::TOPOLOGY_TRIANGLELIST,
       Technique::INDEXER_32_BIT,
@@ -70,7 +70,7 @@ namespace RayGene3D
       }
     };
 
-    const Technique::RCState rc_state =
+    const Technique::RCState rc_technique =
     {
       Technique::FILL_SOLID,
       Technique::CULL_BACK,
@@ -79,14 +79,14 @@ namespace RayGene3D
       },
     };
 
-    const Technique::DSState ds_state =
+    const Technique::DSState ds_technique =
     {
       false, //depth_enabled
       false, //depth_write
       Technique::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const Technique::OMState om_technique =
     {
       false,
       {
@@ -94,14 +94,14 @@ namespace RayGene3D
       }
     };
 
-    unshadowed_state = unshadowed_pass->CreateState("spark_unshadowed_state",
+    unshadowed_technique = unshadowed_pass->CreateTechnique("spark_unshadowed_technique",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
+      ia_technique,
+      rc_technique,
+      ds_technique,
+      om_technique
     );
   }
 
@@ -150,7 +150,7 @@ namespace RayGene3D
       unshadowed_depth_texture,
     };
 
-    unshadowed_batch = unshadowed_state->CreateBatch("spark_unshadowed_batch",
+    unshadowed_batch = unshadowed_technique->CreateBatch("spark_unshadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -161,14 +161,14 @@ namespace RayGene3D
 
   void NoShadow::DestroyUnshadowedBatch()
   {
-    unshadowed_state->DestroyBatch(unshadowed_batch);
+    unshadowed_technique->DestroyBatch(unshadowed_batch);
     unshadowed_batch.reset();
   }
 
-  void NoShadow::DestroyUnshadowedState()
+  void NoShadow::DestroyUnshadowedTechnique()
   {
-    unshadowed_pass->DestroyState(unshadowed_state);
-    unshadowed_state.reset();
+    unshadowed_pass->DestroyTechnique(unshadowed_technique);
+    unshadowed_technique.reset();
   }
 
   void NoShadow::DestroyUnshadowedPass()
@@ -195,36 +195,36 @@ namespace RayGene3D
     : Render3DMode(scope)
   {
     CreateGeometryPass();
-    CreateGeometryState();
+    CreateGeometryTechnique();
     CreateGeometryBatch();
 
-    CreateSkyboxState();
+    CreateSkyboxTechnique();
     CreateSkyboxBatch();
 
     CreateUnshadowedPass();
-    CreateUnshadowedState();
+    CreateUnshadowedTechnique();
     CreateUnshadowedBatch();
 
     CreatePresentPass();
-    CreatePresentState();
+    CreatePresentTechnique();
     CreatePresentBatch();
   }
 
   NoShadow::~NoShadow()
   {
     DestroyPresentBatch();
-    DestroyPresentState();
+    DestroyPresentTechnique();
     DestroyPresentPass();
 
     DestroyUnshadowedBatch();
-    DestroyUnshadowedState();
+    DestroyUnshadowedTechnique();
     DestroyUnshadowedPass();
 
     DestroySkyboxBatch();
-    DestroySkyboxState();
+    DestroySkyboxTechnique();
 
     DestroyGeometryBatch();
-    DestroyGeometryState();
+    DestroyGeometryTechnique();
     DestroyGeometryPass();
   }
 }

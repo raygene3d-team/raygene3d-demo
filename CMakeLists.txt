@@ -63,10 +63,10 @@ set(SOURCE main.cpp
   broker/environment_broker.cpp
   broker/render_3d_broker.h
   broker/render_3d_broker.cpp
+  broker/render_3d_mode.h
+  broker/render_3d_mode.cpp
   broker/render_3d_scope.h
   broker/render_3d_scope.cpp
-  broker/render_3d_technique.h
-  broker/render_3d_technique.cpp
   broker/render_3d/no_shadow.h
   broker/render_3d/no_shadow.cpp
   broker/render_3d/cubemap_shadow.h

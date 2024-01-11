@@ -67,7 +67,7 @@ namespace RayGene3D
     );
   }
 
-  void Render3DMode::CreateGeometryState()
+  void Render3DMode::CreateGeometryTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
@@ -77,7 +77,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_state =
+    const Technique::IAState ia_technique =
     {
       Technique::TOPOLOGY_TRIANGLELIST,
       Technique::INDEXER_32_BIT,
@@ -93,7 +93,7 @@ namespace RayGene3D
       }
     };
 
-    const Technique::RCState rc_state =
+    const Technique::RCState rc_technique =
     {
       Technique::FILL_SOLID,
       Technique::CULL_BACK,
@@ -102,14 +102,14 @@ namespace RayGene3D
       },
     };
 
-    const Technique::DSState ds_state =
+    const Technique::DSState ds_technique =
     {
       true, //depth_enabled
       true, //depth_write
       Technique::COMPARISON_LESS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const Technique::OMState om_technique =
     {
       false,
       {
@@ -119,14 +119,14 @@ namespace RayGene3D
       }
     };
 
-    geometry_state = geometry_pass->CreateState("spark_geometry_state",
+    geometry_technique = geometry_pass->CreateTechnique("spark_geometry_technique",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
+      ia_technique,
+      rc_technique,
+      ds_technique,
+      om_technique
     );
   }
 
@@ -235,7 +235,7 @@ namespace RayGene3D
       geometry_scene_textures3,
     };
 
-    geometry_batch = geometry_state->CreateBatch("spark_geometry_batch",
+    geometry_batch = geometry_technique->CreateBatch("spark_geometry_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -248,7 +248,7 @@ namespace RayGene3D
   }
 
 
-  void Render3DMode::CreateSkyboxState()
+  void Render3DMode::CreateSkyboxTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
@@ -260,7 +260,7 @@ namespace RayGene3D
       { "TEST", "1" },
     };
 
-    const Technique::IAState ia_state =
+    const Technique::IAState ia_technique =
     {
       Technique::TOPOLOGY_TRIANGLELIST,
       Technique::INDEXER_32_BIT,
@@ -269,7 +269,7 @@ namespace RayGene3D
       }
     };
 
-    const Technique::RCState rc_state =
+    const Technique::RCState rc_technique =
     {
       Technique::FILL_SOLID,
       Technique::CULL_BACK,
@@ -278,14 +278,14 @@ namespace RayGene3D
       },
     };
 
-    const Technique::DSState ds_state =
+    const Technique::DSState ds_technique =
     {
       true, //depth_enabled
       false, //depth_write
       Technique::COMPARISON_EQUAL //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const Technique::OMState om_technique =
     {
       false,
       {
@@ -295,14 +295,14 @@ namespace RayGene3D
       }
     };
 
-    skybox_state = geometry_pass->CreateState("spark_skybox_state",
+    skybox_technique = geometry_pass->CreateTechnique("spark_skybox_technique",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
+      ia_technique,
+      rc_technique,
+      ds_technique,
+      om_technique
     );
   }
 
@@ -341,7 +341,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    skybox_batch = skybox_state->CreateBatch("spark_skybox_batch",
+    skybox_batch = skybox_technique->CreateBatch("spark_skybox_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -370,14 +370,14 @@ namespace RayGene3D
     );
   }
 
-  void Render3DMode::CreatePresentState()
+  void Render3DMode::CreatePresentTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    present_state = present_pass->CreateState("spark_present_state",
+    present_technique = present_pass->CreateTechnique("spark_present_technique",
       shader_ss.str(),
       Technique::COMPILATION_CS,
       {},
@@ -415,7 +415,7 @@ namespace RayGene3D
       scope.backbuffer_uav,
     };
 
-    present_batch = present_state->CreateBatch("spark_present_batch",
+    present_batch = present_technique->CreateBatch("spark_present_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -435,38 +435,38 @@ namespace RayGene3D
 
   void Render3DMode::DestroyGeometryBatch()
   {
-    geometry_state->DestroyBatch(geometry_batch);
+    geometry_technique->DestroyBatch(geometry_batch);
     geometry_batch.reset();
   }
 
-  void Render3DMode::DestroyGeometryState()
+  void Render3DMode::DestroyGeometryTechnique()
   {
-    geometry_pass->DestroyState(geometry_state);
-    geometry_state.reset();
+    geometry_pass->DestroyTechnique(geometry_technique);
+    geometry_technique.reset();
   }
 
   void Render3DMode::DestroySkyboxBatch()
   {
-    skybox_state->DestroyBatch(skybox_batch);
+    skybox_technique->DestroyBatch(skybox_batch);
     skybox_batch.reset();
   }
 
-  void Render3DMode::DestroySkyboxState()
+  void Render3DMode::DestroySkyboxTechnique()
   {
-    geometry_pass->DestroyState(skybox_state);
-    skybox_state.reset();
+    geometry_pass->DestroyTechnique(skybox_technique);
+    skybox_technique.reset();
   }
 
   void Render3DMode::DestroyPresentBatch()
   {
-    present_state->DestroyBatch(present_batch);
+    present_technique->DestroyBatch(present_batch);
     present_batch.reset();
   }
 
-  void Render3DMode::DestroyPresentState()
+  void Render3DMode::DestroyPresentTechnique()
   {
-    present_pass->DestroyState(present_state);
-    present_state.reset();
+    present_pass->DestroyTechnique(present_technique);
+    present_technique.reset();
   }
 
   void Render3DMode::DestroyPresentPass()

@@ -45,7 +45,7 @@ namespace RayGene3D
   }
 
 
-  void HWTracedShadow::CreateHWTracedState()
+  void HWTracedShadow::CreateHWTracedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
@@ -55,7 +55,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    hw_traced_state = hw_traced_pass->CreateState("spark_hw_traced_state",
+    hw_traced_technique = hw_traced_pass->CreateTechnique("spark_hw_traced_technique",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_RGEN | Technique::COMPILATION_MISS),
       { defines.data(), uint32_t(defines.size()) },
@@ -146,7 +146,7 @@ namespace RayGene3D
       hw_traced_color_texture,
     };
 
-    hw_traced_batch = hw_traced_state->CreateBatch("spark_hw_traced_batch",
+    hw_traced_batch = hw_traced_technique->CreateBatch("spark_hw_traced_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -160,14 +160,14 @@ namespace RayGene3D
 
   void HWTracedShadow::DestroyHWTracedBatch()
   {
-    hw_traced_state->DestroyBatch(hw_traced_batch);
+    hw_traced_technique->DestroyBatch(hw_traced_batch);
     hw_traced_batch.reset();
   }
 
-  void HWTracedShadow::DestroyHWTracedState()
+  void HWTracedShadow::DestroyHWTracedTechnique()
   {
-    hw_traced_pass->DestroyState(hw_traced_state);
-    hw_traced_state.reset();
+    hw_traced_pass->DestroyTechnique(hw_traced_technique);
+    hw_traced_technique.reset();
   }
 
   void HWTracedShadow::DestroyHWTracedPass()
@@ -194,36 +194,36 @@ namespace RayGene3D
     : Render3DMode(scope)
   {
     CreateGeometryPass();
-    CreateGeometryState();
+    CreateGeometryTechnique();
     CreateGeometryBatch();
 
-    CreateSkyboxState();
+    CreateSkyboxTechnique();
     CreateSkyboxBatch();
 
     CreateHWTracedPass();
-    CreateHWTracedState();
+    CreateHWTracedTechnique();
     CreateHWTracedBatch();
 
     CreatePresentPass();
-    CreatePresentState();
+    CreatePresentTechnique();
     CreatePresentBatch();
   }
 
   HWTracedShadow::~HWTracedShadow()
   {
     DestroyPresentBatch();
-    DestroyPresentState();
+    DestroyPresentTechnique();
     DestroyPresentPass();
 
     DestroyHWTracedBatch();
-    DestroyHWTracedState();
+    DestroyHWTracedTechnique();
     DestroyHWTracedPass();
 
     DestroySkyboxBatch();
-    DestroySkyboxState();
+    DestroySkyboxTechnique();
 
     DestroyGeometryBatch();
-    DestroyGeometryState();
+    DestroyGeometryTechnique();
     DestroyGeometryPass();
   }
     

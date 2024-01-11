@@ -51,7 +51,7 @@ namespace RayGene3D
     );
   }
 
-  void CubemapShadow::CreateShadowedState()
+  void CubemapShadow::CreateShadowedTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
@@ -61,7 +61,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_state =
+    const Technique::IAState ia_technique =
     {
       Technique::TOPOLOGY_TRIANGLELIST,
       Technique::INDEXER_32_BIT,
@@ -70,7 +70,7 @@ namespace RayGene3D
       }
     };
 
-    const Technique::RCState rc_state =
+    const Technique::RCState rc_technique =
     {
       Technique::FILL_SOLID,
       Technique::CULL_BACK,
@@ -79,14 +79,14 @@ namespace RayGene3D
       },
     };
 
-    const Technique::DSState ds_state =
+    const Technique::DSState ds_technique =
     {
       false, //depth_enabled
       false, //depth_write
       Technique::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const Technique::OMState om_technique =
     {
       false,
       {
@@ -94,14 +94,14 @@ namespace RayGene3D
       }
     };
 
-    shadowed_state = shadowed_pass->CreateState("spark_shadowed_state",
+    shadowed_technique = shadowed_pass->CreateTechnique("spark_shadowed_technique",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
+      ia_technique,
+      rc_technique,
+      ds_technique,
+      om_technique
     );
   }
 
@@ -160,7 +160,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
     };
 
-    shadowed_batch = shadowed_state->CreateBatch("spark_shadowed_batch",
+    shadowed_batch = shadowed_technique->CreateBatch("spark_shadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -193,14 +193,14 @@ namespace RayGene3D
   }
 
 
-  void CubemapShadow::CreateShadowmapState(uint32_t index)
+  void CubemapShadow::CreateShadowmapTechnique(uint32_t index)
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    const Technique::IAState ia_state =
+    const Technique::IAState ia_technique =
     {
       Technique::TOPOLOGY_TRIANGLELIST,
       Technique::INDEXER_32_BIT,
@@ -209,7 +209,7 @@ namespace RayGene3D
       }
     };
 
-    const Technique::RCState rc_state =
+    const Technique::RCState rc_technique =
     {
       Technique::FILL_SOLID,
       Technique::CULL_FRONT,
@@ -218,14 +218,14 @@ namespace RayGene3D
       },
     };
 
-    const Technique::DSState ds_state =
+    const Technique::DSState ds_technique =
     {
       true, //depth_enabled
       true, //depth_write
       Technique::COMPARISON_LESS //depth_comparison
     };
 
-    const Technique::OMState om_state =
+    const Technique::OMState om_technique =
     {
       false,
       {
@@ -233,14 +233,14 @@ namespace RayGene3D
       }
     };
 
-    shadowmap_states[index] = shadowmap_passes[index]->CreateState("spark_shadowmap_state" + std::to_string(index),
+    shadowmap_techniques[index] = shadowmap_passes[index]->CreateTechnique("spark_shadowmap_technique" + std::to_string(index),
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS),
       {},
-      ia_state,
-      rc_state,
-      ds_state,
-      om_state
+      ia_technique,
+      rc_technique,
+      ds_technique,
+      om_technique
     );
   }
 
@@ -290,7 +290,7 @@ namespace RayGene3D
       shadowmap_shadow_data,
     };
 
-    shadowmap_batches[index] = shadowmap_states[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
+    shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
       { entities.data(), uint32_t(entities.size()) },
       {},
       {},
@@ -305,14 +305,14 @@ namespace RayGene3D
 
   void CubemapShadow::DestroyShadowmapBatch(uint32_t index)
   {
-    shadowmap_states[index]->DestroyBatch(shadowmap_batches[index]);
+    shadowmap_techniques[index]->DestroyBatch(shadowmap_batches[index]);
     shadowmap_batches[index].reset();
   }
 
-  void CubemapShadow::DestroyShadowmapState(uint32_t index)
+  void CubemapShadow::DestroyShadowmapTechnique(uint32_t index)
   {
-    shadowmap_passes[index]->DestroyState(shadowmap_states[index]);
-    shadowmap_states[index].reset();
+    shadowmap_passes[index]->DestroyTechnique(shadowmap_techniques[index]);
+    shadowmap_techniques[index].reset();
   }
 
   void CubemapShadow::DestroyShadowmapPass(uint32_t index)
@@ -323,14 +323,14 @@ namespace RayGene3D
 
   void CubemapShadow::DestroyShadowedBatch()
   {
-    shadowed_state->DestroyBatch(shadowed_batch);
+    shadowed_technique->DestroyBatch(shadowed_batch);
     shadowed_batch.reset();
   }
 
-  void CubemapShadow::DestroyShadowedState()
+  void CubemapShadow::DestroyShadowedTechnique()
   {
-    shadowed_pass->DestroyState(shadowed_state);
-    shadowed_state.reset();
+    shadowed_pass->DestroyTechnique(shadowed_technique);
+    shadowed_technique.reset();
   }
 
   void CubemapShadow::DestroyShadowedPass()
@@ -367,47 +367,47 @@ namespace RayGene3D
     for (auto i = 0u; i < 6u; ++i)
     {
       CreateShadowmapPass(i);
-      CreateShadowmapState(i);
+      CreateShadowmapTechnique(i);
       CreateShadowmapBatch(i);
     }
 
     CreateGeometryPass();
-    CreateGeometryState();
+    CreateGeometryTechnique();
     CreateGeometryBatch();
 
-    CreateSkyboxState();
+    CreateSkyboxTechnique();
     CreateSkyboxBatch();
 
     CreateShadowedPass();
-    CreateShadowedState();
+    CreateShadowedTechnique();
     CreateShadowedBatch();
 
     CreatePresentPass();
-    CreatePresentState();
+    CreatePresentTechnique();
     CreatePresentBatch();
   }
 
   CubemapShadow::~CubemapShadow()
   {
     DestroyPresentBatch();
-    DestroyPresentState();
+    DestroyPresentTechnique();
     DestroyPresentPass();
 
     DestroyShadowedBatch();
-    DestroyShadowedState();
+    DestroyShadowedTechnique();
     DestroyShadowedPass();
 
     DestroySkyboxBatch();
-    DestroySkyboxState();
+    DestroySkyboxTechnique();
 
     DestroyGeometryBatch();
-    DestroyGeometryState();
+    DestroyGeometryTechnique();
     DestroyGeometryPass();
 
     for (auto i = 0u; i < 6u; ++i)
     {
       DestroyShadowmapBatch(i);
-      DestroyShadowmapState(i);
+      DestroyShadowmapTechnique(i);
       DestroyShadowmapPass(i);
     }
   }
