@@ -192,10 +192,10 @@ namespace RayGene3D
     : Broker("spark_broker", wrap)
     , scope(wrap.GetCore(), wrap.GetUtil())
   {
-    no_shadow = std::unique_ptr<Render3DTechnique>(new NoShadow(scope));
-    cubemap_shadow = std::unique_ptr<Render3DTechnique>(new CubemapShadow(scope));
-    sw_traced_shadow = std::unique_ptr<Render3DTechnique>(new SWTracedShadow(scope));
-    hw_traced_shadow = std::unique_ptr<Render3DTechnique>(new HWTracedShadow(scope));
+    no_shadow = std::unique_ptr<Render3DMode>(new NoShadow(scope));
+    cubemap_shadow = std::unique_ptr<Render3DMode>(new CubemapShadow(scope));
+    sw_traced_shadow = std::unique_ptr<Render3DMode>(new SWTracedShadow(scope));
+    hw_traced_shadow = std::unique_ptr<Render3DMode>(new HWTracedShadow(scope));
   }
 
   Render3DBroker::~Render3DBroker()

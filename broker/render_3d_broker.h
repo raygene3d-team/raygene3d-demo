@@ -41,13 +41,13 @@ namespace RayGene3D
     Render3DScope scope;
 
   protected:
-    std::unique_ptr<Render3DTechnique> no_shadow;
-    std::unique_ptr<Render3DTechnique> cubemap_shadow;
-    std::unique_ptr<Render3DTechnique> sw_traced_shadow;
-    std::unique_ptr<Render3DTechnique> hw_traced_shadow;
+    std::unique_ptr<Render3DMode> no_shadow;
+    std::unique_ptr<Render3DMode> cubemap_shadow;
+    std::unique_ptr<Render3DMode> sw_traced_shadow;
+    std::unique_ptr<Render3DMode> hw_traced_shadow;
 
   public:
-    enum ShadingMode
+    enum ShadowMode
     {
       NO_SHADOW = 0,
       CUBEMAP_SHADOW = 1,
@@ -56,11 +56,11 @@ namespace RayGene3D
     };
 
   protected:
-    ShadingMode mode{ NO_SHADOW };
+    ShadowMode mode{ NO_SHADOW };
 
   public:
-    void SetShadingMode(ShadingMode mode) { this->mode = mode; }
-    ShadingMode GetShadingMode() const { return mode; }
+    void SetShadowMode(ShadowMode mode) { this->mode = mode; }
+    ShadowMode GetShadowMode() const { return mode; }
 
   protected:
     bool use_normal_oct_quad_encoding{ false };

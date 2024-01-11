@@ -28,11 +28,11 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../render_3d_technique.h"
+#include "../render_3d_mode.h"
 
 namespace RayGene3D
 {
-  class SWTracedShadow : public Render3DTechnique
+  class SWTracedShadow : public Render3DMode
   {
   protected:
     SPtrPass sw_traced_pass;

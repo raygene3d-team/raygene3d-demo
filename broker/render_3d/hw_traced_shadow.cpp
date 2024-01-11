@@ -57,7 +57,7 @@ namespace RayGene3D
 
     hw_traced_state = hw_traced_pass->CreateState("spark_hw_traced_state",
       shader_ss.str(),
-      State::Compilation(State::COMPILATION_RGEN | State::COMPILATION_MISS),
+      Technique::Compilation(Technique::COMPILATION_RGEN | Technique::COMPILATION_MISS),
       { defines.data(), uint32_t(defines.size()) },
       {},
       {},
@@ -191,7 +191,7 @@ namespace RayGene3D
   }
 
   HWTracedShadow::HWTracedShadow(const Render3DScope& scope)
-    : Render3DTechnique(scope)
+    : Render3DMode(scope)
   {
     CreateGeometryPass();
     CreateGeometryState();

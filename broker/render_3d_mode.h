@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  class Render3DTechnique
+  class Render3DMode
   {
   protected:
     const Render3DScope& scope;
@@ -78,7 +78,7 @@ namespace RayGene3D
     virtual void Disable() = 0;
 
   public:
-    Render3DTechnique(const Render3DScope& scope);
-    virtual ~Render3DTechnique();
+    Render3DMode(const Render3DScope& scope);
+    virtual ~Render3DMode();
   };
 }

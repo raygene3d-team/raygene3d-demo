@@ -61,42 +61,42 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const State::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const State::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      State::FILL_SOLID,
-      State::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const State::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       false, //depth_enabled
       false, //depth_write
-      State::COMPARISON_ALWAYS //depth_comparison
+      Technique::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const State::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { true, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, 0xF },
+        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
       }
     };
 
     unshadowed_state = unshadowed_pass->CreateState("spark_unshadowed_state",
       shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -192,7 +192,7 @@ namespace RayGene3D
   }
 
   NoShadow::NoShadow(const Render3DScope& scope)
-    : Render3DTechnique(scope)
+    : Render3DMode(scope)
   {
     CreateGeometryPass();
     CreateGeometryState();

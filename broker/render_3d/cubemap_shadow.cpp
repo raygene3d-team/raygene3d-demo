@@ -61,42 +61,42 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const State::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const State::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      State::FILL_SOLID,
-      State::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const State::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       false, //depth_enabled
       false, //depth_write
-      State::COMPARISON_ALWAYS //depth_comparison
+      Technique::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const State::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { true, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, State::OPERAND_ONE, State::OPERAND_ONE, State::OPERATION_ADD, 0xF },
+        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
       }
     };
 
     shadowed_state = shadowed_pass->CreateState("spark_shadowed_state",
       shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -200,42 +200,42 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    const State::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false }
       }
     };
 
-    const State::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      State::FILL_SOLID,
-      State::CULL_FRONT,
+      Technique::FILL_SOLID,
+      Technique::CULL_FRONT,
       {
         { 0.0f, 0.0f, float(scope.shadow_resolution), float(scope.shadow_resolution), 0.0f, 1.0f }
       },
     };
 
-    const State::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       true, //depth_enabled
       true, //depth_write
-      State::COMPARISON_LESS //depth_comparison
+      Technique::COMPARISON_LESS //depth_comparison
     };
 
-    const State::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF }
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF }
       }
     };
 
     shadowmap_states[index] = shadowmap_passes[index]->CreateState("spark_shadowmap_state" + std::to_string(index),
       shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS),
+      Technique::Compilation(Technique::COMPILATION_VS),
       {},
       ia_state,
       rc_state,
@@ -362,7 +362,7 @@ namespace RayGene3D
   }
 
   CubemapShadow::CubemapShadow(const Render3DScope& scope)
-    : Render3DTechnique(scope)
+    : Render3DMode(scope)
   {
     for (auto i = 0u; i < 6u; ++i)
     {

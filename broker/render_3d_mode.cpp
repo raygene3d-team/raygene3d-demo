@@ -27,11 +27,11 @@ THE SOFTWARE.
 ================================================================================*/
 
 
-#include "render_3d_technique.h"
+#include "render_3d_mode.h"
 
 namespace RayGene3D
 {
-  void Render3DTechnique::CreateGeometryPass()
+  void Render3DMode::CreateGeometryPass()
   {
     const auto extent_x = scope.prop_extent_x->GetUint();
     const auto extent_y = scope.prop_extent_y->GetUint();
@@ -67,7 +67,7 @@ namespace RayGene3D
     );
   }
 
-  void Render3DTechnique::CreateGeometryState()
+  void Render3DMode::CreateGeometryState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
@@ -77,10 +77,10 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const State::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
         { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
@@ -93,35 +93,35 @@ namespace RayGene3D
       }
     };
 
-    const State::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      State::FILL_SOLID,
-      State::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const State::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       true, //depth_enabled
       true, //depth_write
-      State::COMPARISON_LESS //depth_comparison
+      Technique::COMPARISON_LESS //depth_comparison
     };
 
-    const State::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
       }
     };
 
     geometry_state = geometry_pass->CreateState("spark_geometry_state",
       shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
       ia_state,
       rc_state,
@@ -131,7 +131,7 @@ namespace RayGene3D
   }
 
 
-  void Render3DTechnique::CreateGeometryBatch()
+  void Render3DMode::CreateGeometryBatch()
   {
     const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
     auto entities = std::vector<Batch::Entity>(count);
@@ -248,7 +248,7 @@ namespace RayGene3D
   }
 
 
-  void Render3DTechnique::CreateSkyboxState()
+  void Render3DMode::CreateSkyboxState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
@@ -260,44 +260,44 @@ namespace RayGene3D
       { "TEST", "1" },
     };
 
-    const State::IAState ia_state =
+    const Technique::IAState ia_state =
     {
-      State::TOPOLOGY_TRIANGLELIST,
-      State::INDEXER_32_BIT,
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const State::RCState rc_state =
+    const Technique::RCState rc_state =
     {
-      State::FILL_SOLID,
-      State::CULL_BACK,
+      Technique::FILL_SOLID,
+      Technique::CULL_BACK,
       {
         { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const State::DSState ds_state =
+    const Technique::DSState ds_state =
     {
       true, //depth_enabled
       false, //depth_write
-      State::COMPARISON_EQUAL //depth_comparison
+      Technique::COMPARISON_EQUAL //depth_comparison
     };
 
-    const State::OMState om_state =
+    const Technique::OMState om_state =
     {
       false,
       {
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
-        { false, State::OPERAND_SRC_ALPHA, State::OPERAND_INV_SRC_ALPHA, State::OPERATION_ADD, State::OPERAND_INV_SRC_ALPHA, State::OPERAND_ZERO, State::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
       }
     };
 
     skybox_state = geometry_pass->CreateState("spark_skybox_state",
       shader_ss.str(),
-      State::Compilation(State::COMPILATION_VS | State::COMPILATION_PS),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
       ia_state,
       rc_state,
@@ -307,7 +307,7 @@ namespace RayGene3D
   }
 
 
-  void Render3DTechnique::CreateSkyboxBatch()
+  void Render3DMode::CreateSkyboxBatch()
   {
     auto skybox_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_skybox_screen_quad_vertices",
       Usage(USAGE_VERTEX_ARRAY)
@@ -357,7 +357,7 @@ namespace RayGene3D
 
 
 
-  void Render3DTechnique::CreatePresentPass()
+  void Render3DMode::CreatePresentPass()
   {
     const auto grid_x = scope.prop_extent_x->GetUint() / 8u;
     const auto grid_y = scope.prop_extent_y->GetUint() / 8u;
@@ -370,7 +370,7 @@ namespace RayGene3D
     );
   }
 
-  void Render3DTechnique::CreatePresentState()
+  void Render3DMode::CreatePresentState()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
@@ -379,7 +379,7 @@ namespace RayGene3D
 
     present_state = present_pass->CreateState("spark_present_state",
       shader_ss.str(),
-      State::COMPILATION_CS,
+      Technique::COMPILATION_CS,
       {},
       {},
       {},
@@ -388,7 +388,7 @@ namespace RayGene3D
     );
   }
 
-  void Render3DTechnique::CreatePresentBatch()
+  void Render3DMode::CreatePresentBatch()
   {
     auto present_compute_arguments = scope.compute_arguments->CreateView("spark_present_compute_arguments",
       Usage(USAGE_ARGUMENT_INDIRECT)
@@ -427,60 +427,60 @@ namespace RayGene3D
     );
   }
 
-  void Render3DTechnique::DestroyGeometryPass()
+  void Render3DMode::DestroyGeometryPass()
   {
     scope.core->GetDevice()->DestroyPass(geometry_pass);
     geometry_pass.reset();
   }
 
-  void Render3DTechnique::DestroyGeometryBatch()
+  void Render3DMode::DestroyGeometryBatch()
   {
     geometry_state->DestroyBatch(geometry_batch);
     geometry_batch.reset();
   }
 
-  void Render3DTechnique::DestroyGeometryState()
+  void Render3DMode::DestroyGeometryState()
   {
     geometry_pass->DestroyState(geometry_state);
     geometry_state.reset();
   }
 
-  void Render3DTechnique::DestroySkyboxBatch()
+  void Render3DMode::DestroySkyboxBatch()
   {
     skybox_state->DestroyBatch(skybox_batch);
     skybox_batch.reset();
   }
 
-  void Render3DTechnique::DestroySkyboxState()
+  void Render3DMode::DestroySkyboxState()
   {
     geometry_pass->DestroyState(skybox_state);
     skybox_state.reset();
   }
 
-  void Render3DTechnique::DestroyPresentBatch()
+  void Render3DMode::DestroyPresentBatch()
   {
     present_state->DestroyBatch(present_batch);
     present_batch.reset();
   }
 
-  void Render3DTechnique::DestroyPresentState()
+  void Render3DMode::DestroyPresentState()
   {
     present_pass->DestroyState(present_state);
     present_state.reset();
   }
 
-  void Render3DTechnique::DestroyPresentPass()
+  void Render3DMode::DestroyPresentPass()
   {
     scope.core->GetDevice()->DestroyPass(present_pass);
     present_pass.reset();
   }
 
-  Render3DTechnique::Render3DTechnique(const Render3DScope& scope)
+  Render3DMode::Render3DMode(const Render3DScope& scope)
     : scope(scope)
   {
   }
   
-  Render3DTechnique::~Render3DTechnique()
+  Render3DMode::~Render3DMode()
   {
   }
 }
