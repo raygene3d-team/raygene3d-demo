@@ -27,7 +27,7 @@ THE SOFTWARE.
 ================================================================================*/
 
 
-#include "render_3d_technique.h"
+#include "render_3d_scope.h"
 
 namespace RayGene3D
 {
