@@ -28,8 +28,8 @@ THE SOFTWARE.
 
 #include "raygene3d-wrap/wrap.h"
 
-#include "spark/spark.h"
-#include "imgui/imgui.h"
+#include "broker/render_3d_broker.h"
+#include "broker/render_ui_broker.h"
 
 #include "broker/bvh_broker.h"
 #include "broker/import_broker.h"
@@ -143,11 +143,11 @@ namespace RayGene3D
     std::unique_ptr<RayGene3D::Wrap> wrap;
 
   protected:
-    std::string mode_name{"Disabled Shadow"};
+    std::string shadow_name{"No Shadow"};
 
   protected:
-    std::shared_ptr<RayGene3D::Spark> spark;
-    std::shared_ptr<RayGene3D::Imgui> imgui;
+    std::shared_ptr<RayGene3D::Render3DBroker> render_3d_broker;
+    std::shared_ptr<RayGene3D::RenderUIBroker> render_ui_broker;
 
   protected:
     //std::shared_ptr<RayGene3D::IOBroker> io_broker;
@@ -488,11 +488,11 @@ namespace RayGene3D
       tree_property->SetObjectItem("environment_property", environment_property);
 
 
-      spark = std::shared_ptr<RayGene3D::Spark>(new RayGene3D::Spark(*wrap));
-      spark->SetShadowType(Spark::DISABLED_SHADOW);
+      render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
+      render_3d_broker->SetShadowMode(Render3DBroker::NO_SHADOW);
 
-      imgui = std::shared_ptr<RayGene3D::Imgui>(new RayGene3D::Imgui(*wrap));
-      imgui->SetShowTestWindow(false);
+      render_ui_broker = std::shared_ptr<RayGene3D::RenderUIBroker>(new RayGene3D::RenderUIBroker(*wrap));
+      render_ui_broker->SetShowTestWindow(false);
     }
 
     void Use()
@@ -528,28 +528,28 @@ namespace RayGene3D
 
         if (glfwGetKey(glfw, GLFW_KEY_F1) == GLFW_RELEASE && change_imgui)
         {
-          auto enabled = imgui->GetShowTestWindow();
+          auto enabled = render_ui_broker->GetShowTestWindow();
           enabled = !enabled;
-          imgui->SetShowTestWindow(enabled);
+          render_ui_broker->SetShowTestWindow(enabled);
 
           if (enabled)
           {
             glfwSetWindowUserPointer(glfw, this);
 
             glfwSetCursorPosCallback(glfw, [](GLFWwindow* window, double xpos, double ypos)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->imgui->OnCursor(xpos, ypos); }
+              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnCursor(xpos, ypos); }
             );
             glfwSetKeyCallback(glfw, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->imgui->OnKeyboard(key, scancode, action, mods); }
+              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnKeyboard(key, scancode, action, mods); }
             );
             glfwSetMouseButtonCallback(glfw, [](GLFWwindow* window, int button, int action, int mods)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->imgui->OnMouse(button, action, mods); }
+              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnMouse(button, action, mods); }
             );
             glfwSetScrollCallback(glfw, [](GLFWwindow* window, double xoffset, double yoffset)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->imgui->OnScroll(xoffset, yoffset); }
+              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnScroll(xoffset, yoffset); }
             );
             glfwSetCharCallback(glfw, [](GLFWwindow* window, unsigned int glyph)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->imgui->OnChar(glyph); }
+              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnChar(glyph); }
             );
           }
           else
@@ -571,35 +571,35 @@ namespace RayGene3D
           change_imgui = true;
         }
 
-        if (!imgui->GetShowTestWindow())
+        if (!render_ui_broker->GetShowTestWindow())
         {
           UpdateCamera();
         }
 
         if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
         {
-          auto shadow_type = spark->GetShadowType();
-          if (shadow_type == Spark::DISABLED_SHADOW)
+          auto shadow_mode = render_3d_broker->GetShadowMode();
+          if (shadow_mode == Render3DBroker::NO_SHADOW)
           {
-            shadow_type = Spark::CUBEMAP_SHADOW;
-            mode_name = "Cubemap Shadow";
+            shadow_mode = Render3DBroker::CUBEMAP_SHADOW;
+            shadow_name = "Cubemap Shadow";
           }
-          else if (shadow_type == Spark::CUBEMAP_SHADOW)
+          else if (shadow_mode == Render3DBroker::CUBEMAP_SHADOW)
           {
-            shadow_type = Spark::SW_TRACED_SHADOW;
-            mode_name = "SW Traced Shadow";
+            shadow_mode = Render3DBroker::SW_TRACED_SHADOW;
+            shadow_name = "SW Traced Shadow";
           }
-          else if (shadow_type == Spark::SW_TRACED_SHADOW)
+          else if (shadow_mode == Render3DBroker::SW_TRACED_SHADOW)
           {
-            shadow_type = Spark::HW_TRACED_SHADOW;
-            mode_name = "HW Traced Shadow";
+            shadow_mode = Render3DBroker::HW_TRACED_SHADOW;
+            shadow_name = "HW Traced Shadow";
           }
-          else if (shadow_type == Spark::HW_TRACED_SHADOW)
+          else if (shadow_mode == Render3DBroker::HW_TRACED_SHADOW)
           {
-            shadow_type = Spark::DISABLED_SHADOW;
-            mode_name = "Disabled Shadow";
+            shadow_mode = Render3DBroker::NO_SHADOW;
+            shadow_name = "No Shadow";
           }
-          spark->SetShadowType(shadow_type);
+          render_3d_broker->SetShadowMode(shadow_mode);
           change_spark = false;
         }
 
@@ -608,12 +608,8 @@ namespace RayGene3D
           change_spark = true;
         }
 
-
-
-
-
-        spark->Use();
-        imgui->Use();
+        render_3d_broker->Use();
+        render_ui_broker->Use();
 
         wrap->Use();
 
@@ -626,7 +622,7 @@ namespace RayGene3D
           const auto adapter_name = wrap->GetCore()->GetDevice()->GetName();
 
           std::stringstream ss;
-          ss << app_name << " [" << mode_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
+          ss << app_name << " [" << shadow_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
           glfwSetWindowTitle(glfw, ss.str().c_str());
 
           frame_counter = 0;
@@ -637,8 +633,12 @@ namespace RayGene3D
 
     void Discard()
     {
-      spark.reset();
-      imgui.reset();
+      render_3d_broker.reset();
+      render_ui_broker.reset();
+
+      const auto device = wrap->GetCore()->GetDevice().get();
+      const auto backbuffer_resource = device->GetScreen();
+      device->DestroyResource(backbuffer_resource);
 
       wrap->Discard();
 
@@ -655,17 +655,12 @@ namespace RayGene3D
 
     ~GLFWWrapper()
     {
-        wrap.reset();
+      wrap.reset();
 
       glfwTerminate();
     }
   };
 }
-
-
-
-
-
 
 int main(int argc, char** argv)
 {
