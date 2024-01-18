@@ -668,9 +668,9 @@ namespace RayGene3D
         const auto texture_0_id = gltf_material.pbrMetallicRoughness.baseColorTexture.index;
         instance.texture0_idx = texture_0_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_0_indices, texture_0_id);
         const auto texture_1_id = gltf_material.emissiveTexture.index;
-        instance.texture1_idx == -1 ? uint32_t(-1) : tex_reindex_fn(texture_1_indices, texture_1_id);
+        instance.texture1_idx = texture_1_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_1_indices, texture_1_id);
         const auto texture_2_id = gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index;
-        instance.texture2_idx == -1 ? uint32_t(-1) : tex_reindex_fn(texture_2_indices, texture_2_id);
+        instance.texture2_idx = texture_2_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_2_indices, texture_2_id);
         const auto texture_3_id = gltf_material.normalTexture.index;
         instance.texture3_idx = texture_3_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_3_indices, texture_3_id);
 

@@ -1,3 +1,11 @@
+#define kDielectricSpec float4(0.04, 0.04, 0.04, 1.0 - 0.04)
+
+float OneMinusReflectivityMetallic(float metallic)
+{
+    float oneMinusDielectricSpec = kDielectricSpec.a;
+    return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
+}
+
 struct BRDF_Lambert
 {
   float3 color;
