@@ -125,8 +125,7 @@ namespace RayGene3D
       Usage(USAGE_CONSTANT_DATA)
     );
     auto shadowed_shadow_data = scope.shadow_data->CreateView("spark_shadowed_shadow_data",
-      Usage(USAGE_CONSTANT_DATA),
-      { 0, uint32_t(sizeof(Frustum)) }
+      Usage(USAGE_CONSTANT_DATA)
     );
     const std::shared_ptr<View> ub_views[] = {
       shadowed_screen_data,
@@ -169,23 +168,22 @@ namespace RayGene3D
     );
   }
 
-  void CubemapShadow::CreateShadowmapPass(uint32_t index)
+  void CubemapShadow::CreateShadowmapPass()
   {
     const auto extent_x = scope.shadow_resolution;
     const auto extent_y = scope.shadow_resolution;
     const auto extent_z = 1u;
 
-    auto shadowmap_shadow_map = scope.shadow_map->CreateView("spark_shadowmap_shadow_map_" + std::to_string(index),
+    auto shadowmap_shadow_map = scope.shadow_map->CreateView("spark_shadowmap_shadow_map",
       Usage(USAGE_DEPTH_STENCIL),
-      { 0u, uint32_t(-1) },
-      { index, 1u }
+      { 0u, uint32_t(-1) }
     );
 
     const Pass::DSAttachment ds_attachments[] = {
       { shadowmap_shadow_map, { 1.0f, std::nullopt }},
     };
 
-    shadowmap_passes[index] = scope.core->GetDevice()->CreatePass("spark_shadowmap_pass_" + std::to_string(index),
+    shadowmap_pass = scope.core->GetDevice()->CreatePass("spark_shadowmap_pass",
       Pass::TYPE_GRAPHIC,
       {},
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
@@ -193,7 +191,7 @@ namespace RayGene3D
   }
 
 
-  void CubemapShadow::CreateShadowmapTechnique(uint32_t index)
+  void CubemapShadow::CreateShadowmapTechnique()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
@@ -233,7 +231,7 @@ namespace RayGene3D
       }
     };
 
-    shadowmap_techniques[index] = shadowmap_passes[index]->CreateTechnique("spark_shadowmap_technique" + std::to_string(index),
+    shadowmap_technique = shadowmap_pass->CreateTechnique("spark_shadowmap_technique",
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS),
       {},
@@ -244,21 +242,21 @@ namespace RayGene3D
     );
   }
 
-  void CubemapShadow::CreateShadowmapBatch(uint32_t index)
+  void CubemapShadow::CreateShadowmapBatch()
   {
     const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
     auto entities = std::vector<Batch::Entity>(count);
     for (auto i = 0u; i < count; ++i)
     {
-      const auto shadowmap_scene_vertices = scope.scene_vertices->CreateView("spark_shadowmap_scene_vertices_" + std::to_string(index) + "_" + std::to_string(i),
+      const auto shadowmap_scene_vertices = scope.scene_vertices->CreateView("spark_shadowmap_scene_vertices_" + std::to_string(i),
         Usage(USAGE_VERTEX_ARRAY)
       );
 
-      const auto shadowmap_scene_triangles = scope.scene_triangles->CreateView("spark_shadowmap_scene_triangles_" + std::to_string(index) + "_" + std::to_string(i),
+      const auto shadowmap_scene_triangles = scope.scene_triangles->CreateView("spark_shadowmap_scene_triangles_" + std::to_string(i),
         Usage(USAGE_INDEX_ARRAY)
       );
 
-      const auto shadowmap_graphic_arguments = scope.graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(index) + "_" + std::to_string(i),
+      const auto shadowmap_graphic_arguments = scope.graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(i),
         Usage(USAGE_ARGUMENT_INDIRECT),
         { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
       );
@@ -266,7 +264,7 @@ namespace RayGene3D
       const auto& ins_range = View::Range{ 0u,  1u };
       const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
       const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-      const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* index, 0u, 0u, 0u };
+      const auto& sb_offset = std::nullopt;
       const auto& push_data = std::nullopt;
 
       entities[i] = {
@@ -281,20 +279,20 @@ namespace RayGene3D
       };
     }
 
-    auto shadowmap_shadow_data = scope.shadow_data->CreateView("spark_shadowmap_shadow_data" + std::to_string(index),
+    auto shadowmap_shadow_data = scope.shadow_data->CreateView("spark_shadowmap_shadow_data",
       USAGE_CONSTANT_DATA,
       { 0u, uint32_t(sizeof(Frustum)) }
     );
 
-    const std::shared_ptr<View> sb_views[] = {
+    const std::shared_ptr<View> ub_views[] = {
       shadowmap_shadow_data,
     };
 
-    shadowmap_batches[index] = shadowmap_techniques[index]->CreateBatch("spark_shadowmap_batch" + std::to_string(index),
+    shadowmap_batch = shadowmap_technique->CreateBatch("spark_shadowmap_batch",
       { entities.data(), uint32_t(entities.size()) },
       {},
+      { ub_views, uint32_t(std::size(ub_views)) },
       {},
-      { sb_views, uint32_t(std::size(sb_views)) },
       {},
       {},
       {},
@@ -303,22 +301,22 @@ namespace RayGene3D
   }
 
 
-  void CubemapShadow::DestroyShadowmapBatch(uint32_t index)
+  void CubemapShadow::DestroyShadowmapBatch()
   {
-    shadowmap_techniques[index]->DestroyBatch(shadowmap_batches[index]);
-    shadowmap_batches[index].reset();
+    shadowmap_technique->DestroyBatch(shadowmap_batch);
+    shadowmap_batch.reset();
   }
 
-  void CubemapShadow::DestroyShadowmapTechnique(uint32_t index)
+  void CubemapShadow::DestroyShadowmapTechnique()
   {
-    shadowmap_passes[index]->DestroyTechnique(shadowmap_techniques[index]);
-    shadowmap_techniques[index].reset();
+    shadowmap_pass->DestroyTechnique(shadowmap_technique);
+    shadowmap_technique.reset();
   }
 
-  void CubemapShadow::DestroyShadowmapPass(uint32_t index)
+  void CubemapShadow::DestroyShadowmapPass()
   {
-    scope.core->GetDevice()->DestroyPass(shadowmap_passes[index]);
-    shadowmap_passes[index].reset();
+    scope.core->GetDevice()->DestroyPass(shadowmap_pass);
+    shadowmap_pass.reset();
   }
 
   void CubemapShadow::DestroyShadowedBatch()
@@ -341,10 +339,7 @@ namespace RayGene3D
 
   void CubemapShadow::Enable()
   {
-    for (auto i = 0u; i < 6u; ++i)
-    {
-      shadowmap_passes[i]->SetEnabled(true);
-    }
+    shadowmap_pass->SetEnabled(true);
     geometry_pass->SetEnabled(true);
     shadowed_pass->SetEnabled(true);
     present_pass->SetEnabled(true);
@@ -352,10 +347,8 @@ namespace RayGene3D
 
   void CubemapShadow::Disable()
   {
-    for (auto i = 0u; i < 6u; ++i)
-    {
-      shadowmap_passes[i]->SetEnabled(false);
-    }
+
+    shadowmap_pass->SetEnabled(false);
     geometry_pass->SetEnabled(false);
     shadowed_pass->SetEnabled(false);
     present_pass->SetEnabled(false);
@@ -364,12 +357,10 @@ namespace RayGene3D
   CubemapShadow::CubemapShadow(const Render3DScope& scope)
     : Render3DMode(scope)
   {
-    for (auto i = 0u; i < 6u; ++i)
-    {
-      CreateShadowmapPass(i);
-      CreateShadowmapTechnique(i);
-      CreateShadowmapBatch(i);
-    }
+
+    CreateShadowmapPass();
+    CreateShadowmapTechnique();
+    CreateShadowmapBatch();
 
     CreateGeometryPass();
     CreateGeometryTechnique();
@@ -404,11 +395,8 @@ namespace RayGene3D
     DestroyGeometryTechnique();
     DestroyGeometryPass();
 
-    for (auto i = 0u; i < 6u; ++i)
-    {
-      DestroyShadowmapBatch(i);
-      DestroyShadowmapTechnique(i);
-      DestroyShadowmapPass(i);
-    }
+    DestroyShadowmapBatch();
+    DestroyShadowmapTechnique();
+    DestroyShadowmapPass();
   }
 }

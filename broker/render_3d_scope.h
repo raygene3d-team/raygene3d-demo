@@ -47,6 +47,10 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_lookat;
     std::shared_ptr<Property> prop_up;
 
+    std::shared_ptr<Property> prop_thetha;
+    std::shared_ptr<Property> prop_phi;
+    std::shared_ptr<Property> prop_intensity;
+
     std::shared_ptr<Property> prop_fov_x;
     std::shared_ptr<Property> prop_fov_y;
 

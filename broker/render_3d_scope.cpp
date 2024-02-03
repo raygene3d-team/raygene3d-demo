@@ -38,7 +38,7 @@ namespace RayGene3D
       {
         Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
         1,
-        6,
+        1,
         FORMAT_D16_UNORM,
         shadow_resolution,
         shadow_resolution,
@@ -140,7 +140,7 @@ namespace RayGene3D
       {
         Usage(USAGE_CONSTANT_DATA),
         uint32_t(sizeof(Frustum)),
-        6,
+        1,
       },
       Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
       );
