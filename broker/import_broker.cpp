@@ -680,15 +680,16 @@ namespace RayGene3D
       for (uint32_t k = 0; k < uint32_t(gltf_mesh.primitives.size()); ++k)
       {
         const auto& gltf_primitive = gltf_mesh.primitives[k];
-        const auto [instance_vertices, instance_triangles, bb_min, bb_max] = instance_convert_fn(gltf_primitive, position_scale, coordinate_flip, false);
+        const auto [instance_vertices, instance_triangles, instance_bb_min, instance_bb_max] = 
+          instance_convert_fn(gltf_primitive, position_scale, coordinate_flip, false);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
 
         Instance instance;
-        instance.transform;
+        instance.transform = glm::identity<glm::fmat3x4>();
         instance.geometry_idx = uint32_t(instances.size());
-        instance.bb_min = bb_min;
-        instance.bb_max = bb_max;
+        instance.bb_min = instance_bb_min;
+        instance.bb_max = instance_bb_max;
         //instance.debug_color{ 0.0f, 0.0f, 0.0f };
 
         const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
@@ -837,7 +838,7 @@ namespace RayGene3D
         );
         const auto tc0_transform = true ? flip_v_tranform : glm::identity<glm::fmat2x2>();
 
-        const auto [instance_vertices, instance_triangles, bb_min, bb_max] = PopulateInstance(idx_count, idx_align,
+        const auto [instance_vertices, instance_triangles, instance_bb_min, instance_bb_max] = PopulateInstance(idx_count, idx_align,
           pos_transform, nrm_transform, tc0_transform,
           pos_data, pos_stride, pos_idx_data, pos_idx_stride,
           nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
@@ -850,10 +851,10 @@ namespace RayGene3D
         BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instances.size(), vertices_count, triangles_count);
 
         Instance instance;
-        instance.transform;
+        instance.transform = glm::identity<glm::fmat3x4>();
         instance.geometry_idx = uint32_t(instances.size());
-        instance.bb_min = bb_min;
-        instance.bb_max = bb_max;
+        instance.bb_min = instance_bb_min;
+        instance.bb_max = instance_bb_max;
         //instance.debug_color{ 0.0f, 0.0f, 0.0f };
 
         const auto& obj_material = obj_materials[material_id.first];

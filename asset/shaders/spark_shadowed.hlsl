@@ -38,7 +38,7 @@ VK_BINDING(3) cbuffer constant2 : register(b2)
 VK_BINDING(4) Texture2D<float4> gbuffer_0_texture : register(t0);
 VK_BINDING(5) Texture2D<float4> gbuffer_1_texture : register(t1);
 VK_BINDING(6) Texture2D<float> depth_texture : register(t2);
-VK_BINDING(7) TextureCube<float> shadow_map  : register(t3);
+VK_BINDING(7) Texture2D<float> shadow_map  : register(t3);
 
 
 static const float4x4 poisson_disk = float4x4(
@@ -67,7 +67,7 @@ float Shadow(const float3 w_pos)
   const float3 dx = normalize(cross(tc, w_pos - view_pos));
   const float3 dy = normalize(cross(tc, dx));
 
-  const float d = shadow_map.Sample(sampler0, normalize(tc));
+  const float d = shadow_map.Sample(sampler0, normalize(tc).xy);
 
   const float cd = far * (1.0 - near / (dot(tk, atc))) / (far - near);
   const float blur_radius = 0.005;

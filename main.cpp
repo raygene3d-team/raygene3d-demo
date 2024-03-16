@@ -490,11 +490,11 @@ namespace RayGene3D
 
       lighting_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
-        const auto lighting_thetha = config_property->GetObjectItem("lighting")->GetObjectItem("thetha");
+        const auto lighting_theta = config_property->GetObjectItem("lighting")->GetObjectItem("theta");
         const auto lighting_phi = config_property->GetObjectItem("lighting")->GetObjectItem("phi");
         const auto lighting_intensity = config_property->GetObjectItem("lighting")->GetObjectItem("intensity");
 
-        lighting_property->SetObjectItem("thetha", lighting_thetha);
+        lighting_property->SetObjectItem("theta", lighting_theta);
         lighting_property->SetObjectItem("phi", lighting_phi);
         lighting_property->SetObjectItem("intensity", lighting_intensity);
       }

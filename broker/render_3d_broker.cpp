@@ -142,44 +142,37 @@ namespace RayGene3D
     }
 
     {
-      const auto proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.01f, 100.0f);
-      const auto proj_inv = glm::inverse(proj);
-
-      const auto x = glm::f32vec3{ 1.0f, 0.0f, 0.0f };
-      const auto y = glm::f32vec3{ 0.0f, 1.0f, 0.0f };
-      const auto z = glm::f32vec3{ 0.0f, 0.0f, 1.0f };
-
-      Frustum shadow_frustums[6];
-      for (uint32_t i = 0; i < 6; ++i)
+      auto bb_min = glm::f32vec3( FLT_MAX, FLT_MAX, FLT_MAX);
+      auto bb_max = glm::f32vec3(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+      const auto [instance_data, instance_count] = scope.prop_instances->GetTypedBytes<Instance>(0);
+      for (uint32_t i = 0; i < instance_count; ++i)
       {
-        auto view = glm::f32mat4x4(1.0);
-
-        switch (i)
-        {
-        case 0:
-          view = glm::lookAt(scope.light_position, scope.light_position + x, y); break;
-        case 1:
-          view = glm::lookAt(scope.light_position, scope.light_position - x, y); break;
-        case 2:
-          view = glm::lookAt(scope.light_position, scope.light_position + y,-z); break;
-        case 3:
-          view = glm::lookAt(scope.light_position, scope.light_position - y, z); break;
-        case 4:
-          view = glm::lookAt(scope.light_position, scope.light_position + z, y); break;
-        case 5:
-          view = glm::lookAt(scope.light_position, scope.light_position - z, y); break;
-        };
-
-        const auto view_inv = glm::inverse(view);
-
-        shadow_frustums[i].view = view;
-        shadow_frustums[i].view_inv = view_inv;
-        shadow_frustums[i].proj = proj;
-        shadow_frustums[i].proj_inv = proj_inv;
+        bb_min = glm::min(bb_min, instance_data[i].bb_min); 
+        bb_max = glm::max(bb_max, instance_data[i].bb_max);
       }
 
+      const auto bb_center = 0.5f * (bb_max + bb_min);
+      const auto bb_extent = 0.5f * (bb_max - bb_min);
+
+      const auto radius = glm::length(bb_extent);
+      const auto proj = glm::ortho(-radius, radius,-radius, radius);
+      const auto proj_inv = glm::inverse(proj);
+
+      const auto theta = scope.prop_theta->GetReal();
+      const auto phi = scope.prop_phi->GetReal();
+
+      const auto direction = glm::polar(glm::f32vec3(theta, phi, 1.0f));
+      const auto view = glm::lookAt(bb_center - direction, bb_center, glm::f32vec3{ 0.0f, 1.0f, 0.0f });
+      const auto view_inv = glm::inverse(view);
+
+      Frustum shadow_frustum;
+      shadow_frustum.view = view;
+      shadow_frustum.view_inv = view_inv;
+      shadow_frustum.proj = proj;
+      shadow_frustum.proj_inv = proj_inv;
+
       auto shadow_mapped = scope.shadow_data->Map();
-      memcpy(shadow_mapped, &shadow_frustums, sizeof(Frustum) * 6);
+      memcpy(shadow_mapped, &shadow_frustum, sizeof(Frustum));
       scope.shadow_data->Unmap();
     }
   }

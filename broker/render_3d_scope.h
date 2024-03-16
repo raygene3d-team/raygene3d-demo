@@ -41,15 +41,12 @@ namespace RayGene3D
   public:
     std::shared_ptr<Property> prop_scene;
     std::shared_ptr<Property> prop_camera;
+    std::shared_ptr<Property> prop_lighting;
     //std::shared_ptr<Property> prop_environment;
 
     std::shared_ptr<Property> prop_eye;
     std::shared_ptr<Property> prop_lookat;
     std::shared_ptr<Property> prop_up;
-
-    std::shared_ptr<Property> prop_thetha;
-    std::shared_ptr<Property> prop_phi;
-    std::shared_ptr<Property> prop_intensity;
 
     std::shared_ptr<Property> prop_fov_x;
     std::shared_ptr<Property> prop_fov_y;
@@ -61,6 +58,10 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_f_plane;
 
     std::shared_ptr<Property> prop_counter;
+
+    std::shared_ptr<Property> prop_theta;
+    std::shared_ptr<Property> prop_phi;
+    std::shared_ptr<Property> prop_intensity;
 
     std::shared_ptr<Property> prop_instances;
     std::shared_ptr<Property> prop_triangles;

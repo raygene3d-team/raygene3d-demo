@@ -143,10 +143,7 @@ namespace RayGene3D
       Usage(USAGE_SHADER_RESOURCE)
     );
     auto shadowed_shadow_map = scope.shadow_map->CreateView("spark_shadowed_shadow_map",
-      Usage(USAGE_SHADER_RESOURCE),
-      { 0u, uint32_t(-1) },
-      { 0u, uint32_t(-1) },
-      View::Bind(View::BIND_CUBEMAP_LAYER)
+      Usage(USAGE_SHADER_RESOURCE)
     );
     const std::shared_ptr<View> ri_views[] = {
       shadowed_gbuffer_0_texture,

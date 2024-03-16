@@ -42,9 +42,8 @@ namespace RayGene3D
         FORMAT_D16_UNORM,
         shadow_resolution,
         shadow_resolution,
-      },
-      Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE)
-      );
+      }
+    );
   }
 
   void Render3DScope::CreateColorTarget()
@@ -816,6 +815,13 @@ namespace RayGene3D
       prop_f_plane = prop_camera->GetObjectItem("f_plane");
 
       prop_counter = prop_camera->GetObjectItem("counter");
+    }
+
+    prop_lighting = util->GetStorage()->GetTree()->GetObjectItem("lighting_property");
+    {
+      prop_theta = prop_lighting->GetObjectItem("theta");
+      prop_phi = prop_lighting->GetObjectItem("phi");
+      prop_intensity = prop_lighting->GetObjectItem("intensity");
     }
 
     prop_skybox = util->GetStorage()->GetTree()->GetObjectItem("environment_property");
