@@ -136,7 +136,7 @@ namespace RayGene3D
     SPtrResource compute_arguments;
 
   public:
-    uint32_t shadow_resolution{ 1024 };
+    uint32_t shadow_resolution{ 4096 };
     uint32_t reflection_probe_size{ 1024 };
     glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
 

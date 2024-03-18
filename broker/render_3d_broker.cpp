@@ -155,14 +155,14 @@ namespace RayGene3D
       const auto bb_extent = 0.5f * (bb_max - bb_min);
 
       const auto radius = glm::length(bb_extent);
-      const auto proj = glm::ortho(-radius, radius,-radius, radius);
+      const auto proj = glm::ortho(-radius, radius,-radius, radius, 0.01f, 2.0f * radius);
       const auto proj_inv = glm::inverse(proj);
 
-      const auto theta = scope.prop_theta->GetReal();
-      const auto phi = scope.prop_phi->GetReal();
-
-      const auto direction = glm::polar(glm::f32vec3(theta, phi, 1.0f));
-      const auto view = glm::lookAt(bb_center - direction, bb_center, glm::f32vec3{ 0.0f, 1.0f, 0.0f });
+      const auto phi = glm::radians(scope.prop_phi->GetReal());
+      const auto theta = glm::radians(scope.prop_theta->GetReal());
+      
+      const auto direction = glm::euclidean(glm::f32vec2(phi, theta));
+      const auto view = glm::lookAt(bb_center + direction * (radius + 0.01f), bb_center, glm::f32vec3{ 0.0f, 1.0f, 0.0f });
       const auto view_inv = glm::inverse(view);
 
       Frustum shadow_frustum;

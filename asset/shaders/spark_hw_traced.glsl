@@ -188,7 +188,7 @@ void main()
 
   const vec3 shadow_pos = vec3(shadow.shadow_view_inv[3][0], shadow.shadow_view_inv[3][1], shadow.shadow_view_inv[3][2]);
   const float shadow_dst = length(shadow_pos - surface_pos);
-  const vec3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
+  const vec3 shadow_dir =-vec3(shadow.shadow_view_inv[2][0], shadow.shadow_view_inv[2][1], shadow.shadow_view_inv[2][2]);
 
   Ray ray;
   ray.org = surface_pos;

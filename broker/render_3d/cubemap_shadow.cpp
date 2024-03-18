@@ -153,7 +153,7 @@ namespace RayGene3D
     };
 
     const Batch::Sampler samplers[] = {
-      { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_ALWAYS, {0.0f, 0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f },
+      { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_CLAMP, Batch::Sampler::COMPARISON_LESS },
     };
 
     shadowed_batch = shadowed_technique->CreateBatch("spark_shadowed_batch",

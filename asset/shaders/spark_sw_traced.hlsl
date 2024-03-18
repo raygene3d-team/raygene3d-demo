@@ -305,7 +305,7 @@ PSOutput ps_main(PSInput input)
 
   const float3 shadow_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
   const float shadow_dst = length(shadow_pos - surface_pos);
-  const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
+  const float3 shadow_dir =-float3(shadow_view_inv[0][2], shadow_view_inv[1][2], shadow_view_inv[2][2]);
 
   Ray ray;
   ray.org = surface_pos;

@@ -11,8 +11,8 @@
   	"quality": 10
   },
   "lighting": {
-    "theta": 80.0,
-    "phi": 30.0,
+    "phi": 45.0,
+    "theta": 105.0,
     "intensity": 1.0
   },
   "camera": {

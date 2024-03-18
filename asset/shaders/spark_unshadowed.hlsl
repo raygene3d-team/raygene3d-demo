@@ -100,7 +100,7 @@ PSOutput ps_main(PSInput input)
 
   const float3 shadow_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
   const float shadow_dst = length(shadow_pos - surface_pos);
-  const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
+  const float3 shadow_dir =-float3(shadow_view_inv[0][2], shadow_view_inv[1][2], shadow_view_inv[2][2]); //(shadow_pos - surface_pos) / shadow_dst;
 
   const float3 diffuse = max(0.0, dot(shadow_dir, normal)) * albedo_metallic.xyz;
   const float3 specular = pow(max(0.0, dot(normalize(camera_dir + shadow_dir), normal)), smoothness);
@@ -117,19 +117,19 @@ PSOutput ps_main(PSInput input)
   const float3 b = normalize(cross(n, t));
   const float3x3 tbn = float3x3(t, b, n);
 
-  const float3 wo = transpose(tbn) * shadow_dir;
-  const float3 lo = transpose(tbn) * camera_dir;
+  const float3 wo = mul((tbn), shadow_dir);
+  const float3 lo = mul((tbn), camera_dir);
 
   const float3 m = Evaluate_CookTorrance(brdf, lo, wo) * brdf.color;
 
   const float oneMinusReflectivity = OneMinusReflectivityMetallic(brdf.metallic);
   const float reflectivity = 1.0 - oneMinusReflectivity;
 
-  const float3 diff = brdf.color * oneMinusReflectivity * max(0.0, wo.z);
+  const float3 diff = brdf.color * oneMinusReflectivity;
   const float3 spec = lerp(kDielectricSpec.rgb, m, metallic);
 
-  const float3 color = diffuse * attenuation;
-  output.target_0 = float4(diff + spec, 1.0);
+  const float3 color = (diff + spec) * attenuation * max(0.0, wo.z);
+  output.target_0 = float4(color, 1.0);
   
   return output;
 }

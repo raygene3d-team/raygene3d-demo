@@ -96,7 +96,7 @@ float3 Evaluate_CookTorrance(BRDF_CookTorrance brdf, float3 lo, float3 wo)
   const float normalizationTerm = brdf.roughness * 4.0 + 2.0;
   const float roughness2MinusOne = roughness2 - 1.0;
 
-  const float NoL = lo.z;
+  //const float NoL = max(0.0, wo.z);
   //half3 radiance = lightColor * (lightAttenuation * NdotL);
 
   //float3 lightDirectionWSFloat3 = float3(lightDirectionWS);
