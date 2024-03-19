@@ -8,6 +8,8 @@
 
 #include "packing.hlsl"
 #include "traverse.hlsl"
+#include "surface.hlsl"
+#include "brdf.hlsl"
 
 VK_BINDING(0) cbuffer constant0 : register(b0)
 {
@@ -316,8 +318,31 @@ PSOutput ps_main(PSInput input)
   const float3 diffuse = max(0.0, dot(shadow_dir, normal)) * albedo_metallic.xyz;
   const float3 specular = pow(max(0.0, dot(normalize(camera_dir + shadow_dir), normal)), smoothness);
   const float attenuation = OccludeScene(ray) ? 0.0 : 1.0;
+  
+  BRDF_CookTorrance brdf; // = Initialize_CookTorrance();
+  brdf.color = albedo_metallic.xyz;
+  brdf.roughness = clamp(normal_smoothness.w, 0.001, 0.999);
+  brdf.metallic = albedo_metallic.w;
 
-  const float3 color = diffuse * attenuation;
+  const float3 n = normalize(normal.xyz);
+  const float3 t = normalize(n.y * n.y > n.x * n.x ? float3(0.0, -n.z, n.y) : float3(-n.z, 0.0, n.x));
+  const float3 b = normalize(cross(n, t));
+  const float3x3 tbn = float3x3(t, b, n);
+
+  const float3 wo = mul((tbn), shadow_dir);
+  const float3 lo = mul((tbn), camera_dir);
+
+  const float3 m = Evaluate_CookTorrance(brdf, lo, wo) * brdf.color;
+
+  const float oneMinusReflectivity = OneMinusReflectivityMetallic(brdf.metallic);
+  const float reflectivity = 1.0 - oneMinusReflectivity;
+
+  const float3 diff = brdf.color * oneMinusReflectivity;
+  const float3 spec = lerp(kDielectricSpec.rgb, m, metallic);
+
+  const float3 color = (diff + spec) * max(0.0, wo.z) * attenuation;
+
+  //const float3 color = attenuation;
   output.target_0 = float4(color, 1.0);
   
   return output;
