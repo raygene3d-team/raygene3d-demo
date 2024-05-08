@@ -10,6 +10,11 @@
   	"exposure": 1.0,
   	"quality": 10
   },
+  "lighting": {
+    "phi": 65.0,
+    "theta": 75.0,
+    "intensity": 1.0
+  },
   "camera": {
     "eye": [8.2, 5.9, 0.1],
     "lookat": [8.0, 5.9, 0.1],
