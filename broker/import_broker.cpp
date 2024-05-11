@@ -833,8 +833,8 @@ namespace RayGene3D
         const auto pos_transform = nrm_transform * position_scale;
 
         const auto flip_v_tranform = glm::fmat2x2(
-          0.0f,-1.0f,
-          1.0f, 0.0f
+          1.0f, 0.0f,
+          0.0f,-1.0f
         );
         const auto tc0_transform = true ? flip_v_tranform : glm::identity<glm::fmat2x2>();
 
