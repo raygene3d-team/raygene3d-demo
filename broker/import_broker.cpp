@@ -53,56 +53,96 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  std::pair<std::vector<Vertex>, std::vector<Triangle>> PopulateInstance(uint32_t count, uint32_t align, float scale, bool z_up, bool flip_v,
+  std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t count, uint32_t align,
+    const glm::fmat3x3& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
     std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_id_stride,
     std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_id_stride,
-    std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_id_stride,
-    uint32_t& degenerated_geom_tris_count, uint32_t degenerated_wrap_tris_count)
+    std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_id_stride)
   {
+    const auto create_vertex_fn = [align,
+      pos_transform, nrm_transform, tc0_transform,
+      pos_data, pos_stride, pos_idx_data, pos_id_stride,
+      nrm_data, nrm_stride, nrm_idx_data, nrm_id_stride,
+      tc0_data, tc0_stride, tc0_idx_data, tc0_id_stride]
+      (uint32_t index)
+    {
+      const auto pos_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(pos_idx_data.first + pos_id_stride * index))
+        : align == 2 ? *(reinterpret_cast<const uint16_t*>(pos_idx_data.first + pos_id_stride * index))
+        : align == 1 ? *(reinterpret_cast<const uint8_t*>(pos_idx_data.first + pos_id_stride * index))
+        : -1;
+      const auto pos_ptr = reinterpret_cast<const float*>(pos_data.first + pos_stride * pos_idx);
+      const auto& pos = glm::fvec3(pos_ptr[0], pos_ptr[1], pos_ptr[2]);
+
+      const auto nrm_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(nrm_idx_data.first + nrm_id_stride * index))
+        : align == 2 ? *(reinterpret_cast<const uint16_t*>(nrm_idx_data.first + nrm_id_stride * index))
+        : align == 1 ? *(reinterpret_cast<const uint8_t*>(nrm_idx_data.first + nrm_id_stride * index))
+        : -1;
+      const auto nrm_ptr = reinterpret_cast<const float*>(nrm_data.first + nrm_stride * nrm_idx);
+      const auto& nrm = glm::fvec3(nrm_ptr[0], nrm_ptr[1], nrm_ptr[2]);
+
+      const auto tc0_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(tc0_idx_data.first + tc0_id_stride * index))
+        : align == 2 ? *(reinterpret_cast<const uint16_t*>(tc0_idx_data.first + tc0_id_stride * index))
+        : align == 1 ? *(reinterpret_cast<const uint8_t*>(tc0_idx_data.first + tc0_id_stride * index))
+        : -1;
+      const auto tc0_ptr = reinterpret_cast<const float*>(tc0_data.first + tc0_stride * tc0_idx);
+      const auto& tc0 = glm::f32vec2(tc0_ptr[0], tc0_ptr[1]);
+
+      Vertex vertex;
+
+      vertex.pos = pos_transform * glm::fvec3{ pos.x, pos.y, pos.z };
+      vertex.nrm = nrm_transform * glm::normalize(glm::fvec3{ nrm.x, nrm.y, nrm.z });
+      vertex.tc0 = tc0_transform * glm::f32vec2(tc0.x, tc0.y);
+
+      return vertex;
+    };
+
+    const auto hash_vertex_fn = [](const Vertex& vertex)
+    {
+      const auto uref = reinterpret_cast<const glm::u32vec4*>(&vertex);
+
+      auto hash = 0u;
+      hash ^= std::hash<glm::u32vec4>()(uref[0]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+      hash ^= std::hash<glm::u32vec4>()(uref[1]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+      hash ^= std::hash<glm::u32vec4>()(uref[2]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+      hash ^= std::hash<glm::u32vec4>()(uref[3]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+
+      return hash;
+    };
+
+    const auto compare_vertex_fn = [](const Vertex& l, const Vertex& r) { return (memcmp(&l, &r, sizeof(Vertex)) == 0); };
+    std::unordered_map<Vertex, uint32_t, decltype(hash_vertex_fn), decltype(compare_vertex_fn)> vertex_map(8, hash_vertex_fn, compare_vertex_fn);
+
+    const auto remap_vertex_fn = [&vertex_map](std::vector<Vertex>& vertices, const Vertex& vertex)
+    {
+      const auto result = vertex_map.emplace(vertex, uint32_t(vertices.size()));
+      if (result.second)
+      {
+        vertices.push_back(vertex);
+      }
+      return result.first->second;
+    };
+
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
+    auto bb_min = glm::fvec3{ FLT_MAX, FLT_MAX, FLT_MAX };
+    auto bb_max = glm::fvec3{-FLT_MAX,-FLT_MAX,-FLT_MAX };
+
+    auto degenerated_geom_tris_count = 0u;
+    auto degenerated_wrap_tris_count = 0u;
 
     for (uint32_t k = 0; k < count / 3; ++k)
     {
-      const auto create_vertex_fn = [align, scale, z_up, flip_v,
-        pos_data, pos_stride, pos_idx_data, pos_id_stride,
-        nrm_data, nrm_stride, nrm_idx_data, nrm_id_stride,
-        tc0_data, tc0_stride, tc0_idx_data, tc0_id_stride]
-        (uint32_t index)
-      {
-        const auto pos_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(pos_idx_data.first + pos_id_stride * index))
-                           : align == 2 ? *(reinterpret_cast<const uint16_t*>(pos_idx_data.first + pos_id_stride * index))
-                           : align == 1 ? *(reinterpret_cast<const uint8_t *>(pos_idx_data.first + pos_id_stride * index))
-                           : -1;
-        const auto pos_ptr = reinterpret_cast<const float*>(pos_data.first + pos_stride * pos_idx);
-        const auto& pos = glm::fvec3(pos_ptr[0], pos_ptr[1], pos_ptr[2]);
-
-        const auto nrm_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(nrm_idx_data.first + nrm_id_stride * index))
-                           : align == 2 ? *(reinterpret_cast<const uint16_t*>(nrm_idx_data.first + nrm_id_stride * index))
-                           : align == 1 ? *(reinterpret_cast<const uint8_t *>(nrm_idx_data.first + nrm_id_stride * index))
-                           : -1;
-        const auto nrm_ptr = reinterpret_cast<const float*>(nrm_data.first + nrm_stride * nrm_idx);
-        const auto& nrm = glm::fvec3(nrm_ptr[0], nrm_ptr[1], nrm_ptr[2]);
-        
-        const auto tc0_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(tc0_idx_data.first + tc0_id_stride * index))
-                           : align == 2 ? *(reinterpret_cast<const uint16_t*>(tc0_idx_data.first + tc0_id_stride * index))
-                           : align == 1 ? *(reinterpret_cast<const uint8_t *>(tc0_idx_data.first + tc0_id_stride * index))
-                           : -1;
-        const auto tc0_ptr = reinterpret_cast<const float*>(tc0_data.first + tc0_stride * tc0_idx);
-        const auto& tc0 = glm::f32vec2(tc0_ptr[0], tc0_ptr[1]);
-
-        Vertex vertex;
-
-        vertex.pos = scale * (z_up ? glm::fvec3{ pos.x,-pos.z, pos.y } : glm::fvec3{ pos.x, pos.y, pos.z });
-        vertex.nrm = glm::normalize(z_up ? glm::fvec3{ nrm.x,-nrm.z, nrm.y } : glm::fvec3{ nrm.x, nrm.y, nrm.z });
-        vertex.tc0 = flip_v ? glm::f32vec2(tc0.x,-tc0.y) : glm::f32vec2(tc0.x, tc0.y);
-
-        return vertex;
-      };
-
       const auto vtx0 = create_vertex_fn(k * 3 + 0);
+      bb_min = glm::min(bb_min, vtx0.pos);
+      bb_max = glm::max(bb_max, vtx0.pos);
+
       const auto vtx1 = create_vertex_fn(k * 3 + 1);
-      const auto vtx2 = create_vertex_fn(k * 3 + 2);
+      bb_min = glm::min(bb_min, vtx1.pos);
+      bb_max = glm::max(bb_max, vtx1.pos);
+      
+      const auto vtx2 = create_vertex_fn(k * 3 + 2);      
+      bb_min = glm::min(bb_min, vtx2.pos);
+      bb_max = glm::max(bb_max, vtx2.pos);
 
       const auto dp_10 = vtx1.pos - vtx0.pos;
       const auto dp_20 = vtx2.pos - vtx0.pos;
@@ -126,34 +166,6 @@ namespace RayGene3D
         }
       }
 
-      const auto hash_vertex_fn = [](const Vertex& vertex)
-      {
-        const auto uref = reinterpret_cast<const glm::u32vec4*>(&vertex);
-
-        auto hash = 0u;
-        hash ^= std::hash<glm::u32vec4>()(uref[0]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-        hash ^= std::hash<glm::u32vec4>()(uref[1]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-        hash ^= std::hash<glm::u32vec4>()(uref[2]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-        hash ^= std::hash<glm::u32vec4>()(uref[3]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-
-        return hash;
-      };
-      auto compare_vertex_fn = [](const Vertex& l, const Vertex& r)
-      {
-        return (memcmp(&l, &r, sizeof(Vertex)) == 0);
-      };
-      std::unordered_map<Vertex, uint32_t, decltype(hash_vertex_fn), decltype(compare_vertex_fn)> vertex_map(8, hash_vertex_fn, compare_vertex_fn);
-
-      const auto remap_vertex_fn = [&vertex_map](std::vector<Vertex>& vertices, const Vertex& vertex)
-      {
-        const auto result = vertex_map.emplace(vertex, uint32_t(vertices.size()));
-        if (result.second)
-        {
-          vertices.push_back(vertex);
-        }
-        return result.first->second;
-      };
-
       Triangle triangle;
 
       triangle.idx[0] = remap_vertex_fn(vertices, vtx0);
@@ -163,7 +175,7 @@ namespace RayGene3D
       triangles.push_back(triangle);
     }
 
-    return { vertices, triangles };
+    return { vertices, triangles, bb_min, bb_max };
   }
 
 
@@ -616,16 +628,29 @@ namespace RayGene3D
         : 0;
       const auto idx_count = gltf_indices.count;
 
+      const auto z_up_transform = glm::fmat3x3(
+        1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f,-1.0f,
+        0.0f, 1.0f, 0.0f
+      );
+      const auto nrm_transform = z_up ? z_up_transform : glm::identity<glm::fmat3x3>();
+      const auto pos_transform = nrm_transform * scale;
+
+      const auto flip_v_tranform = glm::fmat2x2(
+        0.0f,-1.0f,
+        1.0f, 0.0f
+      );
+      const auto tc0_transform = flip_v ? flip_v_tranform : glm::identity<glm::fmat2x2>();
+
       auto degenerated_geom_tris_count = 0u;
       auto degenerated_wrap_tris_count = 0u;
-      const auto [vertices, triangles] = PopulateInstance(idx_count, idx_stride,
-        scale, z_up, flip_v,
+      const auto [vertices, triangles, bb_min, bb_max] = PopulateInstance(idx_count, idx_stride,
+        pos_transform, nrm_transform, tc0_transform,
         pos_data, pos_stride, idx_data, idx_stride,
         nrm_data, nrm_stride, idx_data, idx_stride,
-        tc0_data, tc0_stride, idx_data, idx_stride,
-        degenerated_geom_tris_count, degenerated_wrap_tris_count);
+        tc0_data, tc0_stride, idx_data, idx_stride);
 
-      return std::make_tuple(vertices, triangles);
+      return std::make_tuple(vertices, triangles, bb_min, bb_max);
     };
 
     std::vector<uint32_t> texture_0_indices;
@@ -655,22 +680,25 @@ namespace RayGene3D
       for (uint32_t k = 0; k < uint32_t(gltf_mesh.primitives.size()); ++k)
       {
         const auto& gltf_primitive = gltf_mesh.primitives[k];
-        const auto [instance_vertices, instance_triangles] = instance_convert_fn(gltf_primitive, position_scale, coordinate_flip, false);
+        const auto [instance_vertices, instance_triangles, instance_bb_min, instance_bb_max] = 
+          instance_convert_fn(gltf_primitive, position_scale, coordinate_flip, false);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
 
         Instance instance;
-        instance.transform;
+        instance.transform = glm::identity<glm::fmat3x4>();
         instance.geometry_idx = uint32_t(instances.size());
+        instance.bb_min = instance_bb_min;
+        instance.bb_max = instance_bb_max;
         //instance.debug_color{ 0.0f, 0.0f, 0.0f };
 
         const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
         const auto texture_0_id = gltf_material.pbrMetallicRoughness.baseColorTexture.index;
         instance.texture0_idx = texture_0_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_0_indices, texture_0_id);
         const auto texture_1_id = gltf_material.emissiveTexture.index;
-        instance.texture1_idx == -1 ? uint32_t(-1) : tex_reindex_fn(texture_1_indices, texture_1_id);
+        instance.texture1_idx = texture_1_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_1_indices, texture_1_id);
         const auto texture_2_id = gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index;
-        instance.texture2_idx == -1 ? uint32_t(-1) : tex_reindex_fn(texture_2_indices, texture_2_id);
+        instance.texture2_idx = texture_2_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_2_indices, texture_2_id);
         const auto texture_3_id = gltf_material.normalTexture.index;
         instance.texture3_idx = texture_3_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_3_indices, texture_3_id);
 
@@ -796,11 +824,25 @@ namespace RayGene3D
         const auto tc0_idx_data = std::pair{ reinterpret_cast<const uint8_t*>(material_id.second.data()) + 8u, uint32_t(material_id.second.size()) };
         const auto tc0_idx_stride = 3 * 4u;
 
-        const auto [instance_vertices, instance_triangles] = PopulateInstance(idx_count, idx_align, position_scale, coordinate_flip, true,
+        const auto z_up_transform = glm::fmat3x3(
+          1.0f, 0.0f, 0.0f,
+          0.0f, 0.0f,-1.0f,
+          0.0f, 1.0f, 0.0f
+        );
+        const auto nrm_transform = coordinate_flip ? z_up_transform : glm::identity<glm::fmat3x3>();
+        const auto pos_transform = nrm_transform * position_scale;
+
+        const auto flip_v_tranform = glm::fmat2x2(
+          1.0f, 0.0f,
+          0.0f,-1.0f
+        );
+        const auto tc0_transform = true ? flip_v_tranform : glm::identity<glm::fmat2x2>();
+
+        const auto [instance_vertices, instance_triangles, instance_bb_min, instance_bb_max] = PopulateInstance(idx_count, idx_align,
+          pos_transform, nrm_transform, tc0_transform,
           pos_data, pos_stride, pos_idx_data, pos_idx_stride,
           nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
-          tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride,
-          degenerated_geom_tris_count, degenerated_wrap_tris_count);
+          tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
 
@@ -809,8 +851,10 @@ namespace RayGene3D
         BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instances.size(), vertices_count, triangles_count);
 
         Instance instance;
-        instance.transform;
+        instance.transform = glm::identity<glm::fmat3x4>();
         instance.geometry_idx = uint32_t(instances.size());
+        instance.bb_min = instance_bb_min;
+        instance.bb_max = instance_bb_max;
         //instance.debug_color{ 0.0f, 0.0f, 0.0f };
 
         const auto& obj_material = obj_materials[material_id.first];

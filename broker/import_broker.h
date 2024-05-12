@@ -45,9 +45,9 @@ namespace RayGene3D
     bool coordinate_flip{ false };
     uint32_t texture_level{ 10u };
 
-  protected:
-    uint32_t degenerated_geom_tris_count{ 0u };
-    uint32_t degenerated_wrap_tris_count{ 0u };
+  //protected:
+  //  uint32_t degenerated_geom_tris_count{ 0u };
+  //  uint32_t degenerated_wrap_tris_count{ 0u };
 
   protected:
     std::vector<Vertex> vertices;

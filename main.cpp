@@ -161,6 +161,7 @@ namespace RayGene3D
   protected:
     std::shared_ptr<RayGene3D::Property> scene_property;
     std::shared_ptr<RayGene3D::Property> camera_property;
+    std::shared_ptr<RayGene3D::Property> lighting_property;
     std::shared_ptr<RayGene3D::Property> environment_property;
 
   protected:
@@ -486,6 +487,18 @@ namespace RayGene3D
         environment_property = RayGene3D::ImportAsPanoEXR(environment_path, environment_name, environment_exposure, environment_quality);
       }
       tree_property->SetObjectItem("environment_property", environment_property);
+
+      lighting_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+      {
+        const auto lighting_theta = config_property->GetObjectItem("lighting")->GetObjectItem("theta");
+        const auto lighting_phi = config_property->GetObjectItem("lighting")->GetObjectItem("phi");
+        const auto lighting_intensity = config_property->GetObjectItem("lighting")->GetObjectItem("intensity");
+
+        lighting_property->SetObjectItem("theta", lighting_theta);
+        lighting_property->SetObjectItem("phi", lighting_phi);
+        lighting_property->SetObjectItem("intensity", lighting_intensity);
+      }
+      tree_property->SetObjectItem("lighting_property", lighting_property);
 
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));

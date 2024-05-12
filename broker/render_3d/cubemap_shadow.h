@@ -35,27 +35,27 @@ namespace RayGene3D
   class CubemapShadow : public Render3DMode
   {
   protected:
-    SPtrPass shadowmap_passes[6];
-    SPtrTechnique shadowmap_techniques[6];
-    SPtrBatch shadowmap_batches[6];
+    SPtrPass shadowmap_pass;
+    SPtrTechnique shadowmap_technique;
+    SPtrBatch shadowmap_batch;
 
     SPtrPass shadowed_pass;
     SPtrTechnique shadowed_technique;
     SPtrBatch shadowed_batch;
 
   protected:
-    void CreateShadowmapPass(uint32_t index);
-    void CreateShadowmapTechnique(uint32_t index);
-    void CreateShadowmapBatch(uint32_t index);
+    void CreateShadowmapPass();
+    void CreateShadowmapTechnique();
+    void CreateShadowmapBatch();
 
     void CreateShadowedPass();
     void CreateShadowedTechnique();
     void CreateShadowedBatch();
 
   protected:
-    void DestroyShadowmapBatch(uint32_t index);
-    void DestroyShadowmapTechnique(uint32_t index);
-    void DestroyShadowmapPass(uint32_t index);
+    void DestroyShadowmapBatch();
+    void DestroyShadowmapTechnique();
+    void DestroyShadowmapPass();
 
     void DestroyShadowedBatch();
     void DestroyShadowedTechnique();

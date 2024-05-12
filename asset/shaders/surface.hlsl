@@ -33,7 +33,7 @@ Surface Initialize_OBJ(float3 emission, float intensity, float3 diffuse, float s
   surface.diffuse = diffuse * tex0_value.xyz;
   surface.shininess = shininess;
 
-  surface.specular = specular * tex2_value.xyz;
+  surface.specular = tex2_value.xyz;
 
 #ifdef USE_ALPHA_CLIP
   surface.alpha = tex1_value.x;

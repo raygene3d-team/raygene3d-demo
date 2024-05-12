@@ -41,6 +41,7 @@ namespace RayGene3D
   public:
     std::shared_ptr<Property> prop_scene;
     std::shared_ptr<Property> prop_camera;
+    std::shared_ptr<Property> prop_lighting;
     //std::shared_ptr<Property> prop_environment;
 
     std::shared_ptr<Property> prop_eye;
@@ -57,6 +58,10 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_f_plane;
 
     std::shared_ptr<Property> prop_counter;
+
+    std::shared_ptr<Property> prop_theta;
+    std::shared_ptr<Property> prop_phi;
+    std::shared_ptr<Property> prop_intensity;
 
     std::shared_ptr<Property> prop_instances;
     std::shared_ptr<Property> prop_triangles;
@@ -131,7 +136,7 @@ namespace RayGene3D
     SPtrResource compute_arguments;
 
   public:
-    uint32_t shadow_resolution{ 1024 };
+    uint32_t shadow_resolution{ 4096 };
     uint32_t reflection_probe_size{ 1024 };
     glm::f32vec3 light_position{ -0.605f, 3.515f, 0.387f };
 

@@ -1,7 +1,7 @@
 {
   "scene":  {
   	"file": "DamagedHelmet.gltf",
-    "flip": true,
+    "flip": false,
   	"scale": 1.0,
   	"quality": 12
   },
@@ -9,6 +9,11 @@
   	"file": "asset/environment/skylight-day.exr",
   	"exposure": 1.0,
   	"quality": 10
+  },
+  "lighting": {
+    "phi": 65.0,
+    "theta": 75.0,
+    "intensity": 1.0
   },
   "camera": {
     "eye": [0.0, 0.0,-3.0],

@@ -7,8 +7,10 @@
 #endif
 
 #include "packing.hlsl"
+#include "surface.hlsl"
+#include "brdf.hlsl"
 
-VK_BINDING(0) sampler sampler0 : register(s0);
+VK_BINDING(0)  SamplerComparisonState sampler0 : register(s0);
 
 VK_BINDING(1) cbuffer constant0 : register(b0)
 {
@@ -38,7 +40,7 @@ VK_BINDING(3) cbuffer constant2 : register(b2)
 VK_BINDING(4) Texture2D<float4> gbuffer_0_texture : register(t0);
 VK_BINDING(5) Texture2D<float4> gbuffer_1_texture : register(t1);
 VK_BINDING(6) Texture2D<float> depth_texture : register(t2);
-VK_BINDING(7) TextureCube<float> shadow_map  : register(t3);
+VK_BINDING(7) Texture2D<float> shadow_map  : register(t3);
 
 
 static const float4x4 poisson_disk = float4x4(
@@ -50,39 +52,55 @@ static const float4x4 poisson_disk = float4x4(
 
 float Shadow(const float3 w_pos)
 {
-  const float3 light_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
-  const float3 view_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
-  const float3 tc = w_pos - light_pos;
+  float4x4 shadow_bias = float4x4
+  (
+    0.5, 0.0, 0.0, 0.5,
+    0.0,-0.5, 0.0, 0.5,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+  );
+    
+  float4 s_pos = mul(shadow_bias, mul(shadow_proj, mul(shadow_view, float4(w_pos, 1.0))));
+  
+  
+  //s_pos.x = s_pos.x * 0.5 + 0.5;
+  //s_pos.y = 0.5 - 0.5 * s_pos.y;
+  
+  //const float3 light_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
+  //const float3 view_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
+  //const float3 tc = w_pos - light_pos;
+  //
+  //const float m22 = shadow_proj[2][2];
+  //const float m23 = shadow_proj[2][3];
+  //
+  //const float near = -m23 / m22;
+  //const float far = near / (m22 - 1.0);
+  //
+  //const float3 atc = abs(tc);
+  //const float m = max(max(atc.x, atc.y), atc.z);
+  //const float3 tk = step(m, atc);
+  //
+  //const float3 dx = normalize(cross(tc, w_pos - view_pos));
+  //const float3 dy = normalize(cross(tc, dx));
 
-  const float m22 = shadow_proj[2][2];
-  const float m23 = shadow_proj[2][3];
+  const float d = shadow_map.SampleCmpLevelZero(sampler0, s_pos.xy / s_pos.w, s_pos.z / s_pos.w);
 
-  const float near = -m23 / m22;
-  const float far = near / (m22 - 1.0);
+  //const float cd = far * (1.0 - near / (dot(tk, atc))) / (far - near);
+  //const float blur_radius = 0.005;
+  //
+  //float shadow = step(d, cd);
+  //for (uint x = 0; x < 8; ++x)
+  //{
+  //  const float3 offset = (dx * poisson_disk[x / 2][2 * (x % 2)] + dy * poisson_disk[x / 2][2 * (x % 2) + 1]) * blur_radius;
+  //  const float d = shadow_map.Sample(sampler0, normalize(tc) + offset);
+  //  shadow += step(d, cd);
+  //}
+  //shadow /= 9.0;
+  //shadow *= sign(d);
+  
+  //s_pos.z = 0;
 
-  const float3 atc = abs(tc);
-  const float m = max(max(atc.x, atc.y), atc.z);
-  const float3 tk = step(m, atc);
-
-  const float3 dx = normalize(cross(tc, w_pos - view_pos));
-  const float3 dy = normalize(cross(tc, dx));
-
-  const float d = shadow_map.Sample(sampler0, normalize(tc));
-
-  const float cd = far * (1.0 - near / (dot(tk, atc))) / (far - near);
-  const float blur_radius = 0.005;
-
-  float shadow = step(d, cd);
-  for (uint x = 0; x < 8; ++x)
-  {
-    const float3 offset = (dx * poisson_disk[x / 2][2 * (x % 2)] + dy * poisson_disk[x / 2][2 * (x % 2) + 1]) * blur_radius;
-    const float d = shadow_map.Sample(sampler0, normalize(tc) + offset);
-    shadow += step(d, cd);
-  }
-  shadow /= 9.0;
-  shadow *= sign(d);
-
-  return 1.0 - shadow;
+  return d;
 }
 
 
@@ -146,13 +164,34 @@ PSOutput ps_main(PSInput input)
 
   const float3 shadow_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]);
   const float shadow_dst = length(shadow_pos - surface_pos);
-  const float3 shadow_dir = (shadow_pos - surface_pos) / shadow_dst;
-
+  const float3 shadow_dir =-float3(shadow_view_inv[0][2], shadow_view_inv[1][2], shadow_view_inv[2][2]); 
+  
   const float3 diffuse = max(0.0, dot(shadow_dir, normal)) * albedo_metallic.xyz;
   const float3 specular = pow(max(0.0, dot(normalize(camera_dir + shadow_dir), normal)), smoothness);
-  const float attenuation = Shadow(surface_pos);
+  const float3 attenuation = Shadow(surface_pos);
+  
+  BRDF_CookTorrance brdf; // = Initialize_CookTorrance();
+  brdf.color = albedo_metallic.xyz;
+  brdf.roughness = clamp(normal_smoothness.w, 0.001, 0.999);
+  brdf.metallic = albedo_metallic.w;
 
-  const float3 color = diffuse * attenuation;
+  const float3 n = normalize(normal.xyz);
+  const float3 t = normalize(n.y * n.y > n.x * n.x ? float3(0.0, -n.z, n.y) : float3(-n.z, 0.0, n.x));
+  const float3 b = normalize(cross(n, t));
+  const float3x3 tbn = float3x3(t, b, n);
+
+  const float3 wo = mul((tbn), shadow_dir);
+  const float3 lo = mul((tbn), camera_dir);
+
+  const float3 m = Evaluate_CookTorrance(brdf, lo, wo) * brdf.color;
+
+  const float oneMinusReflectivity = OneMinusReflectivityMetallic(brdf.metallic);
+  const float reflectivity = 1.0 - oneMinusReflectivity;
+
+  const float3 diff = brdf.color * oneMinusReflectivity;
+  const float3 spec = lerp(kDielectricSpec.rgb, m, metallic);
+
+  const float3 color = (diff + spec) * max(0.0, wo.z) * attenuation;
   output.target_0 = float4(color, 1.0);
   
   return output;
