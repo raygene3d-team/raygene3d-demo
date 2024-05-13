@@ -70,7 +70,10 @@ Surface Initialize_GLTF(float3 emission, float intensity, float3 diffuse, float 
 #endif
 
 #ifdef USE_NORMAL_MAP
-  surface.normal = float3(tex3_value.xyz * 2.0 - 1.0);
+  float nrm_x = tex3_value.x * 2.0 - 1.0;
+  float nrm_y = tex3_value.y * 2.0 - 1.0;
+  float nrm_z = sqrt(1.0 - nrm_x * nrm_x - nrm_y * nrm_y);
+  surface.normal = float3(nrm_x, nrm_y, nrm_z);
 #endif
 
   surface.metallic = tex2_value.y;

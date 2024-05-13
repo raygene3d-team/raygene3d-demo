@@ -8,7 +8,7 @@
 
 #define USE_NORMAL_MAP
 //#define USE_ALPHA_CLIP
-#define USE_SPECULAR_SETUP
+//#define USE_SPECULAR_SETUP
 
 #include "common.hlsl"
 #include "surface.hlsl"
