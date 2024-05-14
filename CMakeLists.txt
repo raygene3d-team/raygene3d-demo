@@ -55,12 +55,16 @@ set(mikktspace_source
 set(SOURCE main.cpp
   broker/bvh_broker.h
   broker/bvh_broker.cpp
+  broker/environment_broker.h
+  broker/environment_broker.cpp
   broker/import_broker.h
   broker/import_broker.cpp
   broker/lightmap_broker.h
   broker/lightmap_broker.cpp
-  broker/environment_broker.h
-  broker/environment_broker.cpp
+  broker/mikktspace_broker.h
+  broker/mikktspace_broker.cpp
+  broker/xatlas_broker.h
+  broker/xatlas_broker.cpp
   broker/render_3d_broker.h
   broker/render_3d_broker.cpp
   broker/render_3d_mode.h
