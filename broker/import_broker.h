@@ -77,16 +77,8 @@ namespace RayGene3D
     void Import(const std::shared_ptr<Property>& property);
 
   private:
-    //std::shared_ptr<Property> ImportOBJM(const std::string& path, const std::string& name, bool flip, float scale, uint32_t mipmaps);
-
-    
-    //void ImportGLTF(const std::string& path, const std::string& name, bool flip, float scale, uint32_t mipmaps);
-
     void ImportGLTF();
     void ImportOBJM();
-
-    void ProcessTangents();
-
 
   public:
     ImportBroker(Wrap& wrap);

@@ -47,45 +47,44 @@ THE SOFTWARE.
 #include <stb/stb_image_write.h>
 #include <stb/stb_image_resize.h>
 
-#include <mikktspace/mikktspace.h>
-
-#include <xatlas/xatlas.h>
-
 namespace RayGene3D
 {
-  std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t count, uint32_t align,
+  std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t idx_count, uint32_t idx_align,
     const glm::fmat3x3& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
-    std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_id_stride,
-    std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_id_stride,
-    std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_id_stride)
+    std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_idx_stride,
+    std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_idx_stride,
+    std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_idx_stride)
   {
-    const auto create_vertex_fn = [align,
+    const auto create_vertex_fn = [idx_align,
       pos_transform, nrm_transform, tc0_transform,
-      pos_data, pos_stride, pos_idx_data, pos_id_stride,
-      nrm_data, nrm_stride, nrm_idx_data, nrm_id_stride,
-      tc0_data, tc0_stride, tc0_idx_data, tc0_id_stride]
+      pos_data, pos_stride, pos_idx_data, pos_idx_stride,
+      nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
+      tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride]
       (uint32_t index)
     {
-      const auto pos_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(pos_idx_data.first + pos_id_stride * index))
-        : align == 2 ? *(reinterpret_cast<const uint16_t*>(pos_idx_data.first + pos_id_stride * index))
-        : align == 1 ? *(reinterpret_cast<const uint8_t*>(pos_idx_data.first + pos_id_stride * index))
-        : -1;
+      const auto pos_idx = 
+        idx_align == 4 ? *(reinterpret_cast<const uint32_t*>(pos_idx_data.first + pos_idx_stride * index)) :
+        idx_align == 2 ? *(reinterpret_cast<const uint16_t*>(pos_idx_data.first + pos_idx_stride * index)) :
+        idx_align == 1 ? *(reinterpret_cast<const uint8_t*>(pos_idx_data.first + pos_idx_stride * index)) :
+        -1;
       const auto pos_ptr = reinterpret_cast<const float*>(pos_data.first + pos_stride * pos_idx);
-      const auto& pos = glm::fvec3(pos_ptr[0], pos_ptr[1], pos_ptr[2]);
+      const auto pos = glm::fvec3(pos_ptr[0], pos_ptr[1], pos_ptr[2]);
 
-      const auto nrm_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(nrm_idx_data.first + nrm_id_stride * index))
-        : align == 2 ? *(reinterpret_cast<const uint16_t*>(nrm_idx_data.first + nrm_id_stride * index))
-        : align == 1 ? *(reinterpret_cast<const uint8_t*>(nrm_idx_data.first + nrm_id_stride * index))
-        : -1;
+      const auto nrm_idx = 
+        idx_align == 4 ? *(reinterpret_cast<const uint32_t*>(nrm_idx_data.first + nrm_idx_stride * index)) :
+        idx_align == 2 ? *(reinterpret_cast<const uint16_t*>(nrm_idx_data.first + nrm_idx_stride * index)) :
+        idx_align == 1 ? *(reinterpret_cast<const uint8_t*>(nrm_idx_data.first + nrm_idx_stride * index)) :
+        -1;
       const auto nrm_ptr = reinterpret_cast<const float*>(nrm_data.first + nrm_stride * nrm_idx);
-      const auto& nrm = glm::fvec3(nrm_ptr[0], nrm_ptr[1], nrm_ptr[2]);
+      const auto nrm = glm::fvec3(nrm_ptr[0], nrm_ptr[1], nrm_ptr[2]);
 
-      const auto tc0_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(tc0_idx_data.first + tc0_id_stride * index))
-        : align == 2 ? *(reinterpret_cast<const uint16_t*>(tc0_idx_data.first + tc0_id_stride * index))
-        : align == 1 ? *(reinterpret_cast<const uint8_t*>(tc0_idx_data.first + tc0_id_stride * index))
-        : -1;
+      const auto tc0_idx = 
+        idx_align == 4 ? *(reinterpret_cast<const uint32_t*>(tc0_idx_data.first + tc0_idx_stride * index)) :
+        idx_align == 2 ? *(reinterpret_cast<const uint16_t*>(tc0_idx_data.first + tc0_idx_stride * index)) :
+        idx_align == 1 ? *(reinterpret_cast<const uint8_t*>(tc0_idx_data.first + tc0_idx_stride * index)) :
+        -1;
       const auto tc0_ptr = reinterpret_cast<const float*>(tc0_data.first + tc0_stride * tc0_idx);
-      const auto& tc0 = glm::f32vec2(tc0_ptr[0], tc0_ptr[1]);
+      const auto tc0 = glm::f32vec2(tc0_ptr[0], tc0_ptr[1]);
 
       Vertex vertex;
 
@@ -130,7 +129,7 @@ namespace RayGene3D
     auto degenerated_geom_tris_count = 0u;
     auto degenerated_wrap_tris_count = 0u;
 
-    for (uint32_t k = 0; k < count / 3; ++k)
+    for (uint32_t k = 0; k < idx_count / 3; ++k)
     {
       const auto vtx0 = create_vertex_fn(k * 3 + 0);
       bb_min = glm::min(bb_min, vtx0.pos);
@@ -178,89 +177,6 @@ namespace RayGene3D
     return { vertices, triangles, bb_min, bb_max };
   }
 
-
-  void UpdateTangents(std::vector<Instance>& instances, std::vector<Triangle>& triangles, std::vector<Vertex>& vertices)
-  {
-
-    for (uint32_t i = 0; i < uint32_t(instances.size()); ++i)
-    {
-      auto prim_data = triangles.data() + instances[i].prim_offset;
-      const auto prim_count = instances[i].prim_count;
-
-      auto vert_data = vertices.data() + instances[i].vert_offset;
-      const auto vert_count = instances[i].vert_count;
-
-      struct SMikkTSpaceUserData
-      {
-        std::pair<Triangle*, uint32_t> prims;
-        std::pair<Vertex*, uint32_t> verts;
-      };
-      SMikkTSpaceUserData data { {prim_data, prim_count}, { vert_data, vert_count } };
-
-      SMikkTSpaceInterface input = { 0 };
-      input.m_getNumFaces = [](const SMikkTSpaceContext* ctx)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        return int32_t(data->prims.second);
-      };
-
-      input.m_getNumVerticesOfFace = [](const SMikkTSpaceContext* ctx, const int iFace)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        return 3;
-      };
-
-      //input.m_getPosition = &GetPositionCb;
-      //input.m_getNormal = &GetNormalCb;
-      //input.m_getTexCoord = &GetTexCoordCb;
-      //input.m_setTSpaceBasic = &SetTspaceBasicCb;
-      //input.m_setTSpace = NULL;
-
-
-      input.m_getPosition = [](const SMikkTSpaceContext* ctx, float fvPosOut[], int iFace, int iVert)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        const auto& pos = data->verts.first[data->prims.first[iFace].idx[iVert]].pos;
-        fvPosOut[0] = pos.x;
-        fvPosOut[1] = pos.y;
-        fvPosOut[2] = pos.z;
-      };
-
-      input.m_getNormal = [](const SMikkTSpaceContext* ctx, float fvNormOut[], int iFace, int iVert)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        const auto& nrm = data->verts.first[data->prims.first[iFace].idx[iVert]].nrm;
-        fvNormOut[0] = nrm.x;
-        fvNormOut[1] = nrm.y;
-        fvNormOut[2] = nrm.z;
-      };
-
-      input.m_getTexCoord = [](const SMikkTSpaceContext* ctx, float fvTexcOut[], int iFace, int iVert)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        const auto& tc0 = data->verts.first[data->prims.first[iFace].idx[iVert]].tc0;
-        fvTexcOut[0] = tc0.x;
-        fvTexcOut[1] = tc0.y;
-      };
-
-      input.m_setTSpaceBasic = [](const SMikkTSpaceContext* ctx, const float fvTangent[], float fSign, int iFace, int iVert)
-      {
-        auto data = reinterpret_cast<SMikkTSpaceUserData*>(ctx->m_pUserData);
-        auto& tng = data->verts.first[data->prims.first[iFace].idx[iVert]].tng;
-        tng.x = fvTangent[0];
-        tng.y = fvTangent[1];
-        tng.z = fvTangent[2];
-        auto& sgn = data->verts.first[data->prims.first[iFace].idx[iVert]].sgn;
-        sgn = fSign;
-      };
-
-      SMikkTSpaceContext context;
-      context.m_pInterface = &input;
-      context.m_pUserData = &data;
-
-      BLAST_ASSERT(1 == genTangSpaceDefault(&context));
-    }
-  }
 
   //void UpdateWrap()
   //{
@@ -556,7 +472,7 @@ namespace RayGene3D
       ImportGLTF();
     }
 
-    UpdateTangents(instances, triangles, vertices);
+    //UpdateTangents(instances, triangles, vertices);
   }
 
   void ImportBroker::Use()
@@ -1153,7 +1069,7 @@ namespace RayGene3D
   std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
   {
     const auto cubemap_layer_counter = 6u;
-    const auto cubemap_layer_size = 1 << (mipmaps - 1);
+    const auto cubemap_layer_size = 1u << (mipmaps - 1);
 
     auto texture_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
     texture_property->SetArraySize(cubemap_layer_counter);
@@ -1237,12 +1153,11 @@ namespace RayGene3D
             const auto texel_num = y * pano_tex_x + x;
 
             const auto index = j + k * dst_tex_x;
-            const auto offset = index * dst_tex_n;
 
-            dst_tex_data[offset + 0] = pano_tex_data[texel_num * src_tex_n + 0] * exposure;
-            dst_tex_data[offset + 1] = pano_tex_data[texel_num * src_tex_n + 1] * exposure;
-            dst_tex_data[offset + 2] = pano_tex_data[texel_num * src_tex_n + 2] * exposure;
-            dst_tex_data[offset + 3] = pano_tex_data[texel_num * src_tex_n + 3] * exposure;
+            dst_tex_data[index * dst_tex_n + 0] = pano_tex_data[texel_num * src_tex_n + 0] * exposure;
+            dst_tex_data[index * dst_tex_n + 1] = pano_tex_data[texel_num * src_tex_n + 1] * exposure;
+            dst_tex_data[index * dst_tex_n + 2] = pano_tex_data[texel_num * src_tex_n + 2] * exposure;
+            dst_tex_data[index * dst_tex_n + 3] = pano_tex_data[texel_num * src_tex_n + 3] * exposure;
           }
         }
       }

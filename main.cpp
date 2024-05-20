@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "broker/render_ui_broker.h"
 
 #include "broker/bvh_broker.h"
+#include "broker/mikktspace_broker.h"
 #include "broker/import_broker.h"
 #include "broker/lightmap_broker.h"
 #include "broker/environment_broker.h"
@@ -445,6 +446,13 @@ namespace RayGene3D
         }
       }
       tree_property->SetObjectItem("scene_property", scene_property);
+
+      {
+        auto mikktspace_broker = std::shared_ptr<RayGene3D::MikktspaceBroker>(new RayGene3D::MikktspaceBroker(*wrap));
+        mikktspace_broker->Initialize();
+
+        mikktspace_broker.reset();
+      }
 
       {
         auto bvh_broker = std::shared_ptr<RayGene3D::BVHBroker>(new RayGene3D::BVHBroker(*wrap));

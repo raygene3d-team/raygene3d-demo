@@ -327,8 +327,7 @@ namespace RayGene3D
       prop_instances = prop_scene->GetObjectItem("instances");
       prop_triangles = prop_scene->GetObjectItem("triangles");
       prop_vertices = prop_scene->GetObjectItem("vertices");
-    } 
-  
+    }
   }
 
   BVHBroker::~BVHBroker()
