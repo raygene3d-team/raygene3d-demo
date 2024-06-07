@@ -449,7 +449,10 @@ namespace RayGene3D
 
       {
         auto mikktspace_broker = std::shared_ptr<RayGene3D::MikktspaceBroker>(new RayGene3D::MikktspaceBroker(*wrap));
+        
         mikktspace_broker->Initialize();
+        mikktspace_broker->Use();
+        mikktspace_broker->Discard();
 
         mikktspace_broker.reset();
       }
