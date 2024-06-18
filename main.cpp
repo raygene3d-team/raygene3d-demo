@@ -371,7 +371,7 @@ namespace RayGene3D
         prop_screen = CreateBufferProperty(data, stride, count);
         std::pair<const void*, uint32_t> interops[] =
         {
-          prop_screen->GetRawBytes(0)
+          prop_screen->GetObjectItem("bytes")->GetRawBytes(0)
         };
 
         const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",

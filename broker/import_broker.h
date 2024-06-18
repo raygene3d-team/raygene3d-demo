@@ -87,4 +87,6 @@ namespace RayGene3D
 
   std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
   std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
+
+  std::shared_ptr<Property> ImportPanoram(const std::string& path, const std::string& name, uint32_t mipmaps);
 }

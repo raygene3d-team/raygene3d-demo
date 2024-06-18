@@ -149,7 +149,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_instances->GetRawBytes(0),
+      { data, uint32_t(sizeof(Instance)) * count },
     };
 
     scene_instances = core->GetDevice()->CreateResource("spark_scene_instances",
@@ -168,7 +168,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_triangles->GetRawBytes(0),
+      { data, uint32_t(sizeof(Triangle)) * count },
     };
 
     scene_triangles = core->GetDevice()->CreateResource("spark_scene_triangles",
@@ -187,7 +187,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices->GetRawBytes(0),
+      { data, uint32_t(sizeof(Vertex)) * count },
     };
 
     scene_vertices = core->GetDevice()->CreateResource("spark_scene_vertices",
@@ -204,9 +204,9 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTBoxes()
   {
-    const auto [data, count] = prop_t_boxes->GetTypedBytes<Box>(0);
+    const auto [data, count] = prop_t_boxes->GetObjectItem("bytes")->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_t_boxes->GetRawBytes(0),
+      { data, uint32_t(sizeof(Box)) * count },
     };
 
     scene_t_boxes = core->GetDevice()->CreateResource("spark_scene_t_boxes",
@@ -223,9 +223,9 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneBBoxes()
   {
-    const auto [data, count] = prop_b_boxes->GetTypedBytes<Box>(0);
+    const auto [data, count] = prop_b_boxes->GetObjectItem("bytes")->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_b_boxes->GetRawBytes(0),
+      { data, uint32_t(sizeof(Box)) * count },
     };
 
     scene_b_boxes = core->GetDevice()->CreateResource("spark_scene_b_boxes",
@@ -244,7 +244,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_instances->GetRawBytes(0),
+      { data, uint32_t(sizeof(Instance)) * count },
     };
 
     trace_instances = core->GetDevice()->CreateResource("spark_trace_instances",
@@ -263,7 +263,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_triangles->GetRawBytes(0),
+      { data, uint32_t(sizeof(Triangle)) * count },
     };
 
     trace_triangles = core->GetDevice()->CreateResource("spark_trace_triangles",
@@ -282,7 +282,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices->GetRawBytes(0),
+      { data, uint32_t(sizeof(Vertex)) * count },
     };
 
     trace_vertices = core->GetDevice()->CreateResource("spark_trace_vertices",
