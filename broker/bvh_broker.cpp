@@ -299,8 +299,10 @@ namespace RayGene3D
 
     MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
 
-    const auto prop_t_boxes = CreateBufferProperty(t_boxes.data(), uint32_t(sizeof(RayGene3D::Box)), uint32_t(t_boxes.size()));
-    const auto prop_b_boxes = CreateBufferProperty(b_boxes.data(), uint32_t(sizeof(RayGene3D::Box)), uint32_t(b_boxes.size()));
+    const auto prop_t_boxes = CreateBufferProperty({ t_boxes.data(), uint32_t(sizeof(RayGene3D::Box) * t_boxes.size()) },
+      uint32_t(sizeof(RayGene3D::Box)), uint32_t(t_boxes.size()));
+    const auto prop_b_boxes = CreateBufferProperty({ b_boxes.data(), uint32_t(sizeof(RayGene3D::Box) * b_boxes.size()) },
+      uint32_t(sizeof(RayGene3D::Box)), uint32_t(b_boxes.size()));
 
     prop_scene->SetObjectItem("t_boxes", prop_t_boxes);
     prop_scene->SetObjectItem("b_boxes", prop_b_boxes);
