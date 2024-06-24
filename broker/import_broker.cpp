@@ -37,8 +37,8 @@ THE SOFTWARE.
 //#define TINYGLTF_NO_STB_IMAGE_WRITE
 #include <tinygltf/tiny_gltf.h>
 
-#define TINYEXR_IMPLEMENTATION
-#include <tinyexr/tinyexr.h>
+//#define TINYEXR_IMPLEMENTATION
+//#include <tinyexr/tinyexr.h>
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
