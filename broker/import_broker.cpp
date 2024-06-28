@@ -933,17 +933,29 @@ namespace RayGene3D
     auto root = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
     //property->setSetValue(Property::object());
   
-    const auto instances_property = CreateBufferProperty({ instances.data(), uint32_t(sizeof(Instance) * instances.size()) },
-      uint32_t(sizeof(Instance)), uint32_t(instances.size()));
-    root->SetObjectItem("instances", instances_property);
-  
-    const auto triangles_property = CreateBufferProperty({ triangles.data(), uint32_t(sizeof(Triangle) * triangles.size()) },
-      uint32_t(sizeof(Triangle)), uint32_t(triangles.size()));
-    root->SetObjectItem("triangles", triangles_property);
+    {
+      const auto data = instances.data();
+      const auto stride = uint32_t(sizeof(Instance));
+      const auto count = uint32_t(instances.size());
+      const auto property = CreateBufferProperty({ Raw({ data, stride * count }) }, stride, count);
+      root->SetObjectItem("instances", property);
+    }
 
-    const auto vertices_property = CreateBufferProperty({ vertices.data(), uint32_t(sizeof(Vertex) * vertices.size()) },
-      uint32_t(sizeof(Vertex)), uint32_t(vertices.size()));
-    root->SetObjectItem("vertices", vertices_property);
+    {
+      const auto data = triangles.data();
+      const auto stride = uint32_t(sizeof(Triangle));
+      const auto count = uint32_t(triangles.size());
+      const auto property = CreateBufferProperty({ Raw({ data, stride * count }) }, stride, count);
+      root->SetObjectItem("triangles", property);
+    }
+
+    {
+      const auto data = vertices.data();
+      const auto stride = uint32_t(sizeof(Vertex));
+      const auto count = uint32_t(vertices.size());
+      const auto property = CreateBufferProperty({ Raw({ data, stride * count }) }, stride, count);
+      root->SetObjectItem("vertices", property);
+    }
   
     //const auto vertices0_property = CreateBufferProperty(scene_vertices0.data(), uint32_t(sizeof(Vertex0)), uint32_t(scene_vertices0.size()));
     //property->SetObjectItem("vertices0", vertices0_property);
