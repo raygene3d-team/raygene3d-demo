@@ -204,7 +204,7 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTBoxes()
   {
-    const auto [data, count] = prop_t_boxes->GetObjectItem("bytes")->GetTypedBytes<Box>(0);
+    const auto [data, count] = prop_t_boxes->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Box)) * count },
     };
@@ -223,7 +223,7 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneBBoxes()
   {
-    const auto [data, count] = prop_b_boxes->GetObjectItem("bytes")->GetTypedBytes<Box>(0);
+    const auto [data, count] = prop_b_boxes->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Box)) * count },
     };
@@ -527,34 +527,34 @@ namespace RayGene3D
 
   void Render3DScope::CreateSkyboxTexture()
   {
-    const auto layers = prop_skybox->GetArraySize();
-    const auto format = FORMAT_R32G32B32A32_FLOAT;
+    const auto layers = prop_skybox->GetObjectItem("layers");
+    const auto format = prop_skybox->GetObjectItem("format");
     const auto bpp = 16u;
 
-    auto mipmaps = 1u;
-    auto extent_x = 2u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
-    {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
+    const auto mipmaps = prop_skybox->GetObjectItem("mipmap");
+    const auto extent_x = prop_skybox->GetObjectItem("extent_x");
+    const auto extent_y = prop_skybox->GetObjectItem("extent_y");
+    //auto size = 0u;
+    //while ((size += extent_x * extent_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    //{
+    //  mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
+    //}
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_skybox->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < layers->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_skybox->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(layers->GetArrayItem(i)->GetRawBytes(0));
     }
 
     skybox_texture = core->GetDevice()->CreateResource("spark_skybox_texture",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmaps->GetUint(),
+        layers->GetArraySize(),
+        Format(format->GetUint()),
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_UNKNOWN),
       { interops.data(), uint32_t(interops.size()) }
@@ -766,22 +766,22 @@ namespace RayGene3D
 
     prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene_property");
     {
-      prop_instances = prop_scene->GetObjectItem("instances");
-      prop_triangles = prop_scene->GetObjectItem("triangles");
-      prop_vertices = prop_scene->GetObjectItem("vertices");
+      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("chunks")->GetArrayItem(0);
+      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("chunks")->GetArrayItem(0);
+      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("chunks")->GetArrayItem(0);
 
       //prop_vertices0 = prop_scene->GetObjectItem("vertices0");
       //prop_vertices1 = prop_scene->GetObjectItem("vertices1");
       //prop_vertices2 = prop_scene->GetObjectItem("vertices2");
       //prop_vertices3 = prop_scene->GetObjectItem("vertices3");
 
-      prop_t_boxes = prop_scene->GetObjectItem("t_boxes");
-      prop_b_boxes = prop_scene->GetObjectItem("b_boxes");
+      prop_t_boxes = prop_scene->GetObjectItem("t_boxes")->GetObjectItem("chunks")->GetArrayItem(0);
+      prop_b_boxes = prop_scene->GetObjectItem("b_boxes")->GetObjectItem("chunks")->GetArrayItem(0);
 
-      prop_textures0 = prop_scene->GetObjectItem("textures0");
-      prop_textures1 = prop_scene->GetObjectItem("textures1");
-      prop_textures2 = prop_scene->GetObjectItem("textures2");
-      prop_textures3 = prop_scene->GetObjectItem("textures3");
+      prop_textures0 = prop_scene->GetObjectItem("textures_0")->GetObjectItem("layers");
+      prop_textures1 = prop_scene->GetObjectItem("textures_1")->GetObjectItem("layers");
+      prop_textures2 = prop_scene->GetObjectItem("textures_2")->GetObjectItem("layers");
+      prop_textures3 = prop_scene->GetObjectItem("textures_3")->GetObjectItem("layers");
 
       prop_lightmaps = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
       {

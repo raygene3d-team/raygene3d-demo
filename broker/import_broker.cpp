@@ -937,7 +937,8 @@ namespace RayGene3D
       const auto data = instances.data();
       const auto stride = uint32_t(sizeof(Instance));
       const auto count = uint32_t(instances.size());
-      const auto property = CreateBufferProperty({ Raw({ data, stride * count }) }, stride, count);
+      auto raw = Raw({ data, stride * count });
+      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
       root->SetObjectItem("instances", property);
     }
 
@@ -945,7 +946,8 @@ namespace RayGene3D
       const auto data = triangles.data();
       const auto stride = uint32_t(sizeof(Triangle));
       const auto count = uint32_t(triangles.size());
-      const auto property = CreateBufferProperty({ Raw({ data, stride * count }) }, stride, count);
+      auto raw = Raw({ data, stride * count });
+      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
       root->SetObjectItem("triangles", property);
     }
 
@@ -953,70 +955,74 @@ namespace RayGene3D
       const auto data = vertices.data();
       const auto stride = uint32_t(sizeof(Vertex));
       const auto count = uint32_t(vertices.size());
-      const auto property = CreateBufferProperty({ Raw({ data, stride * count }) }, stride, count);
+      auto raw = Raw({ data, stride * count });
+      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
       root->SetObjectItem("vertices", property);
     }
   
-    //const auto vertices0_property = CreateBufferProperty(scene_vertices0.data(), uint32_t(sizeof(Vertex0)), uint32_t(scene_vertices0.size()));
-    //property->SetObjectItem("vertices0", vertices0_property);
-    //const auto vertices1_property = CreateBufferProperty(scene_vertices1.data(), uint32_t(sizeof(Vertex1)), uint32_t(scene_vertices1.size()));
-    //property->SetObjectItem("vertices1", vertices1_property);
-    //const auto vertices2_property = CreateBufferProperty(scene_vertices2.data(), uint32_t(sizeof(Vertex2)), uint32_t(scene_vertices2.size()));
-    //property->SetObjectItem("vertices2", vertices2_property);
-    //const auto vertices3_property = CreateBufferProperty(scene_vertices3.data(), uint32_t(sizeof(Vertex3)), uint32_t(scene_vertices3.size()));
-    //property->SetObjectItem("vertices3", vertices3_property);
-  
-    const auto textures0_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-    textures0_property->SetArraySize(uint32_t(textures_0.size()));
-    for (uint32_t i = 0; i < uint32_t(textures_0.size()); ++i)
     {
-      const auto texels = std::make_pair(textures_0[i].texels.data(), uint32_t(sizeof(glm::u8vec4) * textures_0[i].texels.size()));
-      const auto extent_x = textures_0[i].extent_x;
-      const auto extent_y = textures_0[i].extent_y;
-      const auto format = FORMAT_R8G8B8A8_UNORM;
-      const auto texture = CreateTextureProperty(texels, extent_x, extent_y, 1, format, texture_level);
-      textures0_property->SetArrayItem(i, texture);
+      auto raws = std::vector<Raw>(textures_0.size());
+      for (uint32_t i = 0; i < uint32_t(textures_0.size()); ++i)
+      {
+        auto extent_x = textures_0[i].extent_x;
+        auto extent_y = textures_0[i].extent_y;
+        const auto stride = uint32_t(sizeof(glm::u8vec4));
+        const auto count = extent_x * extent_y;
+        const auto data = textures_0[i].texels.data();
+        auto raw = Raw({ data, stride * count });
+        raws[i] = std::get<0>(ResizeTextureLDR(raw, extent_x, extent_y, texture_level, true));
+      }
+      const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, 1 << texture_level, 1 << texture_level, FORMAT_R8G8B8A8_UNORM, texture_level);
+      root->SetObjectItem("textures_0", property);
     }
-    root->SetObjectItem("textures0", textures0_property);
 
-    const auto textures1_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-    textures1_property->SetArraySize(uint32_t(textures_0.size()));
-    for (uint32_t i = 0; i < uint32_t(textures_0.size()); ++i)
     {
-      const auto texels = std::make_pair(textures_0[i].texels.data(), uint32_t(sizeof(glm::u8vec4) * textures_0[i].texels.size()));
-      const auto extent_x = textures_0[i].extent_x;
-      const auto extent_y = textures_0[i].extent_y;
-      const auto format = FORMAT_R8G8B8A8_UNORM;
-      const auto texture = CreateTextureProperty(texels, extent_x, extent_y, 1, format, texture_level);
-      textures1_property->SetArrayItem(i, texture);
+      auto raws = std::vector<Raw>(textures_1.size());
+      for (uint32_t i = 0; i < uint32_t(textures_1.size()); ++i)
+      {
+        const auto extent_x = textures_1[i].extent_x;
+        const auto extent_y = textures_1[i].extent_y;
+        const auto stride = uint32_t(sizeof(glm::u8vec4));
+        const auto count = extent_x * extent_y;
+        const auto data = textures_1[i].texels.data();
+        auto raw = Raw({ data, stride * count });
+        raws[i] = std::get<0>(ResizeTextureLDR(raw, extent_x, extent_y, texture_level, true));
+      }
+      const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, 1 << texture_level, 1 << texture_level, FORMAT_R8G8B8A8_UNORM, texture_level);
+      root->SetObjectItem("textures_1", property);
     }
-    root->SetObjectItem("textures1", textures1_property);
 
-    const auto textures2_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-    textures2_property->SetArraySize(uint32_t(textures_0.size()));
-    for (uint32_t i = 0; i < uint32_t(textures_0.size()); ++i)
     {
-      const auto texels = std::make_pair(textures_0[i].texels.data(), uint32_t(sizeof(glm::u8vec4) * textures_0[i].texels.size()));
-      const auto extent_x = textures_0[i].extent_x;
-      const auto extent_y = textures_0[i].extent_y;
-      const auto format = FORMAT_R8G8B8A8_UNORM;
-      const auto texture = CreateTextureProperty(texels, extent_x, extent_y, 1, format, texture_level);
-      textures2_property->SetArrayItem(i, texture);
+      auto raws = std::vector<Raw>(textures_2.size());
+      for (uint32_t i = 0; i < uint32_t(textures_2.size()); ++i)
+      {
+        const auto extent_x = textures_2[i].extent_x;
+        const auto extent_y = textures_2[i].extent_y;
+        const auto stride = uint32_t(sizeof(glm::u8vec4));
+        const auto count = extent_x * extent_y;
+        const auto data = textures_2[i].texels.data();
+        auto raw = Raw({ data, stride * count });
+        raws[i] = std::get<0>(ResizeTextureLDR(raw, extent_x, extent_y, texture_level, true));
+      }
+      const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, 1 << texture_level, 1 << texture_level, FORMAT_R8G8B8A8_UNORM, texture_level);
+      root->SetObjectItem("textures_2", property);
     }
-    root->SetObjectItem("textures2", textures2_property);
 
-    const auto textures3_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-    textures3_property->SetArraySize(uint32_t(textures_0.size()));
-    for (uint32_t i = 0; i < uint32_t(textures_0.size()); ++i)
     {
-      const auto texels = std::make_pair(textures_0[i].texels.data(), uint32_t(sizeof(glm::u8vec4) * textures_0[i].texels.size()));
-      const auto extent_x = textures_0[i].extent_x;
-      const auto extent_y = textures_0[i].extent_y;
-      const auto format = FORMAT_R8G8B8A8_UNORM;
-      const auto texture = CreateTextureProperty(texels, extent_x, extent_y, 1, format, texture_level);
-      textures3_property->SetArrayItem(i, texture);
+      auto raws = std::vector<Raw>(textures_3.size());
+      for (uint32_t i = 0; i < uint32_t(textures_3.size()); ++i)
+      {
+        const auto extent_x = textures_3[i].extent_x;
+        const auto extent_y = textures_3[i].extent_y;
+        const auto stride = uint32_t(sizeof(glm::u8vec4));
+        const auto count = extent_x * extent_y;
+        const auto data = textures_3[i].texels.data();
+        auto raw = Raw({ data, stride * count });
+        raws[i] = std::get<0>(ResizeTextureLDR(raw, extent_x, extent_y, texture_level, true));
+      }
+      const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, 1 << texture_level, 1 << texture_level, FORMAT_R8G8B8A8_UNORM, texture_level);
+      root->SetObjectItem("textures_3", property);
     }
-    root->SetObjectItem("textures3", textures3_property);
 
     property = root;
   }

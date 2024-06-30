@@ -116,9 +116,9 @@ namespace RayGene3D
 
     prop_scene = tree->GetObjectItem("scene_property");
     {
-      prop_instances = prop_scene->GetObjectItem("instances");
-      prop_triangles = prop_scene->GetObjectItem("triangles");
-      prop_vertices = prop_scene->GetObjectItem("vertices");
+      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("chunks")->GetArrayItem(0);
+      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("chunks")->GetArrayItem(0);
+      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("chunks")->GetArrayItem(0);
     }
   }
 
