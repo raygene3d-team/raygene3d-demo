@@ -362,16 +362,11 @@ namespace RayGene3D
       device->SetDebug(device_debug);
       wrap->GetCore()->Initialize();
 
-      
       {
-        std::vector<glm::u8vec4> frame_pixels(extent_x * extent_y, glm::u8vec4(0, 0, 0, 0));
-        const auto data = frame_pixels.data();
-        const auto stride = uint32_t(sizeof(glm::u8vec4));
-        const auto count = uint32_t(extent_x * extent_y);
-        prop_screen = CreateBufferProperty(data, stride, count);
+        const auto frame_pixels = std::vector<glm::u8vec4>(extent_x * extent_y);
         std::pair<const void*, uint32_t> interops[] =
         {
-          prop_screen->GetObjectItem("bytes")->GetRawBytes(0)
+          { frame_pixels.data(), uint32_t(sizeof(glm::u8vec4) * frame_pixels.size()) }
         };
 
         const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",
@@ -383,7 +378,6 @@ namespace RayGene3D
             FORMAT_B8G8R8A8_UNORM,
             uint32_t(extent_x),
             uint32_t(extent_y),
-            
           },
           Resource::HINT_UNKNOWN,
           { interops, uint32_t(std::size(interops)) }
@@ -495,7 +489,14 @@ namespace RayGene3D
         const auto environment_exposure = config_property->GetObjectItem("environment")->GetObjectItem("exposure")->GetReal();
         const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
 
-        environment_property = RayGene3D::ImportAsPanoEXR(environment_path, environment_name, environment_exposure, environment_quality);
+        const auto extent_x = 2u;
+        const auto extent_y = 1u;
+        const auto stride = uint32_t(sizeof(glm::f32vec4));
+        const auto count = extent_x * extent_y;
+        auto raw = Raw(stride * count);
+        const auto value = glm::f32vec4{ 0.5f, 0.5f, 0.5f, 1.0f };
+        for (auto i = 0u; i < count; ++i) { raw.SetElement<glm::f32vec4>(value, i); }
+        environment_property = CreateTextureProperty({&raw, 1u}, extent_x, extent_y, FORMAT_R32G32B32A32_FLOAT, 1u);
       }
       tree_property->SetObjectItem("environment_property", environment_property);
 

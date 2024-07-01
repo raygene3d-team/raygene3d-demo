@@ -299,34 +299,29 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTextures0()
   {
-    const auto layers = prop_textures0->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_SRGB;
+    const auto layers = prop_textures0->GetObjectItem("layers");
+    const auto format = prop_textures0->GetObjectItem("format");
     const auto bpp = 4u;
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
-    {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
+    const auto mipmap = prop_textures0->GetObjectItem("mipmap");
+    const auto extent_x = prop_textures0->GetObjectItem("extent_x");
+    const auto extent_y = prop_textures0->GetObjectItem("extent_y");
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures0->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < layers->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_textures0->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(layers->GetArrayItem(i)->GetRawBytes(0));
     }
 
     scene_textures0 = core->GetDevice()->CreateResource("spark_scene_textures0",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetArraySize(),
+        FORMAT_R8G8B8A8_SRGB,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -335,34 +330,29 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTextures1()
   {
-    const auto layers = prop_textures1->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_UNORM;
+    const auto layers = prop_textures1->GetObjectItem("layers");
+    const auto format = prop_textures1->GetObjectItem("format");
     const auto bpp = 4u;
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
-    {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
+    const auto mipmap = prop_textures1->GetObjectItem("mipmap");
+    const auto extent_x = prop_textures1->GetObjectItem("extent_x");
+    const auto extent_y = prop_textures1->GetObjectItem("extent_y");
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures1->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < layers->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_textures1->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(layers->GetArrayItem(i)->GetRawBytes(0));
     }
 
     scene_textures1 = core->GetDevice()->CreateResource("spark_scene_textures1",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetArraySize(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -371,34 +361,29 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTextures2()
   {
-    const auto layers = prop_textures2->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_UNORM;
+    const auto layers = prop_textures2->GetObjectItem("layers");
+    const auto format = prop_textures2->GetObjectItem("format");
     const auto bpp = 4u;
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
-    {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
+    const auto mipmap = prop_textures2->GetObjectItem("mipmap");
+    const auto extent_x = prop_textures2->GetObjectItem("extent_x");
+    const auto extent_y = prop_textures2->GetObjectItem("extent_y");
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures2->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < layers->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_textures2->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(layers->GetArrayItem(i)->GetRawBytes(0));
     }
 
     scene_textures2 = core->GetDevice()->CreateResource("spark_scene_textures2",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetArraySize(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -407,34 +392,29 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTextures3()
   {
-    const auto layers = prop_textures3->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_UNORM;
+    const auto layers = prop_textures3->GetObjectItem("layers");
+    const auto format = prop_textures3->GetObjectItem("format");
     const auto bpp = 4u;
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
-    {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
+    const auto mipmap = prop_textures3->GetObjectItem("mipmap");
+    const auto extent_x = prop_textures3->GetObjectItem("extent_x");
+    const auto extent_y = prop_textures3->GetObjectItem("extent_y");
 
     std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures3->GetArraySize(); ++i)
+    for (uint32_t i = 0; i < layers->GetArraySize(); ++i)
     {
-      interops.emplace_back(prop_textures3->GetArrayItem(i)->GetRawBytes(0));
+      interops.emplace_back(layers->GetArrayItem(i)->GetRawBytes(0));
     }
 
     scene_textures3 = core->GetDevice()->CreateResource("spark_scene_textures3",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetArraySize(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -529,16 +509,9 @@ namespace RayGene3D
   {
     const auto layers = prop_skybox->GetObjectItem("layers");
     const auto format = prop_skybox->GetObjectItem("format");
-    const auto bpp = 16u;
-
     const auto mipmaps = prop_skybox->GetObjectItem("mipmap");
     const auto extent_x = prop_skybox->GetObjectItem("extent_x");
     const auto extent_y = prop_skybox->GetObjectItem("extent_y");
-    //auto size = 0u;
-    //while ((size += extent_x * extent_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
-    //{
-    //  mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    //}
 
     std::vector<std::pair<const void*, uint32_t>> interops;
     for (uint32_t i = 0; i < layers->GetArraySize(); ++i)
@@ -778,10 +751,10 @@ namespace RayGene3D
       prop_t_boxes = prop_scene->GetObjectItem("t_boxes")->GetObjectItem("chunks")->GetArrayItem(0);
       prop_b_boxes = prop_scene->GetObjectItem("b_boxes")->GetObjectItem("chunks")->GetArrayItem(0);
 
-      prop_textures0 = prop_scene->GetObjectItem("textures_0")->GetObjectItem("layers");
-      prop_textures1 = prop_scene->GetObjectItem("textures_1")->GetObjectItem("layers");
-      prop_textures2 = prop_scene->GetObjectItem("textures_2")->GetObjectItem("layers");
-      prop_textures3 = prop_scene->GetObjectItem("textures_3")->GetObjectItem("layers");
+      prop_textures0 = prop_scene->GetObjectItem("textures_0");
+      prop_textures1 = prop_scene->GetObjectItem("textures_1");
+      prop_textures2 = prop_scene->GetObjectItem("textures_2");
+      prop_textures3 = prop_scene->GetObjectItem("textures_3");
 
       prop_lightmaps = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
       {
