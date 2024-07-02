@@ -53,10 +53,10 @@ namespace RayGene3D
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
     std::vector<Instance> instances;
-    std::vector<Texture> textures_0;
-    std::vector<Texture> textures_1;
-    std::vector<Texture> textures_2;
-    std::vector<Texture> textures_3;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_0;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_3;
 
   public:
     void Initialize() override;

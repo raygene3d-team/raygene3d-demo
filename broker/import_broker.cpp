@@ -641,8 +641,7 @@ namespace RayGene3D
       const auto tex_n = gltf_model.images[image_index].component;
       const auto tex_data = gltf_model.images[image_index].image.data();
 
-      Texture texture;
-      texture.texels.Allocate(tex_x * tex_y * uint32_t(sizeof(glm::u8vec4)));
+      auto raw = Raw(tex_x * tex_y * uint32_t(sizeof(glm::u8vec4)));
 
       for (uint32_t i = 0; i < tex_x * tex_y; ++i)
       {
@@ -650,12 +649,10 @@ namespace RayGene3D
         const auto g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
         const auto b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
         const auto a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
-        texture.texels.SetElement<glm::u8vec4>({r, g, b, a}, i);
+        raw.SetElement<glm::u8vec4>({r, g, b, a}, i);
       }
-      texture.extent_x = tex_x;
-      texture.extent_y = tex_y;
 
-      return texture;
+      return std::make_tuple(std::move(raw), tex_x, tex_y);
     };
 
     textures_0.resize(texture_0_indices.size());
@@ -866,8 +863,7 @@ namespace RayGene3D
       int32_t tex_n = 0;
       unsigned char* tex_data = stbi_load((path_name + file_name).c_str(), &tex_x, &tex_y, &tex_n, STBI_default);
 
-      Texture texture;
-      texture.texels.Allocate(tex_x * tex_y * uint32_t(sizeof(glm::u8vec4)));
+      auto raw = Raw(tex_x * tex_y * uint32_t(sizeof(glm::u8vec4)));
 
       for (uint32_t i = 0; i < tex_x * tex_y; ++i)
       {
@@ -875,14 +871,11 @@ namespace RayGene3D
         const auto g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
         const auto b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
         const auto a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
-        texture.texels.SetElement<glm::u8vec4>({ r, g, b, a }, i);
+        raw.SetElement<glm::u8vec4>({ r, g, b, a }, i);
       }
       stbi_image_free(tex_data);
 
-      texture.extent_x = tex_x;
-      texture.extent_y = tex_y;
-
-      return texture;
+      return std::make_tuple(std::move(raw), tex_x, tex_y);
     };
 
     if (!textures_0_names.empty())
@@ -962,8 +955,7 @@ namespace RayGene3D
       auto raws = std::vector<Raw>(textures_0.size());
       for (uint32_t i = 0; i < uint32_t(textures_0.size()); ++i)
       {
-        raws[i] = std::get<0>(ResizeTextureLDR(textures_0[i].texels,
-          textures_0[i].extent_x, textures_0[i].extent_y, texture_level, true));
+        raws[i] = std::get<0>(ResizeTextureLDR(textures_0[i], texture_level, true));
       }
       const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, 
         1u << int(texture_level) - 1, 1u << int(texture_level) - 1, FORMAT_R8G8B8A8_SRGB, texture_level);
@@ -974,8 +966,7 @@ namespace RayGene3D
       auto raws = std::vector<Raw>(textures_1.size());
       for (uint32_t i = 0; i < uint32_t(textures_1.size()); ++i)
       {
-        raws[i] = std::get<0>(ResizeTextureLDR(textures_1[i].texels,
-          textures_1[i].extent_x, textures_1[i].extent_y, texture_level, true));
+        raws[i] = std::get<0>(ResizeTextureLDR(textures_1[i], texture_level, true));
       }
       const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
         1u << int(texture_level) - 1, 1u << int(texture_level) - 1, FORMAT_R8G8B8A8_UNORM, texture_level);
@@ -986,8 +977,7 @@ namespace RayGene3D
       auto raws = std::vector<Raw>(textures_2.size());
       for (uint32_t i = 0; i < uint32_t(textures_2.size()); ++i)
       {
-        raws[i] = std::get<0>(ResizeTextureLDR(textures_2[i].texels,
-          textures_2[i].extent_x, textures_2[i].extent_y, texture_level, true));
+        raws[i] = std::get<0>(ResizeTextureLDR(textures_2[i], texture_level, true));
       }
       const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
         1u << int(texture_level) - 1, 1u << int(texture_level) - 1, FORMAT_R8G8B8A8_UNORM, texture_level);
@@ -998,8 +988,7 @@ namespace RayGene3D
       auto raws = std::vector<Raw>(textures_3.size());
       for (uint32_t i = 0; i < uint32_t(textures_3.size()); ++i)
       {
-        raws[i] = std::get<0>(ResizeTextureLDR(textures_3[i].texels,
-          textures_3[i].extent_x, textures_3[i].extent_y, texture_level, true));
+        raws[i] = std::get<0>(ResizeTextureLDR(textures_3[i], texture_level, true));
       }
       const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
         1u << int(texture_level) - 1, 1u << int(texture_level) - 1, FORMAT_R8G8B8A8_UNORM, texture_level);
