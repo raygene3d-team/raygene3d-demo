@@ -496,13 +496,16 @@ namespace RayGene3D
         const auto environment_exposure = config_property->GetObjectItem("environment")->GetObjectItem("exposure")->GetReal();
         const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
 
-        const auto extent_x = 2u;
-        const auto extent_y = 1u;
-        const auto stride = uint32_t(sizeof(glm::f32vec4));
-        const auto count = extent_x * extent_y;
-        auto raw = Raw(stride * count);
-        const auto value = glm::f32vec4{ 0.5f, 0.5f, 0.5f, 1.0f };
-        for (auto i = 0u; i < count; ++i) { raw.SetElement<glm::f32vec4>(value, i); }
+        //auto [raw, extent_x, extent_y] = LoadTextureHDR(environment_path + environment_name);
+        auto [raw, extent_x, extent_y] = ResizeTextureHDR(LoadTextureHDR(environment_path + environment_name), environment_quality, false);
+
+        //const auto extent_x = 2u;
+        //const auto extent_y = 1u;
+        //const auto stride = uint32_t(sizeof(glm::f32vec4));
+        //const auto count = extent_x * extent_y;
+        //auto raw = Raw(stride * count);
+        //const auto value = glm::f32vec4{ 0.5f, 0.5f, 0.5f, 1.0f };
+        //for (auto i = 0u; i < count; ++i) { raw.SetElement<glm::f32vec4>(value, i); }
         environment_property = CreateTextureProperty({&raw, 1u}, extent_x, extent_y, FORMAT_R32G32B32A32_FLOAT, 1u);
       }
       tree_property->SetObjectItem("environment_property", environment_property);
