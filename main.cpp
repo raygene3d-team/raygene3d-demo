@@ -363,10 +363,17 @@ namespace RayGene3D
       wrap->GetCore()->Initialize();
 
       {
-        const auto frame_pixels = std::vector<glm::u8vec4>(extent_x * extent_y);
+        const auto stride = uint32_t(sizeof(glm::u8vec4));
+        const auto count = uint32_t(extent_x * extent_y);
+        auto raw = RayGene3D::Raw{ stride * count };
+        for (auto i = 0u; i < count; ++i)
+        {
+          raw.SetElement<glm::u8vec4>({ 0, 0, 0, 0 }, i);
+        }
+        prop_screen = CreateBufferProperty({ &raw, 1 }, stride, count);
         std::pair<const void*, uint32_t> interops[] =
         {
-          { frame_pixels.data(), uint32_t(sizeof(glm::u8vec4) * frame_pixels.size()) }
+          prop_screen->GetObjectItem("chunks")->GetArrayItem(0)->GetRawBytes(0)
         };
 
         const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",
