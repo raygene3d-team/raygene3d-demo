@@ -952,46 +952,82 @@ namespace RayGene3D
     }
   
     {
-      auto raws = std::vector<Raw>(textures_0.size());
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
       for (uint32_t i = 0; i < uint32_t(textures_0.size()); ++i)
       {
-        raws[i] = std::get<0>(ResizeTextureLDR(textures_0[i], texture_level, true));
+        auto [mipmaps, size_x, size_y] = 
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_0[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
       }
-      const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, 
-        1u << int(texture_level) - 1, 1u << int(texture_level) - 1, FORMAT_R8G8B8A8_SRGB, texture_level);
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty() 
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_0.size()));
       root->SetObjectItem("textures_0", property);
     }
 
     {
-      auto raws = std::vector<Raw>(textures_1.size());
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
       for (uint32_t i = 0; i < uint32_t(textures_1.size()); ++i)
       {
-        raws[i] = std::get<0>(ResizeTextureLDR(textures_1[i], texture_level, true));
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_1[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
       }
-      const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
-        1u << int(texture_level) - 1, 1u << int(texture_level) - 1, FORMAT_R8G8B8A8_UNORM, texture_level);
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_1.size()));
       root->SetObjectItem("textures_1", property);
     }
 
     {
-      auto raws = std::vector<Raw>(textures_2.size());
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
       for (uint32_t i = 0; i < uint32_t(textures_2.size()); ++i)
       {
-        raws[i] = std::get<0>(ResizeTextureLDR(textures_2[i], texture_level, true));
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_2[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
       }
-      const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
-        1u << int(texture_level) - 1, 1u << int(texture_level) - 1, FORMAT_R8G8B8A8_UNORM, texture_level);
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_2.size()));
       root->SetObjectItem("textures_2", property);
     }
 
     {
-      auto raws = std::vector<Raw>(textures_3.size());
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
       for (uint32_t i = 0; i < uint32_t(textures_3.size()); ++i)
       {
-        raws[i] = std::get<0>(ResizeTextureLDR(textures_3[i], texture_level, true));
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_3[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
       }
-      const auto property = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
-        1u << int(texture_level) - 1, 1u << int(texture_level) - 1, FORMAT_R8G8B8A8_UNORM, texture_level);
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_3.size()));
       root->SetObjectItem("textures_3", property);
     }
 

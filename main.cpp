@@ -373,7 +373,7 @@ namespace RayGene3D
         prop_screen = CreateBufferProperty({ &raw, 1 }, stride, count);
         std::pair<const void*, uint32_t> interops[] =
         {
-          prop_screen->GetObjectItem("chunks")->GetArrayItem(0)->GetRawBytes(0)
+          prop_screen->GetObjectItem("raws")->GetArrayItem(0)->GetRawBytes(0)
         };
 
         const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",
@@ -496,17 +496,14 @@ namespace RayGene3D
         const auto environment_exposure = config_property->GetObjectItem("environment")->GetObjectItem("exposure")->GetReal();
         const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
 
-        //auto [raw, extent_x, extent_y] = LoadTextureHDR(environment_path + environment_name);
-        auto [raw, extent_x, extent_y] = ResizeTextureHDR(LoadTextureHDR(environment_path + environment_name), environment_quality, false);
-
-        //const auto extent_x = 2u;
-        //const auto extent_y = 1u;
-        //const auto stride = uint32_t(sizeof(glm::f32vec4));
-        //const auto count = extent_x * extent_y;
-        //auto raw = Raw(stride * count);
-        //const auto value = glm::f32vec4{ 0.5f, 0.5f, 0.5f, 1.0f };
-        //for (auto i = 0u; i < count; ++i) { raw.SetElement<glm::f32vec4>(value, i); }
-        environment_property = CreateTextureProperty({&raw, 1u}, extent_x, extent_y, FORMAT_R32G32B32A32_FLOAT, 1u);
+        const auto extent_x = 1u << int32_t(environment_quality) - 1;
+        const auto extent_y = 1u << int32_t(environment_quality) - 2;
+        auto [raws, size_x, size_y] = 
+          MipmapTextureHDR(environment_quality, 
+            ResizeTextureHDR(extent_x, extent_y,
+              LoadTextureHDR(environment_path + environment_name)));
+        environment_property = CreateTextureProperty({raws.data(), uint32_t(raws.size())}, 
+          extent_x, extent_y, environment_quality, 1u);
       }
       tree_property->SetObjectItem("environment_property", environment_property);
 
