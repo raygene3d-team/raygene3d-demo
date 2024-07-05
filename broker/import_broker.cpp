@@ -652,7 +652,7 @@ namespace RayGene3D
         raw.SetElement<glm::u8vec4>({r, g, b, a}, i);
       }
 
-      return std::make_tuple(std::move(raw), tex_x, tex_y);
+      return std::make_tuple(std::move(raw), uint32_t(tex_x), uint32_t(tex_y));
     };
 
     textures_0.resize(texture_0_indices.size());
