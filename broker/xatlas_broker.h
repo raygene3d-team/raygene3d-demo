@@ -42,6 +42,11 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_triangles;
     std::shared_ptr<Property> prop_vertices;
 
+  protected:
+    uint32_t extent_x{ 0u };
+    uint32_t extent_y{ 0u };
+    uint32_t layers{ 0u };
+
   public:
     void Initialize() override;
     void Use() override;
