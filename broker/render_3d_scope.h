@@ -123,7 +123,7 @@ namespace RayGene3D
     SPtrResource scene_textures2;
     SPtrResource scene_textures3;
 
-    SPtrResource light_maps;
+    SPtrResource scene_lightmaps;
 
     SPtrResource reflection_probe;
 

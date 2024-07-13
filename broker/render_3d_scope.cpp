@@ -419,34 +419,28 @@ namespace RayGene3D
 
   void Render3DScope::CreateLightMaps()
   {
-    const auto layers = prop_lightmaps->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_SRGB;
-    const auto bpp = 4u;
+    const auto& layers = prop_lightmaps->GetObjectItem("layers");
+    const auto& mipmap = prop_lightmaps->GetObjectItem("mipmap");
+    const auto& extent_x = prop_lightmaps->GetObjectItem("extent_x");
+    const auto& extent_y = prop_lightmaps->GetObjectItem("extent_y");
+    const auto& raws = prop_lightmaps->GetObjectItem("raws");
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_lightmaps->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
     {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
     }
 
-    std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_lightmaps->GetArraySize(); ++i)
-    {
-      interops.emplace_back(prop_lightmaps->GetArrayItem(i)->GetRawBytes(0));
-    }
-
-    light_maps = core->GetDevice()->CreateResource("spark_light_maps",
+    scene_lightmaps = core->GetDevice()->CreateResource("spark_scene_lightmaps",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -681,8 +675,8 @@ namespace RayGene3D
 
   void Render3DScope::DestroyLightMaps()
   {
-    core->GetDevice()->DestroyResource(light_maps);
-    light_maps.reset();
+    core->GetDevice()->DestroyResource(scene_lightmaps);
+    scene_lightmaps.reset();
   }
 
   void Render3DScope::DestroyScreenQuadVertices()
@@ -753,20 +747,7 @@ namespace RayGene3D
       prop_textures2 = prop_scene->GetObjectItem("textures_2");
       prop_textures3 = prop_scene->GetObjectItem("textures_3");
 
-      prop_lightmaps = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-      {
-        prop_lightmaps->SetArraySize(uint32_t(1));
-
-        const auto texel_value = glm::u8vec4(255, 255, 255, 255);
-        const auto texel_size = uint32_t(sizeof(texel_value));
-
-        const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-        texels_property->RawAllocate(texel_size);
-        texels_property->SetRawBytes({ &texel_value, texel_size }, 0);
-        prop_lightmaps->SetArrayItem(0, texels_property);
-      }
-
-      //prop_lightmaps = prop_scene->GetObjectItem("textures4");
+      prop_lightmaps = prop_scene->GetObjectItem("lightmaps");
     }
 
     prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera_property");

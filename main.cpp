@@ -471,10 +471,25 @@ namespace RayGene3D
 
       {
         auto bvh_broker = std::shared_ptr<RayGene3D::BVHBroker>(new RayGene3D::BVHBroker(*wrap));
+
         bvh_broker->Initialize();
+        bvh_broker->Use();
+        bvh_broker->Discard();
 
         bvh_broker.reset();
       }
+
+      {
+        auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
+
+        lightmap_broker->Initialize();
+        lightmap_broker->Use();
+        lightmap_broker->Discard();
+
+        lightmap_broker.reset();
+      }
+
+
 
       camera_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {

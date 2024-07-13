@@ -324,8 +324,11 @@ namespace RayGene3D
 
   void BVHBroker::Discard()
   {
-    if (prop_scene->HasObjectItem("t_boxes")) prop_scene->RemoveObjectItem("t_boxes");
-    if (prop_scene->HasObjectItem("b_boxes")) prop_scene->RemoveObjectItem("b_boxes");
+    prop_vertices.reset();
+    prop_triangles.reset();
+    prop_instances.reset();
+
+    prop_scene.reset();
   }
 
   BVHBroker::BVHBroker(Wrap& wrap)

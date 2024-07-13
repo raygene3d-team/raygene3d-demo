@@ -74,7 +74,7 @@ VK_BINDING(6) Texture2DArray<float4> texture1_items : register(t1);
 VK_BINDING(7) Texture2DArray<float4> texture2_items : register(t2);
 VK_BINDING(8) Texture2DArray<float4> texture3_items : register(t3);
 
-//VK_BINDING(9) Texture2DArray<float4> texture4_items : register(t4);
+VK_BINDING(9) Texture2DArray<float4> lightmap_items : register(t4);
 
 
 
@@ -97,7 +97,8 @@ struct VSOutput
   VK_LOCATION(2) float4 w_tng_v : register2;
   VK_LOCATION(3) float2 tc1		: register3;
   VK_LOCATION(4) uint mask 		: register4;
-  VK_LOCATION(5) float4 pos   : SV_Position;
+  VK_LOCATION(5) float4 color   : register5;
+  VK_LOCATION(6) float4 pos     : SV_Position;
 };
 
 VSOutput vs_main(VSInput input)
@@ -110,6 +111,7 @@ VSOutput vs_main(VSInput input)
   output.w_tng_v = float4(input.tgn, input.tc0.y);
   output.tc1 = input.tc1;
   output.mask = input.msk;
+  output.color = input.col;
   return output;
 }
 
@@ -120,6 +122,7 @@ struct PSInput
   VK_LOCATION(2) float4 w_tng_v : register2;
   VK_LOCATION(3) float2 tc1		: register3;
   VK_LOCATION(4) uint mask 		: register4;
+  VK_LOCATION(5) float4 color   : register5;
 };
 
 struct PSOutput
@@ -158,17 +161,19 @@ PSOutput ps_main(PSInput input)
   //#endif
   //
 #ifdef USE_NORMAL_MAP
-  n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
+    n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
 #endif
 
-  
+    
+  const float4 lightmaps_value = lightmap_items.Sample(sampler0, float3(input.tc1, input.mask));
+
   
   const float smoothness = surface.shininess;
-  const float3 albedo = surface.diffuse;
+  const float3 albedo = input.color.rgb; //surface.diffuse;
   const float metallic = surface.specular.b;
   const float roughness = surface.specular.g;
 
-  const float3 global_illumination = 0.025 * albedo;
+  const float3 global_illumination = lightmaps_value.rgb * input.color.rgb; //    0.025 * albedo;
 
   output.target_0 = float4(surface.emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);

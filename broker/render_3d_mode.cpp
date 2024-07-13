@@ -224,7 +224,7 @@ namespace RayGene3D
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    auto geometry_light_maps = scope.light_maps->CreateView("spark_geometry_light_maps",
+    auto geometry_scene_lightmaps = scope.scene_lightmaps->CreateView("spark_geometry_scene_lightmaps",
       Usage(USAGE_SHADER_RESOURCE)
     );
 
@@ -233,6 +233,7 @@ namespace RayGene3D
       geometry_scene_textures1,
       geometry_scene_textures2,
       geometry_scene_textures3,
+      geometry_scene_lightmaps,
     };
 
     geometry_batch = geometry_technique->CreateBatch("spark_geometry_batch",

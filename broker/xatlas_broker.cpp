@@ -278,19 +278,21 @@ namespace RayGene3D
 
     xatlas::PackOptions packOptions;
     packOptions.resolution = 2048;
-    packOptions.texelsPerUnit = 200.0;
+    packOptions.texelsPerUnit = 100.0f; // 200.0;
     xatlas::PackCharts(atlas, packOptions);
 
     BLAST_ASSERT(atlas->meshCount == ins_count);
 
     auto updated_vrt_count = 0u;
     auto updated_trg_count = 0u;
+    auto updated_ins_count = 0u;
     for (uint32_t i = 0; i < atlas->meshCount; i++)
     {
       const auto& mesh = atlas->meshes[i];
 
       updated_vrt_count += mesh.vertexCount;
       updated_trg_count += mesh.indexCount * 3;
+      updated_ins_count += 1u;
     }
 
     const auto updated_prop_vrt = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
@@ -300,11 +302,11 @@ namespace RayGene3D
     updated_prop_trg->RawAllocate(updated_trg_count * uint32_t(sizeof(Triangle)));
 
     const auto updated_prop_ins = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    updated_prop_trg->RawAllocate(updated_trg_count * uint32_t(sizeof(Instance)));
+    updated_prop_ins->RawAllocate(updated_ins_count * uint32_t(sizeof(Instance)));
 
     auto updated_vrt_offset = 0u;
     auto updated_trg_offset = 0u;
-    for (uint32_t i = 0; i < atlas->meshCount; i++)
+    for (uint32_t i = 0; i < atlas->meshCount; ++i)
     {
       const auto& mesh = atlas->meshes[i];
 
@@ -315,7 +317,7 @@ namespace RayGene3D
         Vertex updated_vrt = vrt_array[ins_array[i].vert_offset + mesh.vertexArray[j].xref];
         updated_vrt.msk = vertex.atlasIndex;
         updated_vrt.tc1 = { vertex.uv[0] / atlas->width, vertex.uv[1] / atlas->height };
-        updated_prop_vrt->SetTypedBytes<Vertex>({ &updated_vrt, 1}, updated_vrt_offset + j);
+        updated_prop_vrt->SetTypedBytes<Vertex>({ &updated_vrt, 1 }, updated_vrt_offset + j);
       }
 
       for (uint32_t j = 0; j < mesh.indexCount / 3; j++)
@@ -329,6 +331,41 @@ namespace RayGene3D
         updated_prop_trg->SetTypedBytes<Triangle>({ &updated_trg, 1 }, updated_trg_offset + j);
       }
 
+      for (uint32_t j = 0; j < mesh.chartCount; ++j)
+      {
+        const auto& chart = mesh.chartArray[j];
+
+        const auto color = glm::u8vec4
+        {
+          rand() % 64 + 63,
+          rand() % 64 + 63,
+          rand() % 64 + 63,
+          255
+        };
+
+        for (uint32_t k = 0; k < chart.faceCount; ++k)
+        {
+          const auto face = chart.faceArray[k];
+
+          const auto idx_0 = mesh.indexArray[3 * face + 0];
+          auto vtx_0 = *updated_prop_vrt->GetTypedBytes<Vertex>(updated_vrt_offset + idx_0).first;
+          vtx_0.col = color;
+          updated_prop_vrt->SetTypedBytes<Vertex>({ &vtx_0, 1 }, updated_vrt_offset + idx_0);
+
+          const auto idx_1 = mesh.indexArray[3 * face + 1];
+          auto vtx_1 = *updated_prop_vrt->GetTypedBytes<Vertex>(updated_vrt_offset + idx_1).first;
+          vtx_1.col = color;
+          updated_prop_vrt->SetTypedBytes<Vertex>({ &vtx_1, 1 }, updated_vrt_offset + idx_1);
+
+          const auto idx_2 = mesh.indexArray[3 * face + 2];
+          auto vtx_2 = *updated_prop_vrt->GetTypedBytes<Vertex>(updated_vrt_offset + idx_2).first;
+          vtx_2.col = color;
+          updated_prop_vrt->SetTypedBytes<Vertex>({ &vtx_2, 1 }, updated_vrt_offset + idx_2);
+        }
+      }
+
+
+
       Instance updated_ins = ins_array[i];
       updated_ins.vert_count = mesh.vertexCount;
       updated_ins.vert_offset = updated_vrt_offset;
@@ -340,110 +377,51 @@ namespace RayGene3D
       updated_trg_offset += mesh.indexCount / 3;
     }
 
-    prop_instances = updated_prop_ins;
-    prop_triangles = updated_prop_trg;
-    prop_vertices = updated_prop_vrt;
+    prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->SetArrayItem(0, updated_prop_ins);
+    prop_scene->GetObjectItem("instances")->GetObjectItem("count")->SetUint(updated_ins_count);
+
+    prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->SetArrayItem(0, updated_prop_trg);
+    prop_scene->GetObjectItem("triangles")->GetObjectItem("count")->SetUint(updated_trg_count);
+
+    prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->SetArrayItem(0, updated_prop_vrt);
+    prop_scene->GetObjectItem("vertices")->GetObjectItem("count")->SetUint(updated_vrt_count);
+
 
     extent_x = atlas->width;
     extent_y = atlas->height;
     layers = atlas->atlasCount;
 
-    //if (atlas->width > 0 && atlas->height > 0)
-    //{
-    //  const auto white = glm::u8vec4(255, 255, 255, 255);
+    for (uint32_t i = 0; i < atlas->meshCount; ++i)
+    {
+      const auto& mesh = atlas->meshes[i];
 
-    //  const auto triangle_raster_fn = [](glm::u8vec4* pixels, uint32_t size_x, uint32_t size_y, const float* v0, const float* v1, const float* v2, const glm::u8vec4& color)
-    //  {
-    //    const auto tc0 = glm::f32vec2(v0[0], v0[1]);
-    //    const auto tc1 = glm::f32vec2(v1[0], v1[1]);
-    //    const auto tc2 = glm::f32vec2(v2[0], v2[1]);
+      for (uint32_t j = 0; j < mesh.chartCount; ++j)
+      {
+        const auto& chart = mesh.chartArray[j];
 
-    //    const auto min = glm::min(glm::min(tc0, tc1), tc2);
-    //    const auto max = glm::max(glm::max(tc0, tc1), tc2);
+        const auto color = glm::u8vec4
+        {
+          uint8_t((rand() % 255 + 192) * 0.5f),
+          uint8_t((rand() % 255 + 192) * 0.5f),
+          uint8_t((rand() % 255 + 192) * 0.5f),
+          uint8_t(255)
+        };
 
-    //    const auto denom = glm::determinant(glm::f32mat2x2(tc1 - tc0, tc2 - tc0));
+        for (uint32_t k = 0; k < chart.faceCount; ++k)
+        {
+          const auto face = chart.faceArray[k];
 
-    //    for (uint32_t i = 0; i < size_y; ++i)
-    //    {
-    //      if (i < min.y || i > max.y) continue;
-
-    //      for (uint32_t j = 0; j < size_x; ++j)
-    //      {
-    //        if (j < min.x || j > max.x) continue;
-
-    //        const auto pnt = glm::f32vec2(j + 0.0f, i + 0.0f);
-
-    //        const auto v = glm::determinant(glm::f32mat2x2(pnt - tc0, tc2 - tc0)) / denom;
-    //        if (v < 0.0f || v > 1.0f) continue;
-
-    //        const auto w = glm::determinant(glm::f32mat2x2(tc1 - tc0, pnt - tc0)) / denom;
-    //        if (w < 0.0f || w > 1.0f) continue;
-
-    //        const auto u = 1.0f - v - w;
-    //        if (u < 0.0f || u > 1.0f) continue;
-
-    //        pixels[(size_x * i + j)] = color;
-
-    //        const auto pattern = glm::floor(pnt / 16.0f);
-    //        const auto fading = 0.5f * glm::fract(0.5f * (pattern.x + pattern.y)) + 0.5f;
-
-    //        pixels[(size_x * i + j)].x *= fading;
-    //        pixels[(size_x * i + j)].y *= fading;
-    //        pixels[(size_x * i + j)].z *= fading;
-    //      }
-    //    }
-    //  };
-
-    //  textures_4.resize(atlas->atlasCount);
-
-    //  for (uint32_t z = 0; z < atlas->atlasCount; ++z)
-    //  {
-    //    //std::vector<uint8_t> image(atlas->width* atlas->height * 3);
-
-    //    Texture texture;
-    //    texture.texels.resize(atlas->width * atlas->height);
-    //    texture.extent_x = atlas->width;
-    //    texture.extent_y = atlas->height;
-
-    //    for (uint32_t i = 0; i < atlas->meshCount; ++i)
-    //    {
-    //      const auto& mesh = atlas->meshes[i];
-
-    //      for (uint32_t j = 0; j < mesh.chartCount; ++j)
-    //      {
-    //        const auto& chart = mesh.chartArray[j];
-    //        if (chart.atlasIndex != z) continue;
-
-    //        BLAST_ASSERT(chart.atlasIndex != -1);
-
-    //        const auto color = glm::u8vec4(uint8_t((rand() % 255 + 192) * 0.5f), uint8_t((rand() % 255 + 192) * 0.5f), uint8_t((rand() % 255 + 192) * 0.5f), 255);
-
-    //        for (uint32_t k = 0; k < chart.faceCount; ++k)
-    //        {
-    //          const auto face = chart.faceArray[k];
-
-    //          const auto& vtx0 = mesh.vertexArray[mesh.indexArray[3 * face + 0]];
-    //          const auto& vtx1 = mesh.vertexArray[mesh.indexArray[3 * face + 1]];
-    //          const auto& vtx2 = mesh.vertexArray[mesh.indexArray[3 * face + 2]];
+          auto& vtx0 = mesh.vertexArray[mesh.indexArray[3 * face + 0]];
+          auto& vtx1 = mesh.vertexArray[mesh.indexArray[3 * face + 1]];
+          auto& vtx2 = mesh.vertexArray[mesh.indexArray[3 * face + 2]];
 
 
-    //          const int v0[2] = { int(vtx0.uv[0]), int(vtx0.uv[1]) };
-    //          const int v1[2] = { int(vtx1.uv[0]), int(vtx1.uv[1]) };
-    //          const int v2[2] = { int(vtx2.uv[0]), int(vtx2.uv[1]) };
-
-    //          triangle_raster_fn(texture.texels.data(), texture.extent_x, texture.extent_y, vtx0.uv, vtx1.uv, vtx2.uv, color);
-    //        }
-    //      }
-    //    }
-
-    //    //char filename[256];
-    //    //snprintf(filename, sizeof(filename), "example_tris%02u.png", z);
-    //    //printf("Writing '%s'...\n", filename);
-    //    //stbi_write_png(filename, texture.extent_x, texture.extent_y, 4, texture.texels.data(), 4 * texture.extent_x);
-
-    //    textures_4[z] = std::move(texture);
-    //  }
-    //}
+          const int v0[2] = { int(vtx0.uv[0]), int(vtx0.uv[1]) };
+          const int v1[2] = { int(vtx1.uv[0]), int(vtx1.uv[1]) };
+          const int v2[2] = { int(vtx2.uv[0]), int(vtx2.uv[1]) };
+        }
+      }
+    }
 
     xatlas::Destroy(atlas);
   }
@@ -464,10 +442,6 @@ namespace RayGene3D
     const auto layers_property = std::shared_ptr<Property>(new Property(Property::TYPE_UINT));
     layers_property->SetUint(layers);
     atlas_property->SetObjectItem("layers", layers_property);
-
-    prop_scene->SetObjectItem("instances", prop_instances);
-    prop_scene->SetObjectItem("triangles", prop_triangles);
-    prop_scene->SetObjectItem("vertices", prop_vertices);
 
     prop_vertices.reset();
     prop_triangles.reset();
