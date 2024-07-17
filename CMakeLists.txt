@@ -63,6 +63,8 @@ set(SOURCE main.cpp
   broker/lightmap_broker.cpp
   broker/mikktspace_broker.h
   broker/mikktspace_broker.cpp
+  broker/photonmap_broker.h
+  broker/photonmap_broker.cpp
   broker/xatlas_broker.h
   broker/xatlas_broker.cpp
   broker/render_3d_broker.h

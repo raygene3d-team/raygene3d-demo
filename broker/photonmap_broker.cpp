@@ -25,35 +25,53 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ================================================================================*/
+#include "photonmap_broker.h"
 
-
-#pragma once
-#include "../raygene3d-wrap/wrap.h"
 
 namespace RayGene3D
 {
-  class XAtlasBroker : public Broker
+  void PhotonmapBroker::Initialize()
   {
-  protected:
-    std::shared_ptr<Property> prop_scene;
+    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
-  protected:
-    std::shared_ptr<Property> prop_instances;
-    std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
+    prop_scene = tree->GetObjectItem("scene_property");
+    {
+      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+    }
+  }
 
-  protected:
-    uint32_t extent_x{ 0u };
-    uint32_t extent_y{ 0u };
-    uint32_t layers{ 0u };
+  void PhotonmapBroker::Use()
+  {
+    const auto [ins_array, ins_count] = prop_instances->GetTypedBytes<Instance>(0);
+    const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
+    const auto [vrt_array, vrt_count] = prop_vertices->GetTypedBytes<Vertex>(0);
 
-  public:
-    void Initialize() override;
-    void Use() override;
-    void Discard() override;
+    //glm::f32vec3 src = { 34.217, 0.957, 7.187 };
 
-  public:
-    XAtlasBroker(Wrap& wrap);
-    virtual ~XAtlasBroker();
-  };
+    //const auto dst = glm::packUnorm4x8(glm::packRGBM(glm::sqrt(src)));
+
+    //const auto res = glm::unpackRGBM(glm::unpackUnorm4x8(dst)) * glm::unpackRGBM(glm::unpackUnorm4x8(dst));
+
+    //int g = 8;
+  }
+
+  void PhotonmapBroker::Discard()
+  {
+    prop_vertices.reset();
+    prop_triangles.reset();
+    prop_instances.reset();
+
+    prop_scene.reset();
+  }
+
+  PhotonmapBroker::PhotonmapBroker(Wrap& wrap)
+    : Broker("photonmap_broker", wrap)
+  {
+  }
+
+  PhotonmapBroker::~PhotonmapBroker()
+  {
+  }
 }

@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "broker/render_ui_broker.h"
 
 #include "broker/bvh_broker.h"
+#include "broker/xatlas_broker.h"
 #include "broker/mikktspace_broker.h"
 #include "broker/import_broker.h"
 #include "broker/lightmap_broker.h"
@@ -459,11 +460,36 @@ namespace RayGene3D
       }
 
       {
+        auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
+
+        xatlas_broker->Initialize();
+        xatlas_broker->Use();
+        xatlas_broker->Discard();
+
+        xatlas_broker.reset();
+      }
+
+      {
         auto bvh_broker = std::shared_ptr<RayGene3D::BVHBroker>(new RayGene3D::BVHBroker(*wrap));
+
         bvh_broker->Initialize();
+        bvh_broker->Use();
+        bvh_broker->Discard();
 
         bvh_broker.reset();
       }
+
+      {
+        auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
+
+        lightmap_broker->Initialize();
+        lightmap_broker->Use();
+        lightmap_broker->Discard();
+
+        lightmap_broker.reset();
+      }
+
+
 
       camera_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
@@ -682,7 +708,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
+      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_D11, RayGene3D::Util::STORAGE_LOCAL));
     }
 
     ~GLFWWrapper()

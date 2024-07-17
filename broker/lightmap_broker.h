@@ -42,6 +42,12 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_triangles;
     std::shared_ptr<Property> prop_vertices;
 
+  protected:
+    std::shared_ptr<Property> prop_atlas;
+
+  protected:
+    std::shared_ptr<Property> prop_lightmaps;
+
   public:
     void Initialize() override;
     void Use() override;
