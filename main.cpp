@@ -449,45 +449,7 @@ namespace RayGene3D
       }
       tree_property->SetObjectItem("scene_property", scene_property);
 
-      {
-        auto mikktspace_broker = std::shared_ptr<RayGene3D::MikktspaceBroker>(new RayGene3D::MikktspaceBroker(*wrap));
-        
-        mikktspace_broker->Initialize();
-        mikktspace_broker->Use();
-        mikktspace_broker->Discard();
 
-        mikktspace_broker.reset();
-      }
-
-      {
-        auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
-
-        xatlas_broker->Initialize();
-        xatlas_broker->Use();
-        xatlas_broker->Discard();
-
-        xatlas_broker.reset();
-      }
-
-      {
-        auto bvh_broker = std::shared_ptr<RayGene3D::BVHBroker>(new RayGene3D::BVHBroker(*wrap));
-
-        bvh_broker->Initialize();
-        bvh_broker->Use();
-        bvh_broker->Discard();
-
-        bvh_broker.reset();
-      }
-
-      {
-        auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
-
-        lightmap_broker->Initialize();
-        lightmap_broker->Use();
-        lightmap_broker->Discard();
-
-        lightmap_broker.reset();
-      }
 
 
 
@@ -544,6 +506,56 @@ namespace RayGene3D
         lighting_property->SetObjectItem("intensity", lighting_intensity);
       }
       tree_property->SetObjectItem("lighting_property", lighting_property);
+
+      {
+        auto mikktspace_broker = std::shared_ptr<RayGene3D::MikktspaceBroker>(new RayGene3D::MikktspaceBroker(*wrap));
+
+        mikktspace_broker->Initialize();
+        mikktspace_broker->Use();
+        mikktspace_broker->Discard();
+
+        mikktspace_broker.reset();
+      }
+
+      {
+        auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
+
+        xatlas_broker->Initialize();
+        xatlas_broker->Use();
+        xatlas_broker->Discard();
+
+        xatlas_broker.reset();
+      }
+
+      {
+        auto environment_broker = std::shared_ptr<RayGene3D::EnvironmentBroker>(new RayGene3D::EnvironmentBroker(*wrap));
+
+        environment_broker->Initialize();
+        environment_broker->Use();
+        environment_broker->Discard();
+
+        environment_broker.reset();
+      }
+
+      {
+        auto bvh_broker = std::shared_ptr<RayGene3D::BVHBroker>(new RayGene3D::BVHBroker(*wrap));
+
+        bvh_broker->Initialize();
+        bvh_broker->Use();
+        bvh_broker->Discard();
+
+        bvh_broker.reset();
+      }
+
+      {
+        auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
+
+        lightmap_broker->Initialize();
+        lightmap_broker->Use();
+        lightmap_broker->Discard();
+
+        lightmap_broker.reset();
+      }
 
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
@@ -708,7 +720,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_D11, RayGene3D::Util::STORAGE_LOCAL));
+      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
     }
 
     ~GLFWWrapper()
