@@ -26,7 +26,7 @@ VK_BINDING(2) cbuffer constant1 : register(b1)
   float4x4 camera_proj_inv : packoffset(c12.x);
 }
 
-VK_BINDING(3) Texture2D<float4> environment_texture : register(t0);
+VK_BINDING(3) TextureCube<float4> skybox_texture : register(t0);
 
 struct VSInput
 {
@@ -63,17 +63,21 @@ PSOutput ps_main(PSInput input)
  
   const float rx = 2.0 * (input.pos.x / extent_x) - 1.0; 
   const float ry = 2.0 * (input.pos.y / extent_y) - 1.0;
+    
+  const float4 ndc_coord = float4(rx, -ry, 1.0, 1.0);
+  const float4 view_pos = mul(camera_proj_inv, ndc_coord);
+  const float3 surface_pos = mul(camera_view_inv, view_pos / view_pos.w).xyz;
+
+  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]);
+  const float camera_dst = length(camera_pos - surface_pos);
+  const float3 camera_dir = (camera_pos - surface_pos) / camera_dst;
  
-  const float3 screen_dir = normalize(mul(camera_proj_inv, float4(rx, -ry, 1.0, 1.0)).xyz);
-  const float3 camera_dir = mul(transpose((float3x3)camera_view), screen_dir);
-
-  const float env_s = 0.5 * atan2(camera_dir.x, camera_dir.z) / PI + 0.5;
-  const float env_t = -asin(camera_dir.y) / PI + 0.5;
-  const float4 env_value = environment_texture.Sample(sampler0, float2(env_s, env_t));
   
-  //const float4 env_value = environment_texture.Sample(sampler0, normalize(camera_dir));
-
-  output.target_0 = env_value;
+  //const float3 screen_dir = mul(camera_proj_inv, ndc_coord).xyz;
+  //const float3 camera_dir = mul(transpose((float3x3)camera_view), screen_dir);
+  const float4 skybox = skybox_texture.Sample(sampler0, -camera_dir);
+    
+  output.target_0 = float4(-camera_dir, 1.0); //skybox;
   output.target_1 = float4(0.0, 0.0, 0.0, 0.0);
   output.target_2 = float4(0.0, 0.0, 0.0, 0.0);
   return output;

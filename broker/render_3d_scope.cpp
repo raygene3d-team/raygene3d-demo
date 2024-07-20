@@ -520,7 +520,7 @@ namespace RayGene3D
         extent_x->GetUint(),
         extent_y->GetUint(),
       },
-      Resource::Hint(Resource::HINT_UNKNOWN),
+      Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
     );
   }
@@ -748,6 +748,8 @@ namespace RayGene3D
       prop_textures3 = prop_scene->GetObjectItem("textures_3");
 
       prop_lightmaps = prop_scene->GetObjectItem("lightmaps");
+
+      prop_skybox = prop_scene->GetObjectItem("skybox");
     }
 
     prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera_property");
@@ -775,7 +777,7 @@ namespace RayGene3D
       prop_intensity = prop_lighting->GetObjectItem("intensity");
     }
 
-    prop_skybox = util->GetStorage()->GetTree()->GetObjectItem("environment_property");
+    //prop_skybox = util->GetStorage()->GetTree()->GetObjectItem("environment_property");
 
     CreateColorTarget();
     CreateDepthTarget();

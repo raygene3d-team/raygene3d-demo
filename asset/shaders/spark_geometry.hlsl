@@ -169,11 +169,11 @@ PSOutput ps_main(PSInput input)
 
   
   const float smoothness = surface.shininess;
-  const float3 albedo = input.color.rgb; //surface.diffuse;
+  const float3 albedo = surface.diffuse;
   const float metallic = surface.specular.b;
   const float roughness = surface.specular.g;
 
-  const float3 global_illumination = lightmaps_value.rgb * input.color.rgb; //    0.025 * albedo;
+  const float3 global_illumination = 0.025 * albedo;
 
   output.target_0 = float4(surface.emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);
