@@ -38,12 +38,47 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_environment;
 
   protected:
-    //uint32_t extent{ 1024u };
+    static const uint32_t mipmap{ 7u };
+
+  protected:
+    const std::unique_ptr<Core>& core;
+    const std::unique_ptr<Util>& util;
+
+  protected:
+    SPtrPass pass;
+    SPtrTechnique technique;
+    SPtrBatch batch;
+
+  protected:
+    SPtrResource constant_array;
+    SPtrResource skybox_cubemap;
+    SPtrResource reflection_map;
 
   public:
     void Initialize() override;
     void Use() override;
     void Discard() override;
+
+  protected:
+    void CreatePass(uint32_t mipmap);
+    void CreateTechnique(uint32_t mipmap);
+    void CreateBatch(uint32_t mipmap);
+
+  protected:
+    void CreateConstantArray();
+    void CreateSkyboxCubemap();
+    void CreateReflectionMap();
+
+  protected:
+    void DestroyPass(uint32_t mipmap);
+    void DestroyTechnique(uint32_t mipmap);
+    void DestroyBatch(uint32_t mipmap);
+
+  protected:
+    void DestroyConstantArray();
+    void DestroySkyboxCubemap();
+    void DestroyReflectionMap();
+
 
   public:
     EnvironmentBroker(Wrap& wrap);
