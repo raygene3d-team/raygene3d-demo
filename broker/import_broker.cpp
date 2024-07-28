@@ -168,9 +168,10 @@ namespace RayGene3D
 
       Triangle triangle;
 
+      //NOTE: there is a face orientation swap for the left handed coordinate system
       triangle.idx[0] = remap_vertex_fn(vertices, vtx0);
-      triangle.idx[1] = remap_vertex_fn(vertices, vtx1);
-      triangle.idx[2] = remap_vertex_fn(vertices, vtx2);
+      triangle.idx[2] = remap_vertex_fn(vertices, vtx1);
+      triangle.idx[1] = remap_vertex_fn(vertices, vtx2);
 
       triangles.push_back(triangle);
     }
@@ -251,7 +252,8 @@ namespace RayGene3D
         tng.y = fvTangent[1];
         tng.z = fvTangent[2];
         auto& sgn = data->verts.first[data->prims.first[iFace].idx[iVert]].sgn;
-        sgn = fSign;
+        //NOTE: the left handed coordinate system requires the negative bitangent value
+        sgn = -fSign;
       };
 
       SMikkTSpaceContext context;
@@ -633,7 +635,12 @@ namespace RayGene3D
         0.0f, 0.0f,-1.0f,
         0.0f, 1.0f, 0.0f
       );
-      const auto nrm_transform = z_up ? z_up_transform : glm::identity<glm::fmat3x3>();
+      const auto to_lhs_transform = glm::fmat3x3(
+       -1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f
+      );
+      const auto nrm_transform = z_up ? z_up_transform * to_lhs_transform : to_lhs_transform;
       const auto pos_transform = nrm_transform * scale;
 
       const auto flip_v_tranform = glm::fmat2x2(
@@ -829,7 +836,12 @@ namespace RayGene3D
           0.0f, 0.0f,-1.0f,
           0.0f, 1.0f, 0.0f
         );
-        const auto nrm_transform = coordinate_flip ? z_up_transform : glm::identity<glm::fmat3x3>();
+        const auto to_lhs_transform = glm::fmat3x3(
+         -1.0f, 0.0f, 0.0f,
+          0.0f, 1.0f, 0.0f,
+          0.0f, 0.0f, 1.0f
+        );
+        const auto nrm_transform = coordinate_flip ? z_up_transform * to_lhs_transform : to_lhs_transform;
         const auto pos_transform = nrm_transform * position_scale;
 
         const auto flip_v_tranform = glm::fmat2x2(

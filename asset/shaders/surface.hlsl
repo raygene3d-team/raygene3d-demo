@@ -40,7 +40,8 @@ Surface Initialize_OBJ(float3 emission, float intensity, float3 diffuse, float s
 #endif
 
 #ifdef USE_NORMAL_MAP
-  surface.normal = normalize(float3(float2(1.0 - tex3_value.x * 2.0, 1.0 - tex3_value.y * 2.0), 0.25));
+  surface.normal = normalize(float3(2.0 * tex3_value.x - 1.0, 2.0 * tex3_value.y - 1.0, 0.25));
+  surface.normal.x *= -1.0;
 #endif
 
   surface.metallic = 0.0;
