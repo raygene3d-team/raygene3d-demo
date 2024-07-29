@@ -122,12 +122,60 @@ namespace RayGene3D
   void EnvironmentBroker::Discard()
   {}
 
+  void EnvironmentBroker::CreateVtxArray()
+  {
+    static const std::array<glm::f32vec2, 4> quad_vtx = {
+      glm::f32vec2(-1.0f, 1.0f),
+      glm::f32vec2( 1.0f, 1.0f),
+      glm::f32vec2(-1.0f,-1.0f),
+      glm::f32vec2( 1.0f,-1.0f),
+    };
+
+    std::pair<const void*, uint32_t> interops[] = {
+      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec2)) },
+    };
+
+    vtx_array = core->GetDevice()->CreateResource("environment_vtx_array",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_VERTEX_ARRAY),
+        uint32_t(sizeof(glm::f32vec2)),
+        uint32_t(quad_vtx.size()),
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+    );
+  }
+
+  void EnvironmentBroker::CreateIdxArray()
+  {
+    static const std::array<glm::u32vec3, 2> quad_idx = {
+      glm::u32vec3(0u, 1u, 2u),
+      glm::u32vec3(3u, 2u, 1u),
+    };
+
+    std::pair<const void*, uint32_t> interops[] = {
+      { quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3)) },
+    };
+
+    idx_array = core->GetDevice()->CreateResource("environment_idx_array",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_INDEX_ARRAY),
+        uint32_t(sizeof(glm::u32vec3)),
+        uint32_t(quad_idx.size()),
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+    );
+  }
+
   void EnvironmentBroker::CreateReflectionMap()
   {
     const auto layers = 6u;
     const auto extent = 1u << int32_t(mipmap) - 1;
 
-    skybox_cubemap = core->GetDevice()->CreateResource("environment_reflection_map",
+    reflection_map = core->GetDevice()->CreateResource("environment_reflection_map",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET),
@@ -169,7 +217,7 @@ namespace RayGene3D
     );
   }
 
-  void EnvironmentBroker::CreateConstantArray()
+  void EnvironmentBroker::CreateConstantData()
   {
     ReflectionProbeLevel array[mipmap];
     for (auto i = 0u; i < mipmap; ++i)
@@ -183,7 +231,7 @@ namespace RayGene3D
       { array, count * stride },
     };
 
-    constant_array = core->GetDevice()->CreateResource("environment_constant_array",
+    constant_data = core->GetDevice()->CreateResource("environment_constant_data",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -195,147 +243,182 @@ namespace RayGene3D
       );
   }
 
-  void EnvironmentBroker::CreateBatch(uint32_t mipmap)
+
+  void EnvironmentBroker::CreateArgumentList()
   {
-    const auto layout = device->CreateLayout(name);
-
-    const Layout::Sampler samplers[] = {
-    { Layout::Sampler::FILTERING_ANISOTROPIC, 16, Layout::Sampler::ADDRESSING_REPEAT, Layout::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f }
-    };
-    layout->UpdateSamplers({ samplers, uint32_t(std::size(samplers)) });
-
-    const auto reflection_level_data = reflection_probe_data->CreateView("spark_reflection_level_data");
-    {
-      reflection_level_data->SetBind(View::BIND_CONSTANT_DATA);
-      reflection_level_data->SetByteOffset(0);
-      reflection_level_data->SetByteCount(sizeof(ReflectionProbeLevel));
-    }
-
-    const std::shared_ptr<View> sb_views[] = {
-      reflection_level_data,
-    };
-    layout->UpdateSBViews({ sb_views, uint32_t(std::size(sb_views)) });
-
-    const auto skybox_skybox_texture = skybox_texture->CreateView("spark_skybox_skybox_texture");
-    {
-      skybox_skybox_texture->SetBind(View::BIND_SHADER_RESOURCE);
-      skybox_skybox_texture->SetUsage(View::USAGE_CUBEMAP_LAYER);
-    }
-
-    const std::shared_ptr<View> ri_views[] = {
-      skybox_skybox_texture
-    };
-    layout->UpdateRIViews({ ri_views, uint32_t(std::size(ri_views)) });
-
-    return layout;
+    argument_list = core->GetDevice()->CreateResource("environment_argument_list",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_ARGUMENT_LIST),
+        uint32_t(sizeof(Batch::Graphic)),
+        1u,
+      },
+      Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
+    );
   }
+
+
+  void EnvironmentBroker::CreatePass(uint32_t mipmap)
+  {
+    //const auto extent_x = scope.prop_extent_x->GetUint();
+    //const auto extent_y = scope.prop_extent_y->GetUint();
+    //const auto extent_z = 1u;
+
+    auto environment_reflection_target = reflection_map->CreateView("environment_reflection_target_" + std::to_string(mipmap),
+      Usage(USAGE_RENDER_TARGET),
+      { mipmap, 1u },
+      { 0u, 6u },
+      View::BIND_CUBEMAP_LAYER
+    );
+
+    const Pass::RTAttachment rt_attachments[] = {
+      { environment_reflection_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
+    };
+
+    const Pass::DSAttachment ds_attachments[] = {
+      {}
+    };
+
+    pass = core->GetDevice()->CreatePass("environment_reflection_pass_" + std::to_string(mipmap),
+      Pass::TYPE_GRAPHIC,
+      { rt_attachments, uint32_t(std::size(rt_attachments)) },
+      { ds_attachments, uint32_t(std::size(ds_attachments)) }
+    );
+  }
+
 
   void EnvironmentBroker::CreateTechnique(uint32_t mipmap)
   {
-    const auto config = device->CreateConfig(name);
-
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    config->SetSource(shader_ss.str());
-    config->SetCompilation(Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_GS | Config::COMPILATION_PS));
-    config->SetTopology(Config::TOPOLOGY_TRIANGLELIST);
-    config->SetIndexer(Config::INDEXER_32_BIT);
+    std::vector<std::pair<std::string, std::string>> defines;
+    //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Config::Attribute attributes[] = {
-      { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-      { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+    const Technique::IAState ia_technique =
+    {
+      Technique::TOPOLOGY_TRIANGLELIST,
+      Technique::INDEXER_32_BIT,
+      {
+        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
+        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
+      }
     };
-    config->UpdateAttributes({ attributes, uint32_t(std::size(attributes)) });
 
-    config->SetFillMode(Config::FILL_SOLID);
-    config->SetCullMode(Config::CULL_NONE);
-    config->SetClipEnabled(false);
-
-    const Config::Blend blends[] = {
-      { false, Config::ARGUMENT_SRC_ALPHA, Config::ARGUMENT_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::ARGUMENT_INV_SRC_ALPHA, Config::ARGUMENT_ZERO, Config::OPERATION_ADD, 0xF },
+    const Technique::RCState rc_technique =
+    {
+      Technique::FILL_SOLID,
+      Technique::CULL_NONE,
+      {
+        { 0.0f, 0.0f, float(1u << int32_t(mipmap) - 1), float(1u << int32_t(mipmap) - 1), 0.0f, 1.0f }
+      },
     };
-    config->UpdateBlends({ blends, uint32_t(std::size(blends)) });
-    config->SetATCEnabled(false);
 
-    config->SetDepthEnabled(false);
-    config->SetDepthWrite(false);
-
-    const auto mip_size = reflection_probe_size >> mip_level;
-
-    const Config::Viewport viewports[] = {
-      { 0.0f, 0.0f, float(mip_size), float(mip_size), 0.0f, 1.0f },
+    const Technique::DSState ds_technique =
+    {
+      false, //depth_enabled
+      false, //depth_write
+      Technique::COMPARISON_ALWAYS //depth_comparison
     };
-    config->UpdateViewports({ viewports, uint32_t(std::size(viewports)) });
 
-    return config;
+    const Technique::OMState om_technique =
+    {
+      false,
+      {
+        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+      }
+    };
+
+    technique = pass->CreateTechnique("environment_reflection_technique_" + std::to_string(mipmap),
+      shader_ss.str(),
+      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_GS | Technique::COMPILATION_PS),
+      { defines.data(), uint32_t(defines.size()) },
+      ia_technique,
+      rc_technique,
+      ds_technique,
+      om_technique
+    );
   }
 
-  void EnvironmentBroker::CreatePass(uint32_t mipmap)
+
+  void EnvironmentBroker::CreateBatch(uint32_t mipmap)
   {
-    const auto pass = device->CreatePass(name);
-
-    pass->SetExtentX(reflection_probe_size >> mipmap);
-    pass->SetExtentY(reflection_probe_size >> mipmap);
-
-    pass->SetType(Pass::TYPE_GRAPHIC);
-    pass->SetEnabled(true);
-
-    const auto reflection_color_target = reflection_probe->CreateView("spark_reflection_color_target");
-    {
-      reflection_color_target->SetBind(View::BIND_RENDER_TARGET);
-      reflection_color_target->SetLayerOffset(0);
-      reflection_color_target->SetLayerCount(6);
-
-      reflection_color_target->SetMipmapCount(1);
-      reflection_color_target->SetMipmapOffset(mip_level);
-    }
-
-    const std::shared_ptr<View> rt_views[] = {
-      reflection_color_target,
-    };
-    pass->UpdateRTViews({ rt_views, uint32_t(std::size(rt_views)) });
-
-    const Pass::RTValue rt_values[] = {
-      std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f },
-    };
-    pass->UpdateRTValues({ rt_values, uint32_t(std::size(rt_values)) });
-
-    pass->SetSubpassCount(1);
-
-
-    Pass::Command commands[] = {
-      {nullptr, {6, 6, 0, 0, 0, 0, 0, 0}},
-    };
-    commands[0].offsets = { mip_level * uint32_t(sizeof(ReflectionProbeLevel)) };
-    pass->UpdateSubpassCommands(0, { commands, uint32_t(std::size(commands)) });
-
-    const auto reflection_probe_vertices = skybox_vertices->CreateView("spark_reflection_vertices");
-    {
-      reflection_probe_vertices->SetBind(View::BIND_VERTEX_ARRAY);
-    }
-
+    const auto vtx_view = vtx_array->CreateView("environment_vtx_view_" + std::to_string(mipmap),
+      Usage(USAGE_VERTEX_ARRAY)
+    );
     const std::shared_ptr<View> va_views[] = {
-      reflection_probe_vertices,
+      vtx_view,
     };
-    pass->UpdateSubpassVAViews(0, { va_views, uint32_t(std::size(va_views)) });
 
-    const auto reflection_probe_triangles = skybox_triangles->CreateView("spark_reflection_triangles");
-    {
-      reflection_probe_triangles->SetBind(View::BIND_INDEX_ARRAY);
-    }
-
+    const auto idx_view = idx_array->CreateView("environment_idx_view_" + std::to_string(mipmap),
+      Usage(USAGE_INDEX_ARRAY)
+    );
     const std::shared_ptr<View> ia_views[] = {
-      reflection_probe_triangles,
+      idx_view,
     };
-    pass->UpdateSubpassIAViews(0, { ia_views, uint32_t(std::size(ia_views)) });
 
-    pass->SetSubpassLayout(0, reflection_probe_layout);
-    pass->SetSubpassConfig(0, reflection_probe_configs[mip_level]);
+    const auto argument_view = argument_list->CreateView("environment_argument_view_" + std::to_string(mipmap),
+      Usage(USAGE_ARGUMENT_LIST)
+    );
 
-    return pass;
+    const auto& ins_range = View::Range{ 1u, 0u };
+    const auto& vtx_range = View::Range{ 4u, 0u };
+    const auto& idx_range = View::Range{ 6u, 0u };
+    const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(ReflectionProbeLevel))* mipmap, 0u, 0u, 0u };
+    const auto& push_data = std::nullopt;
+
+    const auto entity = Batch::Entity{
+      { va_views, va_views + uint32_t(std::size(va_views)) },
+      { ia_views, ia_views + uint32_t(std::size(ia_views)) },
+      nullptr, // geometry_graphic_arguments,
+      ins_range,
+      vtx_range,
+      idx_range,
+      sb_offset,
+      push_data
+    };
+
+    const Batch::Sampler samplers[] = {
+      { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+    };
+
+
+    const std::shared_ptr<View> ub_views[] = {
+      {},
+    };
+
+
+    const auto constant_view = constant_data->CreateView("environment_argument_view_" + std::to_string(mipmap),
+      Usage(USAGE_CONSTANT_DATA),
+      { 0, uint32_t(sizeof(ReflectionProbeLevel)) }
+    );
+
+    const std::shared_ptr<View> sb_views[] = {
+      constant_view
+    };
+
+
+    const auto skybox_view = skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(mipmap),
+      Usage(USAGE_SHADER_RESOURCE)
+    );
+
+
+    const std::shared_ptr<View> ri_views[] = {
+      skybox_view,
+    };
+
+    batch = technique->CreateBatch("environment_reflection_batch_" + std::to_string(mipmap),
+      { &entity, 1u },
+      { samplers, uint32_t(std::size(samplers)) },
+      { ub_views, uint32_t(std::size(ub_views)) },
+      { sb_views, uint32_t(std::size(sb_views)) },
+      { ri_views, uint32_t(std::size(ri_views)) },
+      {},
+      {},
+      {}
+    );
   }
 
   EnvironmentBroker::EnvironmentBroker(Wrap& wrap)

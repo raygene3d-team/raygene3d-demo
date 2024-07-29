@@ -532,7 +532,7 @@ namespace RayGene3D
     graphic_arguments = core->GetDevice()->CreateResource("spark_graphic_arguments",
       Resource::BufferDesc
       {
-        Usage(USAGE_ARGUMENT_INDIRECT),
+        Usage(USAGE_ARGUMENT_LIST),
         uint32_t(sizeof(Batch::Graphic)),
         uint32_t(count),
       },
@@ -545,7 +545,7 @@ namespace RayGene3D
     compute_arguments = core->GetDevice()->CreateResource("spark_compute_arguments",
       Resource::BufferDesc
       {
-        Usage(USAGE_ARGUMENT_INDIRECT),
+        Usage(USAGE_ARGUMENT_LIST),
         uint32_t(sizeof(Batch::Compute)),
         1u,
       },

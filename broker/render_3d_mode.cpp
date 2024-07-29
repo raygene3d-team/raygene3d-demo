@@ -152,7 +152,7 @@ namespace RayGene3D
       };
 
       const auto geometry_graphic_arguments = scope.graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
-        Usage(USAGE_ARGUMENT_INDIRECT),
+        Usage(USAGE_ARGUMENT_LIST),
         { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
       );
 
@@ -392,7 +392,7 @@ namespace RayGene3D
   void Render3DMode::CreatePresentBatch()
   {
     auto present_compute_arguments = scope.compute_arguments->CreateView("spark_present_compute_arguments",
-      Usage(USAGE_ARGUMENT_INDIRECT)
+      Usage(USAGE_ARGUMENT_LIST)
     );
     const Batch::Entity entities[] = {
       {{}, {}, present_compute_arguments}

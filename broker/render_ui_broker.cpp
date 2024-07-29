@@ -232,7 +232,7 @@ namespace RayGene3D
       arg_resource = device->CreateResource("imgui_arg_resource",
         Resource::BufferDesc
         {
-          Usage(USAGE_ARGUMENT_INDIRECT),
+          Usage(USAGE_ARGUMENT_LIST),
           uint32_t(sizeof(Batch::Graphic)),
           arg_limit * sub_limit,
         },
@@ -433,7 +433,7 @@ namespace RayGene3D
         for (uint32_t j = 0; j < arg_limit; ++j)
         {
           const auto argument_view = arg_resource->CreateView("arg_ci_view_" + std::to_string(j),
-            Usage(USAGE_ARGUMENT_INDIRECT),
+            Usage(USAGE_ARGUMENT_LIST),
             { (i * arg_limit + j) * uint32_t(sizeof(Batch::Graphic)), uint32_t(sizeof(Batch::Graphic)) }
           );
           entities[i * arg_limit + j] = { {vtx_view}, {idx_view}, argument_view };

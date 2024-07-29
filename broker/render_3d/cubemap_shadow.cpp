@@ -254,7 +254,7 @@ namespace RayGene3D
       );
 
       const auto shadowmap_graphic_arguments = scope.graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(i),
-        Usage(USAGE_ARGUMENT_INDIRECT),
+        Usage(USAGE_ARGUMENT_LIST),
         { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
       );
 

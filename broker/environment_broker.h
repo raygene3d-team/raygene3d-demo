@@ -50,7 +50,10 @@ namespace RayGene3D
     SPtrBatch batch;
 
   protected:
-    SPtrResource constant_array;
+    SPtrResource vtx_array;
+    SPtrResource idx_array;
+    SPtrResource constant_data;
+    SPtrResource argument_list;
     SPtrResource skybox_cubemap;
     SPtrResource reflection_map;
 
@@ -65,7 +68,10 @@ namespace RayGene3D
     void CreateBatch(uint32_t mipmap);
 
   protected:
-    void CreateConstantArray();
+    void CreateVtxArray();
+    void CreateIdxArray();
+    void CreateConstantData();
+    void CreateArgumentList();
     void CreateSkyboxCubemap();
     void CreateReflectionMap();
 

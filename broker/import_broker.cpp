@@ -168,8 +168,8 @@ namespace RayGene3D
       Triangle triangle;
 
       triangle.idx[0] = remap_vertex_fn(vertices, vtx0);
-      triangle.idx[2] = remap_vertex_fn(vertices, vtx1);
-      triangle.idx[1] = remap_vertex_fn(vertices, vtx2);
+      triangle.idx[1] = remap_vertex_fn(vertices, vtx1);
+      triangle.idx[2] = remap_vertex_fn(vertices, vtx2);
 
       triangles.push_back(triangle);
     }
