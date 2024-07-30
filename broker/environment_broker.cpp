@@ -117,6 +117,28 @@ namespace RayGene3D
 
     const auto prop_scene = tree->GetObjectItem("scene_property");
     prop_scene->SetObjectItem("skybox", prop_environment);
+
+
+
+    CreateVtxArray();
+    CreateIdxArray();
+    CreateSkyboxCubemap();
+    CreateReflectionMap();
+
+    for (auto i = 0u; i < levels; ++i)
+    {
+      CreateConstantData(i);
+      CreateArgumentList(i);
+    }
+
+
+    for (auto i = 0u; i < levels; ++i)
+    {
+      CreatePass(i);
+      CreateTechnique(i);
+      CreateBatch(i);
+    }
+
   }
 
   void EnvironmentBroker::Discard()
@@ -173,13 +195,13 @@ namespace RayGene3D
   void EnvironmentBroker::CreateReflectionMap()
   {
     const auto layers = 6u;
-    const auto extent = 1u << int32_t(mipmap) - 1;
+    const auto extent = 1u << int32_t(levels) - 1;
 
     reflection_map = core->GetDevice()->CreateResource("environment_reflection_map",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET),
-        mipmap,
+        levels,
         layers,
         FORMAT_R16G16B16A16_FLOAT,
         extent,
@@ -217,21 +239,17 @@ namespace RayGene3D
     );
   }
 
-  void EnvironmentBroker::CreateConstantData()
+  void EnvironmentBroker::CreateConstantData(uint32_t level)
   {
-    ReflectionProbeLevel array[mipmap];
-    for (auto i = 0u; i < mipmap; ++i)
-    {
-      array[i] = {i, 1u << int32_t(mipmap) - (i + 1)};
-    }
-    const auto count = uint32_t(std::size(array));
-    const auto stride = uint32_t(sizeof(ReflectionProbeLevel));
+    const auto data = glm::u32vec4{ level, 1u << int32_t(levels) - (level + 1), 0u, 0u };
+    const auto count = 1u;
+    const auto stride = uint32_t(sizeof(glm::u32vec4));
 
     std::pair<const void*, uint32_t> interops[] = {
-      { array, count * stride },
+      { &data, count * stride },
     };
 
-    constant_data = core->GetDevice()->CreateResource("environment_constant_data",
+    constant_data[level] = core->GetDevice()->CreateResource("environment_constant_data_" + std::to_string(level),
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
@@ -244,9 +262,9 @@ namespace RayGene3D
   }
 
 
-  void EnvironmentBroker::CreateArgumentList()
+  void EnvironmentBroker::CreateArgumentList(uint32_t level)
   {
-    argument_list = core->GetDevice()->CreateResource("environment_argument_list",
+    argument_list[level] = core->GetDevice()->CreateResource("environment_argument_list_" + std::to_string(level),
       Resource::BufferDesc
       {
         Usage(USAGE_ARGUMENT_LIST),
@@ -258,15 +276,11 @@ namespace RayGene3D
   }
 
 
-  void EnvironmentBroker::CreatePass(uint32_t mipmap)
+  void EnvironmentBroker::CreatePass(uint32_t level)
   {
-    //const auto extent_x = scope.prop_extent_x->GetUint();
-    //const auto extent_y = scope.prop_extent_y->GetUint();
-    //const auto extent_z = 1u;
-
-    auto environment_reflection_target = reflection_map->CreateView("environment_reflection_target_" + std::to_string(mipmap),
+    auto environment_reflection_target = reflection_map->CreateView("environment_reflection_target_" + std::to_string(level),
       Usage(USAGE_RENDER_TARGET),
-      { mipmap, 1u },
+      { level, 1u },
       { 0u, 6u },
       View::BIND_CUBEMAP_LAYER
     );
@@ -279,7 +293,7 @@ namespace RayGene3D
       {}
     };
 
-    pass = core->GetDevice()->CreatePass("environment_reflection_pass_" + std::to_string(mipmap),
+    passes[level] = core->GetDevice()->CreatePass("environment_reflection_pass_" + std::to_string(level),
       Pass::TYPE_GRAPHIC,
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
@@ -287,7 +301,7 @@ namespace RayGene3D
   }
 
 
-  void EnvironmentBroker::CreateTechnique(uint32_t mipmap)
+  void EnvironmentBroker::CreateTechnique(uint32_t level)
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
@@ -312,7 +326,7 @@ namespace RayGene3D
       Technique::FILL_SOLID,
       Technique::CULL_NONE,
       {
-        { 0.0f, 0.0f, float(1u << int32_t(mipmap) - 1), float(1u << int32_t(mipmap) - 1), 0.0f, 1.0f }
+        { 0.0f, 0.0f, float(1u << int32_t(level) - 1), float(1u << int32_t(level) - 1), 0.0f, 1.0f }
       },
     };
 
@@ -331,7 +345,7 @@ namespace RayGene3D
       }
     };
 
-    technique = pass->CreateTechnique("environment_reflection_technique_" + std::to_string(mipmap),
+    techniques[level] = passes[level]->CreateTechnique("environment_reflection_technique_" + std::to_string(level),
       shader_ss.str(),
       Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_GS | Technique::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -343,30 +357,30 @@ namespace RayGene3D
   }
 
 
-  void EnvironmentBroker::CreateBatch(uint32_t mipmap)
+  void EnvironmentBroker::CreateBatch(uint32_t level)
   {
-    const auto vtx_view = vtx_array->CreateView("environment_vtx_view_" + std::to_string(mipmap),
+    const auto vtx_view = vtx_array->CreateView("environment_vtx_view_" + std::to_string(level),
       Usage(USAGE_VERTEX_ARRAY)
     );
     const std::shared_ptr<View> va_views[] = {
       vtx_view,
     };
 
-    const auto idx_view = idx_array->CreateView("environment_idx_view_" + std::to_string(mipmap),
+    const auto idx_view = idx_array->CreateView("environment_idx_view_" + std::to_string(level),
       Usage(USAGE_INDEX_ARRAY)
     );
     const std::shared_ptr<View> ia_views[] = {
       idx_view,
     };
 
-    const auto argument_view = argument_list->CreateView("environment_argument_view_" + std::to_string(mipmap),
+    const auto argument_view = argument_list[level]->CreateView("environment_argument_view_" + std::to_string(level),
       Usage(USAGE_ARGUMENT_LIST)
     );
 
     const auto& ins_range = View::Range{ 1u, 0u };
     const auto& vtx_range = View::Range{ 4u, 0u };
     const auto& idx_range = View::Range{ 6u, 0u };
-    const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(ReflectionProbeLevel))* mipmap, 0u, 0u, 0u };
+    const auto& sb_offset = std::nullopt; // std::array<uint32_t, 4>{ 0u, 0u, 0u, 0u };
     const auto& push_data = std::nullopt;
 
     const auto entity = Batch::Entity{
@@ -384,23 +398,15 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-
-    const std::shared_ptr<View> ub_views[] = {
-      {},
-    };
-
-
-    const auto constant_view = constant_data->CreateView("environment_argument_view_" + std::to_string(mipmap),
-      Usage(USAGE_CONSTANT_DATA),
-      { 0, uint32_t(sizeof(ReflectionProbeLevel)) }
+    const auto constant_view = constant_data[level]->CreateView("environment_argument_view_" + std::to_string(level),
+      Usage(USAGE_CONSTANT_DATA)
     );
 
-    const std::shared_ptr<View> sb_views[] = {
-      constant_view
+    const std::shared_ptr<View> ub_views[] = {
+      constant_view,
     };
 
-
-    const auto skybox_view = skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(mipmap),
+    const auto skybox_view = skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(level),
       Usage(USAGE_SHADER_RESOURCE)
     );
 
@@ -409,11 +415,11 @@ namespace RayGene3D
       skybox_view,
     };
 
-    batch = technique->CreateBatch("environment_reflection_batch_" + std::to_string(mipmap),
+    batches[level] = techniques[level]->CreateBatch("environment_reflection_batch_" + std::to_string(level),
       { &entity, 1u },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
-      { sb_views, uint32_t(std::size(sb_views)) },
+      {},
       { ri_views, uint32_t(std::size(ri_views)) },
       {},
       {},

@@ -38,24 +38,26 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_environment;
 
   protected:
-    static const uint32_t mipmap{ 7u };
+    static const uint32_t mipmap{ 9u };
+    static const uint32_t levels{ 7u };
 
   protected:
     const std::unique_ptr<Core>& core;
     const std::unique_ptr<Util>& util;
 
   protected:
-    SPtrPass pass;
-    SPtrTechnique technique;
-    SPtrBatch batch;
+    SPtrPass passes[levels];
+    SPtrTechnique techniques[levels];
+    SPtrBatch batches[levels];
 
   protected:
     SPtrResource vtx_array;
     SPtrResource idx_array;
-    SPtrResource constant_data;
-    SPtrResource argument_list;
     SPtrResource skybox_cubemap;
     SPtrResource reflection_map;
+    SPtrResource constant_data[levels];
+    SPtrResource argument_list[levels];
+
 
   public:
     void Initialize() override;
@@ -63,28 +65,30 @@ namespace RayGene3D
     void Discard() override;
 
   protected:
-    void CreatePass(uint32_t mipmap);
-    void CreateTechnique(uint32_t mipmap);
-    void CreateBatch(uint32_t mipmap);
+    void CreatePass(uint32_t level);
+    void CreateTechnique(uint32_t level);
+    void CreateBatch(uint32_t level);
 
   protected:
     void CreateVtxArray();
     void CreateIdxArray();
-    void CreateConstantData();
-    void CreateArgumentList();
     void CreateSkyboxCubemap();
     void CreateReflectionMap();
+    void CreateConstantData(uint32_t level);
+    void CreateArgumentList(uint32_t level);
 
   protected:
-    void DestroyPass(uint32_t mipmap);
-    void DestroyTechnique(uint32_t mipmap);
-    void DestroyBatch(uint32_t mipmap);
+    void DestroyPass(uint32_t level);
+    void DestroyTechnique(uint32_t level);
+    void DestroyBatch(uint32_t level);
 
   protected:
-    void DestroyConstantArray();
+    void DestroyVtxArray();
+    void DestroyIdxArray();
     void DestroySkyboxCubemap();
     void DestroyReflectionMap();
-
+    void DestroyConstantData(uint32_t level);
+    void DestroyArgumentList(uint32_t level);
 
   public:
     EnvironmentBroker(Wrap& wrap);
