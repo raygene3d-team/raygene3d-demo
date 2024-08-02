@@ -54,7 +54,7 @@ THE SOFTWARE.
 namespace RayGene3D
 {
   std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t count, uint32_t align,
-    const glm::fmat3x3& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
+    const glm::fmat3x3& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform, const glm::uvec3& prim_order,
     std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_id_stride,
     std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_id_stride,
     std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_id_stride)
@@ -168,10 +168,9 @@ namespace RayGene3D
 
       Triangle triangle;
 
-      //NOTE: there is a face orientation swap for the left handed coordinate system
-      triangle.idx[0] = remap_vertex_fn(vertices, vtx0);
-      triangle.idx[2] = remap_vertex_fn(vertices, vtx1);
-      triangle.idx[1] = remap_vertex_fn(vertices, vtx2);
+      triangle.idx[prim_order[0]] = remap_vertex_fn(vertices, vtx0);
+      triangle.idx[prim_order[1]] = remap_vertex_fn(vertices, vtx1);
+      triangle.idx[prim_order[2]] = remap_vertex_fn(vertices, vtx2);
 
       triangles.push_back(triangle);
     }
@@ -252,8 +251,7 @@ namespace RayGene3D
         tng.y = fvTangent[1];
         tng.z = fvTangent[2];
         auto& sgn = data->verts.first[data->prims.first[iFace].idx[iVert]].sgn;
-        //NOTE: the left handed coordinate system requires the negative bitangent value
-        sgn = -fSign;
+        sgn = fSign;
       };
 
       SMikkTSpaceContext context;
@@ -590,7 +588,7 @@ namespace RayGene3D
       if (gltf_node.mesh != -1) { mesh_indices.push_back(gltf_node.mesh); }
     }
 
-    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive, float scale, bool z_up, bool flip_v)
+    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive, float scale, bool z_up, bool to_lhs, bool flip_v)
     {
       BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
 
@@ -635,12 +633,13 @@ namespace RayGene3D
         0.0f, 0.0f,-1.0f,
         0.0f, 1.0f, 0.0f
       );
-      const auto to_lhs_transform = glm::fmat3x3(
+      const auto lhs_transform = glm::fmat3x3(
        -1.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f,
         0.0f, 0.0f, 1.0f
       );
-      const auto nrm_transform = z_up ? z_up_transform * to_lhs_transform : to_lhs_transform;
+      const auto crd_transform = to_lhs ? lhs_transform : glm::identity<glm::fmat3x3>();
+      const auto nrm_transform = z_up ? z_up_transform * crd_transform : crd_transform;
       const auto pos_transform = nrm_transform * scale;
 
       const auto flip_v_tranform = glm::fmat2x2(
@@ -648,11 +647,12 @@ namespace RayGene3D
         1.0f, 0.0f
       );
       const auto tc0_transform = flip_v ? flip_v_tranform : glm::identity<glm::fmat2x2>();
+      const auto prim_order = to_lhs ? glm::uvec3{ 0u, 2u, 1u } : glm::uvec3{ 0u, 1u, 2u };
 
       auto degenerated_geom_tris_count = 0u;
       auto degenerated_wrap_tris_count = 0u;
       const auto [vertices, triangles, bb_min, bb_max] = PopulateInstance(idx_count, idx_stride,
-        pos_transform, nrm_transform, tc0_transform,
+        pos_transform, nrm_transform, tc0_transform, prim_order,
         pos_data, pos_stride, idx_data, idx_stride,
         nrm_data, nrm_stride, idx_data, idx_stride,
         tc0_data, tc0_stride, idx_data, idx_stride);
@@ -688,7 +688,7 @@ namespace RayGene3D
       {
         const auto& gltf_primitive = gltf_mesh.primitives[k];
         const auto [instance_vertices, instance_triangles, instance_bb_min, instance_bb_max] = 
-          instance_convert_fn(gltf_primitive, position_scale, coordinate_flip, false);
+          instance_convert_fn(gltf_primitive, position_scale, coordinate_flip, conversion_from_rhs, false);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
 
@@ -836,12 +836,13 @@ namespace RayGene3D
           0.0f, 0.0f,-1.0f,
           0.0f, 1.0f, 0.0f
         );
-        const auto to_lhs_transform = glm::fmat3x3(
+        const auto lhs_transform = glm::fmat3x3(
          -1.0f, 0.0f, 0.0f,
           0.0f, 1.0f, 0.0f,
           0.0f, 0.0f, 1.0f
         );
-        const auto nrm_transform = coordinate_flip ? z_up_transform * to_lhs_transform : to_lhs_transform;
+        const auto crd_transform = conversion_from_rhs ? lhs_transform : glm::identity<glm::fmat3x3>();
+        const auto nrm_transform = coordinate_flip ? z_up_transform * crd_transform : crd_transform;
         const auto pos_transform = nrm_transform * position_scale;
 
         const auto flip_v_tranform = glm::fmat2x2(
@@ -849,9 +850,10 @@ namespace RayGene3D
           0.0f,-1.0f
         );
         const auto tc0_transform = true ? flip_v_tranform : glm::identity<glm::fmat2x2>();
+        const auto prim_order = conversion_from_rhs ? glm::uvec3{ 0u, 2u, 1u } : glm::uvec3{ 0u, 1u, 2u };
 
         const auto [instance_vertices, instance_triangles, instance_bb_min, instance_bb_max] = PopulateInstance(idx_count, idx_align,
-          pos_transform, nrm_transform, tc0_transform,
+          pos_transform, nrm_transform, tc0_transform, prim_order,
           pos_data, pos_stride, pos_idx_data, pos_idx_stride,
           nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
           tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride);

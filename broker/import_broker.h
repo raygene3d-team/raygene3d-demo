@@ -43,6 +43,7 @@ namespace RayGene3D
   protected:
     float position_scale{ 1.0f };
     bool coordinate_flip{ false };
+    bool conversion_from_rhs{ false };
     uint32_t texture_level{ 10u };
 
   //protected:
@@ -70,6 +71,7 @@ namespace RayGene3D
   public:
     void SetPositionScale(float position_scale) { this->position_scale = position_scale; }
     void SetCoordinateFlip(bool coordinate_flip) { this->coordinate_flip = coordinate_flip; }
+    void SetCoordinateConversion(bool conversion_from_rhs) { this->conversion_from_rhs = conversion_from_rhs; }
     void SetTextureLevel(uint32_t texture_level) { this->texture_level = texture_level; }
 
   public:

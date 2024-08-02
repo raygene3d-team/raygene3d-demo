@@ -1,9 +1,10 @@
 {
-  "scene":  {
-  	"file": "DamagedHelmet.gltf",
+  "scene": {
+    "file": "DamagedHelmet.gltf",
     "flip": false,
-  	"scale": 1.0,
-  	"quality": 12
+    "rhs": true,
+    "scale": 1.0,
+    "quality": 12
   },
   "environment": {
   	"file": "asset/environment/skylight-day.exr",
