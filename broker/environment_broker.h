@@ -38,7 +38,7 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_environment;
 
   protected:
-    static const uint32_t mipmap{ 9u };
+    static const uint32_t detail{ 9u };
     static const uint32_t levels{ 7u };
 
   protected:

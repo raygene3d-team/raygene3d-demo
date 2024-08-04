@@ -42,8 +42,9 @@ namespace RayGene3D
 
     const auto& pano_raw = prop_environment->GetObjectItem("raws")->GetArrayItem(0)->GetRaw();
 
+    const auto mipmap = 1u;
     const auto layers = 6u;
-    const auto extent = 1u << int32_t(mipmap) - 1;
+    const auto extent = 1u << int32_t(detail) - 1;
 
     enum CUBEMAP_FACE
     {
@@ -110,7 +111,7 @@ namespace RayGene3D
       raws.push_back(std::move(raw));
     }
 
-    prop_environment = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, extent, extent, 1u, layers);
+    prop_environment = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, extent, extent, mipmap, layers);
 
     const auto prop_scene = tree->GetObjectItem("scene_property");
     prop_scene->SetObjectItem("skybox", prop_environment);
@@ -232,8 +233,9 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreateSkyboxCubemap()
   {
+    const auto mipmap = 1u;
     const auto layers = 6u;
-    const auto extent = 1u << int32_t(mipmap) - 1;
+    const auto extent = 1u << int32_t(detail) - 1;
     const auto& raws = prop_environment->GetObjectItem("raws");
 
     auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
