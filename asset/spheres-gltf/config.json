@@ -13,7 +13,7 @@
   },
   "lighting": {
     "phi": 45.0,
-    "theta": 105.0,
+    "theta": -15.0,
     "intensity": 1.0
   },
   "camera": {
