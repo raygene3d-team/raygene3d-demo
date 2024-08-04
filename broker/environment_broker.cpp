@@ -30,9 +30,6 @@ THE SOFTWARE.
 namespace RayGene3D
 {
   void EnvironmentBroker::Initialize()
-  {}
-
-  void EnvironmentBroker::Use()
   {
     const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
@@ -118,12 +115,11 @@ namespace RayGene3D
     const auto prop_scene = tree->GetObjectItem("scene_property");
     prop_scene->SetObjectItem("skybox", prop_environment);
 
-
+    CreateSkyboxCubemap();
+    CreateReflectionMap();
 
     CreateVtxArray();
     CreateIdxArray();
-    CreateSkyboxCubemap();
-    CreateReflectionMap();
 
     for (auto i = 0u; i < levels; ++i)
     {
@@ -138,11 +134,34 @@ namespace RayGene3D
       CreateTechnique(i);
       CreateBatch(i);
     }
+  }
 
+  void EnvironmentBroker::Use()
+  {
+    core->GetDevice()->Use();
   }
 
   void EnvironmentBroker::Discard()
-  {}
+  {
+    for (auto i = 0u; i < levels; ++i)
+    {
+      DestroyBatch(i);
+      DestroyTechnique(i);
+      DestroyPass(i);
+    }
+
+    for (auto i = 0u; i < levels; ++i)
+    {
+      DestroyConstantData(i);
+      DestroyArgumentList(i);
+    }
+
+    DestroyVtxArray();
+    DestroyIdxArray();
+
+    DestroySkyboxCubemap();
+    DestroyReflectionMap();
+  }
 
   void EnvironmentBroker::CreateVtxArray()
   {
@@ -241,7 +260,7 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreateConstantData(uint32_t level)
   {
-    const auto data = glm::u32vec4{ level, 1u << int32_t(levels) - (level + 1), 0u, 0u };
+    const auto data = glm::u32vec4{ level, 1u << int32_t(levels) - (1 + level), 0u, 0u };
     const auto count = 1u;
     const auto stride = uint32_t(sizeof(glm::u32vec4));
 
@@ -289,14 +308,17 @@ namespace RayGene3D
       { environment_reflection_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
     };
 
-    const Pass::DSAttachment ds_attachments[] = {
-      {}
-    };
+    const auto size_x = 1u << int32_t(levels) - (1 + level);
+    const auto size_y = 1u << int32_t(levels) - (1 + level);
+    const auto layers = 6u;
 
     passes[level] = core->GetDevice()->CreatePass("environment_reflection_pass_" + std::to_string(level),
       Pass::TYPE_GRAPHIC,
+      size_x,
+      size_y,
+      layers,
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
-      { ds_attachments, uint32_t(std::size(ds_attachments)) }
+      {}
     );
   }
 
@@ -326,7 +348,7 @@ namespace RayGene3D
       Technique::FILL_SOLID,
       Technique::CULL_NONE,
       {
-        { 0.0f, 0.0f, float(1u << int32_t(level) - 1), float(1u << int32_t(level) - 1), 0.0f, 1.0f }
+        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f }
       },
     };
 
@@ -425,6 +447,60 @@ namespace RayGene3D
       {},
       {}
     );
+  }
+
+  void EnvironmentBroker::DestroyPass(uint32_t level)
+  {
+    core->GetDevice()->DestroyPass(passes[level]);
+    passes[level].reset();
+  }
+
+  void EnvironmentBroker::DestroyTechnique(uint32_t level)
+  {
+    passes[level]->DestroyTechnique(techniques[level]);
+    techniques[level].reset();
+  }
+
+  void EnvironmentBroker::DestroyBatch(uint32_t level)
+  {
+    techniques[level]->DestroyBatch(batches[level]);
+    batches[level].reset();
+  }
+
+  void EnvironmentBroker::DestroyVtxArray()
+  {
+    core->GetDevice()->DestroyResource(vtx_array);
+    vtx_array.reset();
+  }
+
+  void EnvironmentBroker::DestroyIdxArray()
+  {
+    core->GetDevice()->DestroyResource(idx_array);
+    idx_array.reset();
+  }
+
+  void EnvironmentBroker::DestroySkyboxCubemap()
+  {
+    core->GetDevice()->DestroyResource(skybox_cubemap);
+    skybox_cubemap.reset();
+  }
+
+  void EnvironmentBroker::DestroyReflectionMap()
+  {
+    core->GetDevice()->DestroyResource(reflection_map);
+    reflection_map.reset();
+  }
+
+  void EnvironmentBroker::DestroyConstantData(uint32_t level)
+  {
+    core->GetDevice()->DestroyResource(constant_data[level]);
+    constant_data[level].reset();
+  }
+
+  void EnvironmentBroker::DestroyArgumentList(uint32_t level)
+  {
+    core->GetDevice()->DestroyResource(argument_list[level]);
+    argument_list[level].reset();
   }
 
   EnvironmentBroker::EnvironmentBroker(Wrap& wrap)

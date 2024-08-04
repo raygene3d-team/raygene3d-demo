@@ -241,9 +241,9 @@ namespace RayGene3D
     }
 
     {
-      const auto extent_x = prop_extent_x->GetUint();
-      const auto extent_y = prop_extent_y->GetUint();
-      const auto extent_z = 1u;
+      const auto size_x = prop_extent_x->GetUint();
+      const auto size_y = prop_extent_y->GetUint();
+      const auto layers = 1u;
 
       const Pass::RTAttachment rt_attachments[] = {
          backbuffer_rtv, std::nullopt,
@@ -251,6 +251,9 @@ namespace RayGene3D
 
       pass = device->CreatePass("imgui_pass",
         Pass::TYPE_GRAPHIC,
+        size_x,
+        size_y,
+        layers,
         { rt_attachments, uint32_t(std::size(rt_attachments)) },
         {}
       );

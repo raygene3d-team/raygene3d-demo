@@ -520,7 +520,7 @@ namespace RayGene3D
         extent_x->GetUint(),
         extent_y->GetUint(),
       },
-      Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
+      Resource::Hint(Resource::HINT_CUBEMAP_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
     );
   }

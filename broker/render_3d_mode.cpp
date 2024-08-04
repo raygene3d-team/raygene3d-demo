@@ -33,9 +33,9 @@ namespace RayGene3D
 {
   void Render3DMode::CreateGeometryPass()
   {
-    const auto extent_x = scope.prop_extent_x->GetUint();
-    const auto extent_y = scope.prop_extent_y->GetUint();
-    const auto extent_z = 1u;
+    const auto size_x = scope.prop_extent_x->GetUint();
+    const auto size_y = scope.prop_extent_y->GetUint();
+    const auto layers = 1u;
 
     auto geometry_color_target = scope.color_target->CreateView("spark_geometry_color_target",
       Usage(USAGE_RENDER_TARGET)
@@ -62,6 +62,9 @@ namespace RayGene3D
 
     geometry_pass = scope.core->GetDevice()->CreatePass("spark_geometry_pass",
       Pass::TYPE_GRAPHIC,
+      size_x,
+      size_y,
+      layers,
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
     );
@@ -332,7 +335,10 @@ namespace RayGene3D
     };
 
     auto skybox_skybox_texture = scope.skybox_texture->CreateView("spark_skybox_skybox_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_RESOURCE),
+      { 0u, 1u },
+      { 0u, 6u },
+      View::BIND_CUBEMAP_LAYER
     );
     const std::shared_ptr<View> ri_views[] = {
       skybox_skybox_texture,
@@ -360,12 +366,15 @@ namespace RayGene3D
 
   void Render3DMode::CreatePresentPass()
   {
-    const auto grid_x = scope.prop_extent_x->GetUint() / 8u;
-    const auto grid_y = scope.prop_extent_y->GetUint() / 8u;
-    const auto grid_z = 1u;
+    const auto size_x = scope.prop_extent_x->GetUint() / 8u;
+    const auto size_y = scope.prop_extent_y->GetUint() / 8u;
+    const auto layers = 1u;
 
     present_pass = scope.core->GetDevice()->CreatePass("spark_present_pass",
       Pass::TYPE_COMPUTE,
+      size_x,
+      size_y,
+      layers,
       {},
       {}
     );

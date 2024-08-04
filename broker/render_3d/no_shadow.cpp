@@ -33,9 +33,9 @@ namespace RayGene3D
 {
   void NoShadow::CreateUnshadowedPass()
   {
-    const auto extent_x = scope.prop_extent_x->GetUint();
-    const auto extent_y = scope.prop_extent_y->GetUint();
-    const auto extent_z = 1u;
+    const auto size_x = scope.prop_extent_x->GetUint();
+    const auto size_y = scope.prop_extent_y->GetUint();
+    const auto layers = 1u;
 
     auto unshadowed_color_target = scope.color_target->CreateView("spark_unshadowed_color_target",
       Usage(USAGE_RENDER_TARGET)
@@ -46,6 +46,9 @@ namespace RayGene3D
 
     unshadowed_pass = scope.core->GetDevice()->CreatePass("spark_unshadowed_pass",
       Pass::TYPE_GRAPHIC,
+      size_x,
+      size_y,
+      layers,
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       {}
     );

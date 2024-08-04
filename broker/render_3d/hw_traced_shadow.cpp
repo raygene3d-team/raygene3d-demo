@@ -33,12 +33,15 @@ namespace RayGene3D
 {
   void HWTracedShadow::CreateHWTracedPass()
   {
-    const auto extent_x = scope.prop_extent_x->GetUint();
-    const auto extent_y = scope.prop_extent_y->GetUint();
-    const auto extent_z = 1u;
+    const auto size_x = scope.prop_extent_x->GetUint();
+    const auto size_y = scope.prop_extent_y->GetUint();
+    const auto layers = 1u;
 
     hw_traced_pass = scope.core->GetDevice()->CreatePass("spark_hw_traced_pass",
       Pass::TYPE_RAYTRACING,
+      size_x,
+      size_y,
+      layers,
       {},
       {}
     );

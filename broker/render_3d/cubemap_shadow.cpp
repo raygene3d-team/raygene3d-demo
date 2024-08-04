@@ -33,9 +33,9 @@ namespace RayGene3D
 {
   void CubemapShadow::CreateShadowedPass()
   {
-    const auto extent_x = scope.prop_extent_x->GetUint();
-    const auto extent_y = scope.prop_extent_y->GetUint();
-    const auto extent_z = 1u;
+    const auto size_x = scope.prop_extent_x->GetUint();
+    const auto size_y = scope.prop_extent_y->GetUint();
+    const auto layers = 1u;
 
     auto shadowed_color_target = scope.color_target->CreateView("spark_shadowed_color_target",
       Usage(USAGE_RENDER_TARGET)
@@ -46,6 +46,9 @@ namespace RayGene3D
 
     shadowed_pass = scope.core->GetDevice()->CreatePass("spark_shadowed_pass",
       Pass::TYPE_GRAPHIC,
+      size_x,
+      size_y,
+      layers,
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       {}
     );
@@ -167,9 +170,9 @@ namespace RayGene3D
 
   void CubemapShadow::CreateShadowmapPass()
   {
-    const auto extent_x = scope.shadow_resolution;
-    const auto extent_y = scope.shadow_resolution;
-    const auto extent_z = 1u;
+    const auto size_x = scope.shadow_resolution;
+    const auto size_y = scope.shadow_resolution;
+    const auto layers = 1u;
 
     auto shadowmap_shadow_map = scope.shadow_map->CreateView("spark_shadowmap_shadow_map",
       Usage(USAGE_DEPTH_STENCIL),
@@ -182,6 +185,9 @@ namespace RayGene3D
 
     shadowmap_pass = scope.core->GetDevice()->CreatePass("spark_shadowmap_pass",
       Pass::TYPE_GRAPHIC,
+      size_x,
+      size_y,
+      layers,
       {},
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
     );
