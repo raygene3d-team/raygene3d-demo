@@ -510,6 +510,16 @@ namespace RayGene3D
       interops[i] = raw->GetRawBytes(0);
     }
 
+    //const auto find_resource_fn = [this](const std::shared_ptr<Resource>& resource)
+    //{
+    //  if (resource->GetName().compare("environment_reflection_map") == 0)
+    //  {
+    //    this->skybox_texture = resource;
+    //  }
+    //};
+    //core->GetDevice()->VisitResource(find_resource_fn);
+
+
     skybox_texture = core->GetDevice()->CreateResource("spark_skybox_texture",
       Resource::Tex2DDesc
       {

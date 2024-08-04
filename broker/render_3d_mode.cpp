@@ -159,7 +159,7 @@ namespace RayGene3D
         { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
       );
 
-      const auto& ins_range = View::Range{ 1u,  0u };
+      const auto& ins_range = View::Range{ 0u,  1u };
       const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
       const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
       const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };

@@ -139,7 +139,30 @@ namespace RayGene3D
 
   void EnvironmentBroker::Use()
   {
+    for (auto i = 0u; i < levels; ++i)
+    {
+      passes[i]->SetEnabled(true);
+    }
+
+    for (auto i = 0u; i < levels; ++i)
+    {
+      auto graphic_arg = reinterpret_cast<Batch::Graphic*>(argument_list[i]->Map());
+
+      graphic_arg[0].idx_count = 3u;
+      graphic_arg[0].ins_count = 6u;
+      graphic_arg[0].idx_offset = 0u;
+      graphic_arg[0].vtx_offset = 0u;
+      graphic_arg[0].ins_offset = 0u;
+
+      argument_list[i]->Unmap();
+    }
+
     core->GetDevice()->Use();
+
+    for (auto i = 0u; i < levels; ++i)
+    {
+      passes[i]->SetEnabled(false);
+    }
   }
 
   void EnvironmentBroker::Discard()
@@ -166,22 +189,22 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreateVtxArray()
   {
-    static const std::array<glm::f32vec2, 4> quad_vtx = {
-      glm::f32vec2(-1.0f, 1.0f),
-      glm::f32vec2( 1.0f, 1.0f),
-      glm::f32vec2(-1.0f,-1.0f),
-      glm::f32vec2( 1.0f,-1.0f),
+    static const std::array<glm::f32vec4, 4> quad_vtx = {
+      glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
+      glm::f32vec4( 1.0f, 1.0f, 1.0f, 0.0f),
+      glm::f32vec4(-1.0f,-1.0f, 0.0f, 1.0f),
+      glm::f32vec4( 1.0f,-1.0f, 1.0f, 1.0f),
     };
 
     std::pair<const void*, uint32_t> interops[] = {
-      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec2)) },
+      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec4)) },
     };
 
     vtx_array = core->GetDevice()->CreateResource("environment_vtx_array",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(glm::f32vec2)),
+        uint32_t(sizeof(glm::f32vec4)),
         uint32_t(quad_vtx.size()),
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
@@ -220,7 +243,7 @@ namespace RayGene3D
     reflection_map = core->GetDevice()->CreateResource("environment_reflection_map",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_RENDER_TARGET),
+        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
         levels,
         layers,
         FORMAT_R16G16B16A16_FLOAT,
@@ -350,7 +373,12 @@ namespace RayGene3D
       Technique::FILL_SOLID,
       Technique::CULL_NONE,
       {
-        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f }
+        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
+        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
+        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
+        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
+        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
+        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
       },
     };
 
@@ -401,16 +429,16 @@ namespace RayGene3D
       Usage(USAGE_ARGUMENT_LIST)
     );
 
-    const auto& ins_range = View::Range{ 1u, 0u };
-    const auto& vtx_range = View::Range{ 4u, 0u };
-    const auto& idx_range = View::Range{ 6u, 0u };
+    const auto& ins_range = View::Range{ 0u, 6u };
+    const auto& vtx_range = View::Range{ 0u, 4u };
+    const auto& idx_range = View::Range{ 0u, 6u };
     const auto& sb_offset = std::nullopt; // std::array<uint32_t, 4>{ 0u, 0u, 0u, 0u };
     const auto& push_data = std::nullopt;
 
     const auto entity = Batch::Entity{
       { va_views, va_views + uint32_t(std::size(va_views)) },
       { ia_views, ia_views + uint32_t(std::size(ia_views)) },
-      nullptr, // geometry_graphic_arguments,
+      nullptr, //argument_view,
       ins_range,
       vtx_range,
       idx_range,
@@ -431,7 +459,10 @@ namespace RayGene3D
     };
 
     const auto skybox_view = skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(level),
-      Usage(USAGE_SHADER_RESOURCE)
+      Usage(USAGE_SHADER_RESOURCE),
+      { 0u, 1u },
+      { 0u, 6u },
+      View::BIND_CUBEMAP_LAYER
     );
 
 
