@@ -1,9 +1,10 @@
 {
-  "scene":  {
-  	"file": "sponza.obm",
-  	"flip": false,
-  	"scale": 0.01,
-  	"quality": 11
+  "scene": {
+    "file": "sponza.obm",
+    "flip": false,
+    "rhs": true,
+    "scale": 0.01,
+    "quality": 11
   },
   "environment": {
   	"file": "asset/environment/skylight-day.exr",
