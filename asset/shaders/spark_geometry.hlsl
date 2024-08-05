@@ -8,7 +8,7 @@
 
 #define USE_NORMAL_MAP
 //#define USE_ALPHA_CLIP
-#define USE_SPECULAR_SETUP
+//#define USE_SPECULAR_SETUP
 
 #include "common.hlsl"
 #include "surface.hlsl"
@@ -135,7 +135,7 @@ PSOutput ps_main(PSInput input)
 
   float3 n = normalize(input.w_nrm_u.xyz);
   float3 t = normalize(input.w_tng_v.xyz);
-  float3 b = input.w_pos_d.w * cross(n, t);
+  float3 b = input.w_pos_d.w * cross(t, n);
 
 #ifdef USE_SPECULAR_SETUP
   const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
