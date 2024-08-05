@@ -63,7 +63,7 @@ Surface Initialize_GLTF(float3 emission, float intensity, float3 diffuse, float 
 
   surface.shininess = exp2(10 * tex2_value.y + 1); // 2.0 / (tex2_value.y * tex2_value.y) - 2.0;
 
-  surface.specular = specular * tex2_value.xyz;
+  surface.specular = tex2_value.xyz;
 
 #ifdef USE_ALPHA_CLIP
   surface.alpha = tex1_value.x;
