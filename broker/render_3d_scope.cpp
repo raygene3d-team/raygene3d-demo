@@ -495,44 +495,56 @@ namespace RayGene3D
     );
   }
 
-  void Render3DScope::CreateSkyboxTexture()
+  void Render3DScope::CreateSkyboxCubemap()
   {
-    const auto& layers = prop_skybox->GetObjectItem("layers");
-    const auto& mipmap = prop_skybox->GetObjectItem("mipmap");
-    const auto& extent_x = prop_skybox->GetObjectItem("extent_x");
-    const auto& extent_y = prop_skybox->GetObjectItem("extent_y");
-    const auto& raws = prop_skybox->GetObjectItem("raws");
+    //const auto& layers = prop_skybox->GetObjectItem("layers");
+    //const auto& mipmap = prop_skybox->GetObjectItem("mipmap");
+    //const auto& extent_x = prop_skybox->GetObjectItem("extent_x");
+    //const auto& extent_y = prop_skybox->GetObjectItem("extent_y");
+    //const auto& raws = prop_skybox->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
-
-    //const auto find_resource_fn = [this](const std::shared_ptr<Resource>& resource)
+    //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
     //{
-    //  if (resource->GetName().compare("environment_reflection_map") == 0)
-    //  {
-    //    this->skybox_texture = resource;
-    //  }
-    //};
-    //core->GetDevice()->VisitResource(find_resource_fn);
+    //  const auto& raw = raws->GetArrayItem(i);
+    //  interops[i] = raw->GetRawBytes(0);
+    //}
 
-
-    skybox_texture = core->GetDevice()->CreateResource("spark_skybox_texture",
-      Resource::Tex2DDesc
+    const auto find_resource_fn = [this](const std::shared_ptr<Resource>& resource)
+    {
+      if (resource->GetName().compare("environment_skybox_cubemap") == 0)
       {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R32G32B32A32_FLOAT,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-    );
+        this->skybox_cubemap = resource;
+      }
+    };
+    core->GetDevice()->VisitResource(find_resource_fn);
+
+
+    //skybox_texture = core->GetDevice()->CreateResource("spark_skybox_texture",
+    //  Resource::Tex2DDesc
+    //  {
+    //    Usage(USAGE_SHADER_RESOURCE),
+    //    mipmap->GetUint(),
+    //    layers->GetUint(),
+    //    FORMAT_R32G32B32A32_FLOAT,
+    //    extent_x->GetUint(),
+    //    extent_y->GetUint(),
+    //  },
+    //  Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
+    //  { interops.data(), uint32_t(interops.size()) }
+    //);
+  }
+
+  void Render3DScope::CreateReflectionMap()
+  {
+    const auto find_resource_fn = [this](const std::shared_ptr<Resource>& resource)
+    {
+      if (resource->GetName().compare("environment_reflection_map") == 0)
+      {
+        this->reflection_map = resource;
+      }
+    };
+    core->GetDevice()->VisitResource(find_resource_fn);
   }
 
   void Render3DScope::CreateGraphicArguments()
@@ -701,10 +713,16 @@ namespace RayGene3D
     screen_quad_triangles.reset();
   }
 
-  void Render3DScope::DestroySkyboxTexture()
+  void Render3DScope::DestroySkyboxCubemap()
   {
-    core->GetDevice()->DestroyResource(skybox_texture);
-    skybox_texture.reset();
+    core->GetDevice()->DestroyResource(skybox_cubemap);
+    skybox_cubemap.reset();
+  }
+
+  void Render3DScope::DestroyReflectionMap()
+  {
+    core->GetDevice()->DestroyResource(reflection_map);
+    reflection_map.reset();
   }
 
   void Render3DScope::DestroyGraphicArguments()
@@ -818,7 +836,9 @@ namespace RayGene3D
 
     CreateScreenQuadVertices();
     CreateScreenQuadTriangles();
-    CreateSkyboxTexture();
+
+    CreateSkyboxCubemap();
+    CreateReflectionMap();
 
     CreateLightMaps();
 
@@ -833,7 +853,9 @@ namespace RayGene3D
 
     DestroyScreenQuadVertices();
     DestroyScreenQuadTriangles();
-    DestroySkyboxTexture();
+
+    DestroyReflectionMap();
+    DestroySkyboxCubemap();
 
     DestroyLightMaps();
 

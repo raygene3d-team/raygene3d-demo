@@ -183,8 +183,8 @@ namespace RayGene3D
     DestroyVtxArray();
     DestroyIdxArray();
 
-    DestroySkyboxCubemap();
-    DestroyReflectionMap();
+    //DestroySkyboxCubemap();
+    //DestroyReflectionMap();
   }
 
   void EnvironmentBroker::CreateVtxArray()

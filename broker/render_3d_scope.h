@@ -130,7 +130,8 @@ namespace RayGene3D
     SPtrResource screen_quad_vertices;
     SPtrResource screen_quad_triangles;
 
-    SPtrResource skybox_texture;
+    SPtrResource skybox_cubemap;
+    SPtrResource reflection_map;
 
     SPtrResource graphic_arguments;
     SPtrResource compute_arguments;
@@ -172,7 +173,9 @@ namespace RayGene3D
 
     void CreateScreenQuadVertices();
     void CreateScreenQuadTriangles();
-    void CreateSkyboxTexture();
+
+    void CreateSkyboxCubemap();
+    void CreateReflectionMap();
 
     void CreateGraphicArguments();
     void CreateComputeArguments();
@@ -209,7 +212,9 @@ namespace RayGene3D
 
     void DestroyScreenQuadVertices();
     void DestroyScreenQuadTriangles();
-    void DestroySkyboxTexture();
+
+    void DestroySkyboxCubemap();
+    void DestroyReflectionMap();
 
     void DestroyGraphicArguments();
     void DestroyComputeArguments();

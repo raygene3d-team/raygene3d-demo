@@ -179,7 +179,7 @@ namespace RayGene3D
 
     const Batch::Sampler samplers[] = {
       { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    };
+      { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
 
     auto geometry_screen_data = scope.screen_data->CreateView("spark_geometry_screen_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -231,12 +231,20 @@ namespace RayGene3D
       Usage(USAGE_SHADER_RESOURCE)
     );
 
+    auto geometry_reflection_map = scope.reflection_map->CreateView("spark_geometry_reflection_map",
+      Usage(USAGE_SHADER_RESOURCE),
+      { 0u, uint32_t(-1) },
+      { 0u, uint32_t(-1) },
+      View::BIND_CUBEMAP_LAYER
+    );
+
     const std::shared_ptr<View> ri_views[] = {
       geometry_scene_textures0,
       geometry_scene_textures1,
       geometry_scene_textures2,
       geometry_scene_textures3,
       geometry_scene_lightmaps,
+      geometry_reflection_map,
     };
 
     geometry_batch = geometry_technique->CreateBatch("spark_geometry_batch",
@@ -334,14 +342,14 @@ namespace RayGene3D
       skybox_camera_data,
     };
 
-    auto skybox_skybox_texture = scope.skybox_texture->CreateView("spark_skybox_skybox_texture",
+    auto skybox_skybox_cubemap = scope.skybox_cubemap->CreateView("spark_skybox_skybox_cubemap",
       Usage(USAGE_SHADER_RESOURCE),
       { 0u, 1u },
       { 0u, 6u },
       View::BIND_CUBEMAP_LAYER
     );
     const std::shared_ptr<View> ri_views[] = {
-      skybox_skybox_texture,
+      skybox_skybox_cubemap,
     };
 
     const Batch::Sampler samplers[] = {
@@ -359,9 +367,6 @@ namespace RayGene3D
       {}
     );
   }
-
-
-
 
 
   void Render3DMode::CreatePresentPass()
