@@ -148,7 +148,7 @@ namespace RayGene3D
     {
       auto graphic_arg = reinterpret_cast<Batch::Graphic*>(argument_list[i]->Map());
 
-      graphic_arg[0].idx_count = 3u;
+      graphic_arg[0].idx_count = 4u;
       graphic_arg[0].ins_count = 6u;
       graphic_arg[0].idx_offset = 0u;
       graphic_arg[0].vtx_offset = 0u;
