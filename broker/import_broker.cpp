@@ -580,58 +580,52 @@ namespace RayGene3D
     const auto gltf_scene = gltf_model.scenes[0];
     std::stack<int, std::vector<int>> node_indices(gltf_scene.nodes);
 
-    struct NodeData
+    std::map<int, glm::fmat4x4> mesh_relations;
+
+    auto parse_node_hierarchy = [&gltf_model, &mesh_relations](auto&& parse_node_hierarchy, const tinygltf::Node& node, glm::fmat4x4 parent_transform)
     {
-      int mesh_index = -1;
-      glm::fmat4x4 world_matrix;
-    };
+      auto transform = glm::identity<glm::fmat4x4>();
 
-    std::vector<NodeData> mesh_relations;
+      if (node.rotation.size() == 4)
+      {
+        glm::quat rotation = glm::make_quat(node.rotation.data());
+        transform = glm::mat4_cast(rotation);
+      }
 
-    std::function<void(const tinygltf::Node&, const glm::fmat4x4&)> parse_node_hierarchy;
+      if (node.translation.size() == 3)
+      {
+        const glm::fvec3 translation = glm::make_vec3(node.translation.data());
+        transform[3] = glm::fvec4(translation, 1.0f);
+      }
 
-    parse_node_hierarchy = [&gltf_model, &mesh_relations, &parse_node_hierarchy]
-    (const tinygltf::Node& node, glm::fmat4x4 parent_transform) -> void
-    {
-        auto transform = glm::identity<glm::fmat4x4>();
+      if (node.scale.size() == 3)
+      {
+        const glm::fvec3 scale = glm::make_vec3(node.scale.data());
+        transform = glm::scale(transform, scale);
+      }
 
-        if (node.rotation.size() == 4)
-        {
-          glm::quat rotation = glm::make_quat(node.rotation.data());
-          transform = glm::mat4_cast(rotation);
-        }
+      transform = parent_transform * transform;
 
-        if (node.translation.size() == 3)
-        {
-          const glm::fvec3 translation = glm::make_vec3(node.translation.data());
-          transform[3] = glm::fvec4(translation, 1.0f);
-        }
+      if (node.mesh != -1)
+      {
+        mesh_relations.insert({ node.mesh, transform });
+      }
 
-        if (node.scale.size() == 3)
-        {
-          const glm::fvec3 scale = glm::make_vec3(node.scale.data());
-          transform = glm::scale(transform, scale);
-        }
+      if (node.children.size() == 0)
+      {
+        return;
+      }
 
-        transform = parent_transform * transform;
-
-        NodeData node_data = { node.mesh, transform };
-
-        if (node_data.mesh_index != -1)
-        {
-          mesh_relations.push_back(node_data);
-        }
-
-        for (const auto& child_index : node.children)
-        {
-          parse_node_hierarchy(gltf_model.nodes[child_index], transform);
-        }
+      for (const auto& child_index : node.children)
+      {
+        parse_node_hierarchy(parse_node_hierarchy, gltf_model.nodes[child_index], transform);
+      }
     };
 
     for (auto node_index : gltf_scene.nodes)
     {
       const auto& node = gltf_model.nodes[node_index];
-      parse_node_hierarchy(node, glm::identity<glm::fmat4x4>());
+      parse_node_hierarchy(parse_node_hierarchy, node, glm::identity<glm::fmat4x4>());
     }
     
 
@@ -743,10 +737,10 @@ namespace RayGene3D
       return tex_index;
     };
 
-    for (uint32_t i = 0; i < uint32_t(mesh_relations.size()); ++i)
+    for (const auto& mesh_data : mesh_relations)
     {
-      const auto& gltf_mesh = gltf_model.meshes[mesh_relations[i].mesh_index];
-      const auto& transform = mesh_relations[i].world_matrix;
+      const auto& gltf_mesh = gltf_model.meshes[mesh_data.first];
+      const auto& transform = mesh_data.second;
       for (uint32_t k = 0; k < uint32_t(gltf_mesh.primitives.size()); ++k)
       {
         const auto& gltf_primitive = gltf_mesh.primitives[k];
