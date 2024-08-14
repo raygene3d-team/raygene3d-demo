@@ -39,38 +39,38 @@ namespace RayGene3D
 
   protected:
     SPtrPass geometry_pass;
-    SPtrTechnique geometry_technique;
+    SPtrConfig geometry_Config;
     SPtrBatch geometry_batch;
 
-    SPtrTechnique skybox_technique;
+    SPtrConfig skybox_Config;
     SPtrBatch skybox_batch;
 
     SPtrPass present_pass;
-    SPtrTechnique present_technique;
+    SPtrConfig present_Config;
     SPtrBatch present_batch;
 
   protected:
     void CreateGeometryPass();
-    void CreateGeometryTechnique();
+    void CreateGeometryConfig();
     void CreateGeometryBatch();
 
-    void CreateSkyboxTechnique();
+    void CreateSkyboxConfig();
     void CreateSkyboxBatch();
 
     void CreatePresentPass();
-    void CreatePresentTechnique();
+    void CreatePresentConfig();
     void CreatePresentBatch();
 
   protected:
     void DestroyGeometryBatch();
-    void DestroyGeometryTechnique();
+    void DestroyGeometryConfig();
     void DestroyGeometryPass();
 
     void DestroySkyboxBatch();
-    void DestroySkyboxTechnique();
+    void DestroySkyboxConfig();
 
     void DestroyPresentBatch();
-    void DestroyPresentTechnique();
+    void DestroyPresentConfig();
     void DestroyPresentPass();
 
   public:

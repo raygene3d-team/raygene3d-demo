@@ -47,7 +47,7 @@ namespace RayGene3D
 
   protected:
     SPtrPass passes[levels];
-    SPtrTechnique techniques[levels];
+    SPtrConfig Configs[levels];
     SPtrBatch batches[levels];
 
   protected:
@@ -66,7 +66,7 @@ namespace RayGene3D
 
   protected:
     void CreatePass(uint32_t level);
-    void CreateTechnique(uint32_t level);
+    void CreateConfig(uint32_t level);
     void CreateBatch(uint32_t level);
 
   protected:
@@ -79,7 +79,7 @@ namespace RayGene3D
 
   protected:
     void DestroyPass(uint32_t level);
-    void DestroyTechnique(uint32_t level);
+    void DestroyConfig(uint32_t level);
     void DestroyBatch(uint32_t level);
 
   protected:

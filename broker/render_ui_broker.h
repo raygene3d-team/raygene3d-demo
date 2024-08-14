@@ -31,7 +31,7 @@ namespace RayGene3D
 
     std::shared_ptr<Pass> pass;
     std::shared_ptr<Batch> batch;
-    std::shared_ptr<Technique> technique;
+    std::shared_ptr<Config> Config;
     //std::shared_ptr<Mesh> meshes[sub_limit];
 
     std::shared_ptr<Resource> proj_resource;

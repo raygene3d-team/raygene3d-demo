@@ -36,17 +36,17 @@ namespace RayGene3D
   {
   protected:
     SPtrPass sw_traced_pass;
-    SPtrTechnique sw_traced_technique;
+    SPtrConfig sw_traced_Config;
     SPtrBatch sw_traced_batch;
 
   protected:
     void CreateSWTracedPass();
-    void CreateSWTracedTechnique();
+    void CreateSWTracedConfig();
     void CreateSWTracedBatch();
 
   protected:
     void DestroySWTracedBatch();
-    void DestroySWTracedTechnique();
+    void DestroySWTracedConfig();
     void DestroySWTracedPass();
 
   public:

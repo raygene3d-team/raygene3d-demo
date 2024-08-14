@@ -54,7 +54,7 @@ namespace RayGene3D
     );
   }
 
-  void NoShadow::CreateUnshadowedTechnique()
+  void NoShadow::CreateUnshadowedConfig()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_unshadowed.hlsl", std::fstream::in);
@@ -64,47 +64,47 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_technique =
+    const Config::IAState ia_Config =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Technique::RCState rc_technique =
+    const Config::RCState rc_Config =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      Config::FILL_SOLID,
+      Config::CULL_BACK,
       {
         { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_technique =
+    const Config::DSState ds_Config =
     {
       false, //depth_enabled
       false, //depth_write
-      Technique::COMPARISON_ALWAYS //depth_comparison
+      Config::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_technique =
+    const Config::OMState om_Config =
     {
       false,
       {
-        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
+        { true, Config::OPERAND_ONE, Config::OPERAND_ONE, Config::OPERATION_ADD, Config::OPERAND_ONE, Config::OPERAND_ONE, Config::OPERATION_ADD, 0xF },
       }
     };
 
-    unshadowed_technique = unshadowed_pass->CreateTechnique("spark_unshadowed_technique",
+    unshadowed_Config = unshadowed_pass->CreateConfig("spark_unshadowed_Config",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_technique,
-      rc_technique,
-      ds_technique,
-      om_technique
+      ia_Config,
+      rc_Config,
+      ds_Config,
+      om_Config
     );
   }
 
@@ -153,7 +153,7 @@ namespace RayGene3D
       unshadowed_depth_texture,
     };
 
-    unshadowed_batch = unshadowed_technique->CreateBatch("spark_unshadowed_batch",
+    unshadowed_batch = unshadowed_Config->CreateBatch("spark_unshadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -164,14 +164,14 @@ namespace RayGene3D
 
   void NoShadow::DestroyUnshadowedBatch()
   {
-    unshadowed_technique->DestroyBatch(unshadowed_batch);
+    unshadowed_Config->DestroyBatch(unshadowed_batch);
     unshadowed_batch.reset();
   }
 
-  void NoShadow::DestroyUnshadowedTechnique()
+  void NoShadow::DestroyUnshadowedConfig()
   {
-    unshadowed_pass->DestroyTechnique(unshadowed_technique);
-    unshadowed_technique.reset();
+    unshadowed_pass->DestroyConfig(unshadowed_Config);
+    unshadowed_Config.reset();
   }
 
   void NoShadow::DestroyUnshadowedPass()
@@ -198,36 +198,36 @@ namespace RayGene3D
     : Render3DMode(scope)
   {
     CreateGeometryPass();
-    CreateGeometryTechnique();
+    CreateGeometryConfig();
     CreateGeometryBatch();
 
-    CreateSkyboxTechnique();
+    CreateSkyboxConfig();
     CreateSkyboxBatch();
 
     CreateUnshadowedPass();
-    CreateUnshadowedTechnique();
+    CreateUnshadowedConfig();
     CreateUnshadowedBatch();
 
     CreatePresentPass();
-    CreatePresentTechnique();
+    CreatePresentConfig();
     CreatePresentBatch();
   }
 
   NoShadow::~NoShadow()
   {
     DestroyPresentBatch();
-    DestroyPresentTechnique();
+    DestroyPresentConfig();
     DestroyPresentPass();
 
     DestroyUnshadowedBatch();
-    DestroyUnshadowedTechnique();
+    DestroyUnshadowedConfig();
     DestroyUnshadowedPass();
 
     DestroySkyboxBatch();
-    DestroySkyboxTechnique();
+    DestroySkyboxConfig();
 
     DestroyGeometryBatch();
-    DestroyGeometryTechnique();
+    DestroyGeometryConfig();
     DestroyGeometryPass();
   }
 }

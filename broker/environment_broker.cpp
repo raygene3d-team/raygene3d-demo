@@ -132,7 +132,7 @@ namespace RayGene3D
     for (auto i = 0u; i < levels; ++i)
     {
       CreatePass(i);
-      CreateTechnique(i);
+      CreateConfig(i);
       CreateBatch(i);
     }
   }
@@ -170,7 +170,7 @@ namespace RayGene3D
     for (auto i = 0u; i < levels; ++i)
     {
       DestroyBatch(i);
-      DestroyTechnique(i);
+      DestroyConfig(i);
       DestroyPass(i);
     }
 
@@ -348,7 +348,7 @@ namespace RayGene3D
   }
 
 
-  void EnvironmentBroker::CreateTechnique(uint32_t level)
+  void EnvironmentBroker::CreateConfig(uint32_t level)
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
@@ -358,20 +358,20 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_technique =
+    const Config::IAState ia_Config =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
       {
         { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
         { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Technique::RCState rc_technique =
+    const Config::RCState rc_Config =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_NONE,
+      Config::FILL_SOLID,
+      Config::CULL_NONE,
       {
         { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
         { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
@@ -382,29 +382,29 @@ namespace RayGene3D
       },
     };
 
-    const Technique::DSState ds_technique =
+    const Config::DSState ds_Config =
     {
       false, //depth_enabled
       false, //depth_write
-      Technique::COMPARISON_ALWAYS //depth_comparison
+      Config::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_technique =
+    const Config::OMState om_Config =
     {
       false,
       {
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF },
       }
     };
 
-    techniques[level] = passes[level]->CreateTechnique("environment_reflection_technique_" + std::to_string(level),
+    Configs[level] = passes[level]->CreateConfig("environment_reflection_Config_" + std::to_string(level),
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_GS | Technique::COMPILATION_PS),
+      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_GS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_technique,
-      rc_technique,
-      ds_technique,
-      om_technique
+      ia_Config,
+      rc_Config,
+      ds_Config,
+      om_Config
     );
   }
 
@@ -470,7 +470,7 @@ namespace RayGene3D
       skybox_view,
     };
 
-    batches[level] = techniques[level]->CreateBatch("environment_reflection_batch_" + std::to_string(level),
+    batches[level] = Configs[level]->CreateBatch("environment_reflection_batch_" + std::to_string(level),
       { &entity, 1u },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -488,15 +488,15 @@ namespace RayGene3D
     passes[level].reset();
   }
 
-  void EnvironmentBroker::DestroyTechnique(uint32_t level)
+  void EnvironmentBroker::DestroyConfig(uint32_t level)
   {
-    passes[level]->DestroyTechnique(techniques[level]);
-    techniques[level].reset();
+    passes[level]->DestroyConfig(Configs[level]);
+    Configs[level].reset();
   }
 
   void EnvironmentBroker::DestroyBatch(uint32_t level)
   {
-    techniques[level]->DestroyBatch(batches[level]);
+    Configs[level]->DestroyBatch(batches[level]);
     batches[level].reset();
   }
 

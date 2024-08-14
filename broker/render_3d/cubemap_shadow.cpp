@@ -54,7 +54,7 @@ namespace RayGene3D
     );
   }
 
-  void CubemapShadow::CreateShadowedTechnique()
+  void CubemapShadow::CreateShadowedConfig()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
@@ -64,47 +64,47 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_technique =
+    const Config::IAState ia_Config =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Technique::RCState rc_technique =
+    const Config::RCState rc_Config =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      Config::FILL_SOLID,
+      Config::CULL_BACK,
       {
         { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_technique =
+    const Config::DSState ds_Config =
     {
       false, //depth_enabled
       false, //depth_write
-      Technique::COMPARISON_ALWAYS //depth_comparison
+      Config::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Technique::OMState om_technique =
+    const Config::OMState om_Config =
     {
       false,
       {
-        { true, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, Technique::OPERAND_ONE, Technique::OPERAND_ONE, Technique::OPERATION_ADD, 0xF },
+        { true, Config::OPERAND_ONE, Config::OPERAND_ONE, Config::OPERATION_ADD, Config::OPERAND_ONE, Config::OPERAND_ONE, Config::OPERATION_ADD, 0xF },
       }
     };
 
-    shadowed_technique = shadowed_pass->CreateTechnique("spark_shadowed_technique",
+    shadowed_Config = shadowed_pass->CreateConfig("spark_shadowed_Config",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_technique,
-      rc_technique,
-      ds_technique,
-      om_technique
+      ia_Config,
+      rc_Config,
+      ds_Config,
+      om_Config
     );
   }
 
@@ -159,7 +159,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_CLAMP, Batch::Sampler::COMPARISON_LESS },
     };
 
-    shadowed_batch = shadowed_technique->CreateBatch("spark_shadowed_batch",
+    shadowed_batch = shadowed_Config->CreateBatch("spark_shadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -194,54 +194,54 @@ namespace RayGene3D
   }
 
 
-  void CubemapShadow::CreateShadowmapTechnique()
+  void CubemapShadow::CreateShadowmapConfig()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    const Technique::IAState ia_technique =
+    const Config::IAState ia_Config =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
       {
         { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false }
       }
     };
 
-    const Technique::RCState rc_technique =
+    const Config::RCState rc_Config =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_FRONT,
+      Config::FILL_SOLID,
+      Config::CULL_FRONT,
       {
         { 0.0f, 0.0f, float(scope.shadow_resolution), float(scope.shadow_resolution), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_technique =
+    const Config::DSState ds_Config =
     {
       true, //depth_enabled
       true, //depth_write
-      Technique::COMPARISON_LESS //depth_comparison
+      Config::COMPARISON_LESS //depth_comparison
     };
 
-    const Technique::OMState om_technique =
+    const Config::OMState om_Config =
     {
       false,
       {
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF }
+        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF }
       }
     };
 
-    shadowmap_technique = shadowmap_pass->CreateTechnique("spark_shadowmap_technique",
+    shadowmap_Config = shadowmap_pass->CreateConfig("spark_shadowmap_Config",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS),
+      Config::Compilation(Config::COMPILATION_VS),
       {},
-      ia_technique,
-      rc_technique,
-      ds_technique,
-      om_technique
+      ia_Config,
+      rc_Config,
+      ds_Config,
+      om_Config
     );
   }
 
@@ -291,7 +291,7 @@ namespace RayGene3D
       shadowmap_shadow_data,
     };
 
-    shadowmap_batch = shadowmap_technique->CreateBatch("spark_shadowmap_batch",
+    shadowmap_batch = shadowmap_Config->CreateBatch("spark_shadowmap_batch",
       { entities.data(), uint32_t(entities.size()) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -306,14 +306,14 @@ namespace RayGene3D
 
   void CubemapShadow::DestroyShadowmapBatch()
   {
-    shadowmap_technique->DestroyBatch(shadowmap_batch);
+    shadowmap_Config->DestroyBatch(shadowmap_batch);
     shadowmap_batch.reset();
   }
 
-  void CubemapShadow::DestroyShadowmapTechnique()
+  void CubemapShadow::DestroyShadowmapConfig()
   {
-    shadowmap_pass->DestroyTechnique(shadowmap_technique);
-    shadowmap_technique.reset();
+    shadowmap_pass->DestroyConfig(shadowmap_Config);
+    shadowmap_Config.reset();
   }
 
   void CubemapShadow::DestroyShadowmapPass()
@@ -324,14 +324,14 @@ namespace RayGene3D
 
   void CubemapShadow::DestroyShadowedBatch()
   {
-    shadowed_technique->DestroyBatch(shadowed_batch);
+    shadowed_Config->DestroyBatch(shadowed_batch);
     shadowed_batch.reset();
   }
 
-  void CubemapShadow::DestroyShadowedTechnique()
+  void CubemapShadow::DestroyShadowedConfig()
   {
-    shadowed_pass->DestroyTechnique(shadowed_technique);
-    shadowed_technique.reset();
+    shadowed_pass->DestroyConfig(shadowed_Config);
+    shadowed_Config.reset();
   }
 
   void CubemapShadow::DestroyShadowedPass()
@@ -362,44 +362,44 @@ namespace RayGene3D
   {
 
     CreateShadowmapPass();
-    CreateShadowmapTechnique();
+    CreateShadowmapConfig();
     CreateShadowmapBatch();
 
     CreateGeometryPass();
-    CreateGeometryTechnique();
+    CreateGeometryConfig();
     CreateGeometryBatch();
 
-    CreateSkyboxTechnique();
+    CreateSkyboxConfig();
     CreateSkyboxBatch();
 
     CreateShadowedPass();
-    CreateShadowedTechnique();
+    CreateShadowedConfig();
     CreateShadowedBatch();
 
     CreatePresentPass();
-    CreatePresentTechnique();
+    CreatePresentConfig();
     CreatePresentBatch();
   }
 
   CubemapShadow::~CubemapShadow()
   {
     DestroyPresentBatch();
-    DestroyPresentTechnique();
+    DestroyPresentConfig();
     DestroyPresentPass();
 
     DestroyShadowedBatch();
-    DestroyShadowedTechnique();
+    DestroyShadowedConfig();
     DestroyShadowedPass();
 
     DestroySkyboxBatch();
-    DestroySkyboxTechnique();
+    DestroySkyboxConfig();
 
     DestroyGeometryBatch();
-    DestroyGeometryTechnique();
+    DestroyGeometryConfig();
     DestroyGeometryPass();
 
     DestroyShadowmapBatch();
-    DestroyShadowmapTechnique();
+    DestroyShadowmapConfig();
     DestroyShadowmapPass();
   }
 }
