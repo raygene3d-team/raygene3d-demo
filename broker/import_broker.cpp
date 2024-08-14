@@ -588,39 +588,39 @@ namespace RayGene3D
 
     std::vector<NodeData> mesh_relations;
 
-    auto extract_node_transform = [](const tinygltf::Node& node)
+    std::function<void(const tinygltf::Node&, const glm::fmat4x4&)> parse_node_hierarchy;
+
+    parse_node_hierarchy = [&gltf_model, &mesh_relations, &parse_node_hierarchy]
+    (const tinygltf::Node& node, glm::fmat4x4 parent_transform) -> void
     {
         auto transform = glm::identity<glm::fmat4x4>();
 
-        if (node.rotation.size() == 4) {
-          const glm::quat rotation = glm::make_quat(node.rotation.data());
+        if (node.rotation.size() == 4)
+        {
+          glm::quat rotation = glm::make_quat(node.rotation.data());
           transform = glm::mat4_cast(rotation);
         }
 
         if (node.translation.size() == 3)
         {
           const glm::fvec3 translation = glm::make_vec3(node.translation.data());
-          transform = glm::translate(transform, glm::fvec3(translation));
+          transform[3] = glm::fvec4(translation, 1.0f);
         }
 
-        if (node.scale.size() == 3) {
+        if (node.scale.size() == 3)
+        {
           const glm::fvec3 scale = glm::make_vec3(node.scale.data());
           transform = glm::scale(transform, scale);
         }
 
-        return transform;
-    };
-
-    std::function<void(const tinygltf::Node&, const glm::fmat4x4&)> parse_node_hierarchy;
-
-    parse_node_hierarchy = [&gltf_model, &mesh_relations, &extract_node_transform, &parse_node_hierarchy]
-    (const tinygltf::Node& node, const glm::fmat4x4& parent_transform) -> void
-    {
-        const auto transform = parent_transform * extract_node_transform(node);
+        transform = parent_transform * transform;
 
         NodeData node_data = { node.mesh, transform };
 
-        if (node_data.mesh_index != -1) { mesh_relations.push_back(node_data); }
+        if (node_data.mesh_index != -1)
+        {
+          mesh_relations.push_back(node_data);
+        }
 
         for (const auto& child_index : node.children)
         {
@@ -701,7 +701,8 @@ namespace RayGene3D
       const auto trs_transform = glm::fmat3x3(transform);
       const auto crd_transform = to_lhs ? lhs_transform * trs_transform : trs_transform;
       const auto nrm_transform = z_up ? z_up_transform * crd_transform : crd_transform;
-      const auto pos_transform = glm::translate(glm::fmat4x4(nrm_transform * scale), glm::fvec3(transform[3]));
+      const auto scl_transform = glm::fmat4x4(nrm_transform * scale);
+      const auto pos_transform = glm::fmat4x4(scl_transform[0], scl_transform[1], scl_transform[2], transform[3]);
 
       const auto flip_v_tranform = glm::fmat2x2(
         0.0f,-1.0f,
