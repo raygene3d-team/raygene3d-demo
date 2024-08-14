@@ -58,7 +58,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    hw_traced_Config = hw_traced_pass->CreateConfig("spark_hw_traced_Config",
+    hw_traced_config = hw_traced_pass->CreateConfig("spark_hw_traced_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
       { defines.data(), uint32_t(defines.size()) },
@@ -149,7 +149,7 @@ namespace RayGene3D
       hw_traced_color_texture,
     };
 
-    hw_traced_batch = hw_traced_Config->CreateBatch("spark_hw_traced_batch",
+    hw_traced_batch = hw_traced_config->CreateBatch("spark_hw_traced_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -163,14 +163,14 @@ namespace RayGene3D
 
   void HWTracedShadow::DestroyHWTracedBatch()
   {
-    hw_traced_Config->DestroyBatch(hw_traced_batch);
+    hw_traced_config->DestroyBatch(hw_traced_batch);
     hw_traced_batch.reset();
   }
 
   void HWTracedShadow::DestroyHWTracedConfig()
   {
-    hw_traced_pass->DestroyConfig(hw_traced_Config);
-    hw_traced_Config.reset();
+    hw_traced_pass->DestroyConfig(hw_traced_config);
+    hw_traced_config.reset();
   }
 
   void HWTracedShadow::DestroyHWTracedPass()

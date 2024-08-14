@@ -47,7 +47,7 @@ namespace RayGene3D
 
   protected:
     SPtrPass passes[levels];
-    SPtrConfig Configs[levels];
+    SPtrConfig configs[levels];
     SPtrBatch batches[levels];
 
   protected:

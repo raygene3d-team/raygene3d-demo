@@ -122,7 +122,7 @@ namespace RayGene3D
       }
     };
 
-    geometry_Config = geometry_pass->CreateConfig("spark_geometry_Config",
+    geometry_config = geometry_pass->CreateConfig("spark_geometry_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -247,7 +247,7 @@ namespace RayGene3D
       geometry_reflection_map,
     };
 
-    geometry_batch = geometry_Config->CreateBatch("spark_geometry_batch",
+    geometry_batch = geometry_config->CreateBatch("spark_geometry_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -307,7 +307,7 @@ namespace RayGene3D
       }
     };
 
-    skybox_Config = geometry_pass->CreateConfig("spark_skybox_Config",
+    skybox_config = geometry_pass->CreateConfig("spark_skybox_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
@@ -356,7 +356,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    skybox_batch = skybox_Config->CreateBatch("spark_skybox_batch",
+    skybox_batch = skybox_config->CreateBatch("spark_skybox_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -392,7 +392,7 @@ namespace RayGene3D
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    present_Config = present_pass->CreateConfig("spark_present_Config",
+    present_config = present_pass->CreateConfig("spark_present_config",
       shader_ss.str(),
       Config::COMPILATION_CS,
       {},
@@ -430,7 +430,7 @@ namespace RayGene3D
       scope.backbuffer_uav,
     };
 
-    present_batch = present_Config->CreateBatch("spark_present_batch",
+    present_batch = present_config->CreateBatch("spark_present_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -450,38 +450,38 @@ namespace RayGene3D
 
   void Render3DMode::DestroyGeometryBatch()
   {
-    geometry_Config->DestroyBatch(geometry_batch);
+    geometry_config->DestroyBatch(geometry_batch);
     geometry_batch.reset();
   }
 
   void Render3DMode::DestroyGeometryConfig()
   {
-    geometry_pass->DestroyConfig(geometry_Config);
-    geometry_Config.reset();
+    geometry_pass->DestroyConfig(geometry_config);
+    geometry_config.reset();
   }
 
   void Render3DMode::DestroySkyboxBatch()
   {
-    skybox_Config->DestroyBatch(skybox_batch);
+    skybox_config->DestroyBatch(skybox_batch);
     skybox_batch.reset();
   }
 
   void Render3DMode::DestroySkyboxConfig()
   {
-    geometry_pass->DestroyConfig(skybox_Config);
-    skybox_Config.reset();
+    geometry_pass->DestroyConfig(skybox_config);
+    skybox_config.reset();
   }
 
   void Render3DMode::DestroyPresentBatch()
   {
-    present_Config->DestroyBatch(present_batch);
+    present_config->DestroyBatch(present_batch);
     present_batch.reset();
   }
 
   void Render3DMode::DestroyPresentConfig()
   {
-    present_pass->DestroyConfig(present_Config);
-    present_Config.reset();
+    present_pass->DestroyConfig(present_config);
+    present_config.reset();
   }
 
   void Render3DMode::DestroyPresentPass()

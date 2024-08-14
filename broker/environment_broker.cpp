@@ -397,7 +397,7 @@ namespace RayGene3D
       }
     };
 
-    Configs[level] = passes[level]->CreateConfig("environment_reflection_Config_" + std::to_string(level),
+    configs[level] = passes[level]->CreateConfig("environment_reflection_config_" + std::to_string(level),
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_GS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -470,7 +470,7 @@ namespace RayGene3D
       skybox_view,
     };
 
-    batches[level] = Configs[level]->CreateBatch("environment_reflection_batch_" + std::to_string(level),
+    batches[level] = configs[level]->CreateBatch("environment_reflection_batch_" + std::to_string(level),
       { &entity, 1u },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -490,13 +490,13 @@ namespace RayGene3D
 
   void EnvironmentBroker::DestroyConfig(uint32_t level)
   {
-    passes[level]->DestroyConfig(Configs[level]);
-    Configs[level].reset();
+    passes[level]->DestroyConfig(configs[level]);
+    configs[level].reset();
   }
 
   void EnvironmentBroker::DestroyBatch(uint32_t level)
   {
-    Configs[level]->DestroyBatch(batches[level]);
+    configs[level]->DestroyBatch(batches[level]);
     batches[level].reset();
   }
 

@@ -39,14 +39,14 @@ namespace RayGene3D
 
   protected:
     SPtrPass geometry_pass;
-    SPtrConfig geometry_Config;
+    SPtrConfig geometry_config;
     SPtrBatch geometry_batch;
 
-    SPtrConfig skybox_Config;
+    SPtrConfig skybox_config;
     SPtrBatch skybox_batch;
 
     SPtrPass present_pass;
-    SPtrConfig present_Config;
+    SPtrConfig present_config;
     SPtrBatch present_batch;
 
   protected:

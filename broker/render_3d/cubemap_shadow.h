@@ -36,11 +36,11 @@ namespace RayGene3D
   {
   protected:
     SPtrPass shadowmap_pass;
-    SPtrConfig shadowmap_Config;
+    SPtrConfig shadowmap_config;
     SPtrBatch shadowmap_batch;
 
     SPtrPass shadowed_pass;
-    SPtrConfig shadowed_Config;
+    SPtrConfig shadowed_config;
     SPtrBatch shadowed_batch;
 
   protected:

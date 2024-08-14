@@ -36,7 +36,7 @@ namespace RayGene3D
   {
   protected:
     SPtrPass hw_traced_pass;
-    SPtrConfig hw_traced_Config;
+    SPtrConfig hw_traced_config;
     SPtrBatch hw_traced_batch;
 
   protected:

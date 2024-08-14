@@ -98,7 +98,7 @@ namespace RayGene3D
       }
     };
 
-    sw_traced_Config = sw_traced_pass->CreateConfig("spark_sw_traced_Config",
+    sw_traced_config = sw_traced_pass->CreateConfig("spark_sw_traced_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -176,7 +176,7 @@ namespace RayGene3D
       sw_traced_depth_texture,
     };
 
-    sw_traced_batch = sw_traced_Config->CreateBatch("spark_sw_traced_batch",
+    sw_traced_batch = sw_traced_config->CreateBatch("spark_sw_traced_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -190,14 +190,14 @@ namespace RayGene3D
 
   void SWTracedShadow::DestroySWTracedBatch()
   {
-    sw_traced_Config->DestroyBatch(sw_traced_batch);
+    sw_traced_config->DestroyBatch(sw_traced_batch);
     sw_traced_batch.reset();
   }
 
   void SWTracedShadow::DestroySWTracedConfig()
   {
-    sw_traced_pass->DestroyConfig(sw_traced_Config);
-    sw_traced_Config.reset();
+    sw_traced_pass->DestroyConfig(sw_traced_config);
+    sw_traced_config.reset();
   }
 
   void SWTracedShadow::DestroySWTracedPass()

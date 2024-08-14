@@ -97,7 +97,7 @@ namespace RayGene3D
       }
     };
 
-    unshadowed_Config = unshadowed_pass->CreateConfig("spark_unshadowed_Config",
+    unshadowed_config = unshadowed_pass->CreateConfig("spark_unshadowed_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -153,7 +153,7 @@ namespace RayGene3D
       unshadowed_depth_texture,
     };
 
-    unshadowed_batch = unshadowed_Config->CreateBatch("spark_unshadowed_batch",
+    unshadowed_batch = unshadowed_config->CreateBatch("spark_unshadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -164,14 +164,14 @@ namespace RayGene3D
 
   void NoShadow::DestroyUnshadowedBatch()
   {
-    unshadowed_Config->DestroyBatch(unshadowed_batch);
+    unshadowed_config->DestroyBatch(unshadowed_batch);
     unshadowed_batch.reset();
   }
 
   void NoShadow::DestroyUnshadowedConfig()
   {
-    unshadowed_pass->DestroyConfig(unshadowed_Config);
-    unshadowed_Config.reset();
+    unshadowed_pass->DestroyConfig(unshadowed_config);
+    unshadowed_config.reset();
   }
 
   void NoShadow::DestroyUnshadowedPass()

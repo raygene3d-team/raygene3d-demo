@@ -97,7 +97,7 @@ namespace RayGene3D
       }
     };
 
-    shadowed_Config = shadowed_pass->CreateConfig("spark_shadowed_Config",
+    shadowed_config = shadowed_pass->CreateConfig("spark_shadowed_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
@@ -159,7 +159,7 @@ namespace RayGene3D
       { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_CLAMP, Batch::Sampler::COMPARISON_LESS },
     };
 
-    shadowed_batch = shadowed_Config->CreateBatch("spark_shadowed_batch",
+    shadowed_batch = shadowed_config->CreateBatch("spark_shadowed_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -234,7 +234,7 @@ namespace RayGene3D
       }
     };
 
-    shadowmap_Config = shadowmap_pass->CreateConfig("spark_shadowmap_Config",
+    shadowmap_config = shadowmap_pass->CreateConfig("spark_shadowmap_config",
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS),
       {},
@@ -291,7 +291,7 @@ namespace RayGene3D
       shadowmap_shadow_data,
     };
 
-    shadowmap_batch = shadowmap_Config->CreateBatch("spark_shadowmap_batch",
+    shadowmap_batch = shadowmap_config->CreateBatch("spark_shadowmap_batch",
       { entities.data(), uint32_t(entities.size()) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -306,14 +306,14 @@ namespace RayGene3D
 
   void CubemapShadow::DestroyShadowmapBatch()
   {
-    shadowmap_Config->DestroyBatch(shadowmap_batch);
+    shadowmap_config->DestroyBatch(shadowmap_batch);
     shadowmap_batch.reset();
   }
 
   void CubemapShadow::DestroyShadowmapConfig()
   {
-    shadowmap_pass->DestroyConfig(shadowmap_Config);
-    shadowmap_Config.reset();
+    shadowmap_pass->DestroyConfig(shadowmap_config);
+    shadowmap_config.reset();
   }
 
   void CubemapShadow::DestroyShadowmapPass()
@@ -324,14 +324,14 @@ namespace RayGene3D
 
   void CubemapShadow::DestroyShadowedBatch()
   {
-    shadowed_Config->DestroyBatch(shadowed_batch);
+    shadowed_config->DestroyBatch(shadowed_batch);
     shadowed_batch.reset();
   }
 
   void CubemapShadow::DestroyShadowedConfig()
   {
-    shadowed_pass->DestroyConfig(shadowed_Config);
-    shadowed_Config.reset();
+    shadowed_pass->DestroyConfig(shadowed_config);
+    shadowed_config.reset();
   }
 
   void CubemapShadow::DestroyShadowedPass()
