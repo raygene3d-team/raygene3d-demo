@@ -371,7 +371,7 @@ namespace RayGene3D
         return output; \
       }";
 
-      const Config::IAState ia_Config =
+      const Config::IAState ia_state =
       {
         Config::TOPOLOGY_TRIANGLELIST,
         Config::INDEXER_16_BIT,
@@ -382,7 +382,7 @@ namespace RayGene3D
         }
       };
 
-      const Config::RCState rc_Config =
+      const Config::RCState rc_state =
       {
         Config::FILL_SOLID,
         Config::CULL_NONE,
@@ -391,14 +391,14 @@ namespace RayGene3D
         },
       };
 
-      const Config::DSState ds_Config =
+      const Config::DSState ds_state =
       {
         false,
         false,
         Config::COMPARISON_ALWAYS
       };
 
-      const Config::OMState om_Config =
+      const Config::OMState om_state =
       {
         false,
         {
@@ -406,20 +406,19 @@ namespace RayGene3D
         }
       };
 
-      Config = pass->CreateConfig("imgui_config",
+      config = pass->CreateConfig("imgui_config",
         source,
         Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
         {},
-        ia_Config,
-        rc_Config,
-        ds_Config,
-        om_Config
+        ia_state,
+        rc_state,
+        ds_state,
+        om_state
       );
     }
 
 
     {
-
       Batch::Entity entities[sub_limit * arg_limit];
       for (uint32_t i = 0; i < sub_limit; ++i)
       {
@@ -461,7 +460,7 @@ namespace RayGene3D
           font_view,
       };
 
-      batch = Config->CreateBatch("imgui_layout",
+      batch = config->CreateBatch("imgui_layout",
         { entities, uint32_t(std::size(entities)) },
         { samplers, uint32_t(std::size(samplers)) },
         { ub_views, uint32_t(std::size(ub_views)) },
@@ -497,11 +496,11 @@ namespace RayGene3D
 
   RenderUIBroker::~RenderUIBroker()
   {
-    Config->DestroyBatch(batch);
+    config->DestroyBatch(batch);
     batch.reset();
 
-    pass->DestroyConfig(Config);
-    Config.reset();
+    pass->DestroyConfig(config);
+    config.reset();
 
     wrap.GetCore()->GetDevice()->DestroyPass(pass);
     pass.reset();
