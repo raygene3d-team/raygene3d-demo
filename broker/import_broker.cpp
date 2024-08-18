@@ -627,20 +627,6 @@ namespace RayGene3D
       const auto& node = gltf_model.nodes[node_index];
       parse_node_hierarchy(parse_node_hierarchy, node, glm::identity<glm::fmat4x4>());
     }
-    
-
-    /*while (!node_indices.empty())
-    {
-      const auto& gltf_node = gltf_model.nodes[node_indices.top()]; node_indices.pop();
-      for (const auto& node_index : gltf_node.children) { node_indices.push(node_index); }
-
-      NodeData node_data;
-
-      if (gltf_node.mesh != -1) { node_data.mesh_index = gltf_node.mesh; }
-
-
-      if (node_data.mesh_index != -1) { mesh_relations.push_back(node_data); }
-    }*/
 
     const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool z_up, bool to_lhs, bool flip_v)
     {
@@ -737,10 +723,9 @@ namespace RayGene3D
       return tex_index;
     };
 
-    for (const auto& mesh_data : mesh_relations)
+    for (const auto& [mesh_id, transform] : mesh_relations)
     {
-      const auto& gltf_mesh = gltf_model.meshes[mesh_data.first];
-      const auto& transform = mesh_data.second;
+      const auto& gltf_mesh = gltf_model.meshes[mesh_id];
       for (uint32_t k = 0; k < uint32_t(gltf_mesh.primitives.size()); ++k)
       {
         const auto& gltf_primitive = gltf_mesh.primitives[k];
