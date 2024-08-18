@@ -31,20 +31,20 @@ namespace RayGene3D
 {
   void EnvironmentBroker::Initialize()
   {
-    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& prop_tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& prop_environment = prop_tree->GetObjectItem("environment");
 
-    prop_environment = tree->GetObjectItem("environment_property");
-
-    const auto pano_extent_x = prop_environment->GetObjectItem("extent_x")->GetUint();
-    const auto pano_extent_y = prop_environment->GetObjectItem("extent_y")->GetUint();
-    const auto pano_mipmap = prop_environment->GetObjectItem("mipmap")->GetUint();
-    const auto pano_layers = prop_environment->GetObjectItem("layers")->GetUint();
-
-    const auto& pano_raw = prop_environment->GetObjectItem("raws")->GetArrayItem(0)->GetRaw();
+    path = prop_environment->GetObjectItem("path")->GetString();
+    quality = prop_environment->GetObjectItem("quality")->GetUint();
 
     const auto mipmap = 1u;
     const auto layers = 6u;
-    const auto extent = 1u << int32_t(detail) - 1;
+    const auto extent = 1u << int32_t(quality) - 1;
+
+    const auto [pano_raws, pano_size_x, pano_size_y] =
+      MipmapTextureHDR(1u,
+        ResizeTextureHDR(2u * extent, extent,
+          LoadTextureHDR(path)));
 
     enum CUBEMAP_FACE
     {
@@ -101,8 +101,8 @@ namespace RayGene3D
           const auto cube_uv = glm::f32vec2{ (i + 0.5f) / extent, (j + 0.5f) / extent };
           const auto pano_uv = pano_from_xyz(xyz_from_cube(cube_uv, CUBEMAP_FACE(k)));
 
-          const auto texel = glm::i32vec2(pano_uv * glm::f32vec2(pano_extent_x, pano_extent_y));
-          const auto& value = pano_raw.GetElement<glm::f32vec4>(texel.y * pano_extent_x + texel.x);
+          const auto texel = glm::i32vec2(pano_uv * glm::f32vec2(pano_size_x, pano_size_y));
+          const auto& value = pano_raws[0].GetElement<glm::f32vec4>(texel.y * pano_size_x + texel.x);
 
           raw.SetElement(value, j * extent + i);
         }
@@ -111,10 +111,8 @@ namespace RayGene3D
       raws.push_back(std::move(raw));
     }
 
-    prop_environment = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, extent, extent, mipmap, layers);
-
-    const auto prop_scene = tree->GetObjectItem("scene_property");
-    prop_scene->SetObjectItem("skybox", prop_environment);
+    const auto prop_skybox = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, extent, extent, mipmap, layers);
+    prop_tree->GetObjectItem("environment")->SetObjectItem("skybox_cubemap", prop_skybox);
 
     CreateSkyboxCubemap();
     CreateReflectionMap();
@@ -256,10 +254,15 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreateSkyboxCubemap()
   {
-    const auto mipmap = 1u;
-    const auto layers = 6u;
-    const auto extent = 1u << int32_t(detail) - 1;
-    const auto& raws = prop_environment->GetObjectItem("raws");
+    const auto& prop_tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& prop_environment = prop_tree->GetObjectItem("environment");
+    const auto& prop_skybox = prop_environment->GetObjectItem("skybox_cubemap");
+
+    const auto& layers = prop_skybox->GetObjectItem("layers");
+    const auto& mipmap = prop_skybox->GetObjectItem("mipmap");
+    const auto& extent_x = prop_skybox->GetObjectItem("extent_x");
+    const auto& extent_y = prop_skybox->GetObjectItem("extent_y");
+    const auto& raws = prop_skybox->GetObjectItem("raws");
 
     auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
     for (auto i = 0u; i < uint32_t(interops.size()); ++i)
@@ -272,11 +275,11 @@ namespace RayGene3D
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap,
-        layers,
+        mipmap->GetUint(),
+        layers->GetUint(),
         FORMAT_R32G32B32A32_FLOAT,
-        extent,
-        extent,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }

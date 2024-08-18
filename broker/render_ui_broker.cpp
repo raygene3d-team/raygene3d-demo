@@ -132,7 +132,7 @@ namespace RayGene3D
 
     const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
-    prop_camera = tree->GetObjectItem("camera_property");
+    prop_camera = tree->GetObjectItem("camera");
     {
       prop_extent_x = prop_camera->GetObjectItem("extent_x");
       prop_extent_y = prop_camera->GetObjectItem("extent_y");
@@ -261,60 +261,6 @@ namespace RayGene3D
 
 
     {
-      const std::string debug_source =
-        "\
-      #ifdef USE_SPIRV\n \
-      #define VK_BINDING(x) [[vk::binding(x)]]\n \
-      #define VK_LOCATION(x) [[vk::location(x)]]\n \
-      #else\n \
-      #define VK_BINDING(x)\n \
-      #define VK_LOCATION(x)\n \
-      #endif\n \
-      \
-      struct VSInput\
-      {\
-        VK_LOCATION(0) uint vertID : SV_VertexID;\
-      };\
-      \
-      struct VSOutput\
-      {\
-        VK_LOCATION(0) float4 col : COLOR0;\
-        VK_LOCATION(1) float4 pos : SV_Position;\
-      };\
-      \
-      VSOutput vs_main(VSInput input)\
-      {\
-        float2 positions[3] = {\
-        float2( 0.0,-0.5),\
-        float2( 0.5, 0.5),\
-        float2(-0.5, 0.5)\
-        };\
-        float3 colors[3] = {\
-        float3(1.0, 0.0, 0.0),\
-        float3(0.0, 1.0, 0.0),\
-        float3(0.0, 0.0, 1.0)\
-        };\
-        VSOutput output;\
-        output.pos = float4(positions[input.vertID], 0.5, 1.0);\
-        output.col = float4(colors[input.vertID], 1.0);\
-        return output;\
-      }\
-      struct PSInput\
-      {\
-        VK_LOCATION(0) float4 col : COLOR0;\
-      };\
-      \
-      struct PSOutput\
-      {\
-        float4 col : SV_Target;\
-      };\
-      PSOutput ps_main(PSInput input)\
-      {\
-        PSOutput output;\
-        output.col = float4(input.col.rgb, 1.0);\
-        return output;\
-      }";
-
       const std::string source =
         "\
       #ifdef USE_SPIRV\n \
@@ -419,7 +365,7 @@ namespace RayGene3D
 
 
     {
-      Batch::Entity entities[sub_limit * arg_limit];
+      std::vector<Batch::Entity> entities(sub_limit * arg_limit);
       for (uint32_t i = 0; i < sub_limit; ++i)
       {
         const auto vtx_view = vtx_resource->CreateView("vtx_view_" + std::to_string(i),
@@ -461,7 +407,7 @@ namespace RayGene3D
       };
 
       batch = config->CreateBatch("imgui_layout",
-        { entities, uint32_t(std::size(entities)) },
+        { entities.data(), uint32_t(entities.size())},
         { samplers, uint32_t(std::size(samplers)) },
         { ub_views, uint32_t(std::size(ub_views)) },
         {},

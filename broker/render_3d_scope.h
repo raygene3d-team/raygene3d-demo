@@ -42,7 +42,7 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_scene;
     std::shared_ptr<Property> prop_camera;
     std::shared_ptr<Property> prop_lighting;
-    //std::shared_ptr<Property> prop_environment;
+    std::shared_ptr<Property> prop_environment;
 
     std::shared_ptr<Property> prop_eye;
     std::shared_ptr<Property> prop_lookat;

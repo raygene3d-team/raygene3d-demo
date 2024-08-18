@@ -336,7 +336,7 @@ namespace RayGene3D
   {
     const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
-    prop_scene = tree->GetObjectItem("scene_property");
+    prop_scene = tree->GetObjectItem("scene");
     {
       prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
       prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);

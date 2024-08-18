@@ -36,6 +36,12 @@ namespace RayGene3D
   {
   protected:
     std::shared_ptr<Property> prop_scene;
+    std::shared_ptr<Property> prop_illumination;
+
+  protected:
+    std::shared_ptr<Property> prop_maps;
+    std::shared_ptr<Property> prop_quality;
+    std::shared_ptr<Property> prop_density;
 
   protected:
     std::shared_ptr<Property> prop_instances;

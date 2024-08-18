@@ -756,7 +756,7 @@ namespace RayGene3D
     core->VisitView(find_view_fn);
 
 
-    prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene_property");
+    prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
     {
       prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
       prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
@@ -776,11 +776,9 @@ namespace RayGene3D
       prop_textures3 = prop_scene->GetObjectItem("textures_3");
 
       prop_lightmaps = prop_scene->GetObjectItem("lightmaps");
-
-      prop_skybox = prop_scene->GetObjectItem("skybox");
     }
 
-    prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera_property");
+    prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera");
     {
       prop_eye = prop_camera->GetObjectItem("eye");
       prop_lookat = prop_camera->GetObjectItem("lookat");
@@ -798,14 +796,17 @@ namespace RayGene3D
       prop_counter = prop_camera->GetObjectItem("counter");
     }
 
-    prop_lighting = util->GetStorage()->GetTree()->GetObjectItem("lighting_property");
+    prop_lighting = util->GetStorage()->GetTree()->GetObjectItem("lighting");
     {
       prop_theta = prop_lighting->GetObjectItem("theta");
       prop_phi = prop_lighting->GetObjectItem("phi");
       prop_intensity = prop_lighting->GetObjectItem("intensity");
     }
 
-    //prop_skybox = util->GetStorage()->GetTree()->GetObjectItem("environment_property");
+    prop_environment = util->GetStorage()->GetTree()->GetObjectItem("environment");
+    {
+      prop_skybox = prop_environment->GetObjectItem("skybox_cubemap");
+    }
 
     CreateColorTarget();
     CreateDepthTarget();

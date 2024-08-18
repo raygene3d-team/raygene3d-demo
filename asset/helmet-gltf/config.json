@@ -1,14 +1,13 @@
 {
   "scene": {
-    "file": "DamagedHelmet.gltf",
+    "path": "./DamagedHelmet.gltf",
     "flip": false,
     "rhs": true,
     "scale": 1.0,
     "quality": 12
   },
   "environment": {
-  	"file": "asset/environment/skylight-day.exr",
-  	"exposure": 1.0,
+  	"path": "./asset/environment/skylight-day.exr",
   	"quality": 10
   },
   "lighting": {
@@ -20,5 +19,16 @@
     "eye": [0.0, 0.0,-3.0],
     "lookat": [0.0, 0.0, 0.0],
     "up": [0.0, 1.0, 0.0]
+  },
+  "illumination" : {
+    "photons" : 1000000,
+    "bounces" : 4,
+    "samples" : 1000,
+    "maps" : false,
+    "density" : 100.0,
+    "quality" : 2048,
+    "probes" : false,
+    "bands" : 6,
+    "limit" : 8
   }
 }
