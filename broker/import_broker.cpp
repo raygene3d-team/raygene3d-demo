@@ -49,11 +49,11 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t idx_count, uint32_t idx_align,
-    const glm::uvec3& idx_order, const glm::fmat3x3& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
-    std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_idx_stride,
-    std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_idx_stride,
-    std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_idx_stride)
+  std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t count, uint32_t align,
+    const glm::uvec3& idx_order, const glm::fmat4x4& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
+    std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_id_stride,
+    std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_id_stride,
+    std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_id_stride)
   {
     const auto create_vertex_fn = [idx_align,
       pos_transform, nrm_transform, tc0_transform,
@@ -88,7 +88,7 @@ namespace RayGene3D
 
       Vertex vertex;
 
-      vertex.pos = pos_transform * glm::fvec3{ pos.x, pos.y, pos.z };
+      vertex.pos = pos_transform * glm::fvec4{ pos.x, pos.y, pos.z, 1.0f };
       vertex.nrm = nrm_transform * glm::normalize(glm::fvec3{ nrm.x, nrm.y, nrm.z });
       vertex.tc0 = tc0_transform * glm::f32vec2(tc0.x, tc0.y);
 
@@ -219,15 +219,55 @@ namespace RayGene3D
     const auto gltf_scene = gltf_model.scenes[0];
     std::stack<int, std::vector<int>> node_indices(gltf_scene.nodes);
 
-    std::vector<int> mesh_indices;
-    while (!node_indices.empty())
+    std::map<int, glm::fmat4x4> mesh_relations;
+
+    auto parse_node_hierarchy = [&gltf_model, &mesh_relations](auto&& parse_node_hierarchy, const tinygltf::Node& node, glm::fmat4x4 parent_transform)
     {
-      const auto& gltf_node = gltf_model.nodes[node_indices.top()]; node_indices.pop();
-      for (const auto& node_index : gltf_node.children) { node_indices.push(node_index); }
-      if (gltf_node.mesh != -1) { mesh_indices.push_back(gltf_node.mesh); }
+      auto transform = glm::identity<glm::fmat4x4>();
+
+      if (node.rotation.size() == 4)
+      {
+        glm::quat rotation = glm::make_quat(node.rotation.data());
+        transform = glm::mat4_cast(rotation);
+      }
+
+      if (node.translation.size() == 3)
+      {
+        const glm::fvec3 translation = glm::make_vec3(node.translation.data());
+        transform[3] = glm::fvec4(translation, 1.0f);
+      }
+
+      if (node.scale.size() == 3)
+      {
+        const glm::fvec3 scale = glm::make_vec3(node.scale.data());
+        transform = glm::scale(transform, scale);
+      }
+
+      transform = parent_transform * transform;
+
+      if (node.mesh != -1)
+      {
+        mesh_relations.insert({ node.mesh, transform });
+      }
+
+      if (node.children.size() == 0)
+      {
+        return;
+      }
+
+      for (const auto& child_index : node.children)
+      {
+        parse_node_hierarchy(parse_node_hierarchy, gltf_model.nodes[child_index], transform);
+      }
+    };
+
+    for (auto node_index : gltf_scene.nodes)
+    {
+      const auto& node = gltf_model.nodes[node_index];
+      parse_node_hierarchy(parse_node_hierarchy, node, glm::identity<glm::fmat4x4>());
     }
 
-    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive, float scale, bool z_up, bool to_lhs, bool flip_v)
+    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool z_up, bool to_lhs, bool flip_v)
     {
       BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
 
@@ -277,9 +317,11 @@ namespace RayGene3D
         0.0f, 1.0f, 0.0f,
         0.0f, 0.0f, 1.0f
       );
-      const auto crd_transform = to_lhs ? lhs_transform : glm::identity<glm::fmat3x3>();
+      const auto trs_transform = glm::fmat3x3(transform);
+      const auto crd_transform = to_lhs ? lhs_transform * trs_transform : trs_transform;
       const auto nrm_transform = z_up ? z_up_transform * crd_transform : crd_transform;
-      const auto pos_transform = nrm_transform * scale;
+      const auto scl_transform = glm::fmat4x4(nrm_transform * scale);
+      const auto pos_transform = glm::fmat4x4(scl_transform[0], scl_transform[1], scl_transform[2], transform[3]);
 
       const auto flip_v_tranform = glm::fmat2x2(
         0.0f, 1.0f,
@@ -320,14 +362,14 @@ namespace RayGene3D
       return tex_index;
     };
 
-    for (uint32_t i = 0; i < uint32_t(mesh_indices.size()); ++i)
+    for (const auto& [mesh_id, transform] : mesh_relations)
     {
-      const auto& gltf_mesh = gltf_model.meshes[mesh_indices[i]];
+      const auto& gltf_mesh = gltf_model.meshes[mesh_id];
       for (uint32_t k = 0; k < uint32_t(gltf_mesh.primitives.size()); ++k)
       {
         const auto& gltf_primitive = gltf_mesh.primitives[k];
         const auto [instance_vertices, instance_triangles, instance_bb_min, instance_bb_max] = 
-          instance_convert_fn(gltf_primitive, position_scale, coordinate_flip, conversion_from_rhs, false);
+          instance_convert_fn(gltf_primitive, transform, position_scale, coordinate_flip, conversion_from_rhs, false);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
 
