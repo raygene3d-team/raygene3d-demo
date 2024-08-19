@@ -3,7 +3,7 @@
     "path": "./Sponza.gltf",
     "flip": false,
     "rhs": true,
-    "scale": 0.01,
+    "scale": 0.125,
     "quality": 11
   },
   "environment": {

@@ -220,20 +220,20 @@ namespace RayGene3D
 
       if (node.rotation.size() == 4)
       {
-        const auto rotation = glm::quat(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]);
-        transform = glm::mat4_cast(rotation) * transform;
+        const auto rotation = glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+        transform = glm::mat4_cast(rotation);
       }
 
       if (node.translation.size() == 3)
       {
         const auto translation = glm::fvec3(node.translation[0], node.translation[1], node.translation[2]);
-        transform = glm::translate(transform, translation);
+        transform = glm::fmat4x4(transform[0], transform[1], transform[2], glm::fvec4(translation, 1.0f));
       }
 
       if (node.scale.size() == 3)
       {
         const auto scaling = glm::f32vec3(node.scale[0], node.scale[1], node.scale[2]);
-        //transform = glm::scale(transform, scaling);
+        transform = glm::scale(transform, scaling);
       }
 
       transform = parent_transform * transform;
@@ -310,11 +310,13 @@ namespace RayGene3D
         0.0f, 1.0f, 0.0f,
         0.0f, 0.0f, 1.0f
       );
-      const auto trs_transform = glm::fmat3x3(transform);
-      const auto crd_transform = to_lhs ? lhs_transform * trs_transform : trs_transform;
-      const auto nrm_transform = z_up ? z_up_transform * crd_transform : crd_transform;
-      const auto scl_transform = glm::fmat4x4(nrm_transform * scale);
-      const auto pos_transform = glm::fmat4x4(scl_transform[0], scl_transform[1], scl_transform[2], transform[3]);
+
+      auto crd_transform = glm::identity<glm::fmat3x3>();
+      crd_transform = to_lhs ? lhs_transform * crd_transform : crd_transform;
+      crd_transform = z_up ? z_up_transform * crd_transform : crd_transform;
+
+      const auto nrm_transform = crd_transform * glm::fmat3x3(transform);
+      const auto pos_transform = glm::fmat4x4(crd_transform * scale) * transform;
 
       const auto flip_v_tranform = glm::fmat2x2(
         0.0f, 1.0f,
