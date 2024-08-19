@@ -42,7 +42,7 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_scene;
     std::shared_ptr<Property> prop_camera;
     std::shared_ptr<Property> prop_lighting;
-    //std::shared_ptr<Property> prop_environment;
+    std::shared_ptr<Property> prop_environment;
 
     std::shared_ptr<Property> prop_eye;
     std::shared_ptr<Property> prop_lookat;
@@ -123,14 +123,15 @@ namespace RayGene3D
     SPtrResource scene_textures2;
     SPtrResource scene_textures3;
 
-    SPtrResource light_maps;
+    SPtrResource scene_lightmaps;
 
     SPtrResource reflection_probe;
 
     SPtrResource screen_quad_vertices;
     SPtrResource screen_quad_triangles;
 
-    SPtrResource skybox_texture;
+    SPtrResource skybox_cubemap;
+    SPtrResource reflection_map;
 
     SPtrResource graphic_arguments;
     SPtrResource compute_arguments;
@@ -172,7 +173,9 @@ namespace RayGene3D
 
     void CreateScreenQuadVertices();
     void CreateScreenQuadTriangles();
-    void CreateSkyboxTexture();
+
+    void CreateSkyboxCubemap();
+    void CreateReflectionMap();
 
     void CreateGraphicArguments();
     void CreateComputeArguments();
@@ -209,7 +212,9 @@ namespace RayGene3D
 
     void DestroyScreenQuadVertices();
     void DestroyScreenQuadTriangles();
-    void DestroySkyboxTexture();
+
+    void DestroySkyboxCubemap();
+    void DestroyReflectionMap();
 
     void DestroyGraphicArguments();
     void DestroyComputeArguments();

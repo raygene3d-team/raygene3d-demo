@@ -25,60 +25,53 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ================================================================================*/
+#include "photonmap_broker.h"
 
-
-#pragma once
-#include "render_3d_scope.h"
 
 namespace RayGene3D
 {
-  class Render3DMode
+  void PhotonmapBroker::Initialize()
   {
-  protected:
-    const Render3DScope& scope;
+    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
-  protected:
-    SPtrPass geometry_pass;
-    SPtrConfig geometry_config;
-    SPtrBatch geometry_batch;
+    prop_scene = tree->GetObjectItem("scene_property");
+    {
+      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+    }
+  }
 
-    SPtrConfig skybox_config;
-    SPtrBatch skybox_batch;
+  void PhotonmapBroker::Use()
+  {
+    const auto [ins_array, ins_count] = prop_instances->GetTypedBytes<Instance>(0);
+    const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
+    const auto [vrt_array, vrt_count] = prop_vertices->GetTypedBytes<Vertex>(0);
 
-    SPtrPass present_pass;
-    SPtrConfig present_config;
-    SPtrBatch present_batch;
+    //glm::f32vec3 src = { 34.217, 0.957, 7.187 };
 
-  protected:
-    void CreateGeometryPass();
-    void CreateGeometryConfig();
-    void CreateGeometryBatch();
+    //const auto dst = glm::packUnorm4x8(glm::packRGBM(glm::sqrt(src)));
 
-    void CreateSkyboxConfig();
-    void CreateSkyboxBatch();
+    //const auto res = glm::unpackRGBM(glm::unpackUnorm4x8(dst)) * glm::unpackRGBM(glm::unpackUnorm4x8(dst));
 
-    void CreatePresentPass();
-    void CreatePresentConfig();
-    void CreatePresentBatch();
+    //int g = 8;
+  }
 
-  protected:
-    void DestroyGeometryBatch();
-    void DestroyGeometryConfig();
-    void DestroyGeometryPass();
+  void PhotonmapBroker::Discard()
+  {
+    prop_vertices.reset();
+    prop_triangles.reset();
+    prop_instances.reset();
 
-    void DestroySkyboxBatch();
-    void DestroySkyboxConfig();
+    prop_scene.reset();
+  }
 
-    void DestroyPresentBatch();
-    void DestroyPresentConfig();
-    void DestroyPresentPass();
+  PhotonmapBroker::PhotonmapBroker(Wrap& wrap)
+    : Broker("photonmap_broker", wrap)
+  {
+  }
 
-  public:
-    virtual void Enable() = 0;
-    virtual void Disable() = 0;
-
-  public:
-    Render3DMode(const Render3DScope& scope);
-    virtual ~Render3DMode();
-  };
+  PhotonmapBroker::~PhotonmapBroker()
+  {
+  }
 }

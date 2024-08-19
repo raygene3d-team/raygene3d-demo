@@ -54,10 +54,10 @@ namespace RayGene3D
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
     std::vector<Instance> instances;
-    std::vector<Texture> textures_0;
-    std::vector<Texture> textures_1;
-    std::vector<Texture> textures_2;
-    std::vector<Texture> textures_3;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_0;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_3;
 
   public:
     void Initialize() override;
@@ -79,22 +79,16 @@ namespace RayGene3D
     void Import(const std::shared_ptr<Property>& property);
 
   private:
-    //std::shared_ptr<Property> ImportOBJM(const std::string& path, const std::string& name, bool flip, float scale, uint32_t mipmaps);
-
-    
-    //void ImportGLTF(const std::string& path, const std::string& name, bool flip, float scale, uint32_t mipmaps);
-
     void ImportGLTF();
     void ImportOBJM();
-
-    void ProcessTangents();
-
 
   public:
     ImportBroker(Wrap& wrap);
     virtual ~ImportBroker();
   };
 
-  std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
-  std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
+  //std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
+  //std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
+
+  //std::shared_ptr<Property> ImportPanoram(const std::string& path, const std::string& name, uint32_t mipmaps);
 }

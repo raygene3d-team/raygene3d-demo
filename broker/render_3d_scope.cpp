@@ -149,7 +149,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_instances->GetRawBytes(0),
+      { data, uint32_t(sizeof(Instance)) * count },
     };
 
     scene_instances = core->GetDevice()->CreateResource("spark_scene_instances",
@@ -168,7 +168,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_triangles->GetRawBytes(0),
+      { data, uint32_t(sizeof(Triangle)) * count },
     };
 
     scene_triangles = core->GetDevice()->CreateResource("spark_scene_triangles",
@@ -187,7 +187,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices->GetRawBytes(0),
+      { data, uint32_t(sizeof(Vertex)) * count },
     };
 
     scene_vertices = core->GetDevice()->CreateResource("spark_scene_vertices",
@@ -206,7 +206,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_t_boxes->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_t_boxes->GetRawBytes(0),
+      { data, uint32_t(sizeof(Box)) * count },
     };
 
     scene_t_boxes = core->GetDevice()->CreateResource("spark_scene_t_boxes",
@@ -225,7 +225,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_b_boxes->GetTypedBytes<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_b_boxes->GetRawBytes(0),
+      { data, uint32_t(sizeof(Box)) * count },
     };
 
     scene_b_boxes = core->GetDevice()->CreateResource("spark_scene_b_boxes",
@@ -244,7 +244,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_instances->GetRawBytes(0),
+      { data, uint32_t(sizeof(Instance)) * count },
     };
 
     trace_instances = core->GetDevice()->CreateResource("spark_trace_instances",
@@ -263,7 +263,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_triangles->GetRawBytes(0),
+      { data, uint32_t(sizeof(Triangle)) * count },
     };
 
     trace_triangles = core->GetDevice()->CreateResource("spark_trace_triangles",
@@ -282,7 +282,7 @@ namespace RayGene3D
   {
     const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
-      prop_vertices->GetRawBytes(0),
+      { data, uint32_t(sizeof(Vertex)) * count },
     };
 
     trace_vertices = core->GetDevice()->CreateResource("spark_trace_vertices",
@@ -299,34 +299,28 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTextures0()
   {
-    const auto layers = prop_textures0->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_SRGB;
-    const auto bpp = 4u;
+    const auto& layers = prop_textures0->GetObjectItem("layers");
+    const auto& mipmap = prop_textures0->GetObjectItem("mipmap");
+    const auto& extent_x = prop_textures0->GetObjectItem("extent_x");
+    const auto& extent_y = prop_textures0->GetObjectItem("extent_y");
+    const auto& raws = prop_textures0->GetObjectItem("raws");
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures0->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
     {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
-
-    std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures0->GetArraySize(); ++i)
-    {
-      interops.emplace_back(prop_textures0->GetArrayItem(i)->GetRawBytes(0));
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
     }
 
     scene_textures0 = core->GetDevice()->CreateResource("spark_scene_textures0",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_SRGB,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -335,34 +329,28 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTextures1()
   {
-    const auto layers = prop_textures1->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_UNORM;
-    const auto bpp = 4u;
+    const auto& layers = prop_textures1->GetObjectItem("layers");
+    const auto& mipmap = prop_textures1->GetObjectItem("mipmap");
+    const auto& extent_x = prop_textures1->GetObjectItem("extent_x");
+    const auto& extent_y = prop_textures1->GetObjectItem("extent_y");
+    const auto& raws = prop_textures1->GetObjectItem("raws");
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures1->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
     {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
-
-    std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures1->GetArraySize(); ++i)
-    {
-      interops.emplace_back(prop_textures1->GetArrayItem(i)->GetRawBytes(0));
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
     }
 
     scene_textures1 = core->GetDevice()->CreateResource("spark_scene_textures1",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -371,34 +359,28 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTextures2()
   {
-    const auto layers = prop_textures2->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_UNORM;
-    const auto bpp = 4u;
+    const auto& layers = prop_textures2->GetObjectItem("layers");
+    const auto& mipmap = prop_textures2->GetObjectItem("mipmap");
+    const auto& extent_x = prop_textures2->GetObjectItem("extent_x");
+    const auto& extent_y = prop_textures2->GetObjectItem("extent_y");
+    const auto& raws = prop_textures2->GetObjectItem("raws");
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures2->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
     {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
-
-    std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures2->GetArraySize(); ++i)
-    {
-      interops.emplace_back(prop_textures2->GetArrayItem(i)->GetRawBytes(0));
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
     }
 
     scene_textures2 = core->GetDevice()->CreateResource("spark_scene_textures2",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -407,34 +389,28 @@ namespace RayGene3D
 
   void Render3DScope::CreateSceneTextures3()
   {
-    const auto layers = prop_textures3->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_UNORM;
-    const auto bpp = 4u;
+    const auto& layers = prop_textures3->GetObjectItem("layers");
+    const auto& mipmap = prop_textures3->GetObjectItem("mipmap");
+    const auto& extent_x = prop_textures3->GetObjectItem("extent_x");
+    const auto& extent_y = prop_textures3->GetObjectItem("extent_y");
+    const auto& raws = prop_textures3->GetObjectItem("raws");
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_textures3->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
     {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
-
-    std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_textures3->GetArraySize(); ++i)
-    {
-      interops.emplace_back(prop_textures3->GetArrayItem(i)->GetRawBytes(0));
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
     }
 
     scene_textures3 = core->GetDevice()->CreateResource("spark_scene_textures3",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -443,34 +419,28 @@ namespace RayGene3D
 
   void Render3DScope::CreateLightMaps()
   {
-    const auto layers = prop_lightmaps->GetArraySize();
-    const auto format = FORMAT_R8G8B8A8_SRGB;
-    const auto bpp = 4u;
+    const auto& layers = prop_lightmaps->GetObjectItem("layers");
+    const auto& mipmap = prop_lightmaps->GetObjectItem("mipmap");
+    const auto& extent_x = prop_lightmaps->GetObjectItem("extent_x");
+    const auto& extent_y = prop_lightmaps->GetObjectItem("extent_y");
+    const auto& raws = prop_lightmaps->GetObjectItem("raws");
 
-    auto mipmaps = 1u;
-    auto extent_x = 1u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_lightmaps->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
     {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
     }
 
-    std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_lightmaps->GetArraySize(); ++i)
-    {
-      interops.emplace_back(prop_lightmaps->GetArrayItem(i)->GetRawBytes(0));
-    }
-
-    light_maps = core->GetDevice()->CreateResource("spark_light_maps",
+    scene_lightmaps = core->GetDevice()->CreateResource("spark_scene_lightmaps",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -525,40 +495,56 @@ namespace RayGene3D
     );
   }
 
-  void Render3DScope::CreateSkyboxTexture()
+  void Render3DScope::CreateSkyboxCubemap()
   {
-    const auto layers = prop_skybox->GetArraySize();
-    const auto format = FORMAT_R32G32B32A32_FLOAT;
-    const auto bpp = 16u;
+    //const auto& layers = prop_skybox->GetObjectItem("layers");
+    //const auto& mipmap = prop_skybox->GetObjectItem("mipmap");
+    //const auto& extent_x = prop_skybox->GetObjectItem("extent_x");
+    //const auto& extent_y = prop_skybox->GetObjectItem("extent_y");
+    //const auto& raws = prop_skybox->GetObjectItem("raws");
 
-    auto mipmaps = 1u;
-    auto extent_x = 2u;
-    auto extent_y = 1u;
-    auto size = 0u;
-    while ((size += extent_x * extent_y * bpp) != prop_skybox->GetArrayItem(0)->GetRawBytes(0).second && mipmaps < 16u)
+    //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    //{
+    //  const auto& raw = raws->GetArrayItem(i);
+    //  interops[i] = raw->GetRawBytes(0);
+    //}
+
+    const auto find_resource_fn = [this](const std::shared_ptr<Resource>& resource)
     {
-      mipmaps += 1; extent_x <<= 1; extent_y <<= 1;
-    }
-
-    std::vector<std::pair<const void*, uint32_t>> interops;
-    for (uint32_t i = 0; i < prop_skybox->GetArraySize(); ++i)
-    {
-      interops.emplace_back(prop_skybox->GetArrayItem(i)->GetRawBytes(0));
-    }
-
-    skybox_texture = core->GetDevice()->CreateResource("spark_skybox_texture",
-      Resource::Tex2DDesc
+      if (resource->GetName().compare("environment_skybox_cubemap") == 0)
       {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmaps,
-        layers,
-        format,
-        extent_x,
-        extent_y,
-      },
-      Resource::Hint(Resource::HINT_UNKNOWN),
-      { interops.data(), uint32_t(interops.size()) }
-    );
+        this->skybox_cubemap = resource;
+      }
+    };
+    core->GetDevice()->VisitResource(find_resource_fn);
+
+
+    //skybox_texture = core->GetDevice()->CreateResource("spark_skybox_texture",
+    //  Resource::Tex2DDesc
+    //  {
+    //    Usage(USAGE_SHADER_RESOURCE),
+    //    mipmap->GetUint(),
+    //    layers->GetUint(),
+    //    FORMAT_R32G32B32A32_FLOAT,
+    //    extent_x->GetUint(),
+    //    extent_y->GetUint(),
+    //  },
+    //  Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
+    //  { interops.data(), uint32_t(interops.size()) }
+    //);
+  }
+
+  void Render3DScope::CreateReflectionMap()
+  {
+    const auto find_resource_fn = [this](const std::shared_ptr<Resource>& resource)
+    {
+      if (resource->GetName().compare("environment_reflection_map") == 0)
+      {
+        this->reflection_map = resource;
+      }
+    };
+    core->GetDevice()->VisitResource(find_resource_fn);
   }
 
   void Render3DScope::CreateGraphicArguments()
@@ -568,7 +554,7 @@ namespace RayGene3D
     graphic_arguments = core->GetDevice()->CreateResource("spark_graphic_arguments",
       Resource::BufferDesc
       {
-        Usage(USAGE_ARGUMENT_INDIRECT),
+        Usage(USAGE_ARGUMENT_LIST),
         uint32_t(sizeof(Batch::Graphic)),
         uint32_t(count),
       },
@@ -581,7 +567,7 @@ namespace RayGene3D
     compute_arguments = core->GetDevice()->CreateResource("spark_compute_arguments",
       Resource::BufferDesc
       {
-        Usage(USAGE_ARGUMENT_INDIRECT),
+        Usage(USAGE_ARGUMENT_LIST),
         uint32_t(sizeof(Batch::Compute)),
         1u,
       },
@@ -711,8 +697,8 @@ namespace RayGene3D
 
   void Render3DScope::DestroyLightMaps()
   {
-    core->GetDevice()->DestroyResource(light_maps);
-    light_maps.reset();
+    core->GetDevice()->DestroyResource(scene_lightmaps);
+    scene_lightmaps.reset();
   }
 
   void Render3DScope::DestroyScreenQuadVertices()
@@ -727,10 +713,16 @@ namespace RayGene3D
     screen_quad_triangles.reset();
   }
 
-  void Render3DScope::DestroySkyboxTexture()
+  void Render3DScope::DestroySkyboxCubemap()
   {
-    core->GetDevice()->DestroyResource(skybox_texture);
-    skybox_texture.reset();
+    core->GetDevice()->DestroyResource(skybox_cubemap);
+    skybox_cubemap.reset();
+  }
+
+  void Render3DScope::DestroyReflectionMap()
+  {
+    core->GetDevice()->DestroyResource(reflection_map);
+    reflection_map.reset();
   }
 
   void Render3DScope::DestroyGraphicArguments()
@@ -764,42 +756,29 @@ namespace RayGene3D
     core->VisitView(find_view_fn);
 
 
-    prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene_property");
+    prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
     {
-      prop_instances = prop_scene->GetObjectItem("instances");
-      prop_triangles = prop_scene->GetObjectItem("triangles");
-      prop_vertices = prop_scene->GetObjectItem("vertices");
+      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
 
       //prop_vertices0 = prop_scene->GetObjectItem("vertices0");
       //prop_vertices1 = prop_scene->GetObjectItem("vertices1");
       //prop_vertices2 = prop_scene->GetObjectItem("vertices2");
       //prop_vertices3 = prop_scene->GetObjectItem("vertices3");
 
-      prop_t_boxes = prop_scene->GetObjectItem("t_boxes");
-      prop_b_boxes = prop_scene->GetObjectItem("b_boxes");
+      prop_t_boxes = prop_scene->GetObjectItem("t_boxes")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_b_boxes = prop_scene->GetObjectItem("b_boxes")->GetObjectItem("raws")->GetArrayItem(0);
 
-      prop_textures0 = prop_scene->GetObjectItem("textures0");
-      prop_textures1 = prop_scene->GetObjectItem("textures1");
-      prop_textures2 = prop_scene->GetObjectItem("textures2");
-      prop_textures3 = prop_scene->GetObjectItem("textures3");
+      prop_textures0 = prop_scene->GetObjectItem("textures_0");
+      prop_textures1 = prop_scene->GetObjectItem("textures_1");
+      prop_textures2 = prop_scene->GetObjectItem("textures_2");
+      prop_textures3 = prop_scene->GetObjectItem("textures_3");
 
-      prop_lightmaps = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-      {
-        prop_lightmaps->SetArraySize(uint32_t(1));
-
-        const auto texel_value = glm::u8vec4(255, 255, 255, 255);
-        const auto texel_size = uint32_t(sizeof(texel_value));
-
-        const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-        texels_property->RawAllocate(texel_size);
-        texels_property->SetRawBytes({ &texel_value, texel_size }, 0);
-        prop_lightmaps->SetArrayItem(0, texels_property);
-      }
-
-      //prop_lightmaps = prop_scene->GetObjectItem("textures4");
+      prop_lightmaps = prop_scene->GetObjectItem("lightmaps");
     }
 
-    prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera_property");
+    prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera");
     {
       prop_eye = prop_camera->GetObjectItem("eye");
       prop_lookat = prop_camera->GetObjectItem("lookat");
@@ -817,14 +796,17 @@ namespace RayGene3D
       prop_counter = prop_camera->GetObjectItem("counter");
     }
 
-    prop_lighting = util->GetStorage()->GetTree()->GetObjectItem("lighting_property");
+    prop_lighting = util->GetStorage()->GetTree()->GetObjectItem("lighting");
     {
       prop_theta = prop_lighting->GetObjectItem("theta");
       prop_phi = prop_lighting->GetObjectItem("phi");
       prop_intensity = prop_lighting->GetObjectItem("intensity");
     }
 
-    prop_skybox = util->GetStorage()->GetTree()->GetObjectItem("environment_property");
+    prop_environment = util->GetStorage()->GetTree()->GetObjectItem("environment");
+    {
+      prop_skybox = prop_environment->GetObjectItem("skybox_cubemap");
+    }
 
     CreateColorTarget();
     CreateDepthTarget();
@@ -855,7 +837,9 @@ namespace RayGene3D
 
     CreateScreenQuadVertices();
     CreateScreenQuadTriangles();
-    CreateSkyboxTexture();
+
+    CreateSkyboxCubemap();
+    CreateReflectionMap();
 
     CreateLightMaps();
 
@@ -870,7 +854,9 @@ namespace RayGene3D
 
     DestroyScreenQuadVertices();
     DestroyScreenQuadTriangles();
-    DestroySkyboxTexture();
+
+    DestroyReflectionMap();
+    DestroySkyboxCubemap();
 
     DestroyLightMaps();
 

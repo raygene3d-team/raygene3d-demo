@@ -28,57 +28,38 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "render_3d_scope.h"
+#include "../raygene3d-wrap/wrap.h"
 
 namespace RayGene3D
 {
-  class Render3DMode
+  class XAtlasBroker : public Broker
   {
   protected:
-    const Render3DScope& scope;
+    std::shared_ptr<Property> prop_scene;
+    std::shared_ptr<Property> prop_illumination;
 
   protected:
-    SPtrPass geometry_pass;
-    SPtrConfig geometry_config;
-    SPtrBatch geometry_batch;
-
-    SPtrConfig skybox_config;
-    SPtrBatch skybox_batch;
-
-    SPtrPass present_pass;
-    SPtrConfig present_config;
-    SPtrBatch present_batch;
+    std::shared_ptr<Property> prop_maps;
+    std::shared_ptr<Property> prop_quality;
+    std::shared_ptr<Property> prop_density;
 
   protected:
-    void CreateGeometryPass();
-    void CreateGeometryConfig();
-    void CreateGeometryBatch();
-
-    void CreateSkyboxConfig();
-    void CreateSkyboxBatch();
-
-    void CreatePresentPass();
-    void CreatePresentConfig();
-    void CreatePresentBatch();
+    std::shared_ptr<Property> prop_instances;
+    std::shared_ptr<Property> prop_triangles;
+    std::shared_ptr<Property> prop_vertices;
 
   protected:
-    void DestroyGeometryBatch();
-    void DestroyGeometryConfig();
-    void DestroyGeometryPass();
-
-    void DestroySkyboxBatch();
-    void DestroySkyboxConfig();
-
-    void DestroyPresentBatch();
-    void DestroyPresentConfig();
-    void DestroyPresentPass();
+    uint32_t extent_x{ 0u };
+    uint32_t extent_y{ 0u };
+    uint32_t layers{ 0u };
 
   public:
-    virtual void Enable() = 0;
-    virtual void Disable() = 0;
+    void Initialize() override;
+    void Use() override;
+    void Discard() override;
 
   public:
-    Render3DMode(const Render3DScope& scope);
-    virtual ~Render3DMode();
+    XAtlasBroker(Wrap& wrap);
+    virtual ~XAtlasBroker();
   };
 }

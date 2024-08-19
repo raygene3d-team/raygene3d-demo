@@ -33,19 +33,22 @@ namespace RayGene3D
 {
   void HWTracedShadow::CreateHWTracedPass()
   {
-    const auto extent_x = scope.prop_extent_x->GetUint();
-    const auto extent_y = scope.prop_extent_y->GetUint();
-    const auto extent_z = 1u;
+    const auto size_x = scope.prop_extent_x->GetUint();
+    const auto size_y = scope.prop_extent_y->GetUint();
+    const auto layers = 1u;
 
     hw_traced_pass = scope.core->GetDevice()->CreatePass("spark_hw_traced_pass",
       Pass::TYPE_RAYTRACING,
+      size_x,
+      size_y,
+      layers,
       {},
       {}
     );
   }
 
 
-  void HWTracedShadow::CreateHWTracedTechnique()
+  void HWTracedShadow::CreateHWTracedConfig()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
@@ -55,9 +58,9 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    hw_traced_technique = hw_traced_pass->CreateTechnique("spark_hw_traced_technique",
+    hw_traced_config = hw_traced_pass->CreateConfig("spark_hw_traced_config",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_RGEN | Technique::COMPILATION_MISS),
+      Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
       { defines.data(), uint32_t(defines.size()) },
       {},
       {},
@@ -146,7 +149,7 @@ namespace RayGene3D
       hw_traced_color_texture,
     };
 
-    hw_traced_batch = hw_traced_technique->CreateBatch("spark_hw_traced_batch",
+    hw_traced_batch = hw_traced_config->CreateBatch("spark_hw_traced_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -160,14 +163,14 @@ namespace RayGene3D
 
   void HWTracedShadow::DestroyHWTracedBatch()
   {
-    hw_traced_technique->DestroyBatch(hw_traced_batch);
+    hw_traced_config->DestroyBatch(hw_traced_batch);
     hw_traced_batch.reset();
   }
 
-  void HWTracedShadow::DestroyHWTracedTechnique()
+  void HWTracedShadow::DestroyHWTracedConfig()
   {
-    hw_traced_pass->DestroyTechnique(hw_traced_technique);
-    hw_traced_technique.reset();
+    hw_traced_pass->DestroyConfig(hw_traced_config);
+    hw_traced_config.reset();
   }
 
   void HWTracedShadow::DestroyHWTracedPass()
@@ -194,36 +197,36 @@ namespace RayGene3D
     : Render3DMode(scope)
   {
     CreateGeometryPass();
-    CreateGeometryTechnique();
+    CreateGeometryConfig();
     CreateGeometryBatch();
 
-    CreateSkyboxTechnique();
+    CreateSkyboxConfig();
     CreateSkyboxBatch();
 
     CreateHWTracedPass();
-    CreateHWTracedTechnique();
+    CreateHWTracedConfig();
     CreateHWTracedBatch();
 
     CreatePresentPass();
-    CreatePresentTechnique();
+    CreatePresentConfig();
     CreatePresentBatch();
   }
 
   HWTracedShadow::~HWTracedShadow()
   {
     DestroyPresentBatch();
-    DestroyPresentTechnique();
+    DestroyPresentConfig();
     DestroyPresentPass();
 
     DestroyHWTracedBatch();
-    DestroyHWTracedTechnique();
+    DestroyHWTracedConfig();
     DestroyHWTracedPass();
 
     DestroySkyboxBatch();
-    DestroySkyboxTechnique();
+    DestroySkyboxConfig();
 
     DestroyGeometryBatch();
-    DestroyGeometryTechnique();
+    DestroyGeometryConfig();
     DestroyGeometryPass();
   }
     

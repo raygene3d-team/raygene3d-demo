@@ -132,7 +132,7 @@ namespace RayGene3D
 
     const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
-    prop_camera = tree->GetObjectItem("camera_property");
+    prop_camera = tree->GetObjectItem("camera");
     {
       prop_extent_x = prop_camera->GetObjectItem("extent_x");
       prop_extent_y = prop_camera->GetObjectItem("extent_y");
@@ -232,7 +232,7 @@ namespace RayGene3D
       arg_resource = device->CreateResource("imgui_arg_resource",
         Resource::BufferDesc
         {
-          Usage(USAGE_ARGUMENT_INDIRECT),
+          Usage(USAGE_ARGUMENT_LIST),
           uint32_t(sizeof(Batch::Graphic)),
           arg_limit * sub_limit,
         },
@@ -241,9 +241,9 @@ namespace RayGene3D
     }
 
     {
-      const auto extent_x = prop_extent_x->GetUint();
-      const auto extent_y = prop_extent_y->GetUint();
-      const auto extent_z = 1u;
+      const auto size_x = prop_extent_x->GetUint();
+      const auto size_y = prop_extent_y->GetUint();
+      const auto layers = 1u;
 
       const Pass::RTAttachment rt_attachments[] = {
          backbuffer_rtv, std::nullopt,
@@ -251,6 +251,9 @@ namespace RayGene3D
 
       pass = device->CreatePass("imgui_pass",
         Pass::TYPE_GRAPHIC,
+        size_x,
+        size_y,
+        layers,
         { rt_attachments, uint32_t(std::size(rt_attachments)) },
         {}
       );
@@ -258,60 +261,6 @@ namespace RayGene3D
 
 
     {
-      const std::string debug_source =
-        "\
-      #ifdef USE_SPIRV\n \
-      #define VK_BINDING(x) [[vk::binding(x)]]\n \
-      #define VK_LOCATION(x) [[vk::location(x)]]\n \
-      #else\n \
-      #define VK_BINDING(x)\n \
-      #define VK_LOCATION(x)\n \
-      #endif\n \
-      \
-      struct VSInput\
-      {\
-        VK_LOCATION(0) uint vertID : SV_VertexID;\
-      };\
-      \
-      struct VSOutput\
-      {\
-        VK_LOCATION(0) float4 col : COLOR0;\
-        VK_LOCATION(1) float4 pos : SV_Position;\
-      };\
-      \
-      VSOutput vs_main(VSInput input)\
-      {\
-        float2 positions[3] = {\
-        float2( 0.0,-0.5),\
-        float2( 0.5, 0.5),\
-        float2(-0.5, 0.5)\
-        };\
-        float3 colors[3] = {\
-        float3(1.0, 0.0, 0.0),\
-        float3(0.0, 1.0, 0.0),\
-        float3(0.0, 0.0, 1.0)\
-        };\
-        VSOutput output;\
-        output.pos = float4(positions[input.vertID], 0.5, 1.0);\
-        output.col = float4(colors[input.vertID], 1.0);\
-        return output;\
-      }\
-      struct PSInput\
-      {\
-        VK_LOCATION(0) float4 col : COLOR0;\
-      };\
-      \
-      struct PSOutput\
-      {\
-        float4 col : SV_Target;\
-      };\
-      PSOutput ps_main(PSInput input)\
-      {\
-        PSOutput output;\
-        output.col = float4(input.col.rgb, 1.0);\
-        return output;\
-      }";
-
       const std::string source =
         "\
       #ifdef USE_SPIRV\n \
@@ -368,10 +317,10 @@ namespace RayGene3D
         return output; \
       }";
 
-      const Technique::IAState ia_technique =
+      const Config::IAState ia_state =
       {
-        Technique::TOPOLOGY_TRIANGLELIST,
-        Technique::INDEXER_16_BIT,
+        Config::TOPOLOGY_TRIANGLELIST,
+        Config::INDEXER_16_BIT,
         {
           { 0, 0, 20, FORMAT_R32G32_FLOAT, false },
           { 0, 8, 20, FORMAT_R32G32_FLOAT, false },
@@ -379,45 +328,44 @@ namespace RayGene3D
         }
       };
 
-      const Technique::RCState rc_technique =
+      const Config::RCState rc_state =
       {
-        Technique::FILL_SOLID,
-        Technique::CULL_NONE,
+        Config::FILL_SOLID,
+        Config::CULL_NONE,
         {
           { 0.0f, 0.0f, float(prop_extent_x->GetUint()), float(prop_extent_y->GetUint()), 0.0f, 1.0f }
         },
       };
 
-      const Technique::DSState ds_technique =
+      const Config::DSState ds_state =
       {
         false,
         false,
-        Technique::COMPARISON_ALWAYS
+        Config::COMPARISON_ALWAYS
       };
 
-      const Technique::OMState om_technique =
+      const Config::OMState om_state =
       {
         false,
         {
-          { true, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF }
+          { true, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF }
         }
       };
 
-      technique = pass->CreateTechnique("imgui_config",
+      config = pass->CreateConfig("imgui_config",
         source,
-        Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
         {},
-        ia_technique,
-        rc_technique,
-        ds_technique,
-        om_technique
+        ia_state,
+        rc_state,
+        ds_state,
+        om_state
       );
     }
 
 
     {
-
-      Batch::Entity entities[sub_limit * arg_limit];
+      std::vector<Batch::Entity> entities(sub_limit * arg_limit);
       for (uint32_t i = 0; i < sub_limit; ++i)
       {
         const auto vtx_view = vtx_resource->CreateView("vtx_view_" + std::to_string(i),
@@ -433,7 +381,7 @@ namespace RayGene3D
         for (uint32_t j = 0; j < arg_limit; ++j)
         {
           const auto argument_view = arg_resource->CreateView("arg_ci_view_" + std::to_string(j),
-            Usage(USAGE_ARGUMENT_INDIRECT),
+            Usage(USAGE_ARGUMENT_LIST),
             { (i * arg_limit + j) * uint32_t(sizeof(Batch::Graphic)), uint32_t(sizeof(Batch::Graphic)) }
           );
           entities[i * arg_limit + j] = { {vtx_view}, {idx_view}, argument_view };
@@ -458,8 +406,8 @@ namespace RayGene3D
           font_view,
       };
 
-      batch = technique->CreateBatch("imgui_layout",
-        { entities, uint32_t(std::size(entities)) },
+      batch = config->CreateBatch("imgui_layout",
+        { entities.data(), uint32_t(entities.size())},
         { samplers, uint32_t(std::size(samplers)) },
         { ub_views, uint32_t(std::size(ub_views)) },
         {},
@@ -494,11 +442,11 @@ namespace RayGene3D
 
   RenderUIBroker::~RenderUIBroker()
   {
-    technique->DestroyBatch(batch);
+    config->DestroyBatch(batch);
     batch.reset();
 
-    pass->DestroyTechnique(technique);
-    technique.reset();
+    pass->DestroyConfig(config);
+    config.reset();
 
     wrap.GetCore()->GetDevice()->DestroyPass(pass);
     pass.reset();

@@ -33,9 +33,9 @@ namespace RayGene3D
 {
   void Render3DMode::CreateGeometryPass()
   {
-    const auto extent_x = scope.prop_extent_x->GetUint();
-    const auto extent_y = scope.prop_extent_y->GetUint();
-    const auto extent_z = 1u;
+    const auto size_x = scope.prop_extent_x->GetUint();
+    const auto size_y = scope.prop_extent_y->GetUint();
+    const auto layers = 1u;
 
     auto geometry_color_target = scope.color_target->CreateView("spark_geometry_color_target",
       Usage(USAGE_RENDER_TARGET)
@@ -62,12 +62,15 @@ namespace RayGene3D
 
     geometry_pass = scope.core->GetDevice()->CreatePass("spark_geometry_pass",
       Pass::TYPE_GRAPHIC,
+      size_x,
+      size_y,
+      layers,
       { rt_attachments, uint32_t(std::size(rt_attachments)) },
       { ds_attachments, uint32_t(std::size(ds_attachments)) }
     );
   }
 
-  void Render3DMode::CreateGeometryTechnique()
+  void Render3DMode::CreateGeometryConfig()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
@@ -77,10 +80,10 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Technique::IAState ia_technique =
+    const Config::IAState ia_Config =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
       {
         { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
         { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
@@ -93,40 +96,40 @@ namespace RayGene3D
       }
     };
 
-    const Technique::RCState rc_technique =
+    const Config::RCState rc_Config =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      Config::FILL_SOLID,
+      Config::CULL_BACK,
       {
         { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_technique =
+    const Config::DSState ds_Config =
     {
       true, //depth_enabled
       true, //depth_write
-      Technique::COMPARISON_LESS //depth_comparison
+      Config::COMPARISON_LESS //depth_comparison
     };
 
-    const Technique::OMState om_technique =
+    const Config::OMState om_Config =
     {
       false,
       {
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF },
+        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF },
+        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF },
       }
     };
 
-    geometry_technique = geometry_pass->CreateTechnique("spark_geometry_technique",
+    geometry_config = geometry_pass->CreateConfig("spark_geometry_config",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_technique,
-      rc_technique,
-      ds_technique,
-      om_technique
+      ia_Config,
+      rc_Config,
+      ds_Config,
+      om_Config
     );
   }
 
@@ -152,11 +155,11 @@ namespace RayGene3D
       };
 
       const auto geometry_graphic_arguments = scope.graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
-        Usage(USAGE_ARGUMENT_INDIRECT),
+        Usage(USAGE_ARGUMENT_LIST),
         { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
       );
 
-      const auto& ins_range = View::Range{ 1u,  0u };
+      const auto& ins_range = View::Range{ 0u,  1u };
       const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
       const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
       const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
@@ -176,7 +179,7 @@ namespace RayGene3D
 
     const Batch::Sampler samplers[] = {
       { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-    };
+      { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
 
     auto geometry_screen_data = scope.screen_data->CreateView("spark_geometry_screen_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -224,8 +227,15 @@ namespace RayGene3D
       Usage(USAGE_SHADER_RESOURCE)
     );
 
-    auto geometry_light_maps = scope.light_maps->CreateView("spark_geometry_light_maps",
+    auto geometry_scene_lightmaps = scope.scene_lightmaps->CreateView("spark_geometry_scene_lightmaps",
       Usage(USAGE_SHADER_RESOURCE)
+    );
+
+    auto geometry_reflection_map = scope.reflection_map->CreateView("spark_geometry_reflection_map",
+      Usage(USAGE_SHADER_RESOURCE),
+      { 0u, uint32_t(-1) },
+      { 0u, uint32_t(-1) },
+      View::BIND_CUBEMAP_LAYER
     );
 
     const std::shared_ptr<View> ri_views[] = {
@@ -233,9 +243,11 @@ namespace RayGene3D
       geometry_scene_textures1,
       geometry_scene_textures2,
       geometry_scene_textures3,
+      geometry_scene_lightmaps,
+      geometry_reflection_map,
     };
 
-    geometry_batch = geometry_technique->CreateBatch("spark_geometry_batch",
+    geometry_batch = geometry_config->CreateBatch("spark_geometry_batch",
       { entities.data(), uint32_t(entities.size()) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -248,7 +260,7 @@ namespace RayGene3D
   }
 
 
-  void Render3DMode::CreateSkyboxTechnique()
+  void Render3DMode::CreateSkyboxConfig()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
@@ -260,49 +272,49 @@ namespace RayGene3D
       { "TEST", "1" },
     };
 
-    const Technique::IAState ia_technique =
+    const Config::IAState ia_Config =
     {
-      Technique::TOPOLOGY_TRIANGLELIST,
-      Technique::INDEXER_32_BIT,
+      Config::TOPOLOGY_TRIANGLELIST,
+      Config::INDEXER_32_BIT,
       {
         { 0, 0, 8, FORMAT_R32G32_FLOAT, false },
       }
     };
 
-    const Technique::RCState rc_technique =
+    const Config::RCState rc_Config =
     {
-      Technique::FILL_SOLID,
-      Technique::CULL_BACK,
+      Config::FILL_SOLID,
+      Config::CULL_BACK,
       {
         { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
       },
     };
 
-    const Technique::DSState ds_technique =
+    const Config::DSState ds_Config =
     {
       true, //depth_enabled
       false, //depth_write
-      Technique::COMPARISON_EQUAL //depth_comparison
+      Config::COMPARISON_EQUAL //depth_comparison
     };
 
-    const Technique::OMState om_technique =
+    const Config::OMState om_Config =
     {
       false,
       {
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
-        { false, Technique::OPERAND_SRC_ALPHA, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERATION_ADD, Technique::OPERAND_INV_SRC_ALPHA, Technique::OPERAND_ZERO, Technique::OPERATION_ADD, 0xF },
+        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF },
+        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF },
+        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF },
       }
     };
 
-    skybox_technique = geometry_pass->CreateTechnique("spark_skybox_technique",
+    skybox_config = geometry_pass->CreateConfig("spark_skybox_config",
       shader_ss.str(),
-      Technique::Compilation(Technique::COMPILATION_VS | Technique::COMPILATION_PS),
+      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
-      ia_technique,
-      rc_technique,
-      ds_technique,
-      om_technique
+      ia_Config,
+      rc_Config,
+      ds_Config,
+      om_Config
     );
   }
 
@@ -330,18 +342,21 @@ namespace RayGene3D
       skybox_camera_data,
     };
 
-    auto skybox_skybox_texture = scope.skybox_texture->CreateView("spark_skybox_skybox_texture",
-      Usage(USAGE_SHADER_RESOURCE)
+    auto skybox_skybox_cubemap = scope.skybox_cubemap->CreateView("spark_skybox_skybox_cubemap",
+      Usage(USAGE_SHADER_RESOURCE),
+      { 0u, 1u },
+      { 0u, 6u },
+      View::BIND_CUBEMAP_LAYER
     );
     const std::shared_ptr<View> ri_views[] = {
-      skybox_skybox_texture,
+      skybox_skybox_cubemap,
     };
 
     const Batch::Sampler samplers[] = {
-      { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+      { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
-    skybox_batch = skybox_technique->CreateBatch("spark_skybox_batch",
+    skybox_batch = skybox_config->CreateBatch("spark_skybox_batch",
       { entities, uint32_t(std::size(entities)) },
       { samplers, uint32_t(std::size(samplers)) },
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -354,32 +369,32 @@ namespace RayGene3D
   }
 
 
-
-
-
   void Render3DMode::CreatePresentPass()
   {
-    const auto grid_x = scope.prop_extent_x->GetUint() / 8u;
-    const auto grid_y = scope.prop_extent_y->GetUint() / 8u;
-    const auto grid_z = 1u;
+    const auto size_x = scope.prop_extent_x->GetUint() / 8u;
+    const auto size_y = scope.prop_extent_y->GetUint() / 8u;
+    const auto layers = 1u;
 
     present_pass = scope.core->GetDevice()->CreatePass("spark_present_pass",
       Pass::TYPE_COMPUTE,
+      size_x,
+      size_y,
+      layers,
       {},
       {}
     );
   }
 
-  void Render3DMode::CreatePresentTechnique()
+  void Render3DMode::CreatePresentConfig()
   {
     std::fstream shader_fs;
     shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
 
-    present_technique = present_pass->CreateTechnique("spark_present_technique",
+    present_config = present_pass->CreateConfig("spark_present_config",
       shader_ss.str(),
-      Technique::COMPILATION_CS,
+      Config::COMPILATION_CS,
       {},
       {},
       {},
@@ -391,7 +406,7 @@ namespace RayGene3D
   void Render3DMode::CreatePresentBatch()
   {
     auto present_compute_arguments = scope.compute_arguments->CreateView("spark_present_compute_arguments",
-      Usage(USAGE_ARGUMENT_INDIRECT)
+      Usage(USAGE_ARGUMENT_LIST)
     );
     const Batch::Entity entities[] = {
       {{}, {}, present_compute_arguments}
@@ -415,7 +430,7 @@ namespace RayGene3D
       scope.backbuffer_uav,
     };
 
-    present_batch = present_technique->CreateBatch("spark_present_batch",
+    present_batch = present_config->CreateBatch("spark_present_batch",
       { entities, uint32_t(std::size(entities)) },
       {},
       { ub_views, uint32_t(std::size(ub_views)) },
@@ -435,38 +450,38 @@ namespace RayGene3D
 
   void Render3DMode::DestroyGeometryBatch()
   {
-    geometry_technique->DestroyBatch(geometry_batch);
+    geometry_config->DestroyBatch(geometry_batch);
     geometry_batch.reset();
   }
 
-  void Render3DMode::DestroyGeometryTechnique()
+  void Render3DMode::DestroyGeometryConfig()
   {
-    geometry_pass->DestroyTechnique(geometry_technique);
-    geometry_technique.reset();
+    geometry_pass->DestroyConfig(geometry_config);
+    geometry_config.reset();
   }
 
   void Render3DMode::DestroySkyboxBatch()
   {
-    skybox_technique->DestroyBatch(skybox_batch);
+    skybox_config->DestroyBatch(skybox_batch);
     skybox_batch.reset();
   }
 
-  void Render3DMode::DestroySkyboxTechnique()
+  void Render3DMode::DestroySkyboxConfig()
   {
-    geometry_pass->DestroyTechnique(skybox_technique);
-    skybox_technique.reset();
+    geometry_pass->DestroyConfig(skybox_config);
+    skybox_config.reset();
   }
 
   void Render3DMode::DestroyPresentBatch()
   {
-    present_technique->DestroyBatch(present_batch);
+    present_config->DestroyBatch(present_batch);
     present_batch.reset();
   }
 
-  void Render3DMode::DestroyPresentTechnique()
+  void Render3DMode::DestroyPresentConfig()
   {
-    present_pass->DestroyTechnique(present_technique);
-    present_technique.reset();
+    present_pass->DestroyConfig(present_config);
+    present_config.reset();
   }
 
   void Render3DMode::DestroyPresentPass()

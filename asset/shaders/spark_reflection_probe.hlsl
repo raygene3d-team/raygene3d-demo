@@ -23,7 +23,6 @@ VK_BINDING(1) cbuffer constant0 : register(b0)
   uint mip_size      : packoffset(c0.y);
   uint dummy_z       : packoffset(c0.z);
   uint dummy_w       : packoffset(c0.w);
-  uint4 dummy[15]    : packoffset(c1.x);
 }
 
 VK_BINDING(2) TextureCube<float4> skybox_texture : register(t0);
@@ -39,39 +38,44 @@ struct VSInput
 
 struct VSOutput
 {
-  VK_LOCATION(0) float4 pos : SV_Position;
-  VK_LOCATION(1) float2 uv : register0;
-  VK_LOCATION(2) uint view_id : register1;
+  VK_LOCATION(0) float2 uv : register0;
+  VK_LOCATION(1) float4 pos : SV_Position;
+  VK_LOCATION(2) uint inst_id : SV_InstanceID;
 };
 
 VSOutput vs_main(VSInput input)
 {
   VSOutput output;
-  output.pos = float4(input.pos, 1.0, 1.0);
   output.uv = input.uv;
-  output.view_id = input.inst_id;
+  output.pos = float4(input.pos, 1.0, 1.0);
+  output.inst_id = input.inst_id;
   return output;
 }
 
+struct GSInput
+{
+  VK_LOCATION(0) float2 uv : register0;
+  VK_LOCATION(1) float4 pos : SV_Position;
+  VK_LOCATION(2) uint inst_id : SV_InstanceID;
+};
+
 struct GSOutput
 {
-  VK_LOCATION(0) float4 pos : SV_Position;
-  VK_LOCATION(1) uint rtv_id : SV_RenderTargetArrayIndex;
-  VK_LOCATION(2) float2 uv : register0;
-  VK_LOCATION(3) uint inst_id : register1;
+  VK_LOCATION(0) float2 uv : register0;
+  VK_LOCATION(1) float4 pos : SV_Position;
+  VK_LOCATION(2) uint inst_id : SV_RenderTargetArrayIndex;
 };
 
 [maxvertexcount(3)]
-void gs_main(triangle VSOutput input[3], inout TriangleStream<GSOutput> outStream)
+void gs_main(triangle GSInput input[3], inout TriangleStream<GSOutput> outStream)
 {
   GSOutput output;
   [unroll(3)]
   for (int i = 0; i < 3; ++i)
   {
-    output.pos = input[i].pos;
     output.uv = input[i].uv;
-    output.rtv_id = input[i].view_id;
-    output.inst_id = input[i].view_id;
+    output.pos = input[i].pos;
+    output.inst_id = input[i].inst_id;
     outStream.Append(output);
   }
 }
@@ -116,9 +120,15 @@ float3 UVtoCube(float u, float v, uint layer)
   return normalize(text_coord);
 }
 
+struct PSInput
+{
+  VK_LOCATION(0) float2 uv : register0;
+  VK_LOCATION(1) float4 pos : SV_Position;
+  VK_LOCATION(2) uint inst_id : SV_InstanceID;
+};
+
 float4 ps_main(GSOutput input) : SV_Target
 {
-
   float2 uv = input.pos.xy / float2(mip_size, mip_size);
   float3 cube_texcoord = UVtoCube(uv.x, uv.y, input.inst_id);
 

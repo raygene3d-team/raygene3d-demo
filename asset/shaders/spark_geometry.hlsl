@@ -17,8 +17,9 @@
 
 
 VK_BINDING(0) sampler sampler0 : register(s0);
+VK_BINDING(1) sampler sampler1 : register(s1);
 
-VK_BINDING(1) cbuffer constant0 : register(b0)
+VK_BINDING(2) cbuffer constant0 : register(b0)
 {
   uint extent_x       : packoffset(c0.x);
   uint extent_y       : packoffset(c0.y);
@@ -26,7 +27,7 @@ VK_BINDING(1) cbuffer constant0 : register(b0)
   uint rnd_seed       : packoffset(c0.w);
 }
 
-VK_BINDING(2) cbuffer constant1 : register(b1)
+VK_BINDING(3) cbuffer constant1 : register(b1)
 {
   float4x4 camera_view     : packoffset(c0.x);
   float4x4 camera_proj     : packoffset(c4.x);
@@ -34,7 +35,7 @@ VK_BINDING(2) cbuffer constant1 : register(b1)
   float4x4 camera_proj_inv : packoffset(c12.x);
 }
 
-VK_BINDING(3) cbuffer constant2 : register(b2)
+VK_BINDING(4) cbuffer constant2 : register(b2)
 {
   float4x4 shadow_view     : packoffset(c0.x);
   float4x4 shadow_proj     : packoffset(c4.x);
@@ -42,7 +43,7 @@ VK_BINDING(3) cbuffer constant2 : register(b2)
   float4x4 shadow_proj_inv : packoffset(c12.x);
 }
 
-VK_BINDING(4) cbuffer constant3 : register(b3)
+VK_BINDING(5) cbuffer constant3 : register(b3)
 {
   float4x3 transform  : packoffset(c0.x);
 
@@ -69,12 +70,13 @@ VK_BINDING(4) cbuffer constant3 : register(b3)
   uint4 padding[7]    : packoffset(c9.x);
 };
 
-VK_BINDING(5) Texture2DArray<float4> texture0_items : register(t0);
-VK_BINDING(6) Texture2DArray<float4> texture1_items : register(t1);
-VK_BINDING(7) Texture2DArray<float4> texture2_items : register(t2);
-VK_BINDING(8) Texture2DArray<float4> texture3_items : register(t3);
+VK_BINDING(6) Texture2DArray<float4> texture0_items : register(t0);
+VK_BINDING(7) Texture2DArray<float4> texture1_items : register(t1);
+VK_BINDING(8) Texture2DArray<float4> texture2_items : register(t2);
+VK_BINDING(9) Texture2DArray<float4> texture3_items : register(t3);
 
-//VK_BINDING(9) Texture2DArray<float4> texture4_items : register(t4);
+VK_BINDING(10) Texture2DArray<float4> lightmap_items : register(t4);
+VK_BINDING(11) TextureCube<float4> reflection_map : register(t5);
 
 
 
@@ -97,7 +99,8 @@ struct VSOutput
   VK_LOCATION(2) float4 w_tng_v : register2;
   VK_LOCATION(3) float2 tc1		: register3;
   VK_LOCATION(4) uint mask 		: register4;
-  VK_LOCATION(5) float4 pos   : SV_Position;
+  VK_LOCATION(5) float4 color   : register5;
+  VK_LOCATION(6) float4 pos     : SV_Position;
 };
 
 VSOutput vs_main(VSInput input)
@@ -110,6 +113,7 @@ VSOutput vs_main(VSInput input)
   output.w_tng_v = float4(input.tgn, input.tc0.y);
   output.tc1 = input.tc1;
   output.mask = input.msk;
+  output.color = input.col;
   return output;
 }
 
@@ -120,6 +124,7 @@ struct PSInput
   VK_LOCATION(2) float4 w_tng_v : register2;
   VK_LOCATION(3) float2 tc1		: register3;
   VK_LOCATION(4) uint mask 		: register4;
+  VK_LOCATION(5) float4 color   : register5;
 };
 
 struct PSOutput
@@ -158,17 +163,19 @@ PSOutput ps_main(PSInput input)
   //#endif
   //
 #ifdef USE_NORMAL_MAP
-  n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
+    n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
 #endif
 
-  
+    
+  const float4 lightmaps_value = lightmap_items.Sample(sampler0, float3(input.tc1, input.mask));
+
   
   const float smoothness = surface.shininess;
   const float3 albedo = surface.diffuse;
   const float metallic = surface.specular.b;
   const float roughness = surface.specular.g;
 
-  const float3 global_illumination = 0.025 * albedo;
+  const float3 global_illumination = 0.025 * albedo; //reflection_map.SampleLevel(sampler1, n, 3.0).xyz;
 
   output.target_0 = float4(surface.emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);

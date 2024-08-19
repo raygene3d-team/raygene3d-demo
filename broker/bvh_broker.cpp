@@ -299,11 +299,22 @@ namespace RayGene3D
 
     MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
 
-    const auto prop_t_boxes = CreateBufferProperty(t_boxes.data(), uint32_t(sizeof(RayGene3D::Box)), uint32_t(t_boxes.size()));
-    const auto prop_b_boxes = CreateBufferProperty(b_boxes.data(), uint32_t(sizeof(RayGene3D::Box)), uint32_t(b_boxes.size()));
-
-    prop_scene->SetObjectItem("t_boxes", prop_t_boxes);
-    prop_scene->SetObjectItem("b_boxes", prop_b_boxes);
+    {
+      const auto data = t_boxes.data();
+      const auto stride = uint32_t(sizeof(RayGene3D::Box));
+      const auto count = uint32_t(t_boxes.size());
+      auto raw = Raw({ data, stride * count });
+      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
+      prop_scene->SetObjectItem("t_boxes", property);
+    }
+    {
+      const auto data = b_boxes.data();
+      const auto stride = uint32_t(sizeof(RayGene3D::Box));
+      const auto count = uint32_t(b_boxes.size());
+      auto raw = Raw({ data, stride * count });
+      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
+      prop_scene->SetObjectItem("b_boxes", property);
+    }
   }
 
   void BVHBroker::Use()
@@ -313,8 +324,11 @@ namespace RayGene3D
 
   void BVHBroker::Discard()
   {
-    if (prop_scene->HasObjectItem("t_boxes")) prop_scene->RemoveObjectItem("t_boxes");
-    if (prop_scene->HasObjectItem("b_boxes")) prop_scene->RemoveObjectItem("b_boxes");
+    prop_vertices.reset();
+    prop_triangles.reset();
+    prop_instances.reset();
+
+    prop_scene.reset();
   }
 
   BVHBroker::BVHBroker(Wrap& wrap)
@@ -322,13 +336,12 @@ namespace RayGene3D
   {
     const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
-    prop_scene = tree->GetObjectItem("scene_property");
+    prop_scene = tree->GetObjectItem("scene");
     {
-      prop_instances = prop_scene->GetObjectItem("instances");
-      prop_triangles = prop_scene->GetObjectItem("triangles");
-      prop_vertices = prop_scene->GetObjectItem("vertices");
-    } 
-  
+      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+    }
   }
 
   BVHBroker::~BVHBroker()

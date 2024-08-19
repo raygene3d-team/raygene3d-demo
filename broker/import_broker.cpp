@@ -37,55 +37,54 @@ THE SOFTWARE.
 //#define TINYGLTF_NO_STB_IMAGE_WRITE
 #include <tinygltf/tiny_gltf.h>
 
-#define TINYEXR_IMPLEMENTATION
-#include <tinyexr/tinyexr.h>
+//#define TINYEXR_IMPLEMENTATION
+//#include <tinyexr/tinyexr.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include <stb/stb_image.h>
-#include <stb/stb_image_write.h>
-#include <stb/stb_image_resize.h>
-
-#include <mikktspace/mikktspace.h>
-
-#include <xatlas/xatlas.h>
+//#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_WRITE_IMPLEMENTATION
+//#define STB_IMAGE_RESIZE_IMPLEMENTATION
+//#include <stb/stb_image.h>
+//#include <stb/stb_image_write.h>
+//#include <stb/stb_image_resize.h>
 
 namespace RayGene3D
 {
-  std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t count, uint32_t align,
+  std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t idx_count, uint32_t idx_align,
     const glm::uvec3& idx_order, const glm::fmat4x4& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
-    std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_id_stride,
-    std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_id_stride,
-    std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_id_stride)
+    std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_idx_stride,
+    std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_idx_stride,
+    std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_idx_stride)
   {
-    const auto create_vertex_fn = [align,
+    const auto create_vertex_fn = [idx_align,
       pos_transform, nrm_transform, tc0_transform,
-      pos_data, pos_stride, pos_idx_data, pos_id_stride,
-      nrm_data, nrm_stride, nrm_idx_data, nrm_id_stride,
-      tc0_data, tc0_stride, tc0_idx_data, tc0_id_stride]
+      pos_data, pos_stride, pos_idx_data, pos_idx_stride,
+      nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
+      tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride]
       (uint32_t index)
     {
-      const auto pos_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(pos_idx_data.first + pos_id_stride * index))
-        : align == 2 ? *(reinterpret_cast<const uint16_t*>(pos_idx_data.first + pos_id_stride * index))
-        : align == 1 ? *(reinterpret_cast<const uint8_t*>(pos_idx_data.first + pos_id_stride * index))
-        : -1;
+      const auto pos_idx = 
+        idx_align == 4 ? *(reinterpret_cast<const uint32_t*>(pos_idx_data.first + pos_idx_stride * index)) :
+        idx_align == 2 ? *(reinterpret_cast<const uint16_t*>(pos_idx_data.first + pos_idx_stride * index)) :
+        idx_align == 1 ? *(reinterpret_cast<const uint8_t*>(pos_idx_data.first + pos_idx_stride * index)) :
+        -1;
       const auto pos_ptr = reinterpret_cast<const float*>(pos_data.first + pos_stride * pos_idx);
-      const auto& pos = glm::fvec3(pos_ptr[0], pos_ptr[1], pos_ptr[2]);
+      const auto pos = glm::fvec3(pos_ptr[0], pos_ptr[1], pos_ptr[2]);
 
-      const auto nrm_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(nrm_idx_data.first + nrm_id_stride * index))
-        : align == 2 ? *(reinterpret_cast<const uint16_t*>(nrm_idx_data.first + nrm_id_stride * index))
-        : align == 1 ? *(reinterpret_cast<const uint8_t*>(nrm_idx_data.first + nrm_id_stride * index))
-        : -1;
+      const auto nrm_idx = 
+        idx_align == 4 ? *(reinterpret_cast<const uint32_t*>(nrm_idx_data.first + nrm_idx_stride * index)) :
+        idx_align == 2 ? *(reinterpret_cast<const uint16_t*>(nrm_idx_data.first + nrm_idx_stride * index)) :
+        idx_align == 1 ? *(reinterpret_cast<const uint8_t*>(nrm_idx_data.first + nrm_idx_stride * index)) :
+        -1;
       const auto nrm_ptr = reinterpret_cast<const float*>(nrm_data.first + nrm_stride * nrm_idx);
-      const auto& nrm = glm::fvec3(nrm_ptr[0], nrm_ptr[1], nrm_ptr[2]);
+      const auto nrm = glm::fvec3(nrm_ptr[0], nrm_ptr[1], nrm_ptr[2]);
 
-      const auto tc0_idx = align == 4 ? *(reinterpret_cast<const uint32_t*>(tc0_idx_data.first + tc0_id_stride * index))
-        : align == 2 ? *(reinterpret_cast<const uint16_t*>(tc0_idx_data.first + tc0_id_stride * index))
-        : align == 1 ? *(reinterpret_cast<const uint8_t*>(tc0_idx_data.first + tc0_id_stride * index))
-        : -1;
+      const auto tc0_idx = 
+        idx_align == 4 ? *(reinterpret_cast<const uint32_t*>(tc0_idx_data.first + tc0_idx_stride * index)) :
+        idx_align == 2 ? *(reinterpret_cast<const uint16_t*>(tc0_idx_data.first + tc0_idx_stride * index)) :
+        idx_align == 1 ? *(reinterpret_cast<const uint8_t*>(tc0_idx_data.first + tc0_idx_stride * index)) :
+        -1;
       const auto tc0_ptr = reinterpret_cast<const float*>(tc0_data.first + tc0_stride * tc0_idx);
-      const auto& tc0 = glm::f32vec2(tc0_ptr[0], tc0_ptr[1]);
+      const auto tc0 = glm::f32vec2(tc0_ptr[0], tc0_ptr[1]);
 
       Vertex vertex;
 
@@ -130,7 +129,7 @@ namespace RayGene3D
     auto degenerated_geom_tris_count = 0u;
     auto degenerated_wrap_tris_count = 0u;
 
-    for (uint32_t k = 0; k < count / 3; ++k)
+    for (uint32_t k = 0; k < idx_count / 3; ++k)
     {
       const auto vtx0 = create_vertex_fn(k * 3 + 0);
       bb_min = glm::min(bb_min, vtx0.pos);
@@ -178,371 +177,6 @@ namespace RayGene3D
     return { vertices, triangles, bb_min, bb_max };
   }
 
-
-  void UpdateTangents(std::vector<Instance>& instances, std::vector<Triangle>& triangles, std::vector<Vertex>& vertices)
-  {
-
-    for (uint32_t i = 0; i < uint32_t(instances.size()); ++i)
-    {
-      auto prim_data = triangles.data() + instances[i].prim_offset;
-      const auto prim_count = instances[i].prim_count;
-
-      auto vert_data = vertices.data() + instances[i].vert_offset;
-      const auto vert_count = instances[i].vert_count;
-
-      struct SMikkTSpaceUserData
-      {
-        std::pair<Triangle*, uint32_t> prims;
-        std::pair<Vertex*, uint32_t> verts;
-      };
-      SMikkTSpaceUserData data { {prim_data, prim_count}, { vert_data, vert_count } };
-
-      SMikkTSpaceInterface input = { 0 };
-      input.m_getNumFaces = [](const SMikkTSpaceContext* ctx)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        return int32_t(data->prims.second);
-      };
-
-      input.m_getNumVerticesOfFace = [](const SMikkTSpaceContext* ctx, const int iFace)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        return 3;
-      };
-
-      //input.m_getPosition = &GetPositionCb;
-      //input.m_getNormal = &GetNormalCb;
-      //input.m_getTexCoord = &GetTexCoordCb;
-      //input.m_setTSpaceBasic = &SetTspaceBasicCb;
-      //input.m_setTSpace = NULL;
-
-
-      input.m_getPosition = [](const SMikkTSpaceContext* ctx, float fvPosOut[], int iFace, int iVert)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        const auto& pos = data->verts.first[data->prims.first[iFace].idx[iVert]].pos;
-        fvPosOut[0] = pos.x;
-        fvPosOut[1] = pos.y;
-        fvPosOut[2] = pos.z;
-      };
-
-      input.m_getNormal = [](const SMikkTSpaceContext* ctx, float fvNormOut[], int iFace, int iVert)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        const auto& nrm = data->verts.first[data->prims.first[iFace].idx[iVert]].nrm;
-        fvNormOut[0] = nrm.x;
-        fvNormOut[1] = nrm.y;
-        fvNormOut[2] = nrm.z;
-      };
-
-      input.m_getTexCoord = [](const SMikkTSpaceContext* ctx, float fvTexcOut[], int iFace, int iVert)
-      {
-        const auto data = reinterpret_cast<const SMikkTSpaceUserData*>(ctx->m_pUserData);
-        const auto& tc0 = data->verts.first[data->prims.first[iFace].idx[iVert]].tc0;
-        fvTexcOut[0] = tc0.x;
-        fvTexcOut[1] = tc0.y;
-      };
-
-      input.m_setTSpaceBasic = [](const SMikkTSpaceContext* ctx, const float fvTangent[], float fSign, int iFace, int iVert)
-      {
-        auto data = reinterpret_cast<SMikkTSpaceUserData*>(ctx->m_pUserData);
-        auto& tng = data->verts.first[data->prims.first[iFace].idx[iVert]].tng;
-        tng.x = fvTangent[0];
-        tng.y = fvTangent[1];
-        tng.z = fvTangent[2];
-        auto& sgn = data->verts.first[data->prims.first[iFace].idx[iVert]].sgn;
-        sgn = fSign;
-      };
-
-      SMikkTSpaceContext context;
-      context.m_pInterface = &input;
-      context.m_pUserData = &data;
-
-      BLAST_ASSERT(1 == genTangSpaceDefault(&context));
-    }
-  }
-
-  //void UpdateWrap()
-  //{
-  //  {
-  //    auto atlas = xatlas::Create();
-
-  //    for (uint32_t i = 0; i < uint32_t(instances_array.size()); ++i)
-  //    {
-  //      const auto& vertices = vertices_arrays[i];
-  //      const auto vertex_data = reinterpret_cast<const uint8_t*>(vertices.data());
-  //      const auto vertex_count = uint32_t(vertices.size());
-  //      const auto vertex_stride = uint32_t(sizeof(Vertex));
-
-  //      const auto& triangles = triangles_arrays[i];
-  //      const auto index_data = reinterpret_cast<const uint8_t*>(triangles.data());
-  //      const auto index_count = uint32_t(triangles.size()) * 3;
-  //      const auto index_format = xatlas::IndexFormat::UInt32;
-
-  //      xatlas::MeshDecl mesh_decl;
-  //      mesh_decl.vertexCount = vertex_count;
-  //      mesh_decl.vertexPositionData = vertex_data + 0;
-  //      mesh_decl.vertexPositionStride = vertex_stride;
-  //      mesh_decl.vertexNormalData = vertex_data + 16;
-  //      mesh_decl.vertexNormalStride = vertex_stride;
-  //      mesh_decl.vertexUvData = vertex_data + 48;
-  //      mesh_decl.vertexUvStride = vertex_stride;
-  //      mesh_decl.indexCount = index_count;
-  //      mesh_decl.indexData = index_data;
-  //      mesh_decl.indexFormat = index_format;
-  //      BLAST_ASSERT(xatlas::AddMeshError::Success == xatlas::AddMesh(atlas, mesh_decl));
-
-  //      //xatlas::UvMeshDecl uv_mesh_decl;
-  //      //uv_mesh_decl.vertexCount = vertex_count;
-  //      //uv_mesh_decl.vertexStride = vertex_stride;
-  //      //uv_mesh_decl.vertexUvData = vertex_data + 48;
-  //      //uv_mesh_decl.indexCount = index_count;
-  //      //uv_mesh_decl.indexData = index_data;
-  //      //uv_mesh_decl.indexFormat = index_format;
-  //      //uv_mesh_decl.indexOffset = 0;
-  //      //BLAST_ASSERT(xatlas::AddMeshError::Success == xatlas::AddUvMesh(atlas, uv_mesh_decl));
-  //    }
-
-  //    xatlas::ChartOptions chartOptions;
-  //    chartOptions.useInputMeshUvs = true;
-  //    xatlas::ComputeCharts(atlas, chartOptions);
-
-  //    xatlas::PackOptions packOptions;
-  //    packOptions.resolution = 2048;
-  //    packOptions.texelsPerUnit = 200.0;
-  //    xatlas::PackCharts(atlas, packOptions);
-
-  //    BLAST_ASSERT(atlas->meshCount == uint32_t(instances_array.size()));
-
-  //    for (uint32_t i = 0; i < atlas->meshCount; i++)
-  //    {
-  //      const auto& triangles = triangles_arrays[i];
-  //      const auto& mesh = atlas->meshes[i];
-  //      BLAST_ASSERT(mesh.indexCount == 3 * uint32_t(triangles.size()))
-
-  //        const auto& vertices = vertices_arrays[i];
-
-  //      std::vector<Vertex> temp_vertices(mesh.vertexCount);
-  //      for (uint32_t j = 0; j < mesh.vertexCount; j++)
-  //      {
-  //        const auto& vertex = mesh.vertexArray[j];
-
-  //        temp_vertices[j] = vertices[vertex.xref];
-  //        temp_vertices[j].msk = vertex.atlasIndex;
-  //        temp_vertices[j].tc1 = { vertex.uv[0] / atlas->width, vertex.uv[1] / atlas->height };
-  //      }
-
-  //      std::vector<Triangle> temp_triangles(mesh.indexCount / 3);
-  //      for (uint32_t j = 0; j < mesh.indexCount / 3; j++)
-  //      {
-  //        temp_triangles[j].idx[0] = mesh.indexArray[j * 3 + 0];
-  //        temp_triangles[j].idx[1] = mesh.indexArray[j * 3 + 1];
-  //        temp_triangles[j].idx[2] = mesh.indexArray[j * 3 + 2];
-  //      }
-
-  //      std::swap(vertices_arrays[i], temp_vertices);
-  //      std::swap(triangles_arrays[i], temp_triangles);
-
-  //      instances_array[i].vert_count = uint32_t(vertices_arrays[i].size());
-  //      instances_array[i].vert_offset = i > 0 ? instances_array[i - 1].vert_offset + instances_array[i - 1].vert_count : 0;
-  //      instances_array[i].prim_count = uint32_t(triangles_arrays[i].size());
-  //      instances_array[i].prim_offset = i > 0 ? instances_array[i - 1].prim_offset + instances_array[i - 1].prim_count : 0;
-  //    }
-
-  //    if (atlas->width > 0 && atlas->height > 0)
-  //    {
-  //      const auto white = glm::u8vec4(255, 255, 255, 255);
-
-  //      const auto triangle_raster_fn = [](glm::u8vec4* pixels, uint32_t size_x, uint32_t size_y, const float* v0, const float* v1, const float* v2, const glm::u8vec4& color)
-  //      {
-  //        const auto tc0 = glm::f32vec2(v0[0], v0[1]);
-  //        const auto tc1 = glm::f32vec2(v1[0], v1[1]);
-  //        const auto tc2 = glm::f32vec2(v2[0], v2[1]);
-
-  //        const auto min = glm::min(glm::min(tc0, tc1), tc2);
-  //        const auto max = glm::max(glm::max(tc0, tc1), tc2);
-
-  //        const auto denom = glm::determinant(glm::f32mat2x2(tc1 - tc0, tc2 - tc0));
-
-  //        for (uint32_t i = 0; i < size_y; ++i)
-  //        {
-  //          if (i < min.y || i > max.y) continue;
-
-  //          for (uint32_t j = 0; j < size_x; ++j)
-  //          {
-  //            if (j < min.x || j > max.x) continue;
-
-  //            const auto pnt = glm::f32vec2(j + 0.0f, i + 0.0f);
-
-  //            const auto v = glm::determinant(glm::f32mat2x2(pnt - tc0, tc2 - tc0)) / denom;
-  //            if (v < 0.0f || v > 1.0f) continue;
-
-  //            const auto w = glm::determinant(glm::f32mat2x2(tc1 - tc0, pnt - tc0)) / denom;
-  //            if (w < 0.0f || w > 1.0f) continue;
-
-  //            const auto u = 1.0f - v - w;
-  //            if (u < 0.0f || u > 1.0f) continue;
-
-  //            pixels[(size_x * i + j)] = color;
-
-  //            const auto pattern = glm::floor(pnt / 16.0f);
-  //            const auto fading = 0.5f * glm::fract(0.5f * (pattern.x + pattern.y)) + 0.5f;
-
-  //            pixels[(size_x * i + j)].x *= fading;
-  //            pixels[(size_x * i + j)].y *= fading;
-  //            pixels[(size_x * i + j)].z *= fading;
-  //          }
-  //        }
-  //      };
-
-  //      textures_4.resize(atlas->atlasCount);
-
-  //      for (uint32_t z = 0; z < atlas->atlasCount; ++z)
-  //      {
-  //        //std::vector<uint8_t> image(atlas->width* atlas->height * 3);
-
-  //        Texture texture;
-  //        texture.texels.resize(atlas->width * atlas->height);
-  //        texture.extent_x = atlas->width;
-  //        texture.extent_y = atlas->height;
-
-  //        for (uint32_t i = 0; i < atlas->meshCount; ++i)
-  //        {
-  //          const auto& mesh = atlas->meshes[i];
-
-  //          for (uint32_t j = 0; j < mesh.chartCount; ++j)
-  //          {
-  //            const auto& chart = mesh.chartArray[j];
-  //            if (chart.atlasIndex != z) continue;
-
-  //            BLAST_ASSERT(chart.atlasIndex != -1);
-
-  //            const auto color = glm::u8vec4(uint8_t((rand() % 255 + 192) * 0.5f), uint8_t((rand() % 255 + 192) * 0.5f), uint8_t((rand() % 255 + 192) * 0.5f), 255);
-
-  //            for (uint32_t k = 0; k < chart.faceCount; ++k)
-  //            {
-  //              const auto face = chart.faceArray[k];
-
-  //              const auto& vtx0 = mesh.vertexArray[mesh.indexArray[3 * face + 0]];
-  //              const auto& vtx1 = mesh.vertexArray[mesh.indexArray[3 * face + 1]];
-  //              const auto& vtx2 = mesh.vertexArray[mesh.indexArray[3 * face + 2]];
-
-
-  //              const int v0[2] = { int(vtx0.uv[0]), int(vtx0.uv[1]) };
-  //              const int v1[2] = { int(vtx1.uv[0]), int(vtx1.uv[1]) };
-  //              const int v2[2] = { int(vtx2.uv[0]), int(vtx2.uv[1]) };
-
-  //              triangle_raster_fn(texture.texels.data(), texture.extent_x, texture.extent_y, vtx0.uv, vtx1.uv, vtx2.uv, color);
-  //            }
-  //          }
-  //        }
-
-  //        //char filename[256];
-  //        //snprintf(filename, sizeof(filename), "example_tris%02u.png", z);
-  //        //printf("Writing '%s'...\n", filename);
-  //        //stbi_write_png(filename, texture.extent_x, texture.extent_y, 4, texture.texels.data(), 4 * texture.extent_x);
-
-  //        textures_4[z] = std::move(texture);
-  //      }
-  //    }
-
-  //    xatlas::Destroy(atlas);
-  //  }
-  //}
-
-
-  std::shared_ptr<Property> CreatePropertyFromTexture(std::pair<const void*, uint32_t> bytes, int32_t tex_x, int32_t tex_y, uint32_t mipmaps)
-  {
-    const auto mipmap_count_fn = [](uint32_t value)
-    {
-      uint32_t power = 0;
-      while ((value >> power) > 0) ++power;
-      return power;
-    };
-    mipmaps = mipmaps > 0 ? mipmaps : std::min(mipmap_count_fn(tex_x), mipmap_count_fn(tex_y));
-
-    //const uint32_t tex_x = (1 << mipmaps) - 1;
-    //const uint32_t tex_y = (1 << mipmaps) - 1;
-    //const uint32_t tex_n = 4;
-
-    const auto texel_count = uint32_t(((1 << mipmaps) * (1 << mipmaps) - 1) / 3);
-    const auto texel_stride = uint32_t(sizeof(glm::u8vec4));
-    unsigned char* texel_data = new unsigned char[texel_count * 4];
-
-    auto dst_tex_x = 1 << (mipmaps - 1);
-    auto dst_tex_y = 1 << (mipmaps - 1);
-    auto dst_tex_n = 4;
-    auto dst_tex_data = texel_data;
-
-    stbir_resize_uint8(reinterpret_cast<const unsigned char*>(bytes.first), tex_x, tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, 4);
-
-    auto src_tex_x = dst_tex_x;
-    auto src_tex_y = dst_tex_y;
-    auto src_tex_n = dst_tex_n;
-    auto src_tex_data = dst_tex_data;
-
-    for (uint32_t i = 1; i < mipmaps; ++i)
-    {
-      dst_tex_x = 1 << (mipmaps - 1 - i);
-      dst_tex_y = 1 << (mipmaps - 1 - i);
-      dst_tex_n = src_tex_n;
-      dst_tex_data += src_tex_x * src_tex_y * src_tex_n;
-      stbir_resize_uint8(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
-
-      src_tex_data = dst_tex_data;
-      src_tex_x = dst_tex_x;
-      src_tex_y = dst_tex_y;
-      src_tex_n = dst_tex_n;
-    }
-
-
-    const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    {
-      texels_property->RawAllocate(texel_count * texel_stride);
-      texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
-    }
-    delete[] texel_data;
-
-    return texels_property;
-  }
-
-
-  std::shared_ptr<Property> CreatePropertyFromTextures(const std::vector<Texture>& textures, uint32_t mipmaps)
-  {
-    auto textures_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-
-    if (textures.empty())
-    {
-      textures_property->SetArraySize(uint32_t(1));
-
-      const auto texel_value = glm::u8vec4(255, 255, 255, 255);
-      const auto texel_size = uint32_t(sizeof(texel_value));
-
-      const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-      texels_property->RawAllocate(texel_size);
-      texels_property->SetRawBytes({ &texel_value, texel_size }, 0);
-      textures_property->SetArrayItem(0, texels_property);
-    }
-    else
-    {
-      textures_property->SetArraySize(uint32_t(textures.size()));
-      for (uint32_t i = 0; i < textures_property->GetArraySize(); ++i)
-      {
-        const Texture& texture = textures[i];
-
-        const auto tex_x = int32_t(texture.extent_x);
-        const auto tex_y = int32_t(texture.extent_y);
-        const auto tex_data = reinterpret_cast<const void*>(texture.texels.data());
-        const auto tex_size = uint32_t(texture.texels.size() * sizeof(glm::u8vec4));
-
-        const auto mipmaps_property = CreatePropertyFromTexture(std::pair(tex_data, tex_size), tex_x, tex_y, mipmaps);
-
-        textures_property->SetArrayItem(i, mipmaps_property);
-      }
-    }
-    return textures_property;
-  }
-
   void ImportBroker::Initialize()
   {
     const auto extension = ExtractExtension(file_name);
@@ -555,8 +189,6 @@ namespace RayGene3D
     {
       ImportGLTF();
     }
-
-    UpdateTangents(instances, triangles, vertices);
   }
 
   void ImportBroker::Use()
@@ -588,20 +220,20 @@ namespace RayGene3D
 
       if (node.rotation.size() == 4)
       {
-        glm::quat rotation = glm::make_quat(node.rotation.data());
-        transform = glm::mat4_cast(rotation);
+        const auto rotation = glm::quat(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]);
+        transform = glm::mat4_cast(rotation) * transform;
       }
 
       if (node.translation.size() == 3)
       {
-        const glm::fvec3 translation = glm::make_vec3(node.translation.data());
-        transform[3] = glm::fvec4(translation, 1.0f);
+        const auto translation = glm::fvec3(node.translation[0], node.translation[1], node.translation[2]);
+        transform = glm::translate(transform, translation);
       }
 
       if (node.scale.size() == 3)
       {
-        const glm::fvec3 scale = glm::make_vec3(node.scale.data());
-        transform = glm::scale(transform, scale);
+        const auto scaling = glm::f32vec3(node.scale[0], node.scale[1], node.scale[2]);
+        //transform = glm::scale(transform, scaling);
       }
 
       transform = parent_transform * transform;
@@ -685,7 +317,7 @@ namespace RayGene3D
       const auto pos_transform = glm::fmat4x4(scl_transform[0], scl_transform[1], scl_transform[2], transform[3]);
 
       const auto flip_v_tranform = glm::fmat2x2(
-        0.0f,-1.0f,
+        0.0f, 1.0f,
         1.0f, 0.0f
       );
       const auto tc0_transform = flip_v ? flip_v_tranform : glm::identity<glm::fmat2x2>();
@@ -774,22 +406,18 @@ namespace RayGene3D
       const auto tex_n = gltf_model.images[image_index].component;
       const auto tex_data = gltf_model.images[image_index].image.data();
 
-      Texture texture;
-      texture.texels.resize(tex_x * tex_y);
+      auto raw = Raw(tex_x * tex_y * uint32_t(sizeof(glm::u8vec4)));
 
       for (uint32_t i = 0; i < tex_x * tex_y; ++i)
       {
-        const uint8_t r = tex_n > 0 ? tex_data[i * tex_n + 0] : 0; //0xFF;
-        const uint8_t g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
-        const uint8_t b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
-        const uint8_t a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
-        texture.texels[i] = glm::u8vec4(r, g, b, a);
-
+        const auto r = tex_n > 0 ? tex_data[i * tex_n + 0] : 0; //0xFF;
+        const auto g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
+        const auto b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
+        const auto a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
+        raw.SetElement<glm::u8vec4>({r, g, b, a}, i);
       }
-      texture.extent_x = tex_x;
-      texture.extent_y = tex_y;
 
-      return texture;
+      return std::make_tuple(std::move(raw), uint32_t(tex_x), uint32_t(tex_y));
     };
 
     textures_0.resize(texture_0_indices.size());
@@ -1007,24 +635,19 @@ namespace RayGene3D
       int32_t tex_n = 0;
       unsigned char* tex_data = stbi_load((path_name + file_name).c_str(), &tex_x, &tex_y, &tex_n, STBI_default);
 
-      Texture texture;
-      texture.texels.resize(tex_x * tex_y);
+      auto raw = Raw(tex_x * tex_y * uint32_t(sizeof(glm::u8vec4)));
 
       for (uint32_t i = 0; i < tex_x * tex_y; ++i)
       {
-        const uint8_t r = tex_n > 0 ? tex_data[i * tex_n + 0] : 0; //0xFF;
-        const uint8_t g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
-        const uint8_t b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
-        const uint8_t a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
-        texture.texels[i] = glm::u8vec4(r, g, b, a);
-
+        const auto r = tex_n > 0 ? tex_data[i * tex_n + 0] : 0; //0xFF;
+        const auto g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
+        const auto b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
+        const auto a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
+        raw.SetElement<glm::u8vec4>({ r, g, b, a }, i);
       }
       stbi_image_free(tex_data);
 
-      texture.extent_x = tex_x;
-      texture.extent_y = tex_y;
-
-      return texture;
+      return std::make_tuple(std::move(raw), tex_x, tex_y);
     };
 
     if (!textures_0_names.empty())
@@ -1070,275 +693,346 @@ namespace RayGene3D
 
   void ImportBroker::Export(std::shared_ptr<Property>& property) const
   {
-    auto temp = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
+    auto root = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
     //property->setSetValue(Property::object());
   
-    const auto instances_property = CreateBufferProperty(instances.data(), uint32_t(sizeof(Instance)), uint32_t(instances.size()));
-    temp->SetObjectItem("instances", instances_property);
-  
-    const auto triangles_property = CreateBufferProperty(triangles.data(), uint32_t(sizeof(Triangle)), uint32_t(triangles.size()));
-    temp->SetObjectItem("triangles", triangles_property);
+    {
+      const auto data = instances.data();
+      const auto stride = uint32_t(sizeof(Instance));
+      const auto count = uint32_t(instances.size());
+      auto raw = Raw({ data, stride * count });
+      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
+      root->SetObjectItem("instances", property);
+    }
 
-    const auto vertices_property = CreateBufferProperty(vertices.data(), uint32_t(sizeof(Vertex)), uint32_t(vertices.size()));
-    temp->SetObjectItem("vertices", vertices_property);
-  
-    //const auto vertices0_property = CreateBufferProperty(scene_vertices0.data(), uint32_t(sizeof(Vertex0)), uint32_t(scene_vertices0.size()));
-    //property->SetObjectItem("vertices0", vertices0_property);
-    //const auto vertices1_property = CreateBufferProperty(scene_vertices1.data(), uint32_t(sizeof(Vertex1)), uint32_t(scene_vertices1.size()));
-    //property->SetObjectItem("vertices1", vertices1_property);
-    //const auto vertices2_property = CreateBufferProperty(scene_vertices2.data(), uint32_t(sizeof(Vertex2)), uint32_t(scene_vertices2.size()));
-    //property->SetObjectItem("vertices2", vertices2_property);
-    //const auto vertices3_property = CreateBufferProperty(scene_vertices3.data(), uint32_t(sizeof(Vertex3)), uint32_t(scene_vertices3.size()));
-    //property->SetObjectItem("vertices3", vertices3_property);
-  
-    const auto textures0_property = CreatePropertyFromTextures(textures_0, texture_level);
-    temp->SetObjectItem("textures0", textures0_property);
-    const auto textures1_property = CreatePropertyFromTextures(textures_1, texture_level);
-    temp->SetObjectItem("textures1", textures1_property);
-    const auto textures2_property = CreatePropertyFromTextures(textures_2, texture_level);
-    temp->SetObjectItem("textures2", textures2_property);
-    const auto textures3_property = CreatePropertyFromTextures(textures_3, texture_level);
-    temp->SetObjectItem("textures3", textures3_property);
+    {
+      const auto data = triangles.data();
+      const auto stride = uint32_t(sizeof(Triangle));
+      const auto count = uint32_t(triangles.size());
+      auto raw = Raw({ data, stride * count });
+      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
+      root->SetObjectItem("triangles", property);
+    }
 
-    property = temp;
+    {
+      const auto data = vertices.data();
+      const auto stride = uint32_t(sizeof(Vertex));
+      const auto count = uint32_t(vertices.size());
+      auto raw = Raw({ data, stride * count });
+      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
+      root->SetObjectItem("vertices", property);
+    }
+  
+    {
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
+      for (uint32_t i = 0; i < uint32_t(textures_0.size()); ++i)
+      {
+        auto [mipmaps, size_x, size_y] = 
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_0[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
+      }
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty() 
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_0.size()));
+      root->SetObjectItem("textures_0", property);
+    }
+
+    {
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
+      for (uint32_t i = 0; i < uint32_t(textures_1.size()); ++i)
+      {
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_1[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
+      }
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_1.size()));
+      root->SetObjectItem("textures_1", property);
+    }
+
+    {
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
+      for (uint32_t i = 0; i < uint32_t(textures_2.size()); ++i)
+      {
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_2[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
+      }
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_2.size()));
+      root->SetObjectItem("textures_2", property);
+    }
+
+    {
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
+      for (uint32_t i = 0; i < uint32_t(textures_3.size()); ++i)
+      {
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_3[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
+      }
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_3.size()));
+      root->SetObjectItem("textures_3", property);
+    }
+
+    property = root;
   }
 
 
-  std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
-  {
-    int32_t src_tex_x = 0;
-    int32_t src_tex_y = 0;
-    int32_t src_tex_n = 4;
-    float* src_tex_data = nullptr;
-    BLAST_ASSERT(0 == LoadEXR(&src_tex_data, &src_tex_x, &src_tex_y, (name).c_str(), nullptr));
+  //std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
+  //{
+  //  int32_t src_tex_x = 0;
+  //  int32_t src_tex_y = 0;
+  //  int32_t src_tex_n = 4;
+  //  float* src_tex_data = nullptr;
+  //  BLAST_ASSERT(0 == LoadEXR(&src_tex_data, &src_tex_x, &src_tex_y, (name).c_str(), nullptr));
 
-    int32_t dst_tex_x = src_tex_x;
-    int32_t dst_tex_y = src_tex_y;
-    int32_t dst_tex_n = 4;
-    float* dst_tex_data = new float[dst_tex_x * dst_tex_y * dst_tex_n];
-    for (uint32_t j = 0; j < src_tex_x * src_tex_y; ++j)
-    {
-      const auto r = src_tex_n > 0 ? src_tex_data[j * src_tex_n + 0] : 0; //0xFF;
-      const auto g = src_tex_n > 1 ? src_tex_data[j * src_tex_n + 1] : r; //0xFF;
-      const auto b = src_tex_n > 2 ? src_tex_data[j * src_tex_n + 2] : r; //0xFF;
-      const auto a = src_tex_n > 3 ? src_tex_data[j * src_tex_n + 3] : r; //0xFF;
-      dst_tex_data[j * dst_tex_n + 0] = r * exposure;
-      dst_tex_data[j * dst_tex_n + 1] = g * exposure;
-      dst_tex_data[j * dst_tex_n + 2] = b * exposure;
-      dst_tex_data[j * dst_tex_n + 3] = a * exposure;
-    }
-    delete[] src_tex_data;
+  //  int32_t dst_tex_x = src_tex_x;
+  //  int32_t dst_tex_y = src_tex_y;
+  //  int32_t dst_tex_n = 4;
+  //  float* dst_tex_data = new float[dst_tex_x * dst_tex_y * dst_tex_n];
+  //  for (uint32_t j = 0; j < src_tex_x * src_tex_y; ++j)
+  //  {
+  //    const auto r = src_tex_n > 0 ? src_tex_data[j * src_tex_n + 0] : 0; //0xFF;
+  //    const auto g = src_tex_n > 1 ? src_tex_data[j * src_tex_n + 1] : r; //0xFF;
+  //    const auto b = src_tex_n > 2 ? src_tex_data[j * src_tex_n + 2] : r; //0xFF;
+  //    const auto a = src_tex_n > 3 ? src_tex_data[j * src_tex_n + 3] : r; //0xFF;
+  //    dst_tex_data[j * dst_tex_n + 0] = r * exposure;
+  //    dst_tex_data[j * dst_tex_n + 1] = g * exposure;
+  //    dst_tex_data[j * dst_tex_n + 2] = b * exposure;
+  //    dst_tex_data[j * dst_tex_n + 3] = a * exposure;
+  //  }
+  //  delete[] src_tex_data;
 
-    src_tex_data = dst_tex_data;
-    src_tex_x = dst_tex_x;
-    src_tex_y = dst_tex_y;
-    src_tex_n = dst_tex_n;
+  //  src_tex_data = dst_tex_data;
+  //  src_tex_x = dst_tex_x;
+  //  src_tex_y = dst_tex_y;
+  //  src_tex_n = dst_tex_n;
 
-    const auto get_pot_fn = [](int32_t value)
-    {
-      int32_t power = 0;
-      while ((1 << power) < value) ++power;
-      return power;
-    };
+  //  const auto get_pot_fn = [](int32_t value)
+  //  {
+  //    int32_t power = 0;
+  //    while ((1 << power) < value) ++power;
+  //    return power;
+  //  };
 
-    const auto pow_tex_x = get_pot_fn(src_tex_x);
-    const auto pow_tex_y = get_pot_fn(src_tex_y);
-    const auto pow_delta = std::abs(pow_tex_x - pow_tex_y);
+  //  const auto pow_tex_x = get_pot_fn(src_tex_x);
+  //  const auto pow_tex_y = get_pot_fn(src_tex_y);
+  //  const auto pow_delta = std::abs(pow_tex_x - pow_tex_y);
 
-    //const uint32_t tex_x = (1 << (pow_tex_x > pow_tex_y ? mipmap_count + pow_delta : mipmap_count)) - 1;
-    //const uint32_t tex_y = (1 << (pow_tex_y > pow_tex_x ? mipmap_count + pow_delta : mipmap_count)) - 1;
-    //const uint32_t tex_n = 4;
+  //  //const uint32_t tex_x = (1 << (pow_tex_x > pow_tex_y ? mipmap_count + pow_delta : mipmap_count)) - 1;
+  //  //const uint32_t tex_y = (1 << (pow_tex_y > pow_tex_x ? mipmap_count + pow_delta : mipmap_count)) - 1;
+  //  //const uint32_t tex_n = 4;
 
-    const auto texel_pow_x = pow_tex_x > pow_tex_y ? mipmaps + pow_delta : mipmaps;
-    const auto texel_pow_y = pow_tex_y > pow_tex_x ? mipmaps + pow_delta : mipmaps;
-    const auto texel_count = uint32_t(((1 << texel_pow_x) * (1 << texel_pow_y) - 1) / 3);
-    const auto texel_stride = uint32_t(sizeof(glm::f32vec4));
-    float* texel_data = new float[texel_count * 4];
+  //  const auto pow_x = pow_tex_x > pow_tex_y ? mipmaps + pow_delta : mipmaps;
+  //  const auto pow_y = pow_tex_y > pow_tex_x ? mipmaps + pow_delta : mipmaps;
+  //  const auto extent_x = 1 << pow_x;
+  //  const auto extent_y = 1 << pow_y;
+  //  const auto count = uint32_t((extent_x * extent_y - 1) / 3);
+  //  const auto stride = uint32_t(sizeof(glm::f32vec4));
+  //  const auto data = new float[count * 4];
 
-    dst_tex_x = 1 << (texel_pow_x - 1);
-    dst_tex_y = 1 << (texel_pow_y - 1);
-    dst_tex_n = src_tex_n;
-    dst_tex_data = texel_data;
-    stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
-    delete[] src_tex_data;
+  //  dst_tex_x = 1 << (pow_x - 1);
+  //  dst_tex_y = 1 << (pow_y - 1);
+  //  dst_tex_n = src_tex_n;
+  //  dst_tex_data = data;
+  //  stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
+  //  delete[] src_tex_data;
 
-    //const auto size_x_property = std::shared_ptr<Property>(new Property());
-    //size_x_property->SetValue(uint32_t(dst_tex_x));
+  //  //const auto size_x_property = std::shared_ptr<Property>(new Property());
+  //  //size_x_property->SetValue(uint32_t(dst_tex_x));
 
-    //const auto size_y_property = std::shared_ptr<Property>(new Property());
-    //size_y_property->SetValue(uint32_t(dst_tex_y));
+  //  //const auto size_y_property = std::shared_ptr<Property>(new Property());
+  //  //size_y_property->SetValue(uint32_t(dst_tex_y));
 
-    //const auto mipmaps_property = std::shared_ptr<Property>(new Property());
-    //mipmaps_property->SetValue(uint32_t(mipmaps));
+  //  //const auto mipmaps_property = std::shared_ptr<Property>(new Property());
+  //  //mipmaps_property->SetValue(uint32_t(mipmaps));
 
-    src_tex_data = dst_tex_data;
-    src_tex_x = dst_tex_x;
-    src_tex_y = dst_tex_y;
-    src_tex_n = dst_tex_n;
+  //  src_tex_data = dst_tex_data;
+  //  src_tex_x = dst_tex_x;
+  //  src_tex_y = dst_tex_y;
+  //  src_tex_n = dst_tex_n;
 
-    for (uint32_t i = 1; i < mipmaps; ++i)
-    {
-      dst_tex_x = src_tex_x >> 1;
-      dst_tex_y = src_tex_y >> 1;
-      dst_tex_n = src_tex_n;
-      dst_tex_data += src_tex_x * src_tex_y * src_tex_n;
-      stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
+  //  for (uint32_t i = 1; i < mipmaps; ++i)
+  //  {
+  //    dst_tex_x = src_tex_x >> 1;
+  //    dst_tex_y = src_tex_y >> 1;
+  //    dst_tex_n = src_tex_n;
+  //    dst_tex_data += src_tex_x * src_tex_y * src_tex_n;
+  //    stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
 
-      src_tex_data = dst_tex_data;
-      src_tex_x = dst_tex_x;
-      src_tex_y = dst_tex_y;
-      src_tex_n = dst_tex_n;
-    }
+  //    src_tex_data = dst_tex_data;
+  //    src_tex_x = dst_tex_x;
+  //    src_tex_y = dst_tex_y;
+  //    src_tex_n = dst_tex_n;
+  //  }
 
-    const auto texels_property = CreateBufferProperty(texel_data, texel_stride, texel_count);
-    //std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    //{
-    //  texels_property->RawAllocate(texel_count * texel_stride);
-    //  texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
-    //}
-    delete[] texel_data;
+  //  const auto root = CreateTextureProperty({ data, stride * count }, extent_x, extent_y, 1, FORMAT_R32G32B32_FLOAT, mipmaps);
+  //  delete[] data;
 
-    const auto texture_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-    //texture_property->SetValue(Property::array());
-    texture_property->SetArraySize(1);
-    texture_property->SetArrayItem(0, texels_property);
+  //  return root;
+  //}
 
-    return texture_property;
-  }
+  //std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
+  //{
+  //  const auto cubemap_layer_counter = 6u;
+  //  const auto cubemap_layer_size = 1u << (mipmaps - 1);
 
-  std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
-  {
-    const auto cubemap_layer_counter = 6u;
-    const auto cubemap_layer_size = 1 << (mipmaps - 1);
+  //  auto texture_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
+  //  texture_property->SetArraySize(cubemap_layer_counter);
 
-    auto texture_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-    texture_property->SetArraySize(cubemap_layer_counter);
+  //  enum CUBEMAP_LAYERS
+  //  {
+  //    CUBEMAP_POSITIVE_X,
+  //    CUBEMAP_NEGATIVE_X,
+  //    CUBEMAP_POSITIVE_Y,
+  //    CUBEMAP_NEGATIVE_Y,
+  //    CUBEMAP_POSITIVE_Z,
+  //    CUBEMAP_NEGATIVE_Z
+  //  };
 
-    enum CUBEMAP_LAYERS
-    {
-      CUBEMAP_POSITIVE_X,
-      CUBEMAP_NEGATIVE_X,
-      CUBEMAP_POSITIVE_Y,
-      CUBEMAP_NEGATIVE_Y,
-      CUBEMAP_POSITIVE_Z,
-      CUBEMAP_NEGATIVE_Z
-    };
+  //  const auto uv_to_cube = [](float u, float v, uint32_t layer)
+  //  {
+  //    glm::fvec3 text_coord = { 0.0f, 0.0f, 0.0f };
 
-    const auto uv_to_cube = [](float u, float v, uint32_t layer)
-    {
-      glm::fvec3 text_coord = { 0.0f, 0.0f, 0.0f };
+  //    switch (layer)
+  //    {
+  //    case CUBEMAP_POSITIVE_X:
+  //      text_coord = { 1.0f, -(2.0f * v - 1.0f), -(2.0f * u - 1.0f) };
+  //      break;
+  //    case CUBEMAP_NEGATIVE_X:
+  //      text_coord = { -1.0f, -(2.0f * v - 1.0f), (2.0f * u - 1.0f) };
+  //      break;
+  //    case CUBEMAP_POSITIVE_Y:
+  //      text_coord = { (2.0f * u - 1.0f), 1.0f, (2.0f * v - 1.0f) };
+  //      break;
+  //    case CUBEMAP_NEGATIVE_Y:
+  //      text_coord = { (2.0f * u - 1.0f), -1.0f, -(2.0f * v - 1.0f) };
+  //      break;
+  //    case CUBEMAP_POSITIVE_Z:
+  //      text_coord = { (2.0f * u - 1.0f), -(2.0f * v - 1.0f), 1.0f };
+  //      break;
+  //    case CUBEMAP_NEGATIVE_Z:
+  //      text_coord = { -(2.0f * u - 1.0f), -(2.0f * v - 1.0f), -1.0f };
+  //      break;
+  //    }
+  //    return glm::normalize(text_coord);
+  //  };
 
-      switch (layer)
-      {
-      case CUBEMAP_POSITIVE_X:
-        text_coord = { 1.0f, -(2.0f * v - 1.0f), -(2.0f * u - 1.0f) };
-        break;
-      case CUBEMAP_NEGATIVE_X:
-        text_coord = { -1.0f, -(2.0f * v - 1.0f), (2.0f * u - 1.0f) };
-        break;
-      case CUBEMAP_POSITIVE_Y:
-        text_coord = { (2.0f * u - 1.0f), 1.0f, (2.0f * v - 1.0f) };
-        break;
-      case CUBEMAP_NEGATIVE_Y:
-        text_coord = { (2.0f * u - 1.0f), -1.0f, -(2.0f * v - 1.0f) };
-        break;
-      case CUBEMAP_POSITIVE_Z:
-        text_coord = { (2.0f * u - 1.0f), -(2.0f * v - 1.0f), 1.0f };
-        break;
-      case CUBEMAP_NEGATIVE_Z:
-        text_coord = { -(2.0f * u - 1.0f), -(2.0f * v - 1.0f), -1.0f };
-        break;
-      }
-      return glm::normalize(text_coord);
-    };
+  //  const auto cube_to_pano = [](const glm::fvec3& cube_tex_coord)
+  //  {
+  //    glm::fvec2 tex_coord = { 0.0f, 0.0f };
+  //    tex_coord.x = 0.5f * atan2(cube_tex_coord.x, cube_tex_coord.z) / glm::pi<float>() + 0.5f;
+  //    tex_coord.y = -asin(cube_tex_coord.y) / glm::pi<float>() + 0.5f;
+  //    return tex_coord;
+  //  };
 
-    const auto cube_to_pano = [](const glm::fvec3& cube_tex_coord)
-    {
-      glm::fvec2 tex_coord = { 0.0f, 0.0f };
-      tex_coord.x = 0.5f * atan2(cube_tex_coord.x, cube_tex_coord.z) / glm::pi<float>() + 0.5f;
-      tex_coord.y = -asin(cube_tex_coord.y) / glm::pi<float>() + 0.5f;
-      return tex_coord;
-    };
+  //  const auto src_tex_n = 4;
+  //  const auto dst_tex_n = 4;
+  //  auto pano_tex_x = 0;
+  //  auto pano_tex_y = 0;
+  //  float* pano_tex_data = nullptr;
+  //  BLAST_ASSERT(0 == LoadEXR(&pano_tex_data, &pano_tex_x, &pano_tex_y, (name).c_str(), nullptr));
 
-    const auto src_tex_n = 4;
-    const auto dst_tex_n = 4;
-    auto pano_tex_x = 0;
-    auto pano_tex_y = 0;
-    float* pano_tex_data = nullptr;
-    BLAST_ASSERT(0 == LoadEXR(&pano_tex_data, &pano_tex_x, &pano_tex_y, (name).c_str(), nullptr));
+  //  for (uint32_t i = 0; i < cubemap_layer_counter; ++i)
+  //  {
+  //    auto dst_tex_x = cubemap_layer_size;
+  //    auto dst_tex_y = cubemap_layer_size;
+  //    const auto texel_pow = mipmaps;
 
-    for (uint32_t i = 0; i < cubemap_layer_counter; ++i)
-    {
-      auto dst_tex_x = cubemap_layer_size;
-      auto dst_tex_y = cubemap_layer_size;
-      const auto texel_pow = mipmaps;
+  //    const auto texel_count = uint32_t(((1 << texel_pow) * (1 << texel_pow) - 1) / 3);
+  //    float* texel_data = new float[texel_count * dst_tex_n];
 
-      const auto texel_count = uint32_t(((1 << texel_pow) * (1 << texel_pow) - 1) / 3);
-      float* texel_data = new float[texel_count * dst_tex_n];
+  //    {
+  //      auto dst_tex_data = texel_data;
+  //      for (uint32_t j = 0; j < dst_tex_x; ++j)
+  //      {
+  //        for (uint32_t k = 0; k < dst_tex_y; ++k)
+  //        {
+  //          const float u = (float(j) + 0.5f) / dst_tex_x;
+  //          const float v = (float(k) + 0.5f) / dst_tex_y;
 
-      {
-        auto dst_tex_data = texel_data;
-        for (uint32_t j = 0; j < dst_tex_x; ++j)
-        {
-          for (uint32_t k = 0; k < dst_tex_y; ++k)
-          {
-            const float u = (float(j) + 0.5f) / dst_tex_x;
-            const float v = (float(k) + 0.5f) / dst_tex_y;
+  //          const auto cube_text_coord = uv_to_cube(u, v, i);
+  //          const auto pano_text_coord = cube_to_pano(cube_text_coord);
 
-            const auto cube_text_coord = uv_to_cube(u, v, i);
-            const auto pano_text_coord = cube_to_pano(cube_text_coord);
+  //          const auto x = uint32_t(pano_tex_x * pano_text_coord.x);
+  //          const auto y = uint32_t(pano_tex_y * pano_text_coord.y);
+  //          const auto texel_num = y * pano_tex_x + x;
 
-            const auto x = uint32_t(pano_tex_x * pano_text_coord.x);
-            const auto y = uint32_t(pano_tex_y * pano_text_coord.y);
-            const auto texel_num = y * pano_tex_x + x;
+  //          const auto index = j + k * dst_tex_x;
 
-            const auto index = j + k * dst_tex_x;
-            const auto offset = index * dst_tex_n;
+  //          dst_tex_data[index * dst_tex_n + 0] = pano_tex_data[texel_num * src_tex_n + 0] * exposure;
+  //          dst_tex_data[index * dst_tex_n + 1] = pano_tex_data[texel_num * src_tex_n + 1] * exposure;
+  //          dst_tex_data[index * dst_tex_n + 2] = pano_tex_data[texel_num * src_tex_n + 2] * exposure;
+  //          dst_tex_data[index * dst_tex_n + 3] = pano_tex_data[texel_num * src_tex_n + 3] * exposure;
+  //        }
+  //      }
+  //    }
 
-            dst_tex_data[offset + 0] = pano_tex_data[texel_num * src_tex_n + 0] * exposure;
-            dst_tex_data[offset + 1] = pano_tex_data[texel_num * src_tex_n + 1] * exposure;
-            dst_tex_data[offset + 2] = pano_tex_data[texel_num * src_tex_n + 2] * exposure;
-            dst_tex_data[offset + 3] = pano_tex_data[texel_num * src_tex_n + 3] * exposure;
-          }
-        }
-      }
+  //    {
+  //      auto src_tex_x = cubemap_layer_size;
+  //      auto src_tex_y = cubemap_layer_size;
+  //      auto dst_tex_data = texel_data;
+  //      auto src_tex_data = dst_tex_data;
 
-      {
-        auto src_tex_x = cubemap_layer_size;
-        auto src_tex_y = cubemap_layer_size;
-        auto dst_tex_data = texel_data;
-        auto src_tex_data = dst_tex_data;
+  //      auto offset = 0u;
+  //      for (uint32_t i = 1; i < mipmaps; ++i)
+  //      {
+  //        dst_tex_x = src_tex_x >> 1;
+  //        dst_tex_y = src_tex_y >> 1;
+  //        dst_tex_data += src_tex_x * src_tex_y * dst_tex_n;
+  //        offset += src_tex_x * src_tex_y * dst_tex_n;
+  //        stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
 
-        auto offset = 0u;
-        for (uint32_t i = 1; i < mipmaps; ++i)
-        {
-          dst_tex_x = src_tex_x >> 1;
-          dst_tex_y = src_tex_y >> 1;
-          dst_tex_data += src_tex_x * src_tex_y * dst_tex_n;
-          offset += src_tex_x * src_tex_y * dst_tex_n;
-          stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
+  //        src_tex_data = dst_tex_data;
+  //        src_tex_x = dst_tex_x;
+  //        src_tex_y = dst_tex_y;
+  //      }
+  //    }
 
-          src_tex_data = dst_tex_data;
-          src_tex_x = dst_tex_x;
-          src_tex_y = dst_tex_y;
-        }
-      }
+  //    const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
+  //    {
+  //      const auto texel_stride = uint32_t(sizeof(float) * dst_tex_n);
+  //      texels_property->RawAllocate(texel_count * texel_stride);
+  //      texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
+  //    }
 
-      const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-      {
-        const auto texel_stride = uint32_t(sizeof(float) * dst_tex_n);
-        texels_property->RawAllocate(texel_count * texel_stride);
-        texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
-      }
+  //    texture_property->SetArrayItem(i, texels_property);
+  //    delete[] texel_data;
+  //  }
 
-      texture_property->SetArrayItem(i, texels_property);
-      delete[] texel_data;
-    }
+  //  delete[] pano_tex_data;
 
-    delete[] pano_tex_data;
-
-    return texture_property;
-  }
+  //  return texture_property;
+  //}
 
   ImportBroker::ImportBroker(Wrap& wrap)
     : Broker("import_broker", wrap)
