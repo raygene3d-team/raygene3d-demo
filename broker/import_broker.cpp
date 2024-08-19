@@ -129,13 +129,6 @@ namespace RayGene3D
     auto degenerated_geom_tris_count = 0u;
     auto degenerated_wrap_tris_count = 0u;
 
-    auto fib = [](int n, auto& fib)
-      {
-      if (n <= 1) return n;
-      return fib(n - 1, fib) + fib(n - 2, fib);
-      };
-    auto i = fib(7, fib);
-
     for (uint32_t k = 0; k < idx_count / 3; ++k)
     {
       const auto vtx0 = create_vertex_fn(k * 3 + 0);
