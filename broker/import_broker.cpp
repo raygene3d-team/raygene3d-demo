@@ -308,9 +308,9 @@ namespace RayGene3D
       const auto idx_count = gltf_indices.count;
 
       const auto z_up_transform = glm::fmat3x3(
-       -1.0f, 0.0f, 0.0f,
-        0.0f,-1.0f, 0.0f,
-        0.0f, 0.0f, 1.0f
+        1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f,-1.0f,
+        0.0f, 1.0f, 0.0f
       );
       const auto lhs_transform = glm::fmat3x3(
        -1.0f, 0.0f, 0.0f,
