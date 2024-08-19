@@ -6,7 +6,7 @@
 #define VK_LOCATION(x)
 #endif
 
-//#define USE_NORMAL_MAP
+#define USE_NORMAL_MAP
 //#define USE_ALPHA_CLIP
 //#define USE_SPECULAR_SETUP
 
@@ -175,7 +175,7 @@ PSOutput ps_main(PSInput input)
   const float metallic = surface.specular.b;
   const float roughness = surface.specular.g;
 
-  const float3 global_illumination = reflection_map.SampleLevel(sampler1, n, 3.0).xyz; // //0.025 * albedo;
+  const float3 global_illumination = 0.025 * albedo; //reflection_map.SampleLevel(sampler1, n, 3.0).xyz;
 
   output.target_0 = float4(surface.emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);
