@@ -80,7 +80,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Config::IAState ia_Config =
+    const Config::IAState ia_config =
     {
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
@@ -96,7 +96,7 @@ namespace RayGene3D
       }
     };
 
-    const Config::RCState rc_Config =
+    const Config::RCState rc_config =
     {
       Config::FILL_SOLID,
       Config::CULL_BACK,
@@ -105,14 +105,14 @@ namespace RayGene3D
       },
     };
 
-    const Config::DSState ds_Config =
+    const Config::DSState ds_config =
     {
       true, //depth_enabled
       true, //depth_write
       Config::COMPARISON_LESS //depth_comparison
     };
 
-    const Config::OMState om_Config =
+    const Config::OMState om_config =
     {
       false,
       {
@@ -126,10 +126,10 @@ namespace RayGene3D
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_Config,
-      rc_Config,
-      ds_Config,
-      om_Config
+      ia_config,
+      rc_config,
+      ds_config,
+      om_config
     );
   }
 
@@ -179,7 +179,7 @@ namespace RayGene3D
 
     const Batch::Sampler samplers[] = {
       { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-      { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
+      { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_MIRROR, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
 
     auto geometry_screen_data = scope.screen_data->CreateView("spark_geometry_screen_data",
       Usage(USAGE_CONSTANT_DATA)
@@ -272,7 +272,7 @@ namespace RayGene3D
       { "TEST", "1" },
     };
 
-    const Config::IAState ia_Config =
+    const Config::IAState ia_config =
     {
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
@@ -281,7 +281,7 @@ namespace RayGene3D
       }
     };
 
-    const Config::RCState rc_Config =
+    const Config::RCState rc_config =
     {
       Config::FILL_SOLID,
       Config::CULL_BACK,
@@ -290,14 +290,14 @@ namespace RayGene3D
       },
     };
 
-    const Config::DSState ds_Config =
+    const Config::DSState ds_config =
     {
       true, //depth_enabled
       false, //depth_write
       Config::COMPARISON_EQUAL //depth_comparison
     };
 
-    const Config::OMState om_Config =
+    const Config::OMState om_config =
     {
       false,
       {
@@ -311,10 +311,10 @@ namespace RayGene3D
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
       { defines, uint32_t(std::size(defines)) },
-      ia_Config,
-      rc_Config,
-      ds_Config,
-      om_Config
+      ia_config,
+      rc_config,
+      ds_config,
+      om_config
     );
   }
 

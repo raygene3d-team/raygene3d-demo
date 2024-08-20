@@ -1,41 +1,27 @@
 #ifndef RAYGENE3D_IBL_UTILS
 #define RAYGENE3D_IBL_UTILS
 
-  float radicalInverse_VdC(uint bits) {
-    bits = (bits << 16u) | (bits >> 16u);
-    bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
-    bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
-    bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
-    bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
-    return float(bits) * 2.3283064365386963e-10; // / 0x100000000
-  }
 
-  float2 Hammersley2d(uint i, uint N)
-  {
-    return float2(float(i) / float(N), radicalInverse_VdC(i));
-  }
+float2 Hammersley2d(uint i, uint N)
+{
+  return float2(float(i) / float(N), reversebits(i) * 2.3283064365386963e-10);
+}
 
-  float FastSign(float x)
-  {
-    return saturate(x * FLT_MAX + 0.5) * 2.0 - 1.0;
-  }
-
-  float3x3 GetLocalFrame(float3 local_z)
-  {
-      float x  = local_z.x;
-      float y  = local_z.y;
-      float z  = local_z.z;
-      float sz = FastSign(z);
-      float a  = 1.0 / (sz + z);
-      float ya = y * a;
-      float b  = x * ya;
-      float c  = x * sz;
-
-      float3 local_x = float3(c * x * a - 1.0, sz * b, c);
-      float3 local_y = float3(b, y * ya - sz, y);
-
-      return float3x3(local_x, local_y, local_z);
-  }
+float3x3 GetTBN(float3 n)
+{
+  //float sz = (n.z >= 0) ? 1.0 : -1.0;
+  //float t0 = 1.0 / (sz + n.z);
+  //float ya = n.y * t0;
+  //float t1 = n.x * ya;
+  //float t2 = n.x * sz;
+  //const float3 t = float3(t2 * n.x * t0 - 1.0, sz * t1, t2);
+  //const float3 b = float3(t1, n.y * ya - sz, n.y);
+  
+  const float3 t = normalize(n.y * n.y > n.x * n.x ? float3(0.0, -n.z, n.y) : float3(-n.z, 0.0, n.x));
+  const float3 b = cross(n, t);
+  
+  return float3x3(t, b, n);
+}
 
   float3 SphericalToCartesian(float phi, float cos_theta)
   {
