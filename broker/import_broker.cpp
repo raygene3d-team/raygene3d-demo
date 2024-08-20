@@ -302,8 +302,8 @@ namespace RayGene3D
 
       const auto z_up_transform = glm::fmat3x3(
         1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f,-1.0f,
-        0.0f, 1.0f, 0.0f
+        0.0f, 0.0f, 1.0f,
+        0.0f,-1.0f, 0.0f
       );
       const auto lhs_transform = glm::fmat3x3(
        -1.0f, 0.0f, 0.0f,
@@ -311,12 +311,12 @@ namespace RayGene3D
         0.0f, 0.0f, 1.0f
       );
 
-      auto crd_transform = glm::identity<glm::fmat3x3>();
-      crd_transform = to_lhs ? lhs_transform * crd_transform : crd_transform;
-      crd_transform = z_up ? z_up_transform * crd_transform : crd_transform;
+      auto mdf_transform = glm::identity<glm::fmat3x3>();
+      mdf_transform = to_lhs ? lhs_transform * mdf_transform : mdf_transform;
+      mdf_transform = z_up ? z_up_transform * mdf_transform : mdf_transform;
 
-      const auto nrm_transform = crd_transform * glm::fmat3x3(transform);
-      const auto pos_transform = glm::fmat4x4(crd_transform * scale) * transform;
+      const auto nrm_transform = mdf_transform * glm::fmat3x3(transform);
+      const auto pos_transform = glm::fmat4x4(mdf_transform * scale) * transform;
 
       const auto flip_v_tranform = glm::fmat2x2(
         0.0f, 1.0f,
