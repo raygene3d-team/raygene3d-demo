@@ -93,8 +93,6 @@ float MipmapLevelToPerceptualRoughness(float mipmap_level, float mipmap_levels_c
 
 uint GetSampleCount(uint mip_level)
 {
-  return 1; //mip_level * 20;
-
   //switch (mip_level)
   //{
   //  case 0:
