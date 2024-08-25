@@ -218,23 +218,29 @@ namespace RayGene3D
     {
       auto transform = glm::identity<glm::fmat4x4>();
 
-      if (node.rotation.size() == 4)
-      {
-        const auto rotation = glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
-        transform = glm::mat4_cast(rotation);
-      }
 
       if (node.translation.size() == 3)
       {
         const auto translation = glm::fvec3(node.translation[0], node.translation[1], node.translation[2]);
-        transform = glm::fmat4x4(transform[0], transform[1], transform[2], glm::fvec4(translation, 1.0f));
+        transform = glm::translate(transform, translation);
+      }
+
+      if (node.rotation.size() == 4)
+      {
+        const auto rotation = glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+        transform = transform * glm::fmat4x4(rotation);
       }
 
       if (node.scale.size() == 3)
       {
         const auto scaling = glm::f32vec3(node.scale[0], node.scale[1], node.scale[2]);
-        transform = glm::scale(transform, scaling);
+        transform = transform * glm::scale(glm::fmat4x4(1.0f), scaling);
       }
+
+      if (node.matrix.size() == 16) {
+        const auto matrix = glm::fmat4x4(glm::make_mat4x4(node.matrix.data()));
+        transform = transform * matrix;
+      };
 
       transform = parent_transform * transform;
 
@@ -260,7 +266,7 @@ namespace RayGene3D
       parse_node_hierarchy(parse_node_hierarchy, node, glm::identity<glm::fmat4x4>());
     }
 
-    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool z_up, bool to_lhs, bool flip_v)
+    const auto instance_convert_fn = [&gltf_model](const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool to_lhs, bool flip_v)
     {
       BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
 
@@ -300,21 +306,13 @@ namespace RayGene3D
         : 0;
       const auto idx_count = gltf_indices.count;
 
-      const auto z_up_transform = glm::fmat3x3(
-        1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f,-1.0f, 0.0f
-      );
       const auto lhs_transform = glm::fmat3x3(
        -1.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f,
         0.0f, 0.0f, 1.0f
       );
 
-      auto mdf_transform = glm::identity<glm::fmat3x3>();
-      mdf_transform = to_lhs ? lhs_transform * mdf_transform : mdf_transform;
-      mdf_transform = z_up ? z_up_transform * mdf_transform : mdf_transform;
-
+      const auto mdf_transform = to_lhs ? lhs_transform : glm::identity<glm::fmat3x3>();
       const auto nrm_transform = mdf_transform * glm::fmat3x3(transform);
       const auto pos_transform = glm::fmat4x4(mdf_transform * scale) * transform;
 
@@ -364,7 +362,7 @@ namespace RayGene3D
       {
         const auto& gltf_primitive = gltf_mesh.primitives[k];
         const auto [instance_vertices, instance_triangles, instance_bb_min, instance_bb_max] = 
-          instance_convert_fn(gltf_primitive, transform, position_scale, coordinate_flip, conversion_from_rhs, false);
+          instance_convert_fn(gltf_primitive, transform, position_scale, conversion_from_rhs, false);
 
         if (instance_vertices.empty() || instance_triangles.empty()) continue;
 
@@ -503,18 +501,12 @@ namespace RayGene3D
         const auto tc0_idx_data = std::pair{ reinterpret_cast<const uint8_t*>(material_id.second.data()) + 8u, uint32_t(material_id.second.size()) };
         const auto tc0_idx_stride = 3 * 4u;
 
-        const auto z_up_transform = glm::fmat3x3(
-          1.0f, 0.0f, 0.0f,
-          0.0f, 0.0f,-1.0f,
-          0.0f, 1.0f, 0.0f
-        );
         const auto lhs_transform = glm::fmat3x3(
          -1.0f, 0.0f, 0.0f,
           0.0f, 1.0f, 0.0f,
           0.0f, 0.0f, 1.0f
         );
-        const auto crd_transform = conversion_from_rhs ? lhs_transform : glm::identity<glm::fmat3x3>();
-        const auto nrm_transform = coordinate_flip ? z_up_transform * crd_transform : crd_transform;
+        const auto nrm_transform = conversion_from_rhs ? lhs_transform : glm::identity<glm::fmat3x3>();
         const auto pos_transform = nrm_transform * position_scale;
 
         const auto flip_v_tranform = glm::fmat2x2(
