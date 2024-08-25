@@ -234,7 +234,7 @@ namespace RayGene3D
       if (node.scale.size() == 3)
       {
         const auto scaling = glm::f32vec3(node.scale[0], node.scale[1], node.scale[2]);
-        transform = transform * glm::scale(glm::fmat4x4(1.0f), scaling);
+        transform = glm::scale(transform, scaling);
       }
 
       if (node.matrix.size() == 16) {
