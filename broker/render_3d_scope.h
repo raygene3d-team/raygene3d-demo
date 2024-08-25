@@ -79,6 +79,10 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_textures1;
     std::shared_ptr<Property> prop_textures2;
     std::shared_ptr<Property> prop_textures3;
+    std::shared_ptr<Property> prop_textures4;
+    std::shared_ptr<Property> prop_textures5;
+    std::shared_ptr<Property> prop_textures6;
+    std::shared_ptr<Property> prop_textures7;
 
     std::shared_ptr<Property> prop_lightmaps;
 
@@ -122,6 +126,10 @@ namespace RayGene3D
     SPtrResource scene_textures1;
     SPtrResource scene_textures2;
     SPtrResource scene_textures3;
+    SPtrResource scene_textures4;
+    SPtrResource scene_textures5;
+    SPtrResource scene_textures6;
+    SPtrResource scene_textures7;
 
     SPtrResource scene_lightmaps;
 
@@ -168,6 +176,10 @@ namespace RayGene3D
     void CreateSceneTextures1();
     void CreateSceneTextures2();
     void CreateSceneTextures3();
+    void CreateSceneTextures4();
+    void CreateSceneTextures5();
+    void CreateSceneTextures6();
+    void CreateSceneTextures7();
 
     void CreateLightMaps();
 
@@ -207,6 +219,10 @@ namespace RayGene3D
     void DestroySceneTextures1();
     void DestroySceneTextures2();
     void DestroySceneTextures3();
+    void DestroySceneTextures4();
+    void DestroySceneTextures5();
+    void DestroySceneTextures6();
+    void DestroySceneTextures7();
 
     void DestroyLightMaps();
 

@@ -338,6 +338,10 @@ namespace RayGene3D
     std::vector<uint32_t> texture_1_indices;
     std::vector<uint32_t> texture_2_indices;
     std::vector<uint32_t> texture_3_indices;
+    std::vector<uint32_t> texture_4_indices;
+    std::vector<uint32_t> texture_5_indices;
+    std::vector<uint32_t> texture_6_indices;
+    std::vector<uint32_t> texture_7_indices;
 
     const auto tex_reindex_fn = [](std::vector<uint32_t>& tex_ids, uint32_t tex_id)
     {
@@ -382,6 +386,8 @@ namespace RayGene3D
         instance.texture2_idx = texture_2_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_2_indices, texture_2_id);
         const auto texture_3_id = gltf_material.normalTexture.index;
         instance.texture3_idx = texture_3_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_3_indices, texture_3_id);
+        const auto texture_4_id = gltf_material.occlusionTexture.index;
+        instance.texture4_idx = texture_4_id == -1 ? uint32_t(-1) : tex_reindex_fn(texture_4_indices, texture_4_id);
 
         instance.vert_count = uint32_t(instance_vertices.size());
         instance.vert_offset = uint32_t(vertices.size());
@@ -447,6 +453,34 @@ namespace RayGene3D
       const auto texture_3_index = texture_3_indices[i];
       textures_3[i] = std::move(tex_prepare_fn(texture_3_index));
     }
+
+    textures_4.resize(texture_4_indices.size());
+    for (uint32_t i = 0; i < uint32_t(texture_4_indices.size()); ++i)
+    {
+      const auto texture_4_index = texture_4_indices[i];
+      textures_4[i] = std::move(tex_prepare_fn(texture_4_index));
+    }
+
+    textures_5.resize(texture_5_indices.size());
+    for (uint32_t i = 0; i < uint32_t(texture_5_indices.size()); ++i)
+    {
+      const auto texture_5_index = texture_5_indices[i];
+      textures_5[i] = std::move(tex_prepare_fn(texture_5_index));
+    }
+
+    textures_6.resize(texture_6_indices.size());
+    for (uint32_t i = 0; i < uint32_t(texture_6_indices.size()); ++i)
+    {
+      const auto texture_6_index = texture_6_indices[i];
+      textures_6[i] = std::move(tex_prepare_fn(texture_6_index));
+    }
+
+    textures_7.resize(texture_7_indices.size());
+    for (uint32_t i = 0; i < uint32_t(texture_7_indices.size()); ++i)
+    {
+      const auto texture_7_index = texture_7_indices[i];
+      textures_7[i] = std::move(tex_prepare_fn(texture_7_index));
+    }
   }
 
   void ImportBroker::ImportOBJM()
@@ -471,6 +505,10 @@ namespace RayGene3D
     std::vector<std::string> textures_1_names;
     std::vector<std::string> textures_2_names;
     std::vector<std::string> textures_3_names;
+    std::vector<std::string> textures_4_names;
+    std::vector<std::string> textures_5_names;
+    std::vector<std::string> textures_6_names;
+    std::vector<std::string> textures_7_names;
 
     for (uint32_t i = 0; i < uint32_t(obj_shapes.size()); ++i)
     {
@@ -689,6 +727,46 @@ namespace RayGene3D
         textures_3[i] = std::move(load_texture_fn(texture_3_name));
       }
     }
+
+    if (!textures_4_names.empty())
+    {
+      textures_4.resize(textures_4_names.size());
+      for (uint32_t i = 0; i < uint32_t(textures_4_names.size()); ++i)
+      {
+        const auto& texture_4_name = textures_4_names[i];
+        textures_4[i] = std::move(load_texture_fn(texture_4_name));
+      }
+    }
+
+    if (!textures_5_names.empty())
+    {
+      textures_5.resize(textures_5_names.size());
+      for (uint32_t i = 0; i < uint32_t(textures_5_names.size()); ++i)
+      {
+        const auto& texture_5_name = textures_5_names[i];
+        textures_5[i] = std::move(load_texture_fn(texture_5_name));
+      }
+    }
+
+    if (!textures_6_names.empty())
+    {
+      textures_6.resize(textures_6_names.size());
+      for (uint32_t i = 0; i < uint32_t(textures_6_names.size()); ++i)
+      {
+        const auto& texture_6_name = textures_6_names[i];
+        textures_6[i] = std::move(load_texture_fn(texture_6_name));
+      }
+    }
+
+    if (!textures_7_names.empty())
+    {
+      textures_7.resize(textures_7_names.size());
+      for (uint32_t i = 0; i < uint32_t(textures_7_names.size()); ++i)
+      {
+        const auto& texture_7_name = textures_7_names[i];
+        textures_7[i] = std::move(load_texture_fn(texture_7_name));
+      }
+    }
   }
 
   void ImportBroker::Export(std::shared_ptr<Property>& property) const
@@ -801,6 +879,86 @@ namespace RayGene3D
         : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
           extent_x, extent_y, texture_level, uint32_t(textures_3.size()));
       root->SetObjectItem("textures_3", property);
+    }
+
+    {
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
+      for (uint32_t i = 0; i < uint32_t(textures_4.size()); ++i)
+      {
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_4[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
+      }
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_4.size()));
+      root->SetObjectItem("textures_4", property);
+    }
+
+    {
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
+      for (uint32_t i = 0; i < uint32_t(textures_5.size()); ++i)
+      {
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_5[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
+      }
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_5.size()));
+      root->SetObjectItem("textures_5", property);
+    }
+
+    {
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
+      for (uint32_t i = 0; i < uint32_t(textures_6.size()); ++i)
+      {
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_6[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
+      }
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_6.size()));
+      root->SetObjectItem("textures_6", property);
+    }
+
+    {
+      auto extent_x = 1u << int(texture_level) - 1;
+      auto extent_y = 1u << int(texture_level) - 1;
+      auto raws = std::vector<Raw>();
+      for (uint32_t i = 0; i < uint32_t(textures_7.size()); ++i)
+      {
+        auto [mipmaps, size_x, size_y] =
+          MipmapTextureLDR(texture_level,
+            ResizeTextureLDR(extent_x, extent_y, textures_7[i]));
+        std::move(mipmaps.begin(), mipmaps.end(), std::back_inserter(raws));
+      }
+      auto raw = Raw(1u * uint32_t(sizeof(glm::u8vec4)));
+      raw.SetElement<glm::u8vec4>({ 1u, 1u, 1u, 1u }, 0u);
+      const auto property = raws.empty()
+        ? CreateTextureProperty({ &raw, 1u }, 1u, 1u, 1u, 1u)
+        : CreateTextureProperty({ raws.data(), uint32_t(raws.size()) },
+          extent_x, extent_y, texture_level, uint32_t(textures_7.size()));
+      root->SetObjectItem("textures_7", property);
     }
 
     property = root;

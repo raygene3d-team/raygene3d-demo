@@ -63,20 +63,33 @@ VK_BINDING(5) cbuffer constant3 : register(b3)
   int tex1_idx : packoffset(c7.y);
   int tex2_idx : packoffset(c7.z);
   int tex3_idx : packoffset(c7.w);
+  int tex4_idx : packoffset(c8.x);
+  int tex5_idx : packoffset(c8.y);
+  int tex6_idx : packoffset(c8.z);
+  int tex7_idx : packoffset(c8.w);
 
-  float debug_color : packoffset(c8.x);
-  uint geometry_idx   : packoffset(c8.w);
+  float3 debug_color : packoffset(c9.x);
+  uint geometry_idx   : packoffset(c9.w);
+  
+  float3 bb_min : packoffset(c10.x);
+  uint padding_min : packoffset(c10.w);
+  float3 bb_max : packoffset(c11.x);
+  uint padding_max : packoffset(c11.w);
 
-  uint4 padding[7]    : packoffset(c9.x);
+  uint4 padding[4]    : packoffset(c12.x);
 };
 
 VK_BINDING(6) Texture2DArray<float4> texture0_items : register(t0);
 VK_BINDING(7) Texture2DArray<float4> texture1_items : register(t1);
 VK_BINDING(8) Texture2DArray<float4> texture2_items : register(t2);
 VK_BINDING(9) Texture2DArray<float4> texture3_items : register(t3);
+VK_BINDING(10) Texture2DArray<float4> texture4_items : register(t4);
+VK_BINDING(11) Texture2DArray<float4> texture5_items : register(t5);
+VK_BINDING(12) Texture2DArray<float4> texture6_items : register(t6);
+VK_BINDING(13) Texture2DArray<float4> texture7_items : register(t7);
 
-VK_BINDING(10) Texture2DArray<float4> lightmap_items : register(t4);
-VK_BINDING(11) TextureCube<float4> reflection_map : register(t5);
+VK_BINDING(14) Texture2DArray<float4> lightmap_items : register(t8);
+VK_BINDING(15) TextureCube<float4> reflection_map : register(t9);
 
 
 
