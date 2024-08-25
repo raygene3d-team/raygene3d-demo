@@ -37,7 +37,7 @@ namespace RayGene3D
     path = prop_environment->GetObjectItem("path")->GetString();
     quality = prop_environment->GetObjectItem("quality")->GetUint();
 
-    const auto mipmap = 1u;
+    const auto mipmap = std::max(quality, levels);
     const auto layers = 6u;
     const auto extent = 1u << int32_t(quality) - 1;
 
@@ -108,7 +108,10 @@ namespace RayGene3D
         }
       }
 
-      raws.push_back(std::move(raw));
+      auto [cube_mipmaps, cube_size_x, cube_size_y] =
+        MipmapTextureHDR(mipmap, { std::move(raw), extent, extent });
+
+      std::move(cube_mipmaps.begin(), cube_mipmaps.end(), std::back_inserter(raws));
     }
 
     const auto prop_skybox = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, extent, extent, mipmap, layers);
@@ -361,7 +364,7 @@ namespace RayGene3D
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Config::IAState ia_Config =
+    const Config::IAState ia_config =
     {
       Config::TOPOLOGY_TRIANGLELIST,
       Config::INDEXER_32_BIT,
@@ -371,7 +374,7 @@ namespace RayGene3D
       }
     };
 
-    const Config::RCState rc_Config =
+    const Config::RCState rc_config =
     {
       Config::FILL_SOLID,
       Config::CULL_NONE,
@@ -385,14 +388,14 @@ namespace RayGene3D
       },
     };
 
-    const Config::DSState ds_Config =
+    const Config::DSState ds_config =
     {
       false, //depth_enabled
       false, //depth_write
       Config::COMPARISON_ALWAYS //depth_comparison
     };
 
-    const Config::OMState om_Config =
+    const Config::OMState om_config =
     {
       false,
       {
@@ -404,10 +407,10 @@ namespace RayGene3D
       shader_ss.str(),
       Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_GS | Config::COMPILATION_PS),
       { defines.data(), uint32_t(defines.size()) },
-      ia_Config,
-      rc_Config,
-      ds_Config,
-      om_Config
+      ia_config,
+      rc_config,
+      ds_config,
+      om_config
     );
   }
 
@@ -450,7 +453,7 @@ namespace RayGene3D
     };
 
     const Batch::Sampler samplers[] = {
-      { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+      { Batch::Sampler::FILTERING_LINEAR, 0, Batch::Sampler::ADDRESSING_BORDER, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
     const auto constant_view = constant_data[level]->CreateView("environment_argument_view_" + std::to_string(level),
@@ -463,7 +466,7 @@ namespace RayGene3D
 
     const auto skybox_view = skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(level),
       Usage(USAGE_SHADER_RESOURCE),
-      { 0u, 1u },
+      { uint32_t(std::min(0, int32_t(quality) - int32_t(levels))), levels},
       { 0u, 6u },
       View::BIND_CUBEMAP_LAYER
     );
