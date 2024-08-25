@@ -58,6 +58,10 @@ namespace RayGene3D
     std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1;
     std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2;
     std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_3;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_4;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_5;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_6;
+    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_7;
 
   public:
     void Initialize() override;

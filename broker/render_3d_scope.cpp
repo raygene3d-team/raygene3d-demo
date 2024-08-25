@@ -417,6 +417,126 @@ namespace RayGene3D
     );
   }
 
+  void Render3DScope::CreateSceneTextures4()
+  {
+    const auto& layers = prop_textures4->GetObjectItem("layers");
+    const auto& mipmap = prop_textures4->GetObjectItem("mipmap");
+    const auto& extent_x = prop_textures4->GetObjectItem("extent_x");
+    const auto& extent_y = prop_textures4->GetObjectItem("extent_y");
+    const auto& raws = prop_textures4->GetObjectItem("raws");
+
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    {
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
+    }
+
+    scene_textures4 = core->GetDevice()->CreateResource("spark_scene_textures4",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+      );
+  }
+
+  void Render3DScope::CreateSceneTextures5()
+  {
+    const auto& layers = prop_textures5->GetObjectItem("layers");
+    const auto& mipmap = prop_textures5->GetObjectItem("mipmap");
+    const auto& extent_x = prop_textures5->GetObjectItem("extent_x");
+    const auto& extent_y = prop_textures5->GetObjectItem("extent_y");
+    const auto& raws = prop_textures5->GetObjectItem("raws");
+
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    {
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
+    }
+
+    scene_textures5 = core->GetDevice()->CreateResource("spark_scene_textures5",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+      );
+  }
+
+  void Render3DScope::CreateSceneTextures6()
+  {
+    const auto& layers = prop_textures6->GetObjectItem("layers");
+    const auto& mipmap = prop_textures6->GetObjectItem("mipmap");
+    const auto& extent_x = prop_textures6->GetObjectItem("extent_x");
+    const auto& extent_y = prop_textures6->GetObjectItem("extent_y");
+    const auto& raws = prop_textures6->GetObjectItem("raws");
+
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    {
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
+    }
+
+    scene_textures6 = core->GetDevice()->CreateResource("spark_scene_textures6",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+      );
+  }
+
+  void Render3DScope::CreateSceneTextures7()
+  {
+    const auto& layers = prop_textures7->GetObjectItem("layers");
+    const auto& mipmap = prop_textures7->GetObjectItem("mipmap");
+    const auto& extent_x = prop_textures7->GetObjectItem("extent_x");
+    const auto& extent_y = prop_textures7->GetObjectItem("extent_y");
+    const auto& raws = prop_textures7->GetObjectItem("raws");
+
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    {
+      const auto& raw = raws->GetArrayItem(i);
+      interops[i] = raw->GetRawBytes(0);
+    }
+
+    scene_textures7 = core->GetDevice()->CreateResource("spark_scene_textures7",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        mipmap->GetUint(),
+        layers->GetUint(),
+        FORMAT_R8G8B8A8_UNORM,
+        extent_x->GetUint(),
+        extent_y->GetUint(),
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+      { interops.data(), uint32_t(interops.size()) }
+      );
+  }
+
   void Render3DScope::CreateLightMaps()
   {
     const auto& layers = prop_lightmaps->GetObjectItem("layers");
@@ -451,9 +571,9 @@ namespace RayGene3D
   {
     static const std::array<glm::f32vec2, 4> quad_vtx = {
       glm::f32vec2(-1.0f, 1.0f),
-      glm::f32vec2(1.0f, 1.0f),
+      glm::f32vec2( 1.0f, 1.0f),
       glm::f32vec2(-1.0f,-1.0f),
-      glm::f32vec2(1.0f,-1.0f),
+      glm::f32vec2( 1.0f,-1.0f),
     };
 
     std::pair<const void*, uint32_t> interops[] = {
@@ -695,6 +815,30 @@ namespace RayGene3D
     scene_textures3.reset();
   }
 
+  void Render3DScope::DestroySceneTextures4()
+  {
+    core->GetDevice()->DestroyResource(scene_textures4);
+    scene_textures4.reset();
+  }
+
+  void Render3DScope::DestroySceneTextures5()
+  {
+    core->GetDevice()->DestroyResource(scene_textures5);
+    scene_textures5.reset();
+  }
+
+  void Render3DScope::DestroySceneTextures6()
+  {
+    core->GetDevice()->DestroyResource(scene_textures6);
+    scene_textures6.reset();
+  }
+
+  void Render3DScope::DestroySceneTextures7()
+  {
+    core->GetDevice()->DestroyResource(scene_textures7);
+    scene_textures7.reset();
+  }
+
   void Render3DScope::DestroyLightMaps()
   {
     core->GetDevice()->DestroyResource(scene_lightmaps);
@@ -774,6 +918,10 @@ namespace RayGene3D
       prop_textures1 = prop_scene->GetObjectItem("textures_1");
       prop_textures2 = prop_scene->GetObjectItem("textures_2");
       prop_textures3 = prop_scene->GetObjectItem("textures_3");
+      prop_textures4 = prop_scene->GetObjectItem("textures_4");
+      prop_textures5 = prop_scene->GetObjectItem("textures_5");
+      prop_textures6 = prop_scene->GetObjectItem("textures_6");
+      prop_textures7 = prop_scene->GetObjectItem("textures_7");
 
       prop_lightmaps = prop_scene->GetObjectItem("lightmaps");
     }
@@ -834,6 +982,10 @@ namespace RayGene3D
     CreateSceneTextures1();
     CreateSceneTextures2();
     CreateSceneTextures3();
+    CreateSceneTextures4();
+    CreateSceneTextures5();
+    CreateSceneTextures6();
+    CreateSceneTextures7();
 
     CreateScreenQuadVertices();
     CreateScreenQuadTriangles();
@@ -864,6 +1016,10 @@ namespace RayGene3D
     DestroySceneTextures1();
     DestroySceneTextures2();
     DestroySceneTextures3();
+    DestroySceneTextures4();
+    DestroySceneTextures5();
+    DestroySceneTextures6();
+    DestroySceneTextures7();
 
     DestroyTraceInstances();
     DestroyTraceTriangles();
