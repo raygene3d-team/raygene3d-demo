@@ -238,7 +238,11 @@ namespace RayGene3D
       }
 
       if (node.matrix.size() == 16) {
-        const auto matrix = glm::fmat4x4(glm::make_mat4x4(node.matrix.data()));
+        const auto matrix = glm::fmat4x4(
+          node.matrix[0],  node.matrix[1],  node.matrix[2],  node.matrix[3],
+          node.matrix[4],  node.matrix[5],  node.matrix[6],  node.matrix[7],
+          node.matrix[8],  node.matrix[9],  node.matrix[10], node.matrix[11],
+          node.matrix[12], node.matrix[13], node.matrix[14], node.matrix[15]);
         transform = transform * matrix;
       };
 
