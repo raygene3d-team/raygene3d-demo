@@ -431,12 +431,10 @@ namespace RayGene3D
           import_broker->SetFileName(scene_name);
           import_broker->SetPathName(scene_path);
 
-          const auto scene_flip = config_property->GetObjectItem("scene")->GetObjectItem("flip")->GetBool();
           const auto scene_rhs = config_property->GetObjectItem("scene")->GetObjectItem("rhs")->GetBool();
           const auto scene_scale = config_property->GetObjectItem("scene")->GetObjectItem("scale")->GetReal();
           const auto scene_quality = config_property->GetObjectItem("scene")->GetObjectItem("quality")->GetUint();
 
-          import_broker->SetCoordinateFlip(scene_flip);
           import_broker->SetCoordinateConversion(scene_rhs);
           import_broker->SetPositionScale(scene_scale);
           import_broker->SetTextureLevel(scene_quality);

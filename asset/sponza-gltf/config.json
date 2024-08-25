@@ -1,9 +1,8 @@
 {
   "scene": {
     "path": "./Sponza.gltf",
-    "flip": false,
     "rhs": true,
-    "scale": 0.01,
+    "scale": 1.25,
     "quality": 11
   },
   "environment": {

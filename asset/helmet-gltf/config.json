@@ -1,7 +1,6 @@
 {
   "scene": {
     "path": "./DamagedHelmet.gltf",
-    "flip": false,
     "rhs": true,
     "scale": 1.0,
     "quality": 12
@@ -16,7 +15,7 @@
     "intensity": 1.0
   },
   "camera": {
-    "eye": [0.0, 0.0,-3.0],
+    "eye": [0.0, 0.0, 3.0],
     "lookat": [0.0, 0.0, 0.0],
     "up": [0.0, 1.0, 0.0]
   },
