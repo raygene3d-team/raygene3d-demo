@@ -4,9 +4,9 @@
 
 //#define USE_KARIS_APPROXIMATION
 
-float4 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_omega_p, uint sample_count)
+float3 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_omega_p, uint sample_count)
 {
-  float3x3 local_to_world = GetLocalFrame(N);
+  float3x3 tbn = GetTBN(N);
 
 #ifndef USE_KARIS_APPROXIMATION
   float NdotV = 1; // N == V
@@ -23,7 +23,7 @@ float4 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
 
     {
       float2 uv = Hammersley2d(i, sample_count);
-      SampleGGXDir(uv, V, local_to_world, roughness, L, NdotL, NdotH, LdotH);
+      SampleGGXDir(uv, V, tbn, roughness, L, NdotL, NdotH, LdotH);
 
       if (NdotL <= 0) continue;
     }
@@ -48,7 +48,7 @@ float4 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
 #endif
   }
 
-  return float4(light_int / cbsdf_int, 1.0);
+  return light_int / cbsdf_int;
 }
 
 float PerceptualRoughnessToRoughness(float perceptual_roughness)
@@ -59,6 +59,21 @@ float PerceptualRoughnessToRoughness(float perceptual_roughness)
 float RoughnessToPerceptualRoughness(float roughness)
 {
   return sqrt(roughness);
+}
+
+float RoughnessToPerceptualSmoothness(float roughness)
+{
+    return 1.0 - sqrt(roughness);
+}
+
+float PerceptualSmoothnessToRoughness(float perceptualSmoothness)
+{
+    return (1.0 - perceptualSmoothness) * (1.0 - perceptualSmoothness);
+}
+
+float PerceptualSmoothnessToPerceptualRoughness(float perceptualSmoothness)
+{
+    return (1.0 - perceptualSmoothness);
 }
 
 
@@ -78,18 +93,23 @@ float MipmapLevelToPerceptualRoughness(float mipmap_level, float mipmap_levels_c
 
 uint GetSampleCount(uint mip_level)
 {
-  return mip_level * 20;
-
   //switch (mip_level)
   //{
-  //  case 0: return 1;
-  //  case 1: return 20;
-  //  case 2: return 40;
-  //  case 3: return 60;
-  //  case 4: return 80;
-  //  case 5: return 100;
-  //  case 6: return 120;
+  //  case 0:
+  //    return 1;
+  //  case 1:
+  //    return 21;
+  //  case 2:
+  //    return 34;
+  //  case 3:
+  //    return 55;
+  //  case 4:
+  //    return 89;
+  //  case 5:
+  //    return 89;
+  //  case 6:
+  //    return 89;
   //}
 
-  //return 1;
+  return 1 << (mip_level);
 }

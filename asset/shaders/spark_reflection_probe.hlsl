@@ -150,7 +150,7 @@ float4 ps_main(GSOutput input) : SV_Target
   float roughness = PerceptualRoughnessToRoughness(perceptual_roughness);
   uint sample_count = GetSampleCount(mip_level);
 
-  float4 color = IntegrateReflectionProbe(V, N, roughness, inv_omega_p, sample_count);
+  float3 color = IntegrateReflectionProbe(V, N, roughness, inv_omega_p, sample_count);
 
-  return float4(color.xyz, 1.0);
+  return float4(color, 1.0);
 }

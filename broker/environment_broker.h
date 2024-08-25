@@ -42,7 +42,7 @@ namespace RayGene3D
     uint32_t quality{ 0u };
 
   protected:
-    static const uint32_t levels{ 7u };
+    static const uint32_t levels{ 8u };
 
   protected:
     const std::unique_ptr<Core>& core;
