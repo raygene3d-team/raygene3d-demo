@@ -213,7 +213,8 @@ PSOutput ps_main(PSInput input)
   const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(0.0, 0.0, 0.0, 0.0);
   const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
   const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.0, 0.0, 1.0, 0.0);
-
+  const float4 tex4_value = tex4_idx != -1 ? texture4_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex4_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+  
   const Surface surface = Initialize_GLTF(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
 #endif
 
@@ -238,6 +239,7 @@ PSOutput ps_main(PSInput input)
   const float3 albedo = surface.diffuse;
   const float metallic = tex2_value.z;
   const float roughness = tex2_value.y;
+  const float occlusion = tex4_value.x;
     
 
     
@@ -267,7 +269,7 @@ PSOutput ps_main(PSInput input)
   
 
 
-  const float3 global_illumination = gi_diffuse + gi_specular * factor;
+  const float3 global_illumination = (gi_diffuse + gi_specular * factor) * occlusion;
 
   output.target_0 = float4(surface.emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);
