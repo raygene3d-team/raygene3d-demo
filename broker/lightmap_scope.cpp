@@ -25,152 +25,133 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ================================================================================*/
-#include "lightmap_broker.h"
+#include "lightmap_scope.h"
 
 
 namespace RayGene3D
 {
 
-  void LightmapBroker::CreateSceneInstances()
-  {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Instance)) * count },
-    };
-
-    scene_instances = core->GetDevice()->CreateResource("spark_scene_instances",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_CONSTANT_DATA),
-        uint32_t(sizeof(Instance)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-      );
-  }
-
-  void LightmapBroker::CreateSceneTriangles()
+  void LightmapScope::CreateSceneInstances()
   {
   }
 
-  void LightmapBroker::CreateSceneVertices()
+  void LightmapScope::CreateSceneTriangles()
   {
   }
 
-  void LightmapBroker::CreateTraceInstances()
+  void LightmapScope::CreateSceneVertices()
   {
   }
 
-  void LightmapBroker::CreateTraceTriangles()
+  void LightmapScope::CreateTraceInstances()
   {
   }
 
-  void LightmapBroker::CreateTraceVertices()
+  void LightmapScope::CreateTraceTriangles()
   {
   }
 
-  void LightmapBroker::CreateLightMaps()
+  void LightmapScope::CreateTraceVertices()
   {
   }
 
-  void LightmapBroker::CreateGraphicPass()
+  void LightmapScope::CreateLightMaps()
   {
   }
 
-  void LightmapBroker::CreateGraphicConfig()
+  void LightmapScope::CreateGraphicPass()
   {
   }
 
-  void LightmapBroker::CreateGraphicBatch()
+  void LightmapScope::CreateGraphicConfig()
   {
   }
 
-  void LightmapBroker::CreateGraphicArguments()
+  void LightmapScope::CreateGraphicBatch()
   {
   }
 
-  void LightmapBroker::CreateComputePass()
+  void LightmapScope::CreateGraphicArguments()
   {
   }
 
-  void LightmapBroker::CreateComputeConfig()
+  void LightmapScope::CreateComputePass()
+  {
+  }
+
+  void LightmapScope::CreateComputeConfig()
   {
   }
   
-  void LightmapBroker::CreateComputeBatch()
+  void LightmapScope::CreateComputeBatch()
   {
   }
 
-  void LightmapBroker::CreateComputeArguments()
+  void LightmapScope::CreateComputeArguments()
   {
   }
 
-  void LightmapBroker::DiscardSceneInstances()
+  void LightmapScope::DiscardSceneInstances()
   {
   }
 
-  void LightmapBroker::DiscardSceneTriangles()
+  void LightmapScope::DiscardSceneTriangles()
   {
   }
 
-  void LightmapBroker::DiscardSceneVertices()
+  void LightmapScope::DiscardSceneVertices()
   {
   }
 
-  void LightmapBroker::DiscardTraceInstances()
+  void LightmapScope::DiscardTraceInstances()
   {
   }
 
-  void LightmapBroker::DiscardTraceTriangles()
+  void LightmapScope::DiscardTraceTriangles()
   {
   }
 
-  void LightmapBroker::DiscardTraceVertices()
+  void LightmapScope::DiscardTraceVertices()
   {
   }
 
-  void LightmapBroker::DiscardLightMaps()
+  void LightmapScope::DiscardLightMaps()
   {
   }
 
-  void LightmapBroker::DiscardGraphicPass()
+  void LightmapScope::DiscardGraphicPass()
   {
   }
 
-  void LightmapBroker::DiscardGraphicConfig()
+  void LightmapScope::DiscardGraphicConfig()
   {
   }
 
-  void LightmapBroker::DiscardGraphicBatch()
+  void LightmapScope::DiscardGraphicBatch()
   {
   }
 
-  void LightmapBroker::DiscardGraphicArguments()
+  void LightmapScope::DiscardGraphicArguments()
   {
   }
 
-  void LightmapBroker::DiscardComputePass()
+  void LightmapScope::DiscardComputePass()
   {
   }
 
-  void LightmapBroker::DiscardComputeConfig()
+  void LightmapScope::DiscardComputeConfig()
   {
   }
 
-  void LightmapBroker::DiscardComputeBatch()
+  void LightmapScope::DiscardComputeBatch()
   {
   }
 
-  void LightmapBroker::DiscardComputeArguments()
+  void LightmapScope::DiscardComputeArguments()
   {
   }
 
-  void LightmapBroker::Initialize()
-  {
-  }
-
-  void LightmapBroker::Use()
+  void LightmapScope::Use()
   {
     const auto [ins_array, ins_count] = prop_instances->GetTypedBytes<Instance>(0);
     const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
@@ -211,7 +192,7 @@ namespace RayGene3D
     }
   }
 
-  void LightmapBroker::Discard()
+  void LightmapScope::Discard()
   {
     prop_scene->SetObjectItem("lightmaps", prop_lightmaps);
 
@@ -222,10 +203,11 @@ namespace RayGene3D
     prop_scene.reset();
   }
 
-  LightmapBroker::LightmapBroker(Wrap& wrap)
-    : Broker("lightmap_broker", wrap)
+  LightmapScope::LightmapScope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)
+    : core(core)
+    , util(util)
   {
-    const auto& tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& tree = util->GetStorage()->GetTree();
 
     prop_scene = tree->GetObjectItem("scene");
     {
@@ -260,7 +242,7 @@ namespace RayGene3D
     
   }
 
-  LightmapBroker::~LightmapBroker()
+  LightmapScope::~LightmapScope()
   {
     DiscardGraphicBatch();
     DiscardGraphicConfig();
@@ -282,10 +264,5 @@ namespace RayGene3D
     DiscardTraceInstances();
     DiscardTraceTriangles();
     DiscardTraceVertices();
-
-
-
-
-
   }
 }

@@ -32,8 +32,12 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  class LightmapBroker : public Broker
+  class LightmapScope
   {
+  public:
+    const std::unique_ptr<Core>& core;
+    const std::unique_ptr<Util>& util;
+
   protected:
     std::shared_ptr<Property> prop_scene;
 
@@ -58,7 +62,9 @@ namespace RayGene3D
     SPtrResource trace_triangles;
     SPtrResource trace_vertices;
 
-    SPtrResource baked_lightmaps;
+    SPtrResource print_lightmaps;
+    SPtrResource accum_lightmaps;
+    SPtrResource final_lightmaps;
 
     SPtrPass graphic_pass;
     SPtrConfig graphic_config;
@@ -79,7 +85,9 @@ namespace RayGene3D
     void CreateTraceTriangles();
     void CreateTraceVertices();
 
-    void CreateLightMaps();
+    void CreatePrintLightmaps();
+    void CreateAccumLightmaps();
+    void CreateFinalLightmaps();
 
     void CreateGraphicPass();
     void CreateGraphicConfig();
@@ -100,7 +108,9 @@ namespace RayGene3D
     void DiscardTraceTriangles();
     void DiscardTraceVertices();
 
-    void DiscardLightMaps();
+    void DiscardPrintLightmaps();
+    void DiscardAccumLightmaps();
+    void DiscardFinalLightmaps();
 
     void DiscardGraphicPass();
     void DiscardGraphicConfig();
@@ -113,12 +123,7 @@ namespace RayGene3D
     void DiscardComputeArguments();
 
   public:
-    void Initialize() override;
-    void Use() override;
-    void Discard() override;
-
-  public:
-    LightmapBroker(Wrap& wrap);
-    virtual ~LightmapBroker();
+    LightmapScope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util);
+    virtual ~LightmapScope();
   };
 }

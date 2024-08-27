@@ -61,6 +61,10 @@ set(SOURCE main.cpp
   broker/import_broker.cpp
   broker/lightmap_broker.h
   broker/lightmap_broker.cpp
+  broker/lightmap_mode.h
+  broker/lightmap_mode.cpp
+  broker/lightmap_scope.h
+  broker/lightmap_scope.cpp
   broker/mikktspace_broker.h
   broker/mikktspace_broker.cpp
   broker/photonmap_broker.h
