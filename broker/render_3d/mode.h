@@ -28,45 +28,60 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../render_3d_mode.h"
+#include "scope.h"
 
 namespace RayGene3D
 {
-  class CubemapShadow : public Render3DMode
+  namespace Render3D
   {
-  protected:
-    SPtrPass shadowmap_pass;
-    SPtrConfig shadowmap_config;
-    SPtrBatch shadowmap_batch;
+    class Mode
+    {
+    protected:
+      const Scope& scope;
 
-    SPtrPass shadowed_pass;
-    SPtrConfig shadowed_config;
-    SPtrBatch shadowed_batch;
+    protected:
+      SPtrPass geometry_pass;
+      SPtrConfig geometry_config;
+      SPtrBatch geometry_batch;
 
-  protected:
-    void CreateShadowmapPass();
-    void CreateShadowmapConfig();
-    void CreateShadowmapBatch();
+      SPtrConfig skybox_config;
+      SPtrBatch skybox_batch;
 
-    void CreateShadowedPass();
-    void CreateShadowedConfig();
-    void CreateShadowedBatch();
+      SPtrPass present_pass;
+      SPtrConfig present_config;
+      SPtrBatch present_batch;
 
-  protected:
-    void DestroyShadowmapBatch();
-    void DestroyShadowmapConfig();
-    void DestroyShadowmapPass();
+    protected:
+      void CreateGeometryPass();
+      void CreateGeometryConfig();
+      void CreateGeometryBatch();
 
-    void DestroyShadowedBatch();
-    void DestroyShadowedConfig();
-    void DestroyShadowedPass();
+      void CreateSkyboxConfig();
+      void CreateSkyboxBatch();
 
-  public:
-    void Enable() override;
-    void Disable() override;
+      void CreatePresentPass();
+      void CreatePresentConfig();
+      void CreatePresentBatch();
 
-  public:
-    CubemapShadow(const Render3DScope& scope);
-    virtual ~CubemapShadow();
-  };
+    protected:
+      void DestroyGeometryBatch();
+      void DestroyGeometryConfig();
+      void DestroyGeometryPass();
+
+      void DestroySkyboxBatch();
+      void DestroySkyboxConfig();
+
+      void DestroyPresentBatch();
+      void DestroyPresentConfig();
+      void DestroyPresentPass();
+
+    public:
+      virtual void Enable() = 0;
+      virtual void Disable() = 0;
+
+    public:
+      Mode(const Scope& scope);
+      virtual ~Mode();
+    };
+  }
 }

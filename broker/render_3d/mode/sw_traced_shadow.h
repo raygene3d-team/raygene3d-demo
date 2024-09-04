@@ -28,33 +28,36 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../render_3d_mode.h"
+#include "../mode.h"
 
 namespace RayGene3D
 {
-  class SWTracedShadow : public Render3DMode
+  namespace Render3D
   {
-  protected:
-    SPtrPass sw_traced_pass;
-    SPtrConfig sw_traced_config;
-    SPtrBatch sw_traced_batch;
+    class SWTracedShadow : public Mode
+    {
+    protected:
+      SPtrPass sw_traced_pass;
+      SPtrConfig sw_traced_config;
+      SPtrBatch sw_traced_batch;
 
-  protected:
-    void CreateSWTracedPass();
-    void CreateSWTracedConfig();
-    void CreateSWTracedBatch();
+    protected:
+      void CreateSWTracedPass();
+      void CreateSWTracedConfig();
+      void CreateSWTracedBatch();
 
-  protected:
-    void DestroySWTracedBatch();
-    void DestroySWTracedConfig();
-    void DestroySWTracedPass();
+    protected:
+      void DestroySWTracedBatch();
+      void DestroySWTracedConfig();
+      void DestroySWTracedPass();
 
-  public:
-    void Enable() override;
-    void Disable() override;
+    public:
+      void Enable() override;
+      void Disable() override;
 
-  public:
-    SWTracedShadow(const Render3DScope& scope);
-    virtual ~SWTracedShadow();
-  };
+    public:
+      SWTracedShadow(const Scope& scope);
+      virtual ~SWTracedShadow();
+    };
+  }
 }

@@ -33,21 +33,6 @@ namespace RayGene3D
 
   void LightmapBroker::CreateSceneInstances()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Instance)) * count },
-    };
-
-    scene_instances = core->GetDevice()->CreateResource("spark_scene_instances",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_CONSTANT_DATA),
-        uint32_t(sizeof(Instance)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-      );
   }
 
   void LightmapBroker::CreateSceneTriangles()

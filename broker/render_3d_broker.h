@@ -28,23 +28,23 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "render_3d/no_shadow.h"
-#include "render_3d/cubemap_shadow.h"
-#include "render_3d/sw_traced_shadow.h"
-#include "render_3d/hw_traced_shadow.h"
+#include "render_3d/mode/no_shadow.h"
+#include "render_3d/mode/cubemap_shadow.h"
+#include "render_3d/mode/sw_traced_shadow.h"
+#include "render_3d/mode/hw_traced_shadow.h"
 
 namespace RayGene3D
 {
   class Render3DBroker : public Broker
   {
   protected:
-    Render3DScope scope;
+    Render3D::Scope scope;
 
   protected:
-    std::unique_ptr<Render3DMode> no_shadow;
-    std::unique_ptr<Render3DMode> cubemap_shadow;
-    std::unique_ptr<Render3DMode> sw_traced_shadow;
-    std::unique_ptr<Render3DMode> hw_traced_shadow;
+    std::unique_ptr<Render3D::Mode> no_shadow;
+    std::unique_ptr<Render3D::Mode> cubemap_shadow;
+    std::unique_ptr<Render3D::Mode> sw_traced_shadow;
+    std::unique_ptr<Render3D::Mode> hw_traced_shadow;
 
   public:
     enum ShadowMode
