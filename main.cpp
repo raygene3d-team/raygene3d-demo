@@ -31,10 +31,11 @@ THE SOFTWARE.
 #include "broker/render_3d_broker.h"
 #include "broker/render_ui_broker.h"
 
-#include "broker/bvh_broker.h"
+#include "broker/trace_broker.h"
 #include "broker/xatlas_broker.h"
 #include "broker/mikktspace_broker.h"
 #include "broker/import_broker.h"
+#include "broker/scene_broker.h"
 #include "broker/lightmap_broker.h"
 #include "broker/environment_broker.h"
 
@@ -526,23 +527,23 @@ namespace RayGene3D
       }
 
       {
-        auto environment_broker = std::shared_ptr<RayGene3D::EnvironmentBroker>(new RayGene3D::EnvironmentBroker(*wrap));
+        auto trace_broker = std::shared_ptr<RayGene3D::TraceBroker>(new RayGene3D::TraceBroker(*wrap));
 
-        environment_broker->Initialize();
-        environment_broker->Use();
-        environment_broker->Discard();
+        trace_broker->Initialize();
+        trace_broker->Use();
+        trace_broker->Discard();
 
-        environment_broker.reset();
+        trace_broker.reset();
       }
 
       {
-        auto bvh_broker = std::shared_ptr<RayGene3D::BVHBroker>(new RayGene3D::BVHBroker(*wrap));
+        auto scene_broker = std::shared_ptr<RayGene3D::SceneBroker>(new RayGene3D::SceneBroker(*wrap));
 
-        bvh_broker->Initialize();
-        bvh_broker->Use();
-        bvh_broker->Discard();
+        scene_broker->Initialize();
+        scene_broker->Use();
+        scene_broker->Discard();
 
-        bvh_broker.reset();
+        scene_broker.reset();
       }
 
       {
@@ -554,6 +555,19 @@ namespace RayGene3D
 
         lightmap_broker.reset();
       }
+
+      {
+        auto environment_broker = std::shared_ptr<RayGene3D::EnvironmentBroker>(new RayGene3D::EnvironmentBroker(*wrap));
+
+        environment_broker->Initialize();
+        environment_broker->Use();
+        environment_broker->Discard();
+
+        environment_broker.reset();
+      }
+
+
+
 
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));

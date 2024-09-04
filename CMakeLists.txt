@@ -52,41 +52,44 @@ set(mikktspace_source
   ${3RDPARTY_DIR}/mikktspace/mikktspace.c
 )
 
+set(render_3d_source
+  broker/render_3d/mode.h
+  broker/render_3d/mode.cpp
+  broker/render_3d/scope.h
+  broker/render_3d/scope.cpp
+  broker/render_3d/mode/no_shadow.h
+  broker/render_3d/mode/no_shadow.cpp
+  broker/render_3d/mode/cubemap_shadow.h
+  broker/render_3d/mode/cubemap_shadow.cpp
+  broker/render_3d/mode/sw_traced_shadow.h
+  broker/render_3d/mode/sw_traced_shadow.cpp
+  broker/render_3d/mode/hw_traced_shadow.h
+  broker/render_3d/mode/hw_traced_shadow.cpp
+)
+
+
 set(SOURCE main.cpp
-  broker/bvh_broker.h
-  broker/bvh_broker.cpp
   broker/environment_broker.h
   broker/environment_broker.cpp
   broker/import_broker.h
   broker/import_broker.cpp
   broker/lightmap_broker.h
   broker/lightmap_broker.cpp
-  broker/lightmap_mode.h
-  broker/lightmap_mode.cpp
-  broker/lightmap_scope.h
-  broker/lightmap_scope.cpp
   broker/mikktspace_broker.h
   broker/mikktspace_broker.cpp
   broker/photonmap_broker.h
   broker/photonmap_broker.cpp
-  broker/xatlas_broker.h
-  broker/xatlas_broker.cpp
   broker/render_3d_broker.h
   broker/render_3d_broker.cpp
-  broker/render_3d_mode.h
-  broker/render_3d_mode.cpp
-  broker/render_3d_scope.h
-  broker/render_3d_scope.cpp
-  broker/render_3d/no_shadow.h
-  broker/render_3d/no_shadow.cpp
-  broker/render_3d/cubemap_shadow.h
-  broker/render_3d/cubemap_shadow.cpp
-  broker/render_3d/sw_traced_shadow.h
-  broker/render_3d/sw_traced_shadow.cpp
-  broker/render_3d/hw_traced_shadow.h
-  broker/render_3d/hw_traced_shadow.cpp
   broker/render_ui_broker.h
   broker/render_ui_broker.cpp
+  broker/scene_broker.h
+  broker/scene_broker.cpp
+  broker/trace_broker.h
+  broker/trace_broker.cpp
+  broker/xatlas_broker.h
+  broker/xatlas_broker.cpp
+  ${render_3d_source}
   ${imgui_source}
   ${xatlas_source}
   ${mikktspace_source}

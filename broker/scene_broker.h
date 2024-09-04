@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  class LightmapBroker : public Broker
+  class SceneBroker : public Broker
   {
   protected:
     std::shared_ptr<Property> prop_scene;
@@ -42,75 +42,81 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_triangles;
     std::shared_ptr<Property> prop_vertices;
 
-  protected:
-    std::shared_ptr<Property> prop_atlas;
+    std::shared_ptr<Property> prop_t_boxes;
+    std::shared_ptr<Property> prop_b_boxes;
 
-  protected:
-    std::shared_ptr<Property> prop_lightmaps;
+    std::shared_ptr<Property> prop_textures0;
+    std::shared_ptr<Property> prop_textures1;
+    std::shared_ptr<Property> prop_textures2;
+    std::shared_ptr<Property> prop_textures3;
+    std::shared_ptr<Property> prop_textures4;
+    std::shared_ptr<Property> prop_textures5;
+    std::shared_ptr<Property> prop_textures6;
+    std::shared_ptr<Property> prop_textures7;
 
   protected:
     SPtrResource scene_instances;
     SPtrResource scene_triangles;
     SPtrResource scene_vertices;
 
+    SPtrResource scene_t_boxes;
+    SPtrResource scene_b_boxes;
+
     //Copies of original resources bacause of DX11 limitations
     SPtrResource trace_instances;
     SPtrResource trace_triangles;
     SPtrResource trace_vertices;
 
-    SPtrResource baked_lightmaps;
-
-    SPtrPass graphic_pass;
-    SPtrConfig graphic_config;
-    SPtrBatch graphic_batch;
-    SPtrResource graphic_arguments;
-
-    SPtrPass compute_pass;
-    SPtrConfig compute_config;
-    SPtrBatch compute_batch;
-    SPtrResource compute_arguments;
+    SPtrResource scene_textures0;
+    SPtrResource scene_textures1;
+    SPtrResource scene_textures2;
+    SPtrResource scene_textures3;
+    SPtrResource scene_textures4;
+    SPtrResource scene_textures5;
+    SPtrResource scene_textures6;
+    SPtrResource scene_textures7;
 
   protected:
     void CreateSceneInstances();
     void CreateSceneTriangles();
     void CreateSceneVertices();
 
+    void CreateSceneTBoxes();
+    void CreateSceneBBoxes();
+
     void CreateTraceInstances();
     void CreateTraceTriangles();
     void CreateTraceVertices();
 
-    void CreateLightMaps();
-
-    void CreateGraphicPass();
-    void CreateGraphicConfig();
-    void CreateGraphicBatch();
-    void CreateGraphicArguments();
-
-    void CreateComputePass();
-    void CreateComputeConfig();
-    void CreateComputeBatch();
-    void CreateComputeArguments();
+    void CreateSceneTextures0();
+    void CreateSceneTextures1();
+    void CreateSceneTextures2();
+    void CreateSceneTextures3();
+    void CreateSceneTextures4();
+    void CreateSceneTextures5();
+    void CreateSceneTextures6();
+    void CreateSceneTextures7();
 
   protected:
-    void DiscardSceneInstances();
-    void DiscardSceneTriangles();
-    void DiscardSceneVertices();
+    void DestroySceneInstances();
+    void DestroySceneTriangles();
+    void DestroySceneVertices();
 
-    void DiscardTraceInstances();
-    void DiscardTraceTriangles();
-    void DiscardTraceVertices();
+    void DestroySceneTBoxes();
+    void DestroySceneBBoxes();
 
-    void DiscardLightMaps();
+    void DestroyTraceInstances();
+    void DestroyTraceTriangles();
+    void DestroyTraceVertices();
 
-    void DiscardGraphicPass();
-    void DiscardGraphicConfig();
-    void DiscardGraphicBatch();
-    void DiscardGraphicArguments();
-
-    void DiscardComputePass();
-    void DiscardComputeConfig();
-    void DiscardComputeBatch();
-    void DiscardComputeArguments();
+    void DestroySceneTextures0();
+    void DestroySceneTextures1();
+    void DestroySceneTextures2();
+    void DestroySceneTextures3();
+    void DestroySceneTextures4();
+    void DestroySceneTextures5();
+    void DestroySceneTextures6();
+    void DestroySceneTextures7();
 
   public:
     void Initialize() override;
@@ -118,7 +124,7 @@ namespace RayGene3D
     void Discard() override;
 
   public:
-    LightmapBroker(Wrap& wrap);
-    virtual ~LightmapBroker();
+    SceneBroker(Wrap& wrap);
+    virtual ~SceneBroker();
   };
 }

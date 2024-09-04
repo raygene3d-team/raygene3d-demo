@@ -25,7 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ================================================================================*/
-#include "bvh_broker.h"
+#include "trace_broker.h"
 
 namespace RayGene3D
 {
@@ -284,7 +284,7 @@ namespace RayGene3D
   }
 
 
-  void BVHBroker::Initialize()
+  void TraceBroker::Initialize()
   {
     if (prop_scene->HasObjectItem("t_boxes")) return;
     if (prop_scene->HasObjectItem("b_boxes")) return;
@@ -317,12 +317,12 @@ namespace RayGene3D
     }
   }
 
-  void BVHBroker::Use()
+  void TraceBroker::Use()
   {
 
   }
 
-  void BVHBroker::Discard()
+  void TraceBroker::Discard()
   {
     prop_vertices.reset();
     prop_triangles.reset();
@@ -331,7 +331,7 @@ namespace RayGene3D
     prop_scene.reset();
   }
 
-  BVHBroker::BVHBroker(Wrap& wrap)
+  TraceBroker::TraceBroker(Wrap& wrap)
     : Broker("bvh_broker", wrap)
   {
     const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
@@ -344,7 +344,7 @@ namespace RayGene3D
     }
   }
 
-  BVHBroker::~BVHBroker()
+  TraceBroker::~TraceBroker()
   {}
 
 }

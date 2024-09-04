@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  class BVHBroker : public Broker
+  class TraceBroker : public Broker
   {
   protected:
     std::shared_ptr<Property> prop_scene;
@@ -48,7 +48,7 @@ namespace RayGene3D
     void Discard() override;
 
   public:
-    BVHBroker(Wrap& wrap);
-    virtual ~BVHBroker();
+    TraceBroker(Wrap& wrap);
+    virtual ~TraceBroker();
   };
 }
