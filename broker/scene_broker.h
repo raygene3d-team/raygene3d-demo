@@ -42,9 +42,6 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_triangles;
     std::shared_ptr<Property> prop_vertices;
 
-    std::shared_ptr<Property> prop_t_boxes;
-    std::shared_ptr<Property> prop_b_boxes;
-
     std::shared_ptr<Property> prop_textures0;
     std::shared_ptr<Property> prop_textures1;
     std::shared_ptr<Property> prop_textures2;
@@ -58,14 +55,6 @@ namespace RayGene3D
     SPtrResource scene_instances;
     SPtrResource scene_triangles;
     SPtrResource scene_vertices;
-
-    SPtrResource scene_t_boxes;
-    SPtrResource scene_b_boxes;
-
-    //Copies of original resources bacause of DX11 limitations
-    SPtrResource trace_instances;
-    SPtrResource trace_triangles;
-    SPtrResource trace_vertices;
 
     SPtrResource scene_textures0;
     SPtrResource scene_textures1;
@@ -81,13 +70,6 @@ namespace RayGene3D
     void CreateSceneTriangles();
     void CreateSceneVertices();
 
-    void CreateSceneTBoxes();
-    void CreateSceneBBoxes();
-
-    void CreateTraceInstances();
-    void CreateTraceTriangles();
-    void CreateTraceVertices();
-
     void CreateSceneTextures0();
     void CreateSceneTextures1();
     void CreateSceneTextures2();
@@ -101,13 +83,6 @@ namespace RayGene3D
     void DestroySceneInstances();
     void DestroySceneTriangles();
     void DestroySceneVertices();
-
-    void DestroySceneTBoxes();
-    void DestroySceneBBoxes();
-
-    void DestroyTraceInstances();
-    void DestroyTraceTriangles();
-    void DestroyTraceVertices();
 
     void DestroySceneTextures0();
     void DestroySceneTextures1();

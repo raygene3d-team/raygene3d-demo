@@ -116,13 +116,7 @@ namespace RayGene3D
       //SPtrResource scene_vertices2;
       //SPtrResource scene_vertices3;
 
-      SPtrResource scene_t_boxes;
-      SPtrResource scene_b_boxes;
 
-      //Copies of original resources bacause of DX11 limitations
-      SPtrResource trace_instances;
-      SPtrResource trace_triangles;
-      SPtrResource trace_vertices;
 
       SPtrResource scene_textures0;
       SPtrResource scene_textures1;
@@ -132,6 +126,14 @@ namespace RayGene3D
       SPtrResource scene_textures5;
       SPtrResource scene_textures6;
       SPtrResource scene_textures7;
+
+      SPtrResource trace_t_boxes;
+      SPtrResource trace_b_boxes;
+
+      //Copies of original resources bacause of DX11 limitations
+      SPtrResource trace_instances;
+      SPtrResource trace_triangles;
+      SPtrResource trace_vertices;
 
       SPtrResource scene_lightmaps;
 
@@ -167,8 +169,8 @@ namespace RayGene3D
       void CreateSceneTriangles();
       void CreateSceneVertices();
 
-      void CreateSceneTBoxes();
-      void CreateSceneBBoxes();
+      void CreateTraceTBoxes();
+      void CreateTraceBBoxes();
 
       void CreateTraceInstances();
       void CreateTraceTriangles();
@@ -210,8 +212,8 @@ namespace RayGene3D
       void DestroySceneTriangles();
       void DestroySceneVertices();
 
-      void DestroySceneTBoxes();
-      void DestroySceneBBoxes();
+      void DestroyTraceTBoxes();
+      void DestroyTraceBBoxes();
 
       void DestroyTraceInstances();
       void DestroyTraceTriangles();

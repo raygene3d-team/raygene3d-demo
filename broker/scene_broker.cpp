@@ -87,101 +87,6 @@ namespace RayGene3D
       );
   }
 
-  void SceneBroker::CreateSceneTBoxes()
-  {
-    const auto [data, count] = prop_t_boxes->GetTypedBytes<Box>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Box)) * count },
-    };
-
-    scene_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("scene_t_boxes",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Box)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-      );
-  }
-
-  void SceneBroker::CreateSceneBBoxes()
-  {
-    const auto [data, count] = prop_b_boxes->GetTypedBytes<Box>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Box)) * count },
-    };
-
-    scene_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("scene_b_boxes",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Box)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-      );
-  }
-
-  void SceneBroker::CreateTraceInstances()
-  {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Instance)) * count },
-    };
-
-    trace_instances = wrap.GetCore()->GetDevice()->CreateResource("trace_instances",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Instance)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-      );
-  }
-
-  void SceneBroker::CreateTraceTriangles()
-  {
-    const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Triangle)) * count },
-    };
-
-    trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("trace_triangles",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-        uint32_t(sizeof(Triangle)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { interops, uint32_t(std::size(interops)) }
-      );
-  }
-
-  void SceneBroker::CreateTraceVertices()
-  {
-    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Vertex)) * count },
-    };
-
-    trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("trace_vertices",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-        uint32_t(sizeof(Vertex)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { interops, uint32_t(std::size(interops)) }
-      );
-  }
-
   void SceneBroker::CreateSceneTextures0()
   {
     const auto& layers = prop_textures0->GetObjectItem("layers");
@@ -442,36 +347,6 @@ namespace RayGene3D
     scene_vertices.reset();
   }
 
-  void SceneBroker::DestroySceneTBoxes()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_t_boxes);
-    scene_t_boxes.reset();
-  }
-
-  void SceneBroker::DestroySceneBBoxes()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_b_boxes);
-    scene_b_boxes.reset();
-  }
-
-  void SceneBroker::DestroyTraceInstances()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_instances);
-    trace_instances.reset();
-  }
-
-  void SceneBroker::DestroyTraceTriangles()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_triangles);
-    trace_triangles.reset();
-  }
-
-  void SceneBroker::DestroyTraceVertices()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_vertices);
-    trace_vertices.reset();
-  }
-
   void SceneBroker::DestroySceneTextures0()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_textures0);
@@ -520,6 +395,15 @@ namespace RayGene3D
     scene_textures7.reset();
   }
 
+  void SceneBroker::Initialize()
+  {}
+
+  void SceneBroker::Use()
+  {}
+
+  void SceneBroker::Discard()
+  {}
+
   SceneBroker::SceneBroker(Wrap& wrap)
     : Broker("scene_broker", wrap)
   {
@@ -530,9 +414,6 @@ namespace RayGene3D
       prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
       prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
       prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
-
-      prop_t_boxes = prop_scene->GetObjectItem("t_boxes")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_b_boxes = prop_scene->GetObjectItem("b_boxes")->GetObjectItem("raws")->GetArrayItem(0);
 
       prop_textures0 = prop_scene->GetObjectItem("textures_0");
       prop_textures1 = prop_scene->GetObjectItem("textures_1");
@@ -548,13 +429,6 @@ namespace RayGene3D
     CreateSceneTriangles();
     CreateSceneVertices();
 
-    CreateSceneTBoxes();
-    CreateSceneBBoxes();
-
-    CreateTraceInstances();
-    CreateTraceTriangles();
-    CreateTraceVertices();
-
     CreateSceneTextures0();
     CreateSceneTextures1();
     CreateSceneTextures2();
@@ -567,24 +441,32 @@ namespace RayGene3D
 
   SceneBroker::~SceneBroker()
   {
-    DestroySceneTextures0();
-    DestroySceneTextures1();
-    DestroySceneTextures2();
-    DestroySceneTextures3();
-    DestroySceneTextures4();
-    DestroySceneTextures5();
-    DestroySceneTextures6();
-    DestroySceneTextures7();
+    prop_scene.reset();
 
-    DestroyTraceInstances();
-    DestroyTraceTriangles();
-    DestroyTraceVertices();
+    prop_instances.reset();
+    prop_triangles.reset();
+    prop_vertices.reset();
 
-    DestroySceneTBoxes();
-    DestroySceneBBoxes();
+    prop_textures0.reset();
+    prop_textures1.reset();
+    prop_textures2.reset();
+    prop_textures3.reset();
+    prop_textures4.reset();
+    prop_textures5.reset();
+    prop_textures6.reset();
+    prop_textures7.reset();
 
-    DestroySceneInstances();
-    DestroySceneTriangles();
-    DestroySceneVertices();
+    //DestroySceneTextures0();
+    //DestroySceneTextures1();
+    //DestroySceneTextures2();
+    //DestroySceneTextures3();
+    //DestroySceneTextures4();
+    //DestroySceneTextures5();
+    //DestroySceneTextures6();
+    //DestroySceneTextures7();
+
+    //DestroySceneInstances();
+    //DestroySceneTriangles();
+    //DestroySceneVertices();
   }
 }

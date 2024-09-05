@@ -114,7 +114,7 @@ namespace RayGene3D
       const auto& mesh = atlas->meshes[i];
 
       updated_vrt_count += mesh.vertexCount;
-      updated_trg_count += mesh.indexCount * 3;
+      updated_trg_count += mesh.indexCount / 3;
       updated_ins_count += 1u;
     }
 

@@ -139,10 +139,10 @@ namespace RayGene3D
         sw_traced_shadow_data,
       };
 
-      auto sw_traced_scene_t_boxes = scope.scene_t_boxes->CreateView("spark_sw_traced_scene_t_boxes",
+      auto sw_traced_trace_t_boxes = scope.trace_t_boxes->CreateView("spark_sw_traced_trace_t_boxes",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_scene_b_boxes = scope.scene_b_boxes->CreateView("spark_sw_traced_scene_b_boxes",
+      auto sw_traced_trace_b_boxes = scope.trace_b_boxes->CreateView("spark_sw_traced_trace_b_boxes",
         Usage(USAGE_SHADER_RESOURCE)
       );
       auto sw_traced_trace_instances = scope.trace_instances->CreateView("spark_sw_traced_trace_instances",
@@ -156,8 +156,8 @@ namespace RayGene3D
       );
 
       const std::shared_ptr<View> rb_views[] = {
-        sw_traced_scene_t_boxes,
-        sw_traced_scene_b_boxes,
+        sw_traced_trace_t_boxes,
+        sw_traced_trace_b_boxes,
         sw_traced_trace_instances,
         sw_traced_trace_triangles,
         sw_traced_trace_vertices,

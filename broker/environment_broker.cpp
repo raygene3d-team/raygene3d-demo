@@ -453,7 +453,7 @@ namespace RayGene3D
     };
 
     const Batch::Sampler samplers[] = {
-      { Batch::Sampler::FILTERING_LINEAR, 0, Batch::Sampler::ADDRESSING_BORDER, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
+      { Batch::Sampler::FILTERING_LINEAR, 0, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
     };
 
     const auto constant_view = constant_data[level]->CreateView("environment_argument_view_" + std::to_string(level),

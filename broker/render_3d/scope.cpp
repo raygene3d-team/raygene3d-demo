@@ -149,425 +149,81 @@ namespace RayGene3D
 
     void Scope::CreateSceneInstances()
     {
-      //const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-      //std::pair<const void*, uint32_t> interops[] = {
-      //  { data, uint32_t(sizeof(Instance)) * count },
-      //};
-
-      //scene_instances = core->GetDevice()->CreateResource("spark_scene_instances",
-      //  Resource::BufferDesc
-      //  {
-      //    Usage(USAGE_CONSTANT_DATA),
-      //    uint32_t(sizeof(Instance)),
-      //    count,
-      //  },
-      //  Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      //  { interops, uint32_t(std::size(interops)) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_instances", scene_instances));
     }
 
     void Scope::CreateSceneTriangles()
     {
-      //const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
-      //std::pair<const void*, uint32_t> interops[] = {
-      //  { data, uint32_t(sizeof(Triangle)) * count },
-      //};
-
-      //scene_triangles = core->GetDevice()->CreateResource("spark_scene_triangles",
-      //  Resource::BufferDesc
-      //  {
-      //    Usage(USAGE_INDEX_ARRAY),
-      //    uint32_t(sizeof(Triangle)),
-      //    count,
-      //  },
-      //  Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      //  { interops, uint32_t(std::size(interops)) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_triangles", scene_triangles));
     }
 
     void Scope::CreateSceneVertices()
     {
-      //const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
-      //std::pair<const void*, uint32_t> interops[] = {
-      //  { data, uint32_t(sizeof(Vertex)) * count },
-      //};
-
-      //scene_vertices = core->GetDevice()->CreateResource("spark_scene_vertices",
-      //  Resource::BufferDesc
-      //  {
-      //    Usage(USAGE_VERTEX_ARRAY),
-      //    uint32_t(sizeof(Vertex)),
-      //    count,
-      //  },
-      //  Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      //  { interops, uint32_t(std::size(interops)) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_vertices", scene_vertices));
     }
 
-    void Scope::CreateSceneTBoxes()
+    void Scope::CreateTraceTBoxes()
     {
-      //const auto [data, count] = prop_t_boxes->GetTypedBytes<Box>(0);
-      //std::pair<const void*, uint32_t> interops[] = {
-      //  { data, uint32_t(sizeof(Box)) * count },
-      //};
-
-      //scene_t_boxes = core->GetDevice()->CreateResource("spark_scene_t_boxes",
-      //  Resource::BufferDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    uint32_t(sizeof(Box)),
-      //    count,
-      //  },
-      //  Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      //  { interops, uint32_t(std::size(interops)) }
-      //);
-
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_t_boxes", scene_t_boxes));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_t_boxes", trace_t_boxes));
     }
 
-    void Scope::CreateSceneBBoxes()
+    void Scope::CreateTraceBBoxes()
     {
-      //const auto [data, count] = prop_b_boxes->GetTypedBytes<Box>(0);
-      //std::pair<const void*, uint32_t> interops[] = {
-      //  { data, uint32_t(sizeof(Box)) * count },
-      //};
-
-      //scene_b_boxes = core->GetDevice()->CreateResource("spark_scene_b_boxes",
-      //  Resource::BufferDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    uint32_t(sizeof(Box)),
-      //    count,
-      //  },
-      //  Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      //  { interops, uint32_t(std::size(interops)) }
-      //);
-
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_b_boxes", scene_b_boxes));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_b_boxes", trace_b_boxes));
     }
 
     void Scope::CreateTraceInstances()
     {
-      //const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-      //std::pair<const void*, uint32_t> interops[] = {
-      //  { data, uint32_t(sizeof(Instance)) * count },
-      //};
-
-      //trace_instances = core->GetDevice()->CreateResource("spark_trace_instances",
-      //  Resource::BufferDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    uint32_t(sizeof(Instance)),
-      //    count,
-      //  },
-      //  Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      //  { interops, uint32_t(std::size(interops)) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_instances", trace_instances));
     }
 
     void Scope::CreateTraceTriangles()
     {
-      //const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
-      //std::pair<const void*, uint32_t> interops[] = {
-      //  { data, uint32_t(sizeof(Triangle)) * count },
-      //};
-
-      //trace_triangles = core->GetDevice()->CreateResource("spark_trace_triangles",
-      //  Resource::BufferDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-      //    uint32_t(sizeof(Triangle)),
-      //    count,
-      //  },
-      //  Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      //  { interops, uint32_t(std::size(interops)) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_triangles", trace_triangles));
     }
 
     void Scope::CreateTraceVertices()
     {
-      //const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
-      //std::pair<const void*, uint32_t> interops[] = {
-      //  { data, uint32_t(sizeof(Vertex)) * count },
-      //};
-
-      //trace_vertices = core->GetDevice()->CreateResource("spark_trace_vertices",
-      //  Resource::BufferDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-      //    uint32_t(sizeof(Vertex)),
-      //    count,
-      //  },
-      //  Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      //  { interops, uint32_t(std::size(interops)) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_vertices", trace_vertices));
     }
 
     void Scope::CreateSceneTextures0()
     {
-      //const auto& layers = prop_textures0->GetObjectItem("layers");
-      //const auto& mipmap = prop_textures0->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_textures0->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_textures0->GetObjectItem("extent_y");
-      //const auto& raws = prop_textures0->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
-      //scene_textures0 = core->GetDevice()->CreateResource("spark_scene_textures0",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R8G8B8A8_SRGB,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures0", scene_textures0));
     }
 
     void Scope::CreateSceneTextures1()
     {
-      //const auto& layers = prop_textures1->GetObjectItem("layers");
-      //const auto& mipmap = prop_textures1->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_textures1->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_textures1->GetObjectItem("extent_y");
-      //const auto& raws = prop_textures1->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
-      //scene_textures1 = core->GetDevice()->CreateResource("spark_scene_textures1",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R8G8B8A8_SRGB,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures1", scene_textures1));
     }
 
     void Scope::CreateSceneTextures2()
     {
-      //const auto& layers = prop_textures2->GetObjectItem("layers");
-      //const auto& mipmap = prop_textures2->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_textures2->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_textures2->GetObjectItem("extent_y");
-      //const auto& raws = prop_textures2->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
-      //scene_textures2 = core->GetDevice()->CreateResource("spark_scene_textures2",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R8G8B8A8_SRGB,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures2", scene_textures2));
     }
 
     void Scope::CreateSceneTextures3()
     {
-      //const auto& layers = prop_textures3->GetObjectItem("layers");
-      //const auto& mipmap = prop_textures3->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_textures3->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_textures3->GetObjectItem("extent_y");
-      //const auto& raws = prop_textures3->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
-      //scene_textures3 = core->GetDevice()->CreateResource("spark_scene_textures3",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R8G8B8A8_UNORM,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //);
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures3", scene_textures3));
     }
 
     void Scope::CreateSceneTextures4()
     {
-      //const auto& layers = prop_textures4->GetObjectItem("layers");
-      //const auto& mipmap = prop_textures4->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_textures4->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_textures4->GetObjectItem("extent_y");
-      //const auto& raws = prop_textures4->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
-      //scene_textures4 = core->GetDevice()->CreateResource("spark_scene_textures4",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R8G8B8A8_SRGB,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //  );
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures4", scene_textures4));
     }
 
     void Scope::CreateSceneTextures5()
     {
-      //const auto& layers = prop_textures5->GetObjectItem("layers");
-      //const auto& mipmap = prop_textures5->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_textures5->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_textures5->GetObjectItem("extent_y");
-      //const auto& raws = prop_textures5->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
-      //scene_textures5 = core->GetDevice()->CreateResource("spark_scene_textures5",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R8G8B8A8_UNORM,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //  );
-
-       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures5", scene_textures5));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures5", scene_textures5));
     }
 
     void Scope::CreateSceneTextures6()
     {
-      //const auto& layers = prop_textures6->GetObjectItem("layers");
-      //const auto& mipmap = prop_textures6->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_textures6->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_textures6->GetObjectItem("extent_y");
-      //const auto& raws = prop_textures6->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
-      //scene_textures6 = core->GetDevice()->CreateResource("spark_scene_textures6",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R8G8B8A8_UNORM,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //  );
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures6", scene_textures6));
     }
 
     void Scope::CreateSceneTextures7()
     {
-      //const auto& layers = prop_textures7->GetObjectItem("layers");
-      //const auto& mipmap = prop_textures7->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_textures7->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_textures7->GetObjectItem("extent_y");
-      //const auto& raws = prop_textures7->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
-      //scene_textures7 = core->GetDevice()->CreateResource("spark_scene_textures7",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R8G8B8A8_UNORM,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //  );
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures7", scene_textures7));
     }
 
@@ -651,35 +307,7 @@ namespace RayGene3D
 
     void Scope::CreateSkyboxCubemap()
     {
-      //const auto& layers = prop_skybox->GetObjectItem("layers");
-      //const auto& mipmap = prop_skybox->GetObjectItem("mipmap");
-      //const auto& extent_x = prop_skybox->GetObjectItem("extent_x");
-      //const auto& extent_y = prop_skybox->GetObjectItem("extent_y");
-      //const auto& raws = prop_skybox->GetObjectItem("raws");
-
-      //auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      //for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      //{
-      //  const auto& raw = raws->GetArrayItem(i);
-      //  interops[i] = raw->GetRawBytes(0);
-      //}
-
       BLAST_ASSERT(core->GetDevice()->ObtainResource("environment_skybox_cubemap", skybox_cubemap));
-
-
-      //skybox_texture = core->GetDevice()->CreateResource("spark_skybox_texture",
-      //  Resource::Tex2DDesc
-      //  {
-      //    Usage(USAGE_SHADER_RESOURCE),
-      //    mipmap->GetUint(),
-      //    layers->GetUint(),
-      //    FORMAT_R32G32B32A32_FLOAT,
-      //    extent_x->GetUint(),
-      //    extent_y->GetUint(),
-      //  },
-      //  Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
-      //  { interops.data(), uint32_t(interops.size()) }
-      //);
     }
 
     void Scope::CreateReflectionMap()
@@ -781,16 +409,16 @@ namespace RayGene3D
       scene_vertices.reset();
     }
 
-    void Scope::DestroySceneTBoxes()
+    void Scope::DestroyTraceTBoxes()
     {
-      core->GetDevice()->DestroyResource(scene_t_boxes);
-      scene_t_boxes.reset();
+      core->GetDevice()->DestroyResource(trace_t_boxes);
+      trace_t_boxes.reset();
     }
 
-    void Scope::DestroySceneBBoxes()
+    void Scope::DestroyTraceBBoxes()
     {
-      core->GetDevice()->DestroyResource(scene_b_boxes);
-      scene_b_boxes.reset();
+      core->GetDevice()->DestroyResource(trace_b_boxes);
+      trace_b_boxes.reset();
     }
 
     void Scope::DestroyTraceInstances()
@@ -994,8 +622,8 @@ namespace RayGene3D
       CreateSceneTriangles();
       CreateSceneVertices();
 
-      CreateSceneTBoxes();
-      CreateSceneBBoxes();
+      CreateTraceTBoxes();
+      CreateTraceBBoxes();
 
       CreateTraceInstances();
       CreateTraceTriangles();
@@ -1068,8 +696,8 @@ namespace RayGene3D
       DestroyTraceTriangles();
       DestroyTraceVertices();
 
-      DestroySceneTBoxes();
-      DestroySceneBBoxes();
+      DestroyTraceTBoxes();
+      DestroyTraceBBoxes();
 
       DestroySceneInstances();
       DestroySceneTriangles();

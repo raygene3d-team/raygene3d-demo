@@ -42,6 +42,34 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_triangles;
     std::shared_ptr<Property> prop_vertices;
 
+    std::shared_ptr<Property> prop_t_boxes;
+    std::shared_ptr<Property> prop_b_boxes;
+
+  protected:
+    //Copies of original resources bacause of DX11 limitations
+    SPtrResource trace_instances;
+    SPtrResource trace_triangles;
+    SPtrResource trace_vertices;
+
+    SPtrResource trace_t_boxes;
+    SPtrResource trace_b_boxes;
+
+  protected:
+    void CreateTraceInstances();
+    void CreateTraceTriangles();
+    void CreateTraceVertices();
+
+    void CreateTraceTBoxes();
+    void CreateTraceBBoxes();
+
+  protected:
+    void DestroyTraceInstances();
+    void DestroyTraceTriangles();
+    void DestroyTraceVertices();
+
+    void DestroyTraceTBoxes();
+    void DestroyTraceBBoxes();
+
   public:
     void Initialize() override;
     void Use() override;
