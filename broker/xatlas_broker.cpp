@@ -209,10 +209,39 @@ namespace RayGene3D
     prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->SetArrayItem(0, updated_prop_vrt);
     prop_scene->GetObjectItem("vertices")->GetObjectItem("count")->SetUint(updated_vrt_count);
 
+    const auto eval_barycentric_fn = [](const glm::f32vec2& p, 
+      const glm::f32vec2& a, const glm::f32vec2& b, const glm::f32vec2& c)
+      {
+        const auto v0 = b - a, v1 = c - a, v2 = p - a;
+        const auto d00 = glm::dot(v0, v0);
+        const auto d01 = glm::dot(v0, v1);
+        const auto d11 = glm::dot(v1, v1);
+        const auto d20 = glm::dot(v2, v0);
+        const auto d21 = glm::dot(v2, v1);
+        const auto denom = d00 * d11 - d01 * d01;
+        const auto v = (d11 * d20 - d01 * d21) / denom;
+        const auto w = (d00 * d21 - d01 * d20) / denom;
+        const auto u = 1.0f - v - w;
+        return glm::f32vec3(u, v, w);
+      };
+
 
     extent_x = atlas->width;
     extent_y = atlas->height;
     layers = atlas->atlasCount;
+
+    auto raws = std::vector<Raw>(layers);
+    for (auto& raw : raws)
+    {
+      //raw.Allocate(extent_x* extent_y* uint32_t(sizeof(glm::u32vec4)));
+      raw.Allocate(extent_x * extent_y * uint32_t(sizeof(glm::u8vec4)));
+
+      for (auto i = 0u; i < extent_x * extent_y; ++i)
+      {
+        //raw.SetElement(glm::zero<glm::u32vec4>(), i);
+        raw.SetElement(glm::zero<glm::u8vec4>(), i);
+      }
+    }
 
     for (uint32_t i = 0; i < atlas->meshCount; ++i)
     {
@@ -224,10 +253,10 @@ namespace RayGene3D
 
         const auto color = glm::u8vec4
         {
-          uint8_t((rand() % 255 + 192) * 0.5f),
-          uint8_t((rand() % 255 + 192) * 0.5f),
-          uint8_t((rand() % 255 + 192) * 0.5f),
-          uint8_t(255)
+          rand() % 64 + 63,
+          rand() % 64 + 63,
+          rand() % 64 + 63,
+          255
         };
 
         for (uint32_t k = 0; k < chart.faceCount; ++k)
@@ -238,30 +267,55 @@ namespace RayGene3D
           auto& vtx1 = mesh.vertexArray[mesh.indexArray[3 * face + 1]];
           auto& vtx2 = mesh.vertexArray[mesh.indexArray[3 * face + 2]];
 
+          const auto p0 = glm::f32vec2(vtx0.uv[0], vtx0.uv[1]);
+          const auto p1 = glm::f32vec2(vtx1.uv[0], vtx1.uv[1]);
+          const auto p2 = glm::f32vec2(vtx2.uv[0], vtx2.uv[1]);
 
-          const int v0[2] = { int(vtx0.uv[0]), int(vtx0.uv[1]) };
-          const int v1[2] = { int(vtx1.uv[0]), int(vtx1.uv[1]) };
-          const int v2[2] = { int(vtx2.uv[0]), int(vtx2.uv[1]) };
+          const auto bb_min = glm::ivec2(glm::floor(glm::min(p0, glm::min(p1, p2))));
+          const auto bb_max = glm::ivec2(glm::ceil(glm::max(p0, glm::max(p1, p2))));
+
+          for (auto n = bb_min.y; n < bb_max.y; ++n)
+          {
+            for (auto m = bb_min.x; m < bb_max.x; ++m)
+            {
+              const auto barycentric_00 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.0f, 0.0f), p0, p1, p2);
+              const auto covered_00 = glm::all(glm::greaterThanEqual(barycentric_00, glm::zero<glm::f32vec3>()))
+                && glm::all(glm::lessThanEqual(barycentric_00, glm::one<glm::f32vec3>()));
+
+              const auto barycentric_01 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.0f, 1.0f), p0, p1, p2);
+              const auto covered_01 = glm::all(glm::greaterThanEqual(barycentric_01, glm::zero<glm::f32vec3>()))
+                && glm::all(glm::lessThanEqual(barycentric_01, glm::one<glm::f32vec3>()));
+
+              const auto barycentric_10 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(1.0f, 0.0f), p0, p1, p2);
+              const auto covered_10 = glm::all(glm::greaterThanEqual(barycentric_10, glm::zero<glm::f32vec3>()))
+                && glm::all(glm::lessThanEqual(barycentric_10, glm::one<glm::f32vec3>()));
+
+              const auto barycentric_11 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(1.0f, 1.0f), p0, p1, p2);
+              const auto covered_11 = glm::all(glm::greaterThanEqual(barycentric_11, glm::zero<glm::f32vec3>()))
+                && glm::all(glm::lessThanEqual(barycentric_11, glm::one<glm::f32vec3>()));
+
+              if (!covered_00 && !covered_01 && !covered_10 && !covered_11) continue;
+
+              const auto barycentric = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.5f, 0.5f), p0, p1, p2);
+
+              const auto u = *reinterpret_cast<const uint32_t*>(&barycentric[0]);
+              const auto v = *reinterpret_cast<const uint32_t*>(&barycentric[1]);
+
+              const auto value = glm::u32vec4{ i, face, u, v };
+              const auto index = n * extent_x + m;
+
+              //raws[chart.atlasIndex].SetElement<glm::u32vec4>(value, index);
+              raws[chart.atlasIndex].SetElement<glm::u8vec4>(color, index);
+            }
+          }
         }
       }
     }
 
     xatlas::Destroy(atlas);
 
-    const auto atlas_property = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
-    prop_scene->SetObjectItem("atlas", atlas_property);
-
-    const auto extent_x_property = std::shared_ptr<Property>(new Property(Property::TYPE_UINT));
-    extent_x_property->SetUint(extent_x);
-    atlas_property->SetObjectItem("extent_x", extent_x_property);
-
-    const auto extent_y_property = std::shared_ptr<Property>(new Property(Property::TYPE_UINT));
-    extent_y_property->SetUint(extent_y);
-    atlas_property->SetObjectItem("extent_y", extent_y_property);
-
-    const auto layers_property = std::shared_ptr<Property>(new Property(Property::TYPE_UINT));
-    layers_property->SetUint(layers);
-    atlas_property->SetObjectItem("layers", layers_property);
+    const auto blueprint_prop = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, extent_x, extent_y, 1u, layers);
+    prop_scene->SetObjectItem("blueprint", blueprint_prop);
   }
 
   void XAtlasBroker::Discard()

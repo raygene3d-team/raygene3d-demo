@@ -547,16 +547,6 @@ namespace RayGene3D
       }
 
       {
-        auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
-
-        lightmap_broker->Initialize();
-        lightmap_broker->Use();
-        lightmap_broker->Discard();
-
-        lightmap_broker.reset();
-      }
-
-      {
         auto environment_broker = std::shared_ptr<RayGene3D::EnvironmentBroker>(new RayGene3D::EnvironmentBroker(*wrap));
 
         environment_broker->Initialize();
@@ -566,7 +556,15 @@ namespace RayGene3D
         environment_broker.reset();
       }
 
+      {
+        auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
 
+        lightmap_broker->Initialize();
+        lightmap_broker->Use();
+        lightmap_broker->Discard();
+
+        lightmap_broker.reset();
+      }
 
 
 

@@ -49,6 +49,13 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_vertices;
 
   protected:
+    SPtrResource scene_instances;
+    SPtrResource scene_triangles;
+    SPtrResource scene_vertices;
+
+    SPtrResource lightmaps_carcass;
+
+  protected:
     uint32_t extent_x{ 0u };
     uint32_t extent_y{ 0u };
     uint32_t layers{ 0u };

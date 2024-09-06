@@ -43,22 +43,26 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_vertices;
 
   protected:
-    std::shared_ptr<Property> prop_atlas;
+    std::shared_ptr<Property> prop_blueprint;
 
   protected:
     std::shared_ptr<Property> prop_lightmaps;
 
   protected:
-    SPtrResource scene_instances;
-    SPtrResource scene_triangles;
-    SPtrResource scene_vertices;
+    //SPtrResource scene_instances;
+    //SPtrResource scene_triangles;
+    //SPtrResource scene_vertices;
 
     //Copies of original resources bacause of DX11 limitations
     SPtrResource trace_instances;
     SPtrResource trace_triangles;
     SPtrResource trace_vertices;
 
-    SPtrResource baked_lightmaps;
+    SPtrResource atlas_blueprint;// lightmaps_carcass;
+    SPtrResource atlas_cumulator;
+    SPtrResource atlas_lightmaps;
+
+    //SPtrResource baked_lightmaps;
 
     SPtrPass graphic_pass;
     SPtrConfig graphic_config;

@@ -161,9 +161,9 @@ namespace RayGene3D
     const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
     const auto [vrt_array, vrt_count] = prop_vertices->GetTypedBytes<Vertex>(0);
 
-    const auto extent_x = prop_atlas->GetObjectItem("extent_x")->GetUint();
-    const auto extent_y = prop_atlas->GetObjectItem("extent_y")->GetUint();
-    const auto layers = prop_atlas->GetObjectItem("layers")->GetUint();
+    const auto extent_x = prop_blueprint->GetObjectItem("extent_x")->GetUint();
+    const auto extent_y = prop_blueprint->GetObjectItem("extent_y")->GetUint();
+    const auto layers = prop_blueprint->GetObjectItem("layers")->GetUint();
 
     BLAST_ASSERT(extent_x > 0u && extent_y > 0u && layers > 0u)
 
@@ -218,7 +218,7 @@ namespace RayGene3D
       prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
       prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
 
-      prop_atlas = prop_scene->GetObjectItem("atlas");
+      prop_blueprint = prop_scene->GetObjectItem("blueprint");
     }
 
 
