@@ -571,7 +571,7 @@ namespace RayGene3D
         //prop_textures6 = prop_scene->GetObjectItem("textures_6");
         //prop_textures7 = prop_scene->GetObjectItem("textures_7");
 
-        prop_lightmaps = prop_scene->GetObjectItem("lightmaps");
+        prop_lightmaps = prop_scene->GetObjectItem("blueprint");
       }
 
 

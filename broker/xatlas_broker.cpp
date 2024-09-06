@@ -278,25 +278,28 @@ namespace RayGene3D
           {
             for (auto m = bb_min.x; m < bb_max.x; ++m)
             {
-              const auto barycentric_00 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.0f, 0.0f), p0, p1, p2);
-              const auto covered_00 = glm::all(glm::greaterThanEqual(barycentric_00, glm::zero<glm::f32vec3>()))
-                && glm::all(glm::lessThanEqual(barycentric_00, glm::one<glm::f32vec3>()));
-
-              const auto barycentric_01 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.0f, 1.0f), p0, p1, p2);
-              const auto covered_01 = glm::all(glm::greaterThanEqual(barycentric_01, glm::zero<glm::f32vec3>()))
-                && glm::all(glm::lessThanEqual(barycentric_01, glm::one<glm::f32vec3>()));
-
-              const auto barycentric_10 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(1.0f, 0.0f), p0, p1, p2);
-              const auto covered_10 = glm::all(glm::greaterThanEqual(barycentric_10, glm::zero<glm::f32vec3>()))
-                && glm::all(glm::lessThanEqual(barycentric_10, glm::one<glm::f32vec3>()));
-
-              const auto barycentric_11 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(1.0f, 1.0f), p0, p1, p2);
-              const auto covered_11 = glm::all(glm::greaterThanEqual(barycentric_11, glm::zero<glm::f32vec3>()))
-                && glm::all(glm::lessThanEqual(barycentric_11, glm::one<glm::f32vec3>()));
-
-              if (!covered_00 && !covered_01 && !covered_10 && !covered_11) continue;
-
               const auto barycentric = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.5f, 0.5f), p0, p1, p2);
+              if (glm::any(glm::lessThan(barycentric, glm::zero<glm::f32vec3>()))
+                || glm::any(glm::greaterThan(barycentric, glm::one<glm::f32vec3>())))
+              {
+                const auto barycentric_00 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.0f, 0.0f), p0, p1, p2);
+                const auto missed_00 = glm::any(glm::lessThan(barycentric_00, glm::zero<glm::f32vec3>()))
+                  || glm::any(glm::greaterThan(barycentric_00, glm::one<glm::f32vec3>()));
+
+                const auto barycentric_01 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.0f, 1.0f), p0, p1, p2);
+                const auto missed_01 = glm::any(glm::lessThan(barycentric_01, glm::zero<glm::f32vec3>()))
+                  || glm::any(glm::greaterThan(barycentric_01, glm::one<glm::f32vec3>()));
+
+                const auto barycentric_10 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(1.0f, 0.0f), p0, p1, p2);
+                const auto missed_10 = glm::any(glm::lessThan(barycentric_10, glm::zero<glm::f32vec3>()))
+                  || glm::any(glm::greaterThan(barycentric_10, glm::one<glm::f32vec3>()));
+
+                const auto barycentric_11 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(1.0f, 1.0f), p0, p1, p2);
+                const auto missed_11 = glm::any(glm::lessThan(barycentric_11, glm::zero<glm::f32vec3>()))
+                  || glm::any(glm::greaterThan(barycentric_11, glm::one<glm::f32vec3>()));
+
+                if (missed_00 && missed_01 && missed_10 && missed_11) continue;
+              }
 
               const auto u = *reinterpret_cast<const uint32_t*>(&barycentric[0]);
               const auto v = *reinterpret_cast<const uint32_t*>(&barycentric[1]);

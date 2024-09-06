@@ -24,7 +24,7 @@
     "bounces" : 4,
     "samples" : 1000,
     "maps" : false,
-    "density" : 100.0,
+    "density" : 50.0,
     "quality" : 2048,
     "probes" : false,
     "bands" : 6,
