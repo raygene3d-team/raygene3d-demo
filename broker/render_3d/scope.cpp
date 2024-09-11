@@ -229,32 +229,7 @@ namespace RayGene3D
 
     void Scope::CreateLightMaps()
     {
-      const auto& layers = prop_lightmaps->GetObjectItem("layers");
-      const auto& mipmap = prop_lightmaps->GetObjectItem("mipmap");
-      const auto& extent_x = prop_lightmaps->GetObjectItem("extent_x");
-      const auto& extent_y = prop_lightmaps->GetObjectItem("extent_y");
-      const auto& raws = prop_lightmaps->GetObjectItem("raws");
-
-      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      {
-        const auto& raw = raws->GetArrayItem(i);
-        interops[i] = raw->GetRawBytes(0);
-      }
-
-      scene_lightmaps = core->GetDevice()->CreateResource("spark_scene_lightmaps",
-        Resource::Tex2DDesc
-        {
-          Usage(USAGE_SHADER_RESOURCE),
-          mipmap->GetUint(),
-          layers->GetUint(),
-          FORMAT_R8G8B8A8_UNORM,
-          extent_x->GetUint(),
-          extent_y->GetUint(),
-        },
-        Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), uint32_t(interops.size()) }
-      );
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_input", scene_lightmaps));
     }
 
     void Scope::CreateScreenQuadVertices()
@@ -553,28 +528,7 @@ namespace RayGene3D
         prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
         prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
         prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
-
-        ////prop_vertices0 = prop_scene->GetObjectItem("vertices0");
-        ////prop_vertices1 = prop_scene->GetObjectItem("vertices1");
-        ////prop_vertices2 = prop_scene->GetObjectItem("vertices2");
-        ////prop_vertices3 = prop_scene->GetObjectItem("vertices3");
-
-        //prop_t_boxes = prop_scene->GetObjectItem("t_boxes")->GetObjectItem("raws")->GetArrayItem(0);
-        //prop_b_boxes = prop_scene->GetObjectItem("b_boxes")->GetObjectItem("raws")->GetArrayItem(0);
-
-        //prop_textures0 = prop_scene->GetObjectItem("textures_0");
-        //prop_textures1 = prop_scene->GetObjectItem("textures_1");
-        //prop_textures2 = prop_scene->GetObjectItem("textures_2");
-        //prop_textures3 = prop_scene->GetObjectItem("textures_3");
-        //prop_textures4 = prop_scene->GetObjectItem("textures_4");
-        //prop_textures5 = prop_scene->GetObjectItem("textures_5");
-        //prop_textures6 = prop_scene->GetObjectItem("textures_6");
-        //prop_textures7 = prop_scene->GetObjectItem("textures_7");
-
-        prop_lightmaps = prop_scene->GetObjectItem("blueprint");
       }
-
-
 
 
       prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera");
@@ -600,11 +554,6 @@ namespace RayGene3D
         prop_theta = prop_lighting->GetObjectItem("theta");
         prop_phi = prop_lighting->GetObjectItem("phi");
         prop_intensity = prop_lighting->GetObjectItem("intensity");
-      }
-
-      prop_environment = util->GetStorage()->GetTree()->GetObjectItem("environment");
-      {
-        prop_skybox = prop_environment->GetObjectItem("skybox_cubemap");
       }
 
       CreateColorTarget();
@@ -637,26 +586,6 @@ namespace RayGene3D
       CreateSceneTextures5();
       CreateSceneTextures6();
       CreateSceneTextures7();
-
-      //scene_instances = core->GetDevice()->FindResource("scene_instances");
-      //scene_triangles = core->GetDevice()->FindResource("scene_triangles");
-      //scene_vertices = core->GetDevice()->FindResource("scene_vertices");
-
-      //scene_t_boxes = core->GetDevice()->FindResource("scene_t_boxes");
-      //scene_b_boxes = core->GetDevice()->FindResource("scene_b_boxes");
-
-      //trace_instances = core->GetDevice()->FindResource("trace_instances");
-      //trace_triangles = core->GetDevice()->FindResource("trace_triangles");
-      //trace_vertices = core->GetDevice()->FindResource("trace_vertices");
-
-      //scene_textures0 = core->GetDevice()->FindResource("scene_textures0");
-      //scene_textures1 = core->GetDevice()->FindResource("scene_textures1");
-      //scene_textures2 = core->GetDevice()->FindResource("scene_textures2");
-      //scene_textures3 = core->GetDevice()->FindResource("scene_textures3");
-      //scene_textures4 = core->GetDevice()->FindResource("scene_textures4");
-      //scene_textures5 = core->GetDevice()->FindResource("scene_textures5");
-      //scene_textures6 = core->GetDevice()->FindResource("scene_textures6");
-      //scene_textures7 = core->GetDevice()->FindResource("scene_textures7");
 
       CreateScreenQuadVertices();
       CreateScreenQuadTriangles();
@@ -701,28 +630,7 @@ namespace RayGene3D
 
       DestroySceneInstances();
       DestroySceneTriangles();
-      DestroySceneVertices();
-
-      //scene_instances.reset();
-      //scene_triangles.reset();
-      //scene_vertices.reset();
-
-      //scene_t_boxes.reset();
-      //scene_b_boxes.reset();
-
-      //trace_instances.reset();
-      //trace_triangles.reset();
-      //trace_vertices.reset();
-
-      //scene_textures0.reset();
-      //scene_textures1.reset();
-      //scene_textures2.reset();
-      //scene_textures3.reset();
-      //scene_textures4.reset();
-      //scene_textures5.reset();
-      //scene_textures6.reset();
-      //scene_textures7.reset();
-    
+      DestroySceneVertices();    
 
       DestroyScreenData();
       DestroyCameraData();

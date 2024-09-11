@@ -36,6 +36,7 @@ namespace RayGene3D
   {
   protected:
     std::shared_ptr<Property> prop_scene;
+    std::shared_ptr<Property> prop_illumination;
 
   protected:
     std::shared_ptr<Property> prop_instances;
@@ -43,77 +44,57 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_vertices;
 
   protected:
-    std::shared_ptr<Property> prop_blueprint;
+    std::shared_ptr<Property> prop_atlas_size_x;
+    std::shared_ptr<Property> prop_atlas_size_y;
+    std::shared_ptr<Property> prop_atlas_layers;
 
   protected:
-    std::shared_ptr<Property> prop_lightmaps;
+    std::shared_ptr<Property> prop_atlas;
 
   protected:
-    //SPtrResource scene_instances;
-    //SPtrResource scene_triangles;
-    //SPtrResource scene_vertices;
-
     //Copies of original resources bacause of DX11 limitations
     SPtrResource trace_instances;
     SPtrResource trace_triangles;
     SPtrResource trace_vertices;
 
-    SPtrResource atlas_blueprint;// lightmaps_carcass;
-    SPtrResource atlas_cumulator;
-    SPtrResource atlas_lightmaps;
-
-    //SPtrResource baked_lightmaps;
-
-    SPtrPass graphic_pass;
-    SPtrConfig graphic_config;
-    SPtrBatch graphic_batch;
-    SPtrResource graphic_arguments;
+    SPtrResource lightmaps_input;
+    SPtrResource lightmaps_accum;
+    SPtrResource lightmaps_final;
 
     SPtrPass compute_pass;
     SPtrConfig compute_config;
     SPtrBatch compute_batch;
+
     SPtrResource compute_arguments;
 
   protected:
-    void CreateSceneInstances();
-    void CreateSceneTriangles();
-    void CreateSceneVertices();
-
     void CreateTraceInstances();
     void CreateTraceTriangles();
     void CreateTraceVertices();
 
-    void CreateLightMaps();
-
-    void CreateGraphicPass();
-    void CreateGraphicConfig();
-    void CreateGraphicBatch();
-    void CreateGraphicArguments();
+    void CreateLightmapsInput();
+    void CreateLightmapsAccum();
+    void CreateLightmapsFinal();
 
     void CreateComputePass();
     void CreateComputeConfig();
     void CreateComputeBatch();
+
     void CreateComputeArguments();
 
   protected:
-    void DiscardSceneInstances();
-    void DiscardSceneTriangles();
-    void DiscardSceneVertices();
-
     void DiscardTraceInstances();
     void DiscardTraceTriangles();
     void DiscardTraceVertices();
 
-    void DiscardLightMaps();
-
-    void DiscardGraphicPass();
-    void DiscardGraphicConfig();
-    void DiscardGraphicBatch();
-    void DiscardGraphicArguments();
+    void DestroyLightmapsInput();
+    void DestroyLightmapsAccum();
+    void DestroyLightmapsFinal();
 
     void DiscardComputePass();
     void DiscardComputeConfig();
     void DiscardComputeBatch();
+
     void DiscardComputeArguments();
 
   public:

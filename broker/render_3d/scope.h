@@ -86,10 +86,10 @@ namespace RayGene3D
       //std::shared_ptr<Property> prop_textures6;
       //std::shared_ptr<Property> prop_textures7;
 
-      std::shared_ptr<Property> prop_lightmaps;
+      //std::shared_ptr<Property> prop_lightmaps;
 
-      std::shared_ptr<Property> prop_skybox;
-      std::shared_ptr<Property> prop_reflection_probe;
+      //std::shared_ptr<Property> prop_skybox;
+      //std::shared_ptr<Property> prop_reflection_probe;
 
     public:
       SPtrView backbuffer_uav;
