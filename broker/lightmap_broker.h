@@ -49,9 +49,6 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_atlas_layers;
 
   protected:
-    std::shared_ptr<Property> prop_atlas;
-
-  protected:
     //Copies of original resources bacause of DX11 limitations
     SPtrResource trace_instances;
     SPtrResource trace_triangles;

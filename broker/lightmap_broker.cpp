@@ -1,3 +1,4 @@
+
 /*================================================================================
 RayGene3D Framework
 --------------------------------------------------------------------------------
@@ -104,28 +105,65 @@ namespace RayGene3D
 
   void LightmapBroker::CreateLightmapsInput()
   {
-    const auto& layers = prop_atlas->GetObjectItem("layers");
-    const auto& mipmap = prop_atlas->GetObjectItem("mipmap");
-    const auto& extent_x = prop_atlas->GetObjectItem("extent_x");
-    const auto& extent_y = prop_atlas->GetObjectItem("extent_y");
-    const auto& raws = prop_atlas->GetObjectItem("raws");
+    const auto atlas_size_x = prop_atlas_size_x->GetUint();
+    const auto atlas_size_y = prop_atlas_size_y->GetUint();
+    const auto atlas_layers = prop_atlas_layers->GetUint();
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
+    auto raws = std::vector<Raw>(atlas_layers);
+    for (auto& raw : raws)
+    {
+      raw.Allocate(atlas_size_x * atlas_size_y * uint32_t(sizeof(glm::u32vec4)));
+
+      for (auto i = 0u; i < atlas_size_x * atlas_size_y; ++i)
+      {
+        raw.SetElement(glm::u32vec4{ uint32_t(-1), uint32_t(-1), 0, 0 }, i);
+      }
+    }
+
+    {
+      const auto [ins_array, ins_count] = prop_instances->GetTypedBytes<Instance>(0);
+      const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
+      const auto [vrt_array, vrt_count] = prop_vertices->GetTypedBytes<Vertex>(0);
+
+      for (uint32_t i = 0; i < ins_count; ++i)
+      {
+        const auto& ins = ins_array[i];
+
+        for (uint32_t j = 0; j < ins.prim_count; ++j)
+        {
+          const auto& trg = trg_array[ins.prim_offset + j];
+
+          const auto& vtx0 = vrt_array[ins.vert_offset + trg.idx[0]];
+          const auto& vtx1 = vrt_array[ins.vert_offset + trg.idx[1]];
+          const auto& vtx2 = vrt_array[ins.vert_offset + trg.idx[2]];
+
+          const auto& layer = vtx0.msk;
+          const auto& color = vtx0.col;
+
+          const auto p0 = vtx0.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
+          const auto p1 = vtx1.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
+          const auto p2 = vtx2.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
+
+          RasterizeTriangle(p0, p1, p2, i, j, atlas_size_x, atlas_size_y, raws[layer]);
+        }
+      }
+    }
+
+    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
     for (auto i = 0u; i < uint32_t(interops.size()); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws[i].AccessBytes();
     }
 
     lightmaps_input = wrap.GetCore()->GetDevice()->CreateResource("lightmaps_input",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
+        1u,
+        prop_atlas_layers->GetUint(),
         FORMAT_R32G32B32A32_FLOAT,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
+        prop_atlas_size_x->GetUint(),
+        prop_atlas_size_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
       { interops.data(), uint32_t(interops.size()) }
@@ -134,10 +172,34 @@ namespace RayGene3D
 
   void LightmapBroker::CreateLightmapsAccum()
   {
+    lightmaps_accum = wrap.GetCore()->GetDevice()->CreateResource("lightmaps_accum",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_UNORDERED_ACCESS),
+        1u,
+        prop_atlas_layers->GetUint(),
+        FORMAT_R32G32B32A32_FLOAT,
+        prop_atlas_size_x->GetUint(),
+        prop_atlas_size_y->GetUint(),
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE)
+      );
   }
 
   void LightmapBroker::CreateLightmapsFinal()
   {
+    lightmaps_final = wrap.GetCore()->GetDevice()->CreateResource("lightmaps_final",
+      Resource::Tex2DDesc
+      {
+        Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
+        1u,
+        prop_atlas_layers->GetUint(),
+        FORMAT_R11G11B10_FLOAT,
+        prop_atlas_size_x->GetUint(),
+        prop_atlas_size_y->GetUint(),
+      },
+      Resource::Hint(Resource::HINT_LAYERED_IMAGE)
+      );
   }
 
   void LightmapBroker::CreateComputePass()
@@ -248,67 +310,19 @@ namespace RayGene3D
       prop_atlas_layers = prop_illumination->GetObjectItem("atlas_layers");
     }
 
-    const auto atlas_size_x = prop_atlas_size_x->GetUint();
-    const auto atlas_size_y = prop_atlas_size_y->GetUint();
-    const auto atlas_layers = prop_atlas_layers->GetUint();
-
-    auto raws = std::vector<Raw>(atlas_layers);
-    for (auto& raw : raws)
-    {
-      raw.Allocate(atlas_size_x * atlas_size_y * uint32_t(sizeof(glm::u32vec4)));
-
-      for (auto i = 0u; i < atlas_size_x * atlas_size_y; ++i)
-      {
-        raw.SetElement(glm::u32vec4{ uint32_t(-1), uint32_t(-1), 0, 0 }, i);
-      }
-    }
-
-    {
-      const auto [ins_array, ins_count] = prop_instances->GetTypedBytes<Instance>(0);
-      const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
-      const auto [vrt_array, vrt_count] = prop_vertices->GetTypedBytes<Vertex>(0);
-
-      for (uint32_t i = 0; i < ins_count; ++i)
-      {
-        const auto& ins = ins_array[i];
-
-        for (uint32_t j = 0; j < ins.prim_count; ++j)
-        {
-          const auto& trg = trg_array[ins.prim_offset + j];
-
-          const auto& vtx0 = vrt_array[ins.vert_offset + trg.idx[0]];
-          const auto& vtx1 = vrt_array[ins.vert_offset + trg.idx[1]];
-          const auto& vtx2 = vrt_array[ins.vert_offset + trg.idx[2]];
-
-          const auto& layer = vtx0.msk;
-          const auto& color = vtx0.col;
-
-          const auto p0 = vtx0.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
-          const auto p1 = vtx1.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
-          const auto p2 = vtx2.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
-
-          RasterizeTriangle(p0, p1, p2, i, j, atlas_size_x, atlas_size_y, raws[layer]);
-        }
-      }
-    }
-
-    prop_atlas = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, atlas_size_x, atlas_size_y, 1u, atlas_layers);
-
     CreateTraceInstances();
     CreateTraceTriangles();
     CreateTraceVertices();
 
     CreateLightmapsInput();
-    CreateLightmapsAccum();
-    CreateLightmapsFinal();
+    //CreateLightmapsAccum();
+    //CreateLightmapsFinal();
 
     CreateComputeArguments();
 
     CreateComputePass();
     CreateComputeConfig();
-    CreateComputeBatch();
-
-    //prop_atlas.reset();    
+    CreateComputeBatch();   
   }
 
   LightmapBroker::~LightmapBroker()
