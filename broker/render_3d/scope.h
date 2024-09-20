@@ -169,13 +169,6 @@ namespace RayGene3D
       void CreateSceneTriangles();
       void CreateSceneVertices();
 
-      void CreateTraceTBoxes();
-      void CreateTraceBBoxes();
-
-      void CreateTraceInstances();
-      void CreateTraceTriangles();
-      void CreateTraceVertices();
-
       void CreateSceneTextures0();
       void CreateSceneTextures1();
       void CreateSceneTextures2();
@@ -184,6 +177,13 @@ namespace RayGene3D
       void CreateSceneTextures5();
       void CreateSceneTextures6();
       void CreateSceneTextures7();
+
+      void CreateTraceTBoxes();
+      void CreateTraceBBoxes();
+
+      void CreateTraceInstances();
+      void CreateTraceTriangles();
+      void CreateTraceVertices();
 
       void CreateLightMaps();
 
@@ -212,13 +212,6 @@ namespace RayGene3D
       void DestroySceneTriangles();
       void DestroySceneVertices();
 
-      void DestroyTraceTBoxes();
-      void DestroyTraceBBoxes();
-
-      void DestroyTraceInstances();
-      void DestroyTraceTriangles();
-      void DestroyTraceVertices();
-
       void DestroySceneTextures0();
       void DestroySceneTextures1();
       void DestroySceneTextures2();
@@ -227,6 +220,13 @@ namespace RayGene3D
       void DestroySceneTextures5();
       void DestroySceneTextures6();
       void DestroySceneTextures7();
+
+      void DestroyTraceTBoxes();
+      void DestroyTraceBBoxes();
+
+      void DestroyTraceInstances();
+      void DestroyTraceTriangles();
+      void DestroyTraceVertices();
 
       void DestroyLightMaps();
 
