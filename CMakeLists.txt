@@ -67,6 +67,17 @@ set(render_3d_source
   broker/render_3d/mode/hw_traced_shadow.cpp
 )
 
+set(lightmap_source
+  broker/lightmap/mode.h
+  broker/lightmap/mode.cpp
+  broker/lightmap/scope.h
+  broker/lightmap/scope.cpp
+  broker/lightmap/mode/sw_traced_atlas.h
+  broker/lightmap/mode/sw_traced_atlas.cpp
+  broker/lightmap/mode/hw_traced_atlas.h
+  broker/lightmap/mode/hw_traced_atlas.cpp
+)
+
 
 set(SOURCE main.cpp
   broker/environment_broker.h
@@ -90,6 +101,7 @@ set(SOURCE main.cpp
   broker/xatlas_broker.h
   broker/xatlas_broker.cpp
   ${render_3d_source}
+  ${lightmap_source}
   ${imgui_source}
   ${xatlas_source}
   ${mikktspace_source}
