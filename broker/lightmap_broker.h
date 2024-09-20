@@ -28,20 +28,21 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../raygene3d-wrap/wrap.h"
+#include "lightmap/mode/sw_traced_atlas.h"
+#include "lightmap/mode/hw_traced_atlas.h"
 
 namespace RayGene3D
 {
   class LightmapBroker : public Broker
   {
+
+  protected:
+    std::unique_ptr<Lightmap::Mode> sw_traced_lightmap;
+    std::unique_ptr<Lightmap::Mode> hw_traced_lightmap;
+
   protected:
     std::shared_ptr<Property> prop_scene;
     std::shared_ptr<Property> prop_illumination;
-
-  protected:
-    std::shared_ptr<Property> prop_instances;
-    std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
 
   protected:
     std::shared_ptr<Property> prop_atlas_size_x;
@@ -49,6 +50,25 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_atlas_layers;
 
   protected:
+    std::shared_ptr<Property> prop_atlas;
+
+  protected:
+    SPtrResource scene_instances;
+    SPtrResource scene_triangles;
+    SPtrResource scene_vertices;
+
+    SPtrResource scene_textures0;
+    SPtrResource scene_textures1;
+    SPtrResource scene_textures2;
+    SPtrResource scene_textures3;
+    SPtrResource scene_textures4;
+    SPtrResource scene_textures5;
+    SPtrResource scene_textures6;
+    SPtrResource scene_textures7;
+
+    SPtrResource trace_t_boxes;
+    SPtrResource trace_b_boxes;
+
     //Copies of original resources bacause of DX11 limitations
     SPtrResource trace_instances;
     SPtrResource trace_triangles;
@@ -65,6 +85,22 @@ namespace RayGene3D
     SPtrResource compute_arguments;
 
   protected:
+    void CreateSceneInstances();
+    void CreateSceneTriangles();
+    void CreateSceneVertices();
+
+    void CreateSceneTextures0();
+    void CreateSceneTextures1();
+    void CreateSceneTextures2();
+    void CreateSceneTextures3();
+    void CreateSceneTextures4();
+    void CreateSceneTextures5();
+    void CreateSceneTextures6();
+    void CreateSceneTextures7();
+
+    void CreateTraceTBoxes();
+    void CreateTraceBBoxes();
+
     void CreateTraceInstances();
     void CreateTraceTriangles();
     void CreateTraceVertices();
@@ -80,9 +116,25 @@ namespace RayGene3D
     void CreateComputeArguments();
 
   protected:
-    void DiscardTraceInstances();
-    void DiscardTraceTriangles();
-    void DiscardTraceVertices();
+    void DestroySceneInstances();
+    void DestroySceneTriangles();
+    void DestroySceneVertices();
+
+    void DestroySceneTextures0();
+    void DestroySceneTextures1();
+    void DestroySceneTextures2();
+    void DestroySceneTextures3();
+    void DestroySceneTextures4();
+    void DestroySceneTextures5();
+    void DestroySceneTextures6();
+    void DestroySceneTextures7();
+
+    void DestroyTraceTBoxes();
+    void DestroyTraceBBoxes();
+
+    void DestroyTraceInstances();
+    void DestroyTraceTriangles();
+    void DestroyTraceVertices();
 
     void DestroyLightmapsInput();
     void DestroyLightmapsAccum();
