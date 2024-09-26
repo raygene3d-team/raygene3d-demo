@@ -28,41 +28,39 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "lightmap/mode/sw_traced_atlas.h"
-#include "lightmap/mode/hw_traced_atlas.h"
+#include "scope.h"
 
 namespace RayGene3D
 {
-  class LightmapBroker : public Broker
+  namespace Lightmap
   {
-  protected:
-    Lightmap::Scope scope;
-
-  protected:
-    std::unique_ptr<Lightmap::Mode> sw_traced_lightmap;
-    std::unique_ptr<Lightmap::Mode> hw_traced_lightmap;
-
-  public:
-    enum BakingMode
+    class Mode
     {
-      SW_TRACED_BAKING = 0,
-      HW_TRACED_BAKING = 1,
+    protected:
+      const Scope& scope;
+
+    protected:
+      SPtrPass average_pass;
+      SPtrConfig average_config;
+      SPtrBatch average_batch;
+
+    protected:
+      void CreateAveragePass();
+      void CreateAverageConfig();
+      void CreateAverageBatch();
+
+    protected:
+      void DestroyAverageBatch();
+      void DestroyAverageConfig();
+      void DestroyAveragePass();
+
+    public:
+      virtual void Enable() = 0;
+      virtual void Disable() = 0;
+
+    public:
+      Mode(const Scope& scope);
+      virtual ~Mode();
     };
-
-  protected:
-    BakingMode mode{ SW_TRACED_BAKING };
-
-  public:
-    void SetBakingMode(BakingMode mode) { this->mode = mode; }
-    BakingMode GetBakingMode() const { return mode; }
-
-  public:
-    void Initialize() override;
-    void Use() override;
-    void Discard() override;
-
-  public:
-    LightmapBroker(Wrap& wrap);
-    virtual ~LightmapBroker();
-  };
+  }
 }

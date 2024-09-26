@@ -28,41 +28,36 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "lightmap/mode/sw_traced_atlas.h"
-#include "lightmap/mode/hw_traced_atlas.h"
+#include "../mode.h"
 
 namespace RayGene3D
 {
-  class LightmapBroker : public Broker
+  namespace Lightmap
   {
-  protected:
-    Lightmap::Scope scope;
-
-  protected:
-    std::unique_ptr<Lightmap::Mode> sw_traced_lightmap;
-    std::unique_ptr<Lightmap::Mode> hw_traced_lightmap;
-
-  public:
-    enum BakingMode
+    class HWTracedAtlas : public Mode
     {
-      SW_TRACED_BAKING = 0,
-      HW_TRACED_BAKING = 1,
+    protected:
+      SPtrPass hw_traced_pass;
+      SPtrConfig hw_traced_config;
+      SPtrBatch hw_traced_batch;
+
+    protected:
+      void CreateHWTracedPass();
+      void CreateHWTracedConfig();
+      void CreateHWTracedBatch();
+
+    protected:
+      void DestroyHWTracedBatch();
+      void DestroyHWTracedConfig();
+      void DestroyHWTracedPass();
+
+    public:
+      void Enable() override;
+      void Disable() override;
+
+    public:
+      HWTracedAtlas(const Scope& scope);
+      virtual ~HWTracedAtlas();
     };
-
-  protected:
-    BakingMode mode{ SW_TRACED_BAKING };
-
-  public:
-    void SetBakingMode(BakingMode mode) { this->mode = mode; }
-    BakingMode GetBakingMode() const { return mode; }
-
-  public:
-    void Initialize() override;
-    void Use() override;
-    void Discard() override;
-
-  public:
-    LightmapBroker(Wrap& wrap);
-    virtual ~LightmapBroker();
-  };
+  }
 }
