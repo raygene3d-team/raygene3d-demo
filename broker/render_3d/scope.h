@@ -135,7 +135,9 @@ namespace RayGene3D
       SPtrResource trace_triangles;
       SPtrResource trace_vertices;
 
-      SPtrResource scene_lightmaps;
+      SPtrResource lightmaps_input;
+      SPtrResource lightmaps_accum;
+      SPtrResource lightmaps_final;
 
       SPtrResource reflection_probe;
 
@@ -185,7 +187,9 @@ namespace RayGene3D
       void CreateTraceTriangles();
       void CreateTraceVertices();
 
-      void CreateLightMaps();
+      void CreateLightmapsInput();
+      void CreateLightmapsAccum();
+      void CreateLightmapsFinal();
 
       void CreateScreenQuadVertices();
       void CreateScreenQuadTriangles();
@@ -228,7 +232,9 @@ namespace RayGene3D
       void DestroyTraceTriangles();
       void DestroyTraceVertices();
 
-      void DestroyLightMaps();
+      void DestroyLightmapsInput();
+      void DestroyLightmapsAccum();
+      void DestroyLightmapsFinal();
 
       void DestroyScreenQuadVertices();
       void DestroyScreenQuadTriangles();

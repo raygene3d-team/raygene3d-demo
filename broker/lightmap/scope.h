@@ -89,6 +89,8 @@ namespace RayGene3D
       SPtrResource lightmaps_final;
 
     protected:
+      void CreateScreenData();
+
       void CreateSceneInstances();
       void CreateSceneTriangles();
       void CreateSceneVertices();
@@ -114,6 +116,8 @@ namespace RayGene3D
       void CreateLightmapsFinal();
 
     protected:
+      void DestroyScreenData();
+
       void DestroySceneInstances();
       void DestroySceneTriangles();
       void DestroySceneVertices();

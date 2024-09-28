@@ -38,6 +38,40 @@ namespace RayGene3D
 
   void LightmapBroker::Use()
   {
+    //{
+    //  const auto extent_x = scope.prop_atlas_size_x->GetUint();
+    //  const auto extent_y = scope.prop_atlas_size_x->GetUint();
+
+    //  const auto counter = scope.prop_counter->GetUint();
+
+    //  Screen screen;
+    //  screen.extent_x = extent_x;
+    //  screen.extent_y = extent_y;
+    //  screen.rnd_base = counter;
+    //  screen.rnd_seed = rand();
+
+    //  auto screen_mapped = scope.screen_data->Map();
+    //  memcpy(screen_mapped, &screen, sizeof(Screen));
+    //  scope.screen_data->Unmap();
+    //}
+
+    sw_traced_lightmap->Disable();
+    //hw_traced_lightmap->Disable();
+
+    switch (mode)
+    {
+    case SW_TRACED_BAKING:
+      sw_traced_lightmap->Enable(); break;
+    case HW_TRACED_BAKING:
+      //hw_traced_lightmap->Enable(); break;
+    default:
+      break;
+    }
+
+    scope.core->GetDevice()->Use();
+
+    sw_traced_lightmap->Disable();
+    //hw_traced_lightmap->Disable();
   }
 
   void LightmapBroker::Discard()
@@ -48,9 +82,13 @@ namespace RayGene3D
     : Broker("lightmap_broker", wrap)
     , scope(wrap.GetCore(), wrap.GetUtil())
   {
+    sw_traced_lightmap = std::unique_ptr<Lightmap::Mode>(new Lightmap::SWTracedAtlas(scope));
+    //hw_traced_lightmap = std::unique_ptr<Lightmap::Mode>(new Lightmap::HWTracedAtlas(scope));
   }
 
   LightmapBroker::~LightmapBroker()
   {
+    sw_traced_lightmap.reset();
+    hw_traced_lightmap.reset();
   }
 }

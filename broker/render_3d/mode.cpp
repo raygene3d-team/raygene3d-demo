@@ -245,7 +245,7 @@ namespace RayGene3D
         Usage(USAGE_SHADER_RESOURCE)
       );
 
-      auto geometry_scene_lightmaps = scope.scene_lightmaps->CreateView("spark_geometry_scene_lightmaps",
+      auto geometry_scene_lightmaps = scope.lightmaps_final->CreateView("spark_geometry_scene_lightmaps",
         Usage(USAGE_SHADER_RESOURCE)
       );
 

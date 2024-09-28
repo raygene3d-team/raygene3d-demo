@@ -41,8 +41,8 @@ namespace RayGene3D
 
       sw_traced_pass = scope.core->GetDevice()->CreatePass("lightmap_sw_traced_pass",
         Pass::TYPE_COMPUTE,
-        size_x,
-        size_y,
+        size_x / 8,
+        size_y / 8,
         layers,
         {},
         {}
@@ -77,7 +77,7 @@ namespace RayGene3D
       const auto layers = scope.prop_atlas_layers->GetUint();
 
       const Batch::Entity entities[] = {
-        {{}, {}, nullptr, { 0u, size_x }, { 0u, size_y }, { 0u, layers }}
+        {{}, {}, nullptr, { 0u, size_x / 8 }, { 0u, size_y / 8 }, { 0u, layers }}
       };
 
       const Batch::Sampler samplers[] = {
@@ -129,7 +129,7 @@ namespace RayGene3D
         sw_traced_accum,
       };
 
-      sw_traced_batch = sw_traced_config->CreateBatch("spark_sw_traced_batch",
+      sw_traced_batch = sw_traced_config->CreateBatch("lightmap_sw_traced_batch",
         { entities, uint32_t(std::size(entities)) },
         { samplers, uint32_t(std::size(samplers)) },
         { ub_views, uint32_t(std::size(ub_views)) },
@@ -162,11 +162,13 @@ namespace RayGene3D
     void SWTracedAtlas::Enable()
     {
       sw_traced_pass->SetEnabled(true);
+      average_pass->SetEnabled(true);
     }
 
     void SWTracedAtlas::Disable()
     {
       sw_traced_pass->SetEnabled(false);
+      average_pass->SetEnabled(false);
     }
 
     SWTracedAtlas::SWTracedAtlas(const Scope& scope)
@@ -175,10 +177,18 @@ namespace RayGene3D
       CreateSWTracedPass();
       CreateSWTracedConfig();
       CreateSWTracedBatch();
+
+      CreateAveragePass();
+      CreateAverageConfig();
+      CreateAverageBatch();
     }
 
     SWTracedAtlas::~SWTracedAtlas()
     {
+      DestroyAverageBatch();
+      DestroyAverageConfig();
+      DestroyAveragePass();
+
       DestroySWTracedBatch();
       DestroySWTracedConfig();
       DestroySWTracedPass();

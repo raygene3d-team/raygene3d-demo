@@ -227,9 +227,19 @@ namespace RayGene3D
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures7", scene_textures7));
     }
 
-    void Scope::CreateLightMaps()
+    void Scope::CreateLightmapsInput()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_input", scene_lightmaps));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_input", lightmaps_input));
+    }
+
+    void Scope::CreateLightmapsAccum()
+    {
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_accum", lightmaps_accum));
+    }
+
+    void Scope::CreateLightmapsFinal()
+    {
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_final", lightmaps_final));
     }
 
     void Scope::CreateScreenQuadVertices()
@@ -462,12 +472,6 @@ namespace RayGene3D
       scene_textures7.reset();
     }
 
-    void Scope::DestroyLightMaps()
-    {
-      core->GetDevice()->DestroyResource(scene_lightmaps);
-      scene_lightmaps.reset();
-    }
-
     void Scope::DestroyScreenQuadVertices()
     {
       core->GetDevice()->DestroyResource(screen_quad_vertices);
@@ -502,6 +506,24 @@ namespace RayGene3D
     {
       core->GetDevice()->DestroyResource(compute_arguments);
       compute_arguments.reset();
+    }
+
+    void Scope::DestroyLightmapsInput()
+    {
+      core->GetDevice()->DestroyResource(lightmaps_input);
+      lightmaps_input.reset();
+    }
+
+    void Scope::DestroyLightmapsAccum()
+    {
+      core->GetDevice()->DestroyResource(lightmaps_accum);
+      lightmaps_accum.reset();
+    }
+
+    void Scope::DestroyLightmapsFinal()
+    {
+      core->GetDevice()->DestroyResource(lightmaps_final);
+      lightmaps_final.reset();
     }
 
     Scope::Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)
@@ -593,7 +615,9 @@ namespace RayGene3D
       CreateSkyboxCubemap();
       CreateReflectionMap();
 
-      CreateLightMaps();
+      CreateLightmapsInput();
+      CreateLightmapsAccum();
+      CreateLightmapsFinal();
 
       CreateGraphicArguments();
       CreateComputeArguments();
@@ -610,7 +634,9 @@ namespace RayGene3D
       DestroyReflectionMap();
       DestroySkyboxCubemap();
 
-      DestroyLightMaps();
+      DestroyLightmapsInput();
+      DestroyLightmapsAccum();
+      DestroyLightmapsFinal();
 
       DestroySceneTextures0();
       DestroySceneTextures1();

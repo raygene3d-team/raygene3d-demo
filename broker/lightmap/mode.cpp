@@ -41,8 +41,8 @@ namespace RayGene3D
 
       average_pass = scope.core->GetDevice()->CreatePass("lightmap_average_pass",
         Pass::TYPE_COMPUTE,
-        size_x,
-        size_y,
+        size_x / 8,
+        size_y / 8,
         layers,
         {},
         {}
@@ -74,7 +74,7 @@ namespace RayGene3D
       const auto layers = scope.prop_atlas_layers->GetUint();
 
       const Batch::Entity entities[] = {
-        {{}, {}, nullptr, { 0u, size_x }, { 0u, size_y }, { 0u, layers }}
+        {{}, {}, nullptr, { 0u, size_x / 8 }, { 0u, size_y / 8 }, { 0u, layers }}
       };
 
       auto average_accum = scope.lightmaps_accum->CreateView("lightmap_average_accum",

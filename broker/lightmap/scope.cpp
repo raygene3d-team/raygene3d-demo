@@ -93,6 +93,19 @@ namespace RayGene3D
       }
     }
 
+    void Scope::CreateScreenData()
+    {
+      screen_data = core->GetDevice()->CreateResource("lightmap_screen_data",
+        Resource::BufferDesc
+        {
+          Usage(USAGE_CONSTANT_DATA),
+          uint32_t(sizeof(Screen)),
+          1,
+        },
+        Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
+        );
+    }
+
     void Scope::CreateSceneInstances()
     {
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_instances", scene_instances));
@@ -242,34 +255,82 @@ namespace RayGene3D
 
     void Scope::CreateLightmapsAccum()
     {
+      const auto stride = uint32_t(sizeof(glm::f32vec4));
+      const auto count = uint32_t(prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint());
+      
+      auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
+      for (auto i = 0u; i < uint32_t(raws.size()); ++i)
+      {
+        auto raw = RayGene3D::Raw{ stride * count };
+        for (auto j = 0u; j < count; ++j)
+        {
+          raw.SetElement<glm::f32vec4>({ 0.0f, 0.0f, 0.0f, 0.0f }, j);
+        }
+        raws[i] = std::move(raw);
+      }
+
+      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
+      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+      {
+        interops[i] = raws[i].AccessBytes();
+      }
+
       lightmaps_accum = core->GetDevice()->CreateResource("lightmaps_accum",
         Resource::Tex2DDesc
         {
-          Usage(USAGE_UNORDERED_ACCESS),
+          Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
           1u,
           prop_atlas_layers->GetUint(),
           FORMAT_R32G32B32A32_FLOAT,
           prop_atlas_size_x->GetUint(),
           prop_atlas_size_y->GetUint(),
         },
-        Resource::Hint(Resource::HINT_LAYERED_IMAGE)
+        Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+        { interops.data(), uint32_t(interops.size()) }
         );
     }
 
     void Scope::CreateLightmapsFinal()
     {
+      const auto stride = uint32_t(sizeof(glm::u8vec4));
+      const auto count = uint32_t(prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint());
+
+      auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
+      for (auto i = 0u; i < uint32_t(raws.size()); ++i)
+      {
+        auto raw = RayGene3D::Raw{ stride * count };
+        for (auto j = 0u; j < count; ++j)
+        {
+          raw.SetElement<glm::u8vec4>({ 0, 0, 0, 0 }, j);
+        }
+        raws[i] = std::move(raw);
+      }
+
+      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
+      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+      {
+        interops[i] = raws[i].AccessBytes();
+      }
+
       lightmaps_final = core->GetDevice()->CreateResource("lightmaps_final",
         Resource::Tex2DDesc
         {
           Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
           1u,
           prop_atlas_layers->GetUint(),
-          FORMAT_R11G11B10_FLOAT,
+          FORMAT_R8G8B8A8_UNORM,
           prop_atlas_size_x->GetUint(),
           prop_atlas_size_y->GetUint(),
         },
-        Resource::Hint(Resource::HINT_LAYERED_IMAGE)
+        Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+        { interops.data(), uint32_t(interops.size()) }
         );
+    }
+
+    void Scope::DestroyScreenData()
+    {
+      core->GetDevice()->DestroyResource(screen_data);
+      screen_data.reset();
     }
 
     void Scope::DestroySceneInstances()
@@ -397,6 +458,22 @@ namespace RayGene3D
         prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
       }
 
+      prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera");
+      prop_lighting = util->GetStorage()->GetTree()->GetObjectItem("lighting");
+
+      prop_illumination = util->GetStorage()->GetTree()->GetObjectItem("illumination");
+      {
+        prop_atlas_size_x = prop_illumination->GetObjectItem("atlas_size_x");
+        prop_atlas_size_y = prop_illumination->GetObjectItem("atlas_size_y");
+        prop_atlas_layers = prop_illumination->GetObjectItem("atlas_layers");
+      }
+
+      CreateScreenData();
+
+      CreateLightmapsInput();
+      CreateLightmapsAccum();
+      CreateLightmapsFinal();
+
       CreateSceneInstances();
       CreateSceneTriangles();
       CreateSceneVertices();
@@ -420,25 +497,31 @@ namespace RayGene3D
 
     Scope::~Scope()
     {
-      DestroySceneTextures0();
-      DestroySceneTextures1();
-      DestroySceneTextures2();
-      DestroySceneTextures3();
-      DestroySceneTextures4();
-      DestroySceneTextures5();
-      DestroySceneTextures6();
-      DestroySceneTextures7();
+      //DestroySceneTextures0();
+      //DestroySceneTextures1();
+      //DestroySceneTextures2();
+      //DestroySceneTextures3();
+      //DestroySceneTextures4();
+      //DestroySceneTextures5();
+      //DestroySceneTextures6();
+      //DestroySceneTextures7();
 
-      DestroyTraceInstances();
-      DestroyTraceTriangles();
-      DestroyTraceVertices();
+      //DestroyTraceInstances();
+      //DestroyTraceTriangles();
+      //DestroyTraceVertices();
 
-      DestroyTraceTBoxes();
-      DestroyTraceBBoxes();
+      //DestroyTraceTBoxes();
+      //DestroyTraceBBoxes();
 
-      DestroySceneInstances();
-      DestroySceneTriangles();
-      DestroySceneVertices();    
+      //DestroySceneInstances();
+      //DestroySceneTriangles();
+      //DestroySceneVertices();
+
+      //DestroyLightmapsInput();
+      //DestroyLightmapsAccum();
+      //DestroyLightmapsFinal();
+
+      DestroyScreenData();
     }
   }
 }
