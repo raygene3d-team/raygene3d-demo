@@ -244,7 +244,7 @@ namespace RayGene3D
           Usage(USAGE_SHADER_RESOURCE),
           1u,
           prop_atlas_layers->GetUint(),
-          FORMAT_R32G32B32A32_FLOAT,
+          FORMAT_R32G32B32A32_UINT,
           prop_atlas_size_x->GetUint(),
           prop_atlas_size_y->GetUint(),
         },
@@ -292,7 +292,7 @@ namespace RayGene3D
 
     void Scope::CreateLightmapsFinal()
     {
-      const auto stride = uint32_t(sizeof(glm::u8vec4));
+      const auto stride = uint32_t(sizeof(glm::f32vec4));
       const auto count = uint32_t(prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint());
 
       auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
@@ -301,7 +301,7 @@ namespace RayGene3D
         auto raw = RayGene3D::Raw{ stride * count };
         for (auto j = 0u; j < count; ++j)
         {
-          raw.SetElement<glm::u8vec4>({ 0, 0, 0, 0 }, j);
+          raw.SetElement<glm::f32vec4>({ 0, 0, 0, 0 }, j);
         }
         raws[i] = std::move(raw);
       }
@@ -318,7 +318,7 @@ namespace RayGene3D
           Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
           1u,
           prop_atlas_layers->GetUint(),
-          FORMAT_R8G8B8A8_UNORM,
+          FORMAT_R32G32B32A32_FLOAT,
           prop_atlas_size_x->GetUint(),
           prop_atlas_size_y->GetUint(),
         },

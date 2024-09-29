@@ -88,9 +88,11 @@ namespace RayGene3D
 
       Vertex vertex;
 
-      vertex.pos = pos_transform * glm::fvec4{ pos.x, pos.y, pos.z, 1.0f };
-      vertex.nrm = nrm_transform * glm::normalize(glm::fvec3{ nrm.x, nrm.y, nrm.z });
-      vertex.tc0 = tc0_transform * glm::f32vec2(tc0.x, tc0.y);
+      vertex.pos = pos_transform * glm::f32vec4{ pos.x, pos.y, pos.z, 1.0f };
+      vertex.nrm = nrm_transform * glm::f32vec3{ nrm.x, nrm.y, nrm.z };
+      vertex.tc0 = tc0_transform * glm::f32vec2{ tc0.x, tc0.y };
+
+      vertex.nrm = glm::normalize(vertex.nrm);
 
       return vertex;
     };

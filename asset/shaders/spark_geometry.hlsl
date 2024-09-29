@@ -262,7 +262,7 @@ PSOutput ps_main(PSInput input)
   const float mip = PerceptualRoughnessToMipmapLevel(perceptual_roughness, 6);
   const float3 gi_specular = reflection_map.SampleLevel(sampler1, r, mip).xyz;
     
-  const float3 gi_diffuse = 0.05 * albedo; //lightmap_items.Sample(sampler0, float3(input.tc1, input.mask)).xyz;
+  const float3 gi_diffuse = lightmap_items.Sample(sampler0, float3(input.tc1, input.mask)).xyz;
     
 
 

@@ -115,10 +115,42 @@ namespace RayGene3D
         sw_traced_trace_vertices,
       };
 
+      auto sw_traced_textures0 = scope.scene_textures0->CreateView("lightmap_sw_traced_textures0",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      auto sw_traced_textures1 = scope.scene_textures1->CreateView("lightmap_sw_traced_textures1",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      auto sw_traced_textures2 = scope.scene_textures2->CreateView("lightmap_sw_traced_textures2",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      auto sw_traced_textures3 = scope.scene_textures3->CreateView("lightmap_sw_traced_textures3",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      auto sw_traced_textures4 = scope.scene_textures4->CreateView("lightmap_sw_traced_textures4",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      auto sw_traced_textures5 = scope.scene_textures5->CreateView("lightmap_sw_traced_textures5",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      auto sw_traced_textures6 = scope.scene_textures6->CreateView("lightmap_sw_traced_textures6",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      auto sw_traced_textures7 = scope.scene_textures7->CreateView("lightmap_sw_traced_textures7",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
       auto sw_traced_input = scope.lightmaps_input->CreateView("lightmap_sw_traced_input",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
+        sw_traced_textures0,
+        sw_traced_textures1,
+        sw_traced_textures2,
+        sw_traced_textures3,
+        sw_traced_textures4,
+        sw_traced_textures5,
+        sw_traced_textures6,
+        sw_traced_textures7,
         sw_traced_input,
       };
 

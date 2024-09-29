@@ -9,7 +9,7 @@ struct Box
 struct Vertex
 {
   float3 pos;
-  float color;
+  uint col;
   float3 nrm;
   float mask;
   float3 tgn;
