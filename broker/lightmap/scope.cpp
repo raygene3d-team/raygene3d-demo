@@ -459,6 +459,10 @@ namespace RayGene3D
       }
 
       prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera");
+      {
+        prop_counter = prop_camera->GetObjectItem("counter");
+      }
+
       prop_lighting = util->GetStorage()->GetTree()->GetObjectItem("lighting");
 
       prop_illumination = util->GetStorage()->GetTree()->GetObjectItem("illumination");

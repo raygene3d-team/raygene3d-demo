@@ -51,6 +51,8 @@ namespace RayGene3D
       std::shared_ptr<Property> prop_triangles;
       std::shared_ptr<Property> prop_vertices;
 
+      std::shared_ptr<Property> prop_counter;
+
     //  std::shared_ptr<Property> prop_theta;
     //  std::shared_ptr<Property> prop_phi;
     //  std::shared_ptr<Property> prop_intensity;

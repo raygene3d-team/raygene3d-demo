@@ -38,22 +38,22 @@ namespace RayGene3D
 
   void LightmapBroker::Use()
   {
-    //{
-    //  const auto extent_x = scope.prop_atlas_size_x->GetUint();
-    //  const auto extent_y = scope.prop_atlas_size_x->GetUint();
+    {
+      const auto extent_x = scope.prop_atlas_size_x->GetUint();
+      const auto extent_y = scope.prop_atlas_size_x->GetUint();
 
-    //  const auto counter = scope.prop_counter->GetUint();
+      const auto counter = scope.prop_counter->GetUint();
 
-    //  Screen screen;
-    //  screen.extent_x = extent_x;
-    //  screen.extent_y = extent_y;
-    //  screen.rnd_base = counter;
-    //  screen.rnd_seed = rand();
+      Screen screen;
+      screen.extent_x = extent_x;
+      screen.extent_y = extent_y;
+      screen.rnd_base = counter;
+      screen.rnd_seed = rand();
 
-    //  auto screen_mapped = scope.screen_data->Map();
-    //  memcpy(screen_mapped, &screen, sizeof(Screen));
-    //  scope.screen_data->Unmap();
-    //}
+      auto screen_mapped = scope.screen_data->Map();
+      memcpy(screen_mapped, &screen, sizeof(Screen));
+      scope.screen_data->Unmap();
+    }
 
     sw_traced_lightmap->Disable();
     //hw_traced_lightmap->Disable();
