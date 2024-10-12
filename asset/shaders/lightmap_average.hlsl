@@ -26,5 +26,5 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   const uint3 pixel_id = { dispatch_id.x, dispatch_id.y, dispatch_id.z };
 
   const float4 pixel_value = lightmap_accum[pixel_id];
-  lightmap_final[pixel_id] = pixel_value;
+  lightmap_final[pixel_id] = pixel_value / pixel_value.w;
 }

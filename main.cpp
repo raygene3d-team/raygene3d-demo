@@ -149,6 +149,7 @@ namespace RayGene3D
     std::string shadow_name{"No Shadow"};
 
   protected:
+    std::shared_ptr<RayGene3D::LightmapBroker> lightmap_broker;
     std::shared_ptr<RayGene3D::Render3DBroker> render_3d_broker;
     std::shared_ptr<RayGene3D::RenderUIBroker> render_ui_broker;
 
@@ -556,17 +557,18 @@ namespace RayGene3D
         environment_broker.reset();
       }
 
-      {
-        auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
+      //{
+      //  auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
 
-        lightmap_broker->Initialize();
-        lightmap_broker->Use();
-        lightmap_broker->Discard();
+      //  lightmap_broker->Initialize();
+      //  lightmap_broker->Use();
+      //  lightmap_broker->Discard();
 
-        lightmap_broker.reset();
-      }
+      //  lightmap_broker.reset();
+      //}
 
-
+      lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
+      lightmap_broker->SetBakingMode(LightmapBroker::SW_TRACED_BAKING);
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
       render_3d_broker->SetShadowMode(Render3DBroker::NO_SHADOW);
@@ -688,6 +690,7 @@ namespace RayGene3D
           change_spark = true;
         }
 
+        lightmap_broker->Use();
         render_3d_broker->Use();
         render_ui_broker->Use();
 
@@ -699,7 +702,7 @@ namespace RayGene3D
         if (frame_period > 1.0)
         {
           const auto frame_rate = frame_counter / frame_period;
-          const auto adapter_name = wrap->GetCore()->GetDevice()->GetName();
+          const auto& adapter_name = wrap->GetCore()->GetDevice()->GetName();
 
           std::stringstream ss;
           ss << app_name << " [" << shadow_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
@@ -713,6 +716,7 @@ namespace RayGene3D
 
     void Discard()
     {
+      lightmap_broker.reset();
       render_3d_broker.reset();
       render_ui_broker.reset();
 
@@ -730,7 +734,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
+      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_D11, RayGene3D::Util::STORAGE_LOCAL));
     }
 
     ~GLFWWrapper()

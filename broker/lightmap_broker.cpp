@@ -38,16 +38,21 @@ namespace RayGene3D
 
   void LightmapBroker::Use()
   {
+    sw_traced_lightmap->Disable();
+
+    if (samples_cur >= samples_max)
+    {
+      return;
+    }
+
     {
       const auto extent_x = scope.prop_atlas_size_x->GetUint();
       const auto extent_y = scope.prop_atlas_size_x->GetUint();
 
-      const auto counter = scope.prop_counter->GetUint();
-
       Screen screen;
       screen.extent_x = extent_x;
       screen.extent_y = extent_y;
-      screen.rnd_base = counter;
+      screen.rnd_base = samples_cur;
       screen.rnd_seed = rand();
 
       auto screen_mapped = scope.screen_data->Map();
@@ -55,7 +60,8 @@ namespace RayGene3D
       scope.screen_data->Unmap();
     }
 
-    sw_traced_lightmap->Disable();
+    ++samples_cur;
+    
     //hw_traced_lightmap->Disable();
 
     switch (mode)
@@ -68,9 +74,9 @@ namespace RayGene3D
       break;
     }
 
-    scope.core->GetDevice()->Use();
+    //scope.core->GetDevice()->Use();
 
-    sw_traced_lightmap->Disable();
+    //sw_traced_lightmap->Disable();
     //hw_traced_lightmap->Disable();
   }
 
