@@ -45,204 +45,6 @@ VK_BINDING(8) Texture2D<float4> gbuffer_0_texture : register(t5);
 VK_BINDING(9) Texture2D<float4> gbuffer_1_texture : register(t6);
 VK_BINDING(10) Texture2D<float> depth_texture : register(t7);
 
-Hit IntersectScene(in Ray ray, out float dist)
-{
-  Hit hit;
-  hit.geom = uint2(-1, -1);
-  hit.bary = float2(0.0, 0.0);
-
-
-  //StructuredBuffer<Box> mesh_nodes = mesh_boxes;
-  dist = ray.tmax;
-
-  const uint inst_offset = 0;
-  const uint inst_count = t_boxes[inst_offset].count;
-
-  uint inst_stride = 0;
-  while (inst_stride < inst_count)
-  {
-    const Box inst_node = t_boxes[inst_stride + inst_offset];
-    if (inst_node.count == 1) //Instance leaf
-    {
-      const int inst_idx = inst_node.offset;
-      const Instance instance = inst_items[inst_idx];
-
-      const uint prim_offset = 2 * instance.prim_offset - inst_idx;
-      const uint prim_count = b_boxes[prim_offset].count;
-
-      uint prim_stride = 0;
-      while (prim_stride < prim_count)
-      {
-        const Box prim_node = b_boxes[prim_stride + prim_offset];
-        if (prim_node.count == 1) //Primitive leaf
-        {
-          const int prim_idx = prim_node.offset;
-          const Primitive primitive = prim_items[instance.prim_offset + prim_idx];
-
-#ifdef USE_CONSISTENT_BVH
-          const float3 center = f16tof32(asuint(prim_node.min));
-          const float3 delta0 = f16tof32(asuint(prim_node.min) >> 16);
-          const float3 delta1 = f16tof32(asuint(prim_node.max));
-          const float3 delta2 = f16tof32(asuint(prim_node.max) >> 16);
-
-          const float3 pos0 = center + delta0;
-          const float3 pos1 = center + delta1;
-          const float3 pos2 = center + delta2;
-#else
-          const float3 pos0 = vert_items[instance.vert_offset + primitive.idx0].pos;
-          const float3 pos1 = vert_items[instance.vert_offset + primitive.idx1].pos;
-          const float3 pos2 = vert_items[instance.vert_offset + primitive.idx2].pos;
-#endif
-
-          float t, u, v;
-          if (CheckTriangle(pos0, pos1, pos2, ray.org, ray.tmin, ray.dir, dist, t, u, v))
-          {
-            if (dist >= t)
-            {
-              bool alpha_clip = false;
-#ifdef USE_ALPHA_CLIP
-              if (instance.tex1_idx != -1)
-              {
-                const Vertex vertex0 = vertex_items[instance.vert_offset + primitive.idx0];
-                const Vertex vertex1 = vertex_items[instance.vert_offset + primitive.idx1];
-                const Vertex vertex2 = vertex_items[instance.vert_offset + primitive.idx2];
-
-                const float3 weights = float3(1.0 - u - v, u, v);
-                const float u = dot(float3(vertex0.u, vertex1.u, vertex2.u), weights);
-                const float v = dot(float3(vertex0.v, vertex1.v, vertex2.v), weights);
-
-                uint tex_w = 0;
-                uint tex_h = 0;
-                uint tex_n = 0;
-                texture1_items.GetDimensions(tex_w, tex_h, tex_n);
-                const float4 tex_value = texture1_items.Load(int4(abs(frac(u)) * tex_w, abs(frac(v)) * tex_h, instance.tex1_idx, 0));
-
-                alpha_clip = tex_value.r > 0.1 ? false : true;
-              }
-#endif
-              if (!alpha_clip)
-              {
-                dist = t;
-                hit.bary = float2(u, v);
-                hit.geom = uint2(inst_idx, prim_idx);
-              }
-            }
-          }
-          prim_stride += 1;
-          continue;
-        }
-        const float3 prim_bmin = prim_node.min;
-        const float3 prim_bmax = prim_node.max;
-
-        float prim_dmin, prim_dmax;
-        if (CheckBox(prim_bmin, prim_dmin, prim_bmax, prim_dmax, ray.org, ray.tmin, ray.dir, dist))
-        {
-          prim_stride += 1;
-          continue;
-        }
-        prim_stride += prim_node.count;
-      }
-      inst_stride += 1;
-      continue;
-    }
-    const float3 inst_bmin = inst_node.min;
-    const float3 inst_bmax = inst_node.max;
-
-    float inst_dmin, inst_dmax;
-    if (CheckBox(inst_bmin, inst_dmin, inst_bmax, inst_dmax, ray.org, ray.tmin, ray.dir, dist))
-    {
-      inst_stride += 1;
-      continue;
-    }
-    inst_stride += inst_node.count;
-  }
-  return hit;
-}
-
-
-
-bool OccludeScene(in Ray ray)
-{
-  //StructuredBuffer<Box> mesh_nodes = mesh_boxes;
-
-  const uint inst_offset = 0;
-  const uint inst_count = t_boxes[inst_offset].count;
-
-  uint inst_stride = 0;
-  while (inst_stride < inst_count)
-  {
-    const Box inst_node = t_boxes[inst_stride + inst_offset];
-    if (inst_node.count == 1) //Instance leaf
-    {
-      const int inst_idx = inst_node.offset;
-      const Instance instance = inst_items[inst_idx];
-
-      const uint prim_offset = 2 * instance.prim_offset - inst_idx;
-      const uint prim_count = b_boxes[prim_offset].count;
-
-      uint prim_stride = 0;
-      while (prim_stride < prim_count)
-      {
-        const Box prim_node = b_boxes[prim_stride + prim_offset];
-        if (prim_node.count == 1) //Primitive leaf
-        {
-          const int prim_idx = prim_node.offset;
-
-#ifdef USE_CONSISTENT_BVH
-          const float3 center = f16tof32(asuint(prim_node.min));
-          const float3 delta0 = f16tof32(asuint(prim_node.min) >> 16);
-          const float3 delta1 = f16tof32(asuint(prim_node.max));
-          const float3 delta2 = f16tof32(asuint(prim_node.max) >> 16);
-
-          const float3 pos0 = center + delta0;
-          const float3 pos1 = center + delta1;
-          const float3 pos2 = center + delta2;
-#else
-          const Primitive primitive = prim_items[instance.prim_offset + prim_idx];
-          const float3 pos0 = vert_items[instance.vert_offset + primitive.idx0].pos;
-          const float3 pos1 = vert_items[instance.vert_offset + primitive.idx1].pos;
-          const float3 pos2 = vert_items[instance.vert_offset + primitive.idx2].pos;
-#endif
-
-          float t, u, v;
-          if (CheckTriangle(pos0, pos1, pos2, ray.org, ray.tmin, ray.dir, ray.tmax, t, u, v))
-          {
-            if (ray.tmax > t)
-            {
-              return true;
-            }
-          }
-          prim_stride += 1;
-          continue;
-        }
-        const float3 prim_bmin = prim_node.min;
-        const float3 prim_bmax = prim_node.max;
-
-        float prim_dmin, prim_dmax;
-        if (CheckBox(prim_bmin, prim_dmin, prim_bmax, prim_dmax, ray.org, ray.tmin, ray.dir, ray.tmax))
-        {
-          prim_stride += 1;
-          continue;
-        }
-        prim_stride += prim_node.count;
-      }
-      inst_stride += 1;
-      continue;
-    }
-    const float3 inst_bmin = inst_node.min;
-    const float3 inst_bmax = inst_node.max;
-
-    float inst_dmin, inst_dmax;
-    if (CheckBox(inst_bmin, inst_dmin, inst_bmax, inst_dmax, ray.org, ray.tmin, ray.dir, ray.tmax))
-    {
-      inst_stride += 1;
-      continue;
-    }
-    inst_stride += inst_node.count;
-  }
-  return false;
-}
-
 struct VSInput
 {
   VK_LOCATION(0) float2 pos : register0;
@@ -309,15 +111,17 @@ PSOutput ps_main(PSInput input)
   const float shadow_dst = length(shadow_pos - surface_pos);
   const float3 shadow_dir =-float3(shadow_view_inv[0][2], shadow_view_inv[1][2], shadow_view_inv[2][2]);
 
-  Ray ray;
-  ray.org = surface_pos;
-  ray.tmin = RAY_TMIN;
-  ray.dir = shadow_dir;
-  ray.tmax = shadow_dst;
+  RayHit rayhit = (RayHit)0;
+  rayhit.org = surface_pos;
+  rayhit.tmin = RAY_TMIN;
+  rayhit.dir = shadow_dir;
+  rayhit.tmax = shadow_dst;
 
   const float3 diffuse = max(0.0, dot(shadow_dir, normal)) * albedo_metallic.xyz;
   const float3 specular = pow(max(0.0, dot(normalize(camera_dir + shadow_dir), normal)), smoothness);
-  const float attenuation = OccludeScene(ray) ? 0.0 : 1.0;
+  
+  OccludeScene(rayhit, t_boxes, b_boxes, inst_items, prim_items, vert_items);
+  const float attenuation = rayhit.dist == rayhit.tmax ? 1.0 : 0.0;
   
   BRDF_CookTorrance brdf; // = Initialize_CookTorrance();
   brdf.color = albedo_metallic.xyz;

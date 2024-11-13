@@ -734,7 +734,7 @@ namespace RayGene3D
     {
       glfwInit();
 
-      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_D11, RayGene3D::Util::STORAGE_LOCAL));
+      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
     }
 
     ~GLFWWrapper()
