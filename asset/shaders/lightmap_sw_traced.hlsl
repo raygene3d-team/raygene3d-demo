@@ -13,6 +13,7 @@ static const float3 RAY_TOFF = float3(0.005, 0.005, 0.005);
 static const uint BOUNCE_COUNT = 8; 
 
 #include "traverse.hlsl"
+#include "random.hlsl"
 
 VK_BINDING(0)  SamplerComparisonState sampler0 : register(s0);
 
@@ -46,63 +47,6 @@ VK_BINDING(16) RWTexture2DArray<float4> lightmap_accum : register(u0);
 float nrand(float2 uv)
 {
   return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453);
-}
-
-inline uint MurmurHash3_mix(in uint hash, in uint k)
-{
-  k *= 0xcc9e2d51;
-  k = (k << 15) | (k >> (32 - 15));
-  k *= 0x1b873593;
-
-  hash ^= k;
-  hash = ((hash << 13) | (hash >> (32 - 13))) * 5 + 0xe6546b64;
-
-  return hash;
-}
-
-inline uint MurmurHash3_finalize(uint hash)
-{
-  hash ^= hash >> 16;
-  hash *= 0x85ebca6b;
-  hash ^= hash >> 13;
-  hash *= 0xc2b2ae35;
-  hash ^= hash >> 16;
-
-  return hash;
-}
-
-inline uint LCG_next(uint value)
-{
-  return value * 1664525 + 1013904223;
-}
-
-inline uint RandomSampler_init(int pixelId, int sampleId)
-{
-  uint hash = 0;
-  hash = MurmurHash3_mix(hash, pixelId);
-  hash = MurmurHash3_mix(hash, sampleId);
-  hash = MurmurHash3_finalize(hash);
-
-  return hash;
-}
-
-//inline uint MurmurHash3_initialize(in uint index, in uint scramble)
-//{
-//  uint hash = 0;
-//  hash = MurmurHash3_mix(hash, index);
-//  hash = MurmurHash3_mix(hash, scramble);
-//  hash ^= hash >> 16;
-//  hash *= 0x85ebca6b;
-//  hash ^= hash >> 13;
-//  hash *= 0xc2b2ae35;
-//  hash ^= hash >> 16;
-//
-//  return hash;
-//}
-
-inline float RandomSampler_sample(inout uint state)
-{
-  state = LCG_next(state); return state * 2.3283064365386963e-10;
 }
 
 float3 SampleLambertBRDF(in float3 color, in float3 wo, in float s0, in float s1, out float3 wi, out float pdf)
@@ -147,9 +91,7 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   uint state = RandomSampler_init(seed, base);
   const float s0 = RandomSampler_sample(state);
   const float s1 = RandomSampler_sample(state);
-  
-
-  
+   
   const Instance instance = inst_items[inst_idx];
   const Primitive primitive = prim_items[instance.prim_offset + prim_idx];
   const Vertex vertex0 = vert_items[instance.vert_offset + primitive.idx0];
