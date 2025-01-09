@@ -622,19 +622,10 @@ namespace RayGene3D
           const auto& texture_3_name = obj_material.bump_texname;
           instance.texture3_idx = texture_3_name.empty() ? uint32_t(-1) : tex_reindex_fn(textures_3_names, texture_3_name);
 
-          //switch (obj_material.illum)
-          //{
-          //case 3: // mirror
-          //  instance.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
-          //  instance.specular = glm::vec3(1.0f, 1.0f, 1.0f);
-          //  instance.shininess = float(1 << 16);
-          //  break;
-          //case 7: // glass
-          //  instance.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
-          //  instance.specular = glm::vec3(0.0f, 0.0f, 0.0f);
-          //  instance.alpha = 1.5f;
-          //  break;
-          //}
+          if (obj_material.illum != 7) // glass material
+          {
+            instance.brdf_param3 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+          }
         }
 
         instance.vert_count = uint32_t(instance_vertices.size());

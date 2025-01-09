@@ -236,9 +236,9 @@ PSOutput ps_main(PSInput input)
     : texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx));
   const float4 tex2_value = tex2_idx == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
     : texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx));
-  const float4 tex3_value = tex3_idx == -1 ? float4(0.0, 0.0, 1.0, 0.0) 
+  const float4 tex3_value = tex3_idx == -1 ? float4(0.5, 0.5, 1.0, 0.0) 
     : texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx));
-  //const float4 tex3_value = float4(0.0, 0.0, 1.0, 0.0);
+  //const float4 tex3_value = float4(0.5, 0.5, 1.0, 0.0);
   const float4 tex4_value = tex4_idx == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
     : texture4_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex4_idx));
     
@@ -266,18 +266,18 @@ PSOutput ps_main(PSInput input)
   float surface_reduction = 1.0 / (roughness * roughness + 1.0);
   float3 factor = surface_reduction * lerp(specular, grazing_term, fresnel_term);
     
-  const float3 r = reflect(v, n);
+  const float3 r = reflect(v, normal);
   const float mip = PerceptualRoughnessToMipmapLevel(perceptual_roughness, 6);
   const float3 gi_specular = reflection_map.SampleLevel(sampler1, r, mip).xyz;
     
-  const float3 gi_diffuse = lightmap_items.Sample(sampler1, float3(input.tc1, input.mask)).xyz;
+  const float3 gi_diffuse = 0 * lightmap_items.Sample(sampler1, float3(input.tc1, input.mask)).xyz;
     
 
 
   
 
 
-  const float3 global_illumination = 0 * normal; //(gi_diffuse + gi_specular * factor) * occlusion;
+  const float3 global_illumination = (gi_diffuse + gi_specular * factor) * occlusion;
 
   output.target_0 = float4(emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);
