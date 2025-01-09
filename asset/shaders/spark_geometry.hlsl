@@ -52,29 +52,24 @@ VK_BINDING(5) cbuffer constant3 : register(b3)
   uint vert_offset    : packoffset(c3.z);
   uint vert_count     : packoffset(c3.w);
 
-  float3 emission     : packoffset(c4.x);
-  float intensity : packoffset(c4.w);
-  float3 diffuse      : packoffset(c5.x);
-  float shininess : packoffset(c5.w);
-  float3 specular     : packoffset(c6.x);
-  float alpha : packoffset(c6.w);
+  float4 brdf_param0  : packoffset(c4.x);
+  float4 brdf_param1  : packoffset(c5.x);
+  float4 brdf_param2  : packoffset(c6.x);
+  float4 brdf_param3  : packoffset(c7.x);
 
-  int tex0_idx : packoffset(c7.x);
-  int tex1_idx : packoffset(c7.y);
-  int tex2_idx : packoffset(c7.z);
-  int tex3_idx : packoffset(c7.w);
-  int tex4_idx : packoffset(c8.x);
-  int tex5_idx : packoffset(c8.y);
-  int tex6_idx : packoffset(c8.z);
-  int tex7_idx : packoffset(c8.w);
-
-  float3 debug_color : packoffset(c9.x);
-  uint geometry_idx   : packoffset(c9.w);
+  int tex0_idx : packoffset(c8.x);
+  int tex1_idx : packoffset(c8.y);
+  int tex2_idx : packoffset(c8.z);
+  int tex3_idx : packoffset(c8.w);
+  int tex4_idx : packoffset(c9.x);
+  int tex5_idx : packoffset(c9.y);
+  int tex6_idx : packoffset(c9.z);
+  int tex7_idx : packoffset(c9.w);
   
   float3 bb_min : packoffset(c10.x);
-  uint padding_min : packoffset(c10.w);
+  uint geom_idx : packoffset(c10.w);
   float3 bb_max : packoffset(c11.x);
-  uint padding_max : packoffset(c11.w);
+  uint brdf_idx : packoffset(c11.w);
 
   uint4 padding[4]    : packoffset(c12.x);
 };
@@ -201,30 +196,30 @@ PSOutput ps_main(PSInput input)
   float3 t = normalize(input.w_tng_v.xyz);
   float3 b = input.w_pos_d.w * cross(t, n);
 
-#ifdef USE_SPECULAR_SETUP
-  const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
-  const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(1.0, 1.0, 1.0, 1.0);
-  const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
-  const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.5, 0.5, 0.0, 0.0);
-
-  const Surface surface = Initialize_OBJ(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
-#else
-  const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
-  const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(0.0, 0.0, 0.0, 0.0);
-  const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
-  const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.0, 0.0, 1.0, 0.0);
-  const float4 tex4_value = tex4_idx != -1 ? texture4_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex4_idx)) : float4(1.0, 1.0, 1.0, 1.0);
-  
-  const Surface surface = Initialize_GLTF(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
-#endif
+//#ifdef USE_SPECULAR_SETUP
+//  const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+//  const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+//  const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+//  const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.5, 0.5, 0.0, 0.0);
+//
+//  const Surface surface = Initialize_OBJ(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
+//#else
+//  const float4 tex0_value = tex0_idx != -1 ? texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+//  const float4 tex1_value = tex1_idx != -1 ? texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx)) : float4(0.0, 0.0, 0.0, 0.0);
+//  const float4 tex2_value = tex2_idx != -1 ? texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+//  const float4 tex3_value = tex3_idx != -1 ? texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx)) : float4(0.0, 0.0, 1.0, 0.0);
+//  const float4 tex4_value = tex4_idx != -1 ? texture4_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex4_idx)) : float4(1.0, 1.0, 1.0, 1.0);
+//  
+//  const Surface surface = Initialize_GLTF(emission, intensity, diffuse, shininess, specular, alpha, tex0_value, tex1_value, tex2_value, tex3_value);
+//#endif
 
   //#ifdef USE_ALPHA_CLIP
   //  if (surface.alpha < 0.1) discard;
   //#endif
   //
-#ifdef USE_NORMAL_MAP
-  n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
-#endif
+//#ifdef USE_NORMAL_MAP
+//  n = normalize(surface.normal.x * t + surface.normal.y * b + surface.normal.z * n);
+//#endif
     
   const float3 surface_pos = input.w_pos_d.xyz;
 
@@ -234,18 +229,31 @@ PSOutput ps_main(PSInput input)
     
   const float3 v = -camera_dir;
 
+  // temp mapping - only PBR materials!
+  const float4 tex0_value = tex0_idx == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
+    : texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx));
+  const float4 tex1_value = tex1_idx == -1 ? float4(0.0, 0.0, 0.0, 0.0) 
+    : texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx));
+  const float4 tex2_value = tex2_idx == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
+    : texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx));
+  const float4 tex3_value = tex3_idx == -1 ? float4(0.0, 0.0, 1.0, 0.0) 
+    : texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx));
+  //const float4 tex3_value = float4(0.0, 0.0, 1.0, 0.0);
+  const float4 tex4_value = tex4_idx == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
+    : texture4_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex4_idx));
     
-  const float smoothness = surface.shininess;
-  const float3 albedo = surface.diffuse;
+  const float3 albedo = tex0_value.xyz;
+  const float3 emission = tex1_value.xyz;
   const float metallic = tex2_value.z;
   const float roughness = tex2_value.y;
+  const float3 normal = normalize(
+    (2.0 * tex3_value.x - 1.0) * t +
+    (2.0 * tex3_value.y - 1.0) * b +
+    (2.0 * tex3_value.z - 1.0) * n);
   const float occlusion = tex4_value.x;
-    
-
-    
-
-
-    
+  
+  
+       
   const float one_minus_reflectivity = OneMinusReflectivityMetallic(metallic);
   const float reflectivity = 1.0 - one_minus_reflectivity;
   const float3 diffuse = albedo * one_minus_reflectivity;
@@ -269,11 +277,11 @@ PSOutput ps_main(PSInput input)
   
 
 
-  const float3 global_illumination = (gi_diffuse + gi_specular * factor) * occlusion;
+  const float3 global_illumination = 0 * normal; //(gi_diffuse + gi_specular * factor) * occlusion;
 
-  output.target_0 = float4(surface.emission + global_illumination, 1.0);
+  output.target_0 = float4(emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);
-  output.target_2 = float4(PackNormal(n), roughness);
+  output.target_2 = float4(0.5 * normal + 0.5, roughness);
 
 #ifdef TEST
 #endif

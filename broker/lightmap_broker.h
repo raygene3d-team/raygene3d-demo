@@ -51,7 +51,7 @@ namespace RayGene3D
 
   protected:
     BakingMode mode{ SW_TRACED_BAKING };
-    uint32_t samples_max{ 1000u };
+    uint32_t samples_max{ 0u };
     uint32_t samples_cur{ 0u };
 
   public:

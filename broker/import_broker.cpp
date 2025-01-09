@@ -378,10 +378,10 @@ namespace RayGene3D
 
         Instance instance;
         instance.transform = glm::identity<glm::fmat3x4>();
-        instance.geometry_idx = uint32_t(instances.size());
         instance.bb_min = instance_bb_min;
+        instance.geom_idx = uint32_t(instances.size());
         instance.bb_max = instance_bb_max;
-        //instance.debug_color{ 0.0f, 0.0f, 0.0f };
+        instance.brdf_idx = 1;
 
         const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
         const auto texture_0_id = gltf_material.pbrMetallicRoughness.baseColorTexture.index;
@@ -405,7 +405,7 @@ namespace RayGene3D
 
         instances.push_back(instance);
 
-        BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instance.geometry_idx, instance.vert_count, instance.prim_count);
+        BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instance.geom_idx, instance.vert_count, instance.prim_count);
       }
     }
 
@@ -574,57 +574,44 @@ namespace RayGene3D
 
         Instance instance;
         instance.transform = glm::identity<glm::fmat3x4>();
-        instance.geometry_idx = uint32_t(instances.size());
         instance.bb_min = instance_bb_min;
+        instance.geom_idx = uint32_t(instances.size());
         instance.bb_max = instance_bb_max;
-        //instance.debug_color{ 0.0f, 0.0f, 0.0f };
+        instance.brdf_idx = 0;
 
         const auto& obj_material = obj_materials[material_id.first];
 
         const auto debug = false;
         if (debug)
         {
-          instance.emission = glm::vec3(0.0f, 0.0f, 0.0f);
-          instance.intensity = 0.0f;
-          //material.ambient = glm::vec3(obj_material.ambient[0], obj_material.ambient[1], obj_material.ambient[2]);
-          //material.dissolve = obj_material.dissolve;
-          instance.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-          instance.shininess = 1.0f;
-          instance.specular = glm::vec3(0.0f, 0.0f, 0.0f);
-          instance.alpha = 1.0f;
-          //instance.transmittance = glm::vec3(0.0f, 0.0f, 0.0f) * (1.0f - obj_material.dissolve);
-          //instance.ior = 1.0f;
+          instance.brdf_param0 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+          instance.brdf_param1 = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+          instance.brdf_param2 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+          instance.brdf_param3 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
         }
         else
         {
-
-          instance.emission = glm::vec3(obj_material.emission[0], obj_material.emission[1], obj_material.emission[2]);
-          instance.intensity = 10.0f;
-          //material.ambient = glm::vec3(obj_material.ambient[0], obj_material.ambient[1], obj_material.ambient[2]);
-          //material.dissolve = obj_material.dissolve;
-          instance.diffuse = glm::vec3(obj_material.diffuse[0], obj_material.diffuse[1], obj_material.diffuse[2]);
-          instance.shininess = obj_material.shininess;
-          instance.specular = glm::vec3(obj_material.specular[0], obj_material.specular[1], obj_material.specular[2]);
-          instance.alpha = 1.0f; // -obj_material.dissolve;
-          //instance.transmittance = glm::vec3(obj_material.transmittance[0], obj_material.transmittance[1], obj_material.transmittance[2]) * (1.0f - obj_material.dissolve);
-          //instance.ior = obj_material.ior;
+          instance.brdf_param0 = glm::vec4(obj_material.emission[0], obj_material.emission[1], obj_material.emission[2], obj_material.illum);
+          instance.brdf_param1 = glm::vec4(obj_material.diffuse[0], obj_material.diffuse[1], obj_material.diffuse[2], obj_material.dissolve);
+          instance.brdf_param2 = glm::vec4(obj_material.specular[0], obj_material.specular[1], obj_material.specular[2], obj_material.shininess);
+          instance.brdf_param3 = glm::vec4(obj_material.transmittance[0], obj_material.transmittance[1], obj_material.transmittance[2], obj_material.ior);
 
           const auto tex_reindex_fn = [](std::vector<std::string>& tex_names, const std::string& tex_name)
-          {
-            if (tex_name.empty())
             {
-              return -1;
-            }
+              if (tex_name.empty())
+              {
+                return -1;
+              }
 
-            const auto tex_iter = std::find_if(tex_names.cbegin(), tex_names.cend(), [&tex_name](const auto& name) { return tex_name == name; });
-            const auto tex_index = tex_iter == tex_names.cend() ? int32_t(tex_names.size()) : int32_t(tex_iter - tex_names.cbegin());
-            if (tex_index == tex_names.size())
-            {
-              tex_names.push_back(tex_name);
-            }
+              const auto tex_iter = std::find_if(tex_names.cbegin(), tex_names.cend(), [&tex_name](const auto& name) { return tex_name == name; });
+              const auto tex_index = tex_iter == tex_names.cend() ? int32_t(tex_names.size()) : int32_t(tex_iter - tex_names.cbegin());
+              if (tex_index == tex_names.size())
+              {
+                tex_names.push_back(tex_name);
+              }
 
-            return tex_index;
-          };
+              return tex_index;
+            };
 
           const auto& texture_0_name = obj_material.diffuse_texname;
           instance.texture0_idx = texture_0_name.empty() ? uint32_t(-1) : tex_reindex_fn(textures_0_names, texture_0_name);
@@ -635,19 +622,19 @@ namespace RayGene3D
           const auto& texture_3_name = obj_material.bump_texname;
           instance.texture3_idx = texture_3_name.empty() ? uint32_t(-1) : tex_reindex_fn(textures_3_names, texture_3_name);
 
-          switch (obj_material.illum)
-          {
-          case 3: // mirror
-            instance.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
-            instance.specular = glm::vec3(1.0f, 1.0f, 1.0f);
-            instance.shininess = float(1 << 16);
-            break;
-          case 7: // glass
-            instance.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
-            instance.specular = glm::vec3(0.0f, 0.0f, 0.0f);
-            instance.alpha = 1.5f;
-            break;
-          }
+          //switch (obj_material.illum)
+          //{
+          //case 3: // mirror
+          //  instance.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
+          //  instance.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+          //  instance.shininess = float(1 << 16);
+          //  break;
+          //case 7: // glass
+          //  instance.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
+          //  instance.specular = glm::vec3(0.0f, 0.0f, 0.0f);
+          //  instance.alpha = 1.5f;
+          //  break;
+          //}
         }
 
         instance.vert_count = uint32_t(instance_vertices.size());

@@ -61,29 +61,31 @@ struct Instance
 {
   mat3x4 transform;
 
-  vec3 emission;
-  float intensity;
-  vec3 diffuse;
-  float metallic;
-  vec3 specular;
-  float roughness;
-  vec3 transmit;
-  float ior;
-
-  int tex0_idx;
-  int tex1_idx;
-  int tex2_idx;
-  int tex3_idx;
-
-  vec3 debug_color;
-  uint geometry_idx;
-
   uint prim_offset;
   uint prim_count;
   uint vert_offset;
   uint vert_count;
 
-  uvec4 padding[6];
+  vec4 brdf_param0;
+  vec4 brdf_param1;
+  vec4 brdf_param2;
+  vec4 brdf_param3;
+
+  int tex0_idx;
+  int tex1_idx;
+  int tex2_idx;
+  int tex3_idx;
+  int tex4_idx;
+  int tex5_idx;
+  int tex6_idx;
+  int tex7_idx;
+
+  vec3 bb_min;
+  uint geom_idx;
+  vec3 bb_max;
+  uint brdf_idx;
+
+  uvec4 padding[4];
 };
 
 
@@ -126,11 +128,6 @@ layout(std140, set = 0, binding = 3) uniform Shadow
 layout(set = 0, binding = 4) uniform texture2D gbuffer_0_texture;
 layout(set = 0, binding = 5) uniform texture2D gbuffer_1_texture;
 layout(set = 0, binding = 6) uniform texture2D depth_texture;
-//layout(set = 0, binding = 18) buffer AccumulationBuffer
-//{
-//  vec4 accumulation_buffer[];
-//};
-
 layout(set = 0, binding = 7, rgba32f) uniform image2D color_texture;
 layout(set = 0, binding = 8) uniform accelerationStructureEXT tlas;
 
