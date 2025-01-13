@@ -28,42 +28,47 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "render_3d/mode/no_shadow.h"
-#include "render_3d/mode/cubemap_shadow.h"
-#include "render_3d/mode/sw_traced_shadow.h"
-#include "render_3d/mode/hw_traced_shadow.h"
+#include "../raygene3d-wrap/wrap.h"
 
 namespace RayGene3D
 {
-  class Render3DBroker : public Broker
+  class TraceBroker : public Broker
   {
   protected:
-    Render3D::Scope scope;
+    std::shared_ptr<Property> prop_scene;
 
   protected:
-    std::unique_ptr<Render3D::Mode> no_shadow;
-    std::unique_ptr<Render3D::Mode> cubemap_shadow;
-    std::unique_ptr<Render3D::Mode> sw_traced_shadow;
-    std::unique_ptr<Render3D::Mode> hw_traced_shadow;
+    std::shared_ptr<Property> prop_instances;
+    std::shared_ptr<Property> prop_triangles;
+    std::shared_ptr<Property> prop_vertices;
 
-  public:
-    enum ShadowMode
-    {
-      NO_SHADOW = 0,
-      CUBEMAP_SHADOW = 1,
-      SW_TRACED_SHADOW = 2,
-      HW_TRACED_SHADOW = 3,
-    };
+    std::shared_ptr<Property> prop_t_boxes;
+    std::shared_ptr<Property> prop_b_boxes;
 
   protected:
-    ShadowMode mode{ NO_SHADOW };
+    //Copies of original resources bacause of DX11 limitations
+    SPtrResource trace_instances;
+    SPtrResource trace_triangles;
+    SPtrResource trace_vertices;
 
-  public:
-    void SetShadowMode(ShadowMode mode) { this->mode = mode; }
-    ShadowMode GetShadowMode() const { return mode; }
+    SPtrResource trace_t_boxes;
+    SPtrResource trace_b_boxes;
 
   protected:
-    bool use_normal_oct_quad_encoding{ false };
+    void CreateTraceInstances();
+    void CreateTraceTriangles();
+    void CreateTraceVertices();
+
+    void CreateTraceTBoxes();
+    void CreateTraceBBoxes();
+
+  protected:
+    void DestroyTraceInstances();
+    void DestroyTraceTriangles();
+    void DestroyTraceVertices();
+
+    void DestroyTraceTBoxes();
+    void DestroyTraceBBoxes();
 
   public:
     void Initialize() override;
@@ -71,7 +76,7 @@ namespace RayGene3D
     void Discard() override;
 
   public:
-    Render3DBroker(Wrap& wrap);
-    virtual ~Render3DBroker();
+    TraceBroker(Wrap& wrap);
+    virtual ~TraceBroker();
   };
 }

@@ -25,7 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ================================================================================*/
-#include "bvh_broker.h"
+#include "trace_broker.h"
 
 namespace RayGene3D
 {
@@ -283,8 +283,133 @@ namespace RayGene3D
     instance_boxes.insert(instance_boxes.end(), nodes.begin(), nodes.end());;
   }
 
+  void TraceBroker::CreateTraceTBoxes()
+  {
+    const auto [data, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetTypedBytes<Box>(0);
+    std::pair<const void*, uint32_t> interops[] = {
+      { data, uint32_t(sizeof(Box)) * count },
+    };
 
-  void BVHBroker::Initialize()
+    trace_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_t_boxes",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        uint32_t(sizeof(Box)),
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+      );
+  }
+
+  void TraceBroker::CreateTraceBBoxes()
+  {
+    const auto [data, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetTypedBytes<Box>(0);
+    std::pair<const void*, uint32_t> interops[] = {
+      { data, uint32_t(sizeof(Box)) * count },
+    };
+
+    trace_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_b_boxes",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        uint32_t(sizeof(Box)),
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+      );
+  }
+
+  void TraceBroker::CreateTraceInstances()
+  {
+    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    std::pair<const void*, uint32_t> interops[] = {
+      { data, uint32_t(sizeof(Instance)) * count },
+    };
+
+    trace_instances = wrap.GetCore()->GetDevice()->CreateResource("trace_instances",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        uint32_t(sizeof(Instance)),
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { interops, uint32_t(std::size(interops)) }
+      );
+  }
+
+  void TraceBroker::CreateTraceTriangles()
+  {
+    const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
+    std::pair<const void*, uint32_t> interops[] = {
+      { data, uint32_t(sizeof(Triangle)) * count },
+    };
+
+    trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("trace_triangles",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
+        uint32_t(sizeof(Triangle)),
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
+      { interops, uint32_t(std::size(interops)) }
+      );
+  }
+
+  void TraceBroker::CreateTraceVertices()
+  {
+    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
+    std::pair<const void*, uint32_t> interops[] = {
+      { data, uint32_t(sizeof(Vertex)) * count },
+    };
+
+    trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("trace_vertices",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
+        uint32_t(sizeof(Vertex)),
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
+      { interops, uint32_t(std::size(interops)) }
+      );
+  }
+
+  void TraceBroker::DestroyTraceTBoxes()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_t_boxes);
+    trace_t_boxes.reset();
+  }
+
+  void TraceBroker::DestroyTraceBBoxes()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_b_boxes);
+    trace_b_boxes.reset();
+  }
+
+  void TraceBroker::DestroyTraceInstances()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_instances);
+    trace_instances.reset();
+  }
+
+  void TraceBroker::DestroyTraceTriangles()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_triangles);
+    trace_triangles.reset();
+  }
+
+  void TraceBroker::DestroyTraceVertices()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_vertices);
+    trace_vertices.reset();
+  }
+
+
+  void TraceBroker::Initialize()
   {
     if (prop_scene->HasObjectItem("t_boxes")) return;
     if (prop_scene->HasObjectItem("b_boxes")) return;
@@ -296,6 +421,10 @@ namespace RayGene3D
     const auto triangle_items = prop_triangles->GetTypedBytes<Triangle>(0);
     const auto vertex_items = prop_vertices->GetTypedBytes<Vertex>(0);
 
+    CreateTraceInstances();
+    CreateTraceTriangles();
+    CreateTraceVertices();
+
 
     MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
 
@@ -304,26 +433,39 @@ namespace RayGene3D
       const auto stride = uint32_t(sizeof(RayGene3D::Box));
       const auto count = uint32_t(t_boxes.size());
       auto raw = Raw({ data, stride * count });
-      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
-      prop_scene->SetObjectItem("t_boxes", property);
+      prop_t_boxes = CreateBufferProperty({ &raw, 1u }, stride, count);
+      prop_scene->SetObjectItem("t_boxes", prop_t_boxes);
     }
+    CreateTraceTBoxes();
+
     {
       const auto data = b_boxes.data();
       const auto stride = uint32_t(sizeof(RayGene3D::Box));
       const auto count = uint32_t(b_boxes.size());
       auto raw = Raw({ data, stride * count });
-      const auto property = CreateBufferProperty({ &raw, 1u }, stride, count);
-      prop_scene->SetObjectItem("b_boxes", property);
+      prop_b_boxes = CreateBufferProperty({ &raw, 1u }, stride, count);
+      prop_scene->SetObjectItem("b_boxes", prop_b_boxes);
     }
+    CreateTraceBBoxes();
   }
 
-  void BVHBroker::Use()
+  void TraceBroker::Use()
   {
 
   }
 
-  void BVHBroker::Discard()
+  void TraceBroker::Discard()
   {
+    //DestroyTraceInstances();
+    //DestroyTraceTriangles();
+    //DestroyTraceVertices();
+
+    //DestroyTraceTBoxes();
+    //DestroyTraceBBoxes();
+
+    prop_t_boxes.reset();
+    prop_b_boxes.reset();
+
     prop_vertices.reset();
     prop_triangles.reset();
     prop_instances.reset();
@@ -331,8 +473,8 @@ namespace RayGene3D
     prop_scene.reset();
   }
 
-  BVHBroker::BVHBroker(Wrap& wrap)
-    : Broker("bvh_broker", wrap)
+  TraceBroker::TraceBroker(Wrap& wrap)
+    : Broker("trace_broker", wrap)
   {
     const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
 
@@ -344,7 +486,7 @@ namespace RayGene3D
     }
   }
 
-  BVHBroker::~BVHBroker()
+  TraceBroker::~TraceBroker()
   {}
 
 }

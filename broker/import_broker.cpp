@@ -88,9 +88,11 @@ namespace RayGene3D
 
       Vertex vertex;
 
-      vertex.pos = pos_transform * glm::fvec4{ pos.x, pos.y, pos.z, 1.0f };
-      vertex.nrm = nrm_transform * glm::normalize(glm::fvec3{ nrm.x, nrm.y, nrm.z });
-      vertex.tc0 = tc0_transform * glm::f32vec2(tc0.x, tc0.y);
+      vertex.pos = pos_transform * glm::f32vec4{ pos.x, pos.y, pos.z, 1.0f };
+      vertex.nrm = nrm_transform * glm::f32vec3{ nrm.x, nrm.y, nrm.z };
+      vertex.tc0 = tc0_transform * glm::f32vec2{ tc0.x, tc0.y };
+
+      vertex.nrm = glm::normalize(vertex.nrm);
 
       return vertex;
     };
@@ -376,10 +378,10 @@ namespace RayGene3D
 
         Instance instance;
         instance.transform = glm::identity<glm::fmat3x4>();
-        instance.geometry_idx = uint32_t(instances.size());
         instance.bb_min = instance_bb_min;
+        instance.geom_idx = uint32_t(instances.size());
         instance.bb_max = instance_bb_max;
-        //instance.debug_color{ 0.0f, 0.0f, 0.0f };
+        instance.brdf_idx = 1;
 
         const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
         const auto texture_0_id = gltf_material.pbrMetallicRoughness.baseColorTexture.index;
@@ -403,7 +405,7 @@ namespace RayGene3D
 
         instances.push_back(instance);
 
-        BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instance.geometry_idx, instance.vert_count, instance.prim_count);
+        BLAST_LOG("Instance %d: Added vert/prim: %d/%d", instance.geom_idx, instance.vert_count, instance.prim_count);
       }
     }
 
@@ -572,57 +574,44 @@ namespace RayGene3D
 
         Instance instance;
         instance.transform = glm::identity<glm::fmat3x4>();
-        instance.geometry_idx = uint32_t(instances.size());
         instance.bb_min = instance_bb_min;
+        instance.geom_idx = uint32_t(instances.size());
         instance.bb_max = instance_bb_max;
-        //instance.debug_color{ 0.0f, 0.0f, 0.0f };
+        instance.brdf_idx = 0;
 
         const auto& obj_material = obj_materials[material_id.first];
 
         const auto debug = false;
         if (debug)
         {
-          instance.emission = glm::vec3(0.0f, 0.0f, 0.0f);
-          instance.intensity = 0.0f;
-          //material.ambient = glm::vec3(obj_material.ambient[0], obj_material.ambient[1], obj_material.ambient[2]);
-          //material.dissolve = obj_material.dissolve;
-          instance.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-          instance.shininess = 1.0f;
-          instance.specular = glm::vec3(0.0f, 0.0f, 0.0f);
-          instance.alpha = 1.0f;
-          //instance.transmittance = glm::vec3(0.0f, 0.0f, 0.0f) * (1.0f - obj_material.dissolve);
-          //instance.ior = 1.0f;
+          instance.brdf_param0 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+          instance.brdf_param1 = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+          instance.brdf_param2 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+          instance.brdf_param3 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
         }
         else
         {
-
-          instance.emission = glm::vec3(obj_material.emission[0], obj_material.emission[1], obj_material.emission[2]);
-          instance.intensity = 10.0f;
-          //material.ambient = glm::vec3(obj_material.ambient[0], obj_material.ambient[1], obj_material.ambient[2]);
-          //material.dissolve = obj_material.dissolve;
-          instance.diffuse = glm::vec3(obj_material.diffuse[0], obj_material.diffuse[1], obj_material.diffuse[2]);
-          instance.shininess = obj_material.shininess;
-          instance.specular = glm::vec3(obj_material.specular[0], obj_material.specular[1], obj_material.specular[2]);
-          instance.alpha = 1.0f; // -obj_material.dissolve;
-          //instance.transmittance = glm::vec3(obj_material.transmittance[0], obj_material.transmittance[1], obj_material.transmittance[2]) * (1.0f - obj_material.dissolve);
-          //instance.ior = obj_material.ior;
+          instance.brdf_param0 = glm::vec4(obj_material.emission[0], obj_material.emission[1], obj_material.emission[2], obj_material.illum);
+          instance.brdf_param1 = glm::vec4(obj_material.diffuse[0], obj_material.diffuse[1], obj_material.diffuse[2], obj_material.dissolve);
+          instance.brdf_param2 = glm::vec4(obj_material.specular[0], obj_material.specular[1], obj_material.specular[2], obj_material.shininess);
+          instance.brdf_param3 = glm::vec4(obj_material.transmittance[0], obj_material.transmittance[1], obj_material.transmittance[2], obj_material.ior);
 
           const auto tex_reindex_fn = [](std::vector<std::string>& tex_names, const std::string& tex_name)
-          {
-            if (tex_name.empty())
             {
-              return -1;
-            }
+              if (tex_name.empty())
+              {
+                return -1;
+              }
 
-            const auto tex_iter = std::find_if(tex_names.cbegin(), tex_names.cend(), [&tex_name](const auto& name) { return tex_name == name; });
-            const auto tex_index = tex_iter == tex_names.cend() ? int32_t(tex_names.size()) : int32_t(tex_iter - tex_names.cbegin());
-            if (tex_index == tex_names.size())
-            {
-              tex_names.push_back(tex_name);
-            }
+              const auto tex_iter = std::find_if(tex_names.cbegin(), tex_names.cend(), [&tex_name](const auto& name) { return tex_name == name; });
+              const auto tex_index = tex_iter == tex_names.cend() ? int32_t(tex_names.size()) : int32_t(tex_iter - tex_names.cbegin());
+              if (tex_index == tex_names.size())
+              {
+                tex_names.push_back(tex_name);
+              }
 
-            return tex_index;
-          };
+              return tex_index;
+            };
 
           const auto& texture_0_name = obj_material.diffuse_texname;
           instance.texture0_idx = texture_0_name.empty() ? uint32_t(-1) : tex_reindex_fn(textures_0_names, texture_0_name);
@@ -633,18 +622,9 @@ namespace RayGene3D
           const auto& texture_3_name = obj_material.bump_texname;
           instance.texture3_idx = texture_3_name.empty() ? uint32_t(-1) : tex_reindex_fn(textures_3_names, texture_3_name);
 
-          switch (obj_material.illum)
+          if (obj_material.illum != 7) // glass material
           {
-          case 3: // mirror
-            instance.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
-            instance.specular = glm::vec3(1.0f, 1.0f, 1.0f);
-            instance.shininess = float(1 << 16);
-            break;
-          case 7: // glass
-            instance.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
-            instance.specular = glm::vec3(0.0f, 0.0f, 0.0f);
-            instance.alpha = 1.5f;
-            break;
+            instance.brdf_param3 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
           }
         }
 
@@ -961,234 +941,6 @@ namespace RayGene3D
 
     property = root;
   }
-
-
-  //std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
-  //{
-  //  int32_t src_tex_x = 0;
-  //  int32_t src_tex_y = 0;
-  //  int32_t src_tex_n = 4;
-  //  float* src_tex_data = nullptr;
-  //  BLAST_ASSERT(0 == LoadEXR(&src_tex_data, &src_tex_x, &src_tex_y, (name).c_str(), nullptr));
-
-  //  int32_t dst_tex_x = src_tex_x;
-  //  int32_t dst_tex_y = src_tex_y;
-  //  int32_t dst_tex_n = 4;
-  //  float* dst_tex_data = new float[dst_tex_x * dst_tex_y * dst_tex_n];
-  //  for (uint32_t j = 0; j < src_tex_x * src_tex_y; ++j)
-  //  {
-  //    const auto r = src_tex_n > 0 ? src_tex_data[j * src_tex_n + 0] : 0; //0xFF;
-  //    const auto g = src_tex_n > 1 ? src_tex_data[j * src_tex_n + 1] : r; //0xFF;
-  //    const auto b = src_tex_n > 2 ? src_tex_data[j * src_tex_n + 2] : r; //0xFF;
-  //    const auto a = src_tex_n > 3 ? src_tex_data[j * src_tex_n + 3] : r; //0xFF;
-  //    dst_tex_data[j * dst_tex_n + 0] = r * exposure;
-  //    dst_tex_data[j * dst_tex_n + 1] = g * exposure;
-  //    dst_tex_data[j * dst_tex_n + 2] = b * exposure;
-  //    dst_tex_data[j * dst_tex_n + 3] = a * exposure;
-  //  }
-  //  delete[] src_tex_data;
-
-  //  src_tex_data = dst_tex_data;
-  //  src_tex_x = dst_tex_x;
-  //  src_tex_y = dst_tex_y;
-  //  src_tex_n = dst_tex_n;
-
-  //  const auto get_pot_fn = [](int32_t value)
-  //  {
-  //    int32_t power = 0;
-  //    while ((1 << power) < value) ++power;
-  //    return power;
-  //  };
-
-  //  const auto pow_tex_x = get_pot_fn(src_tex_x);
-  //  const auto pow_tex_y = get_pot_fn(src_tex_y);
-  //  const auto pow_delta = std::abs(pow_tex_x - pow_tex_y);
-
-  //  //const uint32_t tex_x = (1 << (pow_tex_x > pow_tex_y ? mipmap_count + pow_delta : mipmap_count)) - 1;
-  //  //const uint32_t tex_y = (1 << (pow_tex_y > pow_tex_x ? mipmap_count + pow_delta : mipmap_count)) - 1;
-  //  //const uint32_t tex_n = 4;
-
-  //  const auto pow_x = pow_tex_x > pow_tex_y ? mipmaps + pow_delta : mipmaps;
-  //  const auto pow_y = pow_tex_y > pow_tex_x ? mipmaps + pow_delta : mipmaps;
-  //  const auto extent_x = 1 << pow_x;
-  //  const auto extent_y = 1 << pow_y;
-  //  const auto count = uint32_t((extent_x * extent_y - 1) / 3);
-  //  const auto stride = uint32_t(sizeof(glm::f32vec4));
-  //  const auto data = new float[count * 4];
-
-  //  dst_tex_x = 1 << (pow_x - 1);
-  //  dst_tex_y = 1 << (pow_y - 1);
-  //  dst_tex_n = src_tex_n;
-  //  dst_tex_data = data;
-  //  stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
-  //  delete[] src_tex_data;
-
-  //  //const auto size_x_property = std::shared_ptr<Property>(new Property());
-  //  //size_x_property->SetValue(uint32_t(dst_tex_x));
-
-  //  //const auto size_y_property = std::shared_ptr<Property>(new Property());
-  //  //size_y_property->SetValue(uint32_t(dst_tex_y));
-
-  //  //const auto mipmaps_property = std::shared_ptr<Property>(new Property());
-  //  //mipmaps_property->SetValue(uint32_t(mipmaps));
-
-  //  src_tex_data = dst_tex_data;
-  //  src_tex_x = dst_tex_x;
-  //  src_tex_y = dst_tex_y;
-  //  src_tex_n = dst_tex_n;
-
-  //  for (uint32_t i = 1; i < mipmaps; ++i)
-  //  {
-  //    dst_tex_x = src_tex_x >> 1;
-  //    dst_tex_y = src_tex_y >> 1;
-  //    dst_tex_n = src_tex_n;
-  //    dst_tex_data += src_tex_x * src_tex_y * src_tex_n;
-  //    stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
-
-  //    src_tex_data = dst_tex_data;
-  //    src_tex_x = dst_tex_x;
-  //    src_tex_y = dst_tex_y;
-  //    src_tex_n = dst_tex_n;
-  //  }
-
-  //  const auto root = CreateTextureProperty({ data, stride * count }, extent_x, extent_y, 1, FORMAT_R32G32B32_FLOAT, mipmaps);
-  //  delete[] data;
-
-  //  return root;
-  //}
-
-  //std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps)
-  //{
-  //  const auto cubemap_layer_counter = 6u;
-  //  const auto cubemap_layer_size = 1u << (mipmaps - 1);
-
-  //  auto texture_property = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-  //  texture_property->SetArraySize(cubemap_layer_counter);
-
-  //  enum CUBEMAP_LAYERS
-  //  {
-  //    CUBEMAP_POSITIVE_X,
-  //    CUBEMAP_NEGATIVE_X,
-  //    CUBEMAP_POSITIVE_Y,
-  //    CUBEMAP_NEGATIVE_Y,
-  //    CUBEMAP_POSITIVE_Z,
-  //    CUBEMAP_NEGATIVE_Z
-  //  };
-
-  //  const auto uv_to_cube = [](float u, float v, uint32_t layer)
-  //  {
-  //    glm::fvec3 text_coord = { 0.0f, 0.0f, 0.0f };
-
-  //    switch (layer)
-  //    {
-  //    case CUBEMAP_POSITIVE_X:
-  //      text_coord = { 1.0f, -(2.0f * v - 1.0f), -(2.0f * u - 1.0f) };
-  //      break;
-  //    case CUBEMAP_NEGATIVE_X:
-  //      text_coord = { -1.0f, -(2.0f * v - 1.0f), (2.0f * u - 1.0f) };
-  //      break;
-  //    case CUBEMAP_POSITIVE_Y:
-  //      text_coord = { (2.0f * u - 1.0f), 1.0f, (2.0f * v - 1.0f) };
-  //      break;
-  //    case CUBEMAP_NEGATIVE_Y:
-  //      text_coord = { (2.0f * u - 1.0f), -1.0f, -(2.0f * v - 1.0f) };
-  //      break;
-  //    case CUBEMAP_POSITIVE_Z:
-  //      text_coord = { (2.0f * u - 1.0f), -(2.0f * v - 1.0f), 1.0f };
-  //      break;
-  //    case CUBEMAP_NEGATIVE_Z:
-  //      text_coord = { -(2.0f * u - 1.0f), -(2.0f * v - 1.0f), -1.0f };
-  //      break;
-  //    }
-  //    return glm::normalize(text_coord);
-  //  };
-
-  //  const auto cube_to_pano = [](const glm::fvec3& cube_tex_coord)
-  //  {
-  //    glm::fvec2 tex_coord = { 0.0f, 0.0f };
-  //    tex_coord.x = 0.5f * atan2(cube_tex_coord.x, cube_tex_coord.z) / glm::pi<float>() + 0.5f;
-  //    tex_coord.y = -asin(cube_tex_coord.y) / glm::pi<float>() + 0.5f;
-  //    return tex_coord;
-  //  };
-
-  //  const auto src_tex_n = 4;
-  //  const auto dst_tex_n = 4;
-  //  auto pano_tex_x = 0;
-  //  auto pano_tex_y = 0;
-  //  float* pano_tex_data = nullptr;
-  //  BLAST_ASSERT(0 == LoadEXR(&pano_tex_data, &pano_tex_x, &pano_tex_y, (name).c_str(), nullptr));
-
-  //  for (uint32_t i = 0; i < cubemap_layer_counter; ++i)
-  //  {
-  //    auto dst_tex_x = cubemap_layer_size;
-  //    auto dst_tex_y = cubemap_layer_size;
-  //    const auto texel_pow = mipmaps;
-
-  //    const auto texel_count = uint32_t(((1 << texel_pow) * (1 << texel_pow) - 1) / 3);
-  //    float* texel_data = new float[texel_count * dst_tex_n];
-
-  //    {
-  //      auto dst_tex_data = texel_data;
-  //      for (uint32_t j = 0; j < dst_tex_x; ++j)
-  //      {
-  //        for (uint32_t k = 0; k < dst_tex_y; ++k)
-  //        {
-  //          const float u = (float(j) + 0.5f) / dst_tex_x;
-  //          const float v = (float(k) + 0.5f) / dst_tex_y;
-
-  //          const auto cube_text_coord = uv_to_cube(u, v, i);
-  //          const auto pano_text_coord = cube_to_pano(cube_text_coord);
-
-  //          const auto x = uint32_t(pano_tex_x * pano_text_coord.x);
-  //          const auto y = uint32_t(pano_tex_y * pano_text_coord.y);
-  //          const auto texel_num = y * pano_tex_x + x;
-
-  //          const auto index = j + k * dst_tex_x;
-
-  //          dst_tex_data[index * dst_tex_n + 0] = pano_tex_data[texel_num * src_tex_n + 0] * exposure;
-  //          dst_tex_data[index * dst_tex_n + 1] = pano_tex_data[texel_num * src_tex_n + 1] * exposure;
-  //          dst_tex_data[index * dst_tex_n + 2] = pano_tex_data[texel_num * src_tex_n + 2] * exposure;
-  //          dst_tex_data[index * dst_tex_n + 3] = pano_tex_data[texel_num * src_tex_n + 3] * exposure;
-  //        }
-  //      }
-  //    }
-
-  //    {
-  //      auto src_tex_x = cubemap_layer_size;
-  //      auto src_tex_y = cubemap_layer_size;
-  //      auto dst_tex_data = texel_data;
-  //      auto src_tex_data = dst_tex_data;
-
-  //      auto offset = 0u;
-  //      for (uint32_t i = 1; i < mipmaps; ++i)
-  //      {
-  //        dst_tex_x = src_tex_x >> 1;
-  //        dst_tex_y = src_tex_y >> 1;
-  //        dst_tex_data += src_tex_x * src_tex_y * dst_tex_n;
-  //        offset += src_tex_x * src_tex_y * dst_tex_n;
-  //        stbir_resize_float(src_tex_data, src_tex_x, src_tex_y, 0, dst_tex_data, dst_tex_x, dst_tex_y, 0, dst_tex_n);
-
-  //        src_tex_data = dst_tex_data;
-  //        src_tex_x = dst_tex_x;
-  //        src_tex_y = dst_tex_y;
-  //      }
-  //    }
-
-  //    const auto texels_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-  //    {
-  //      const auto texel_stride = uint32_t(sizeof(float) * dst_tex_n);
-  //      texels_property->RawAllocate(texel_count * texel_stride);
-  //      texels_property->SetRawBytes({ texel_data, texel_count * texel_stride }, 0);
-  //    }
-
-  //    texture_property->SetArrayItem(i, texels_property);
-  //    delete[] texel_data;
-  //  }
-
-  //  delete[] pano_tex_data;
-
-  //  return texture_property;
-  //}
 
   ImportBroker::ImportBroker(Wrap& wrap)
     : Broker("import_broker", wrap)

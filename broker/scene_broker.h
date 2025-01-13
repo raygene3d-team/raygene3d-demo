@@ -32,26 +32,66 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  class XAtlasBroker : public Broker
+  class SceneBroker : public Broker
   {
   protected:
     std::shared_ptr<Property> prop_scene;
-    std::shared_ptr<Property> prop_illumination;
-
-  protected:
-    std::shared_ptr<Property> prop_maps;
-    std::shared_ptr<Property> prop_quality;
-    std::shared_ptr<Property> prop_density;
 
   protected:
     std::shared_ptr<Property> prop_instances;
     std::shared_ptr<Property> prop_triangles;
     std::shared_ptr<Property> prop_vertices;
 
+    std::shared_ptr<Property> prop_textures0;
+    std::shared_ptr<Property> prop_textures1;
+    std::shared_ptr<Property> prop_textures2;
+    std::shared_ptr<Property> prop_textures3;
+    std::shared_ptr<Property> prop_textures4;
+    std::shared_ptr<Property> prop_textures5;
+    std::shared_ptr<Property> prop_textures6;
+    std::shared_ptr<Property> prop_textures7;
+
   protected:
-    std::shared_ptr<Property> prop_atlas_size_x;
-    std::shared_ptr<Property> prop_atlas_size_y;
-    std::shared_ptr<Property> prop_atlas_layers;
+    SPtrResource scene_instances;
+    SPtrResource scene_triangles;
+    SPtrResource scene_vertices;
+
+    SPtrResource scene_textures0;
+    SPtrResource scene_textures1;
+    SPtrResource scene_textures2;
+    SPtrResource scene_textures3;
+    SPtrResource scene_textures4;
+    SPtrResource scene_textures5;
+    SPtrResource scene_textures6;
+    SPtrResource scene_textures7;
+
+  protected:
+    void CreateSceneInstances();
+    void CreateSceneTriangles();
+    void CreateSceneVertices();
+
+    void CreateSceneTextures0();
+    void CreateSceneTextures1();
+    void CreateSceneTextures2();
+    void CreateSceneTextures3();
+    void CreateSceneTextures4();
+    void CreateSceneTextures5();
+    void CreateSceneTextures6();
+    void CreateSceneTextures7();
+
+  protected:
+    void DestroySceneInstances();
+    void DestroySceneTriangles();
+    void DestroySceneVertices();
+
+    void DestroySceneTextures0();
+    void DestroySceneTextures1();
+    void DestroySceneTextures2();
+    void DestroySceneTextures3();
+    void DestroySceneTextures4();
+    void DestroySceneTextures5();
+    void DestroySceneTextures6();
+    void DestroySceneTextures7();
 
   public:
     void Initialize() override;
@@ -59,7 +99,7 @@ namespace RayGene3D
     void Discard() override;
 
   public:
-    XAtlasBroker(Wrap& wrap);
-    virtual ~XAtlasBroker();
+    SceneBroker(Wrap& wrap);
+    virtual ~SceneBroker();
   };
 }

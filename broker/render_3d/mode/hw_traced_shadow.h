@@ -28,50 +28,36 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "render_3d/mode/no_shadow.h"
-#include "render_3d/mode/cubemap_shadow.h"
-#include "render_3d/mode/sw_traced_shadow.h"
-#include "render_3d/mode/hw_traced_shadow.h"
+#include "../mode.h"
 
 namespace RayGene3D
 {
-  class Render3DBroker : public Broker
+  namespace Render3D
   {
-  protected:
-    Render3D::Scope scope;
-
-  protected:
-    std::unique_ptr<Render3D::Mode> no_shadow;
-    std::unique_ptr<Render3D::Mode> cubemap_shadow;
-    std::unique_ptr<Render3D::Mode> sw_traced_shadow;
-    std::unique_ptr<Render3D::Mode> hw_traced_shadow;
-
-  public:
-    enum ShadowMode
+    class HWTracedShadow : public Mode
     {
-      NO_SHADOW = 0,
-      CUBEMAP_SHADOW = 1,
-      SW_TRACED_SHADOW = 2,
-      HW_TRACED_SHADOW = 3,
+    protected:
+      SPtrPass hw_traced_pass;
+      SPtrConfig hw_traced_config;
+      SPtrBatch hw_traced_batch;
+
+    protected:
+      void CreateHWTracedPass();
+      void CreateHWTracedConfig();
+      void CreateHWTracedBatch();
+
+    protected:
+      void DestroyHWTracedBatch();
+      void DestroyHWTracedConfig();
+      void DestroyHWTracedPass();
+
+    public:
+      void Enable() override;
+      void Disable() override;
+
+    public:
+      HWTracedShadow(const Scope& scope);
+      virtual ~HWTracedShadow();
     };
-
-  protected:
-    ShadowMode mode{ NO_SHADOW };
-
-  public:
-    void SetShadowMode(ShadowMode mode) { this->mode = mode; }
-    ShadowMode GetShadowMode() const { return mode; }
-
-  protected:
-    bool use_normal_oct_quad_encoding{ false };
-
-  public:
-    void Initialize() override;
-    void Use() override;
-    void Discard() override;
-
-  public:
-    Render3DBroker(Wrap& wrap);
-    virtual ~Render3DBroker();
-  };
+  }
 }

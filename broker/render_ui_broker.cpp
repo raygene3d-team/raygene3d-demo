@@ -130,7 +130,7 @@ namespace RayGene3D
     };
     wrap.GetCore()->VisitView(find_view_fn);
 
-    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& tree = wrap.GetUtil()->GetStorage()->GetTree();
 
     prop_camera = tree->GetObjectItem("camera");
     {

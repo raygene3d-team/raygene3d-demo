@@ -28,27 +28,36 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../raygene3d-wrap/wrap.h"
+#include "../mode.h"
 
 namespace RayGene3D
 {
-  class BVHBroker : public Broker
+  namespace Render3D
   {
-  protected:
-    std::shared_ptr<Property> prop_scene;
+    class SWTracedShadow : public Mode
+    {
+    protected:
+      SPtrPass sw_traced_pass;
+      SPtrConfig sw_traced_config;
+      SPtrBatch sw_traced_batch;
 
-  protected:
-    std::shared_ptr<Property> prop_instances;
-    std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
+    protected:
+      void CreateSWTracedPass();
+      void CreateSWTracedConfig();
+      void CreateSWTracedBatch();
 
-  public:
-    void Initialize() override;
-    void Use() override;
-    void Discard() override;
+    protected:
+      void DestroySWTracedBatch();
+      void DestroySWTracedConfig();
+      void DestroySWTracedPass();
 
-  public:
-    BVHBroker(Wrap& wrap);
-    virtual ~BVHBroker();
-  };
+    public:
+      void Enable() override;
+      void Disable() override;
+
+    public:
+      SWTracedShadow(const Scope& scope);
+      virtual ~SWTracedShadow();
+    };
+  }
 }

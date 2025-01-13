@@ -28,57 +28,36 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "render_3d_scope.h"
+#include "../mode.h"
 
 namespace RayGene3D
 {
-  class Render3DMode
+  namespace Render3D
   {
-  protected:
-    const Render3DScope& scope;
+    class NoShadow : public Mode
+    {
+    protected:
+      SPtrPass unshadowed_pass;
+      SPtrConfig unshadowed_config;
+      SPtrBatch unshadowed_batch;
 
-  protected:
-    SPtrPass geometry_pass;
-    SPtrConfig geometry_config;
-    SPtrBatch geometry_batch;
+    protected:
+      void CreateUnshadowedPass();
+      void CreateUnshadowedConfig();
+      void CreateUnshadowedBatch();
 
-    SPtrConfig skybox_config;
-    SPtrBatch skybox_batch;
+    protected:
+      void DestroyUnshadowedBatch();
+      void DestroyUnshadowedConfig();
+      void DestroyUnshadowedPass();
 
-    SPtrPass present_pass;
-    SPtrConfig present_config;
-    SPtrBatch present_batch;
+    public:
+      void Enable() override;
+      void Disable() override;
 
-  protected:
-    void CreateGeometryPass();
-    void CreateGeometryConfig();
-    void CreateGeometryBatch();
-
-    void CreateSkyboxConfig();
-    void CreateSkyboxBatch();
-
-    void CreatePresentPass();
-    void CreatePresentConfig();
-    void CreatePresentBatch();
-
-  protected:
-    void DestroyGeometryBatch();
-    void DestroyGeometryConfig();
-    void DestroyGeometryPass();
-
-    void DestroySkyboxBatch();
-    void DestroySkyboxConfig();
-
-    void DestroyPresentBatch();
-    void DestroyPresentConfig();
-    void DestroyPresentPass();
-
-  public:
-    virtual void Enable() = 0;
-    virtual void Disable() = 0;
-
-  public:
-    Render3DMode(const Render3DScope& scope);
-    virtual ~Render3DMode();
-  };
+    public:
+      NoShadow(const Scope& scope);
+      virtual ~NoShadow();
+    };
+  }
 }

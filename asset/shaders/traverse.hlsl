@@ -9,7 +9,7 @@ struct Box
 struct Vertex
 {
   float3 pos;
-  float color;
+  uint col;
   float3 nrm;
   float mask;
   float3 tgn;
@@ -45,11 +45,20 @@ struct Instance
   int tex1_idx;
   int tex2_idx;
   int tex3_idx;
+  int tex4_idx;
+  int tex5_idx;
+  int tex6_idx;
+  int tex7_idx;
 
   float3 debug_color;
   uint geometry_idx;
+  
+  float3 bb_min;
+  uint bb_min_padding;
+  float3 bb_max;
+  uint bb_max_padding;
 
-  uint4 padding[7];
+  uint4 padding[4];
 };
 
 struct Ray
@@ -62,6 +71,18 @@ struct Ray
 
 struct Hit
 {
+  uint2 geom;
+  float2 bary;
+};
+
+struct RayHit
+{
+  float3 org;
+  float tmin;
+  float3 dir;
+  float tmax;
+  float3 pg;
+  float dist;
   uint2 geom;
   float2 bary;
 };
@@ -85,8 +106,7 @@ bool CheckBox(in float3 pmin, out float dmin, in float3 pmax, out float dmax,
 }
 
 bool CheckTriangle(in float3 p0, in float3 p1, in float3 p2,
-  in float3 org, in float tmin, const in float3 dir, in float tmax, 
-  out float t, out float u, out float v)
+  in float3 org, in float tmin, const in float3 dir, in float tmax, out float t, out float u, out float v)
 {
   const float3 e1 = p1 - p0;
   const float3 e2 = p2 - p0;
@@ -104,4 +124,209 @@ bool CheckTriangle(in float3 p0, in float3 p1, in float3 p2,
   }
 
   return true;
+}
+
+
+
+void IntersectScene(inout RayHit rayhit,
+  in StructuredBuffer<Box> inst_boxes,
+  in StructuredBuffer<Box> prim_boxes,
+  in StructuredBuffer<Instance> inst_items,
+  in StructuredBuffer<Primitive> prim_items,
+  in StructuredBuffer<Vertex> vert_items)
+{
+  rayhit.dist = rayhit.tmax;
+
+  const uint inst_offset = 0;
+  const uint inst_count = inst_boxes[inst_offset].count;
+
+  uint inst_stride = 0;
+  while (inst_stride < inst_count)
+  {
+    const Box inst_node = inst_boxes[inst_stride + inst_offset];
+    if(inst_node.count == 1) //Instance leaf
+    {
+      const int inst_idx = inst_node.offset;
+      const Instance instance = inst_items[inst_idx];
+
+      const uint prim_offset = 2 * instance.prim_offset - inst_idx;
+      const uint prim_count = prim_boxes[prim_offset].count;
+
+      uint prim_stride = 0;
+      while (prim_stride < prim_count)
+      {
+        const Box prim_node = prim_boxes[prim_stride + prim_offset];
+        if (prim_node.count == 1) //Primitive leaf
+        {
+          const int prim_idx = prim_node.offset;
+          const Primitive primitive = prim_items[instance.prim_offset + prim_idx];
+
+#ifdef USE_CONSISTENT_BVH
+          const float3 center = f16tof32(asuint(prim_node.min));
+          const float3 delta0 = f16tof32(asuint(prim_node.min) >> 16);
+          const float3 delta1 = f16tof32(asuint(prim_node.max));
+          const float3 delta2 = f16tof32(asuint(prim_node.max) >> 16);
+
+          const float3 pos0 = center + delta0;
+          const float3 pos1 = center + delta1;
+          const float3 pos2 = center + delta2;
+#else
+          const float3 pos0 = vert_items[instance.vert_offset + primitive.idx0].pos;
+          const float3 pos1 = vert_items[instance.vert_offset + primitive.idx1].pos;
+          const float3 pos2 = vert_items[instance.vert_offset + primitive.idx2].pos;
+#endif
+
+          float t, u, v;
+          if (CheckTriangle(pos0, pos1, pos2, rayhit.org, rayhit.tmin, rayhit.dir, rayhit.dist, t, u, v))
+          {
+            if (rayhit.dist >= t)
+            {
+              bool alpha_clip = false;
+#ifdef USE_ALPHA_CLIP
+              if (instance.tex1_idx != -1)
+              {
+                const Vertex vertex0 = vert_items[instance.vert_offset + primitive.idx0];
+                const Vertex vertex1 = vert_items[instance.vert_offset + primitive.idx1];
+                const Vertex vertex2 = vert_items[instance.vert_offset + primitive.idx2];
+
+                const float3 weights = float3(1.0 - u - v, u, v);
+                const float u = dot(float3(vertex0.u, vertex1.u, vertex2.u), weights);
+                const float v = dot(float3(vertex0.v, vertex1.v, vertex2.v), weights);
+
+                uint tex_w = 0;
+                uint tex_h = 0;
+                uint tex_n = 0;
+                texture1_items.GetDimensions(tex_w, tex_h, tex_n);
+                const float4 tex_value = texture1_items.Load(int4(abs(frac(u)) * tex_w, abs(frac(v)) * tex_h, instance.tex1_idx, 0));
+                
+                alpha_clip = tex_value.r > 0.1 ? false : true;
+              }
+#endif
+              if (!alpha_clip)
+              {
+                rayhit.bary = float2(u, v);
+                rayhit.geom = uint2(inst_idx, prim_idx);
+                rayhit.dist = t;
+                rayhit.pg = mul(float3(1.0 - u - v, u, v), float3x3(pos0, pos1, pos2)); 
+              }
+            }
+          }
+          prim_stride += 1;
+          continue;
+        }
+        const float3 prim_bmin = prim_node.min;
+        const float3 prim_bmax = prim_node.max;
+
+        float prim_dmin, prim_dmax;
+        if (CheckBox(prim_bmin, prim_dmin, prim_bmax, prim_dmax, rayhit.org, rayhit.tmin, rayhit.dir, rayhit.dist))
+        {
+          prim_stride += 1;
+          continue;
+        }
+        prim_stride += prim_node.count;
+      }
+      inst_stride += 1;
+      continue;
+    }
+    const float3 inst_bmin = inst_node.min;
+    const float3 inst_bmax = inst_node.max;
+
+    float inst_dmin, inst_dmax;
+    if (CheckBox(inst_bmin, inst_dmin, inst_bmax, inst_dmax, rayhit.org, rayhit.tmin, rayhit.dir, rayhit.dist))
+    {
+      inst_stride += 1;
+      continue;
+    }
+    inst_stride += inst_node.count;
+  }
+}
+
+
+
+void OccludeScene(inout RayHit rayhit,
+  in StructuredBuffer<Box> inst_boxes,
+  in StructuredBuffer<Box> prim_boxes,
+  in StructuredBuffer<Instance> inst_items,
+  in StructuredBuffer<Primitive> prim_items,
+  in StructuredBuffer<Vertex> vert_items)
+{ 
+  rayhit.dist = rayhit.tmax;
+
+  const uint inst_offset = 0;
+  const uint inst_count = inst_boxes[inst_offset].count;
+
+  uint inst_stride = 0;
+  while (inst_stride < inst_count)
+  {
+    const Box inst_node = inst_boxes[inst_stride + inst_offset];
+    if (inst_node.count == 1) //Instance leaf
+    {
+      const int inst_idx = inst_node.offset;
+      const Instance instance = inst_items[inst_idx];
+
+      const uint prim_offset = 2 * instance.prim_offset - inst_idx;
+      const uint prim_count = prim_boxes[prim_offset].count;
+
+      uint prim_stride = 0;
+      while (prim_stride < prim_count)
+      {
+        const Box prim_node = prim_boxes[prim_stride + prim_offset];
+        if (prim_node.count == 1) //Primitive leaf
+        {
+          const int prim_idx = prim_node.offset;
+
+#ifdef USE_CONSISTENT_BVH
+          const float3 center = f16tof32(asuint(prim_node.min));
+          const float3 delta0 = f16tof32(asuint(prim_node.min) >> 16);
+          const float3 delta1 = f16tof32(asuint(prim_node.max));
+          const float3 delta2 = f16tof32(asuint(prim_node.max) >> 16);
+
+          const float3 pos0 = center + delta0;
+          const float3 pos1 = center + delta1;
+          const float3 pos2 = center + delta2;
+#else
+          const Primitive primitive = prim_items[instance.prim_offset + prim_idx];
+          const float3 pos0 = vert_items[instance.vert_offset + primitive.idx0].pos;
+          const float3 pos1 = vert_items[instance.vert_offset + primitive.idx1].pos;
+          const float3 pos2 = vert_items[instance.vert_offset + primitive.idx2].pos;
+#endif
+
+          float t, u, v;
+          if (CheckTriangle(pos0, pos1, pos2, rayhit.org, rayhit.tmin, rayhit.dir, rayhit.tmax, t, u, v))
+          {
+            if (rayhit.dist > t)
+            {
+              rayhit.dist = t;
+              return;
+            }
+          }
+          prim_stride += 1;
+          continue;
+        }
+        const float3 prim_bmin = prim_node.min;
+        const float3 prim_bmax = prim_node.max;
+
+        float prim_dmin, prim_dmax;
+        if (CheckBox(prim_bmin, prim_dmin, prim_bmax, prim_dmax, rayhit.org, rayhit.tmin, rayhit.dir, rayhit.tmax))
+        {
+          prim_stride += 1;
+          continue;
+        }
+        prim_stride += prim_node.count;
+      }
+      inst_stride += 1;
+      continue;
+    }
+    const float3 inst_bmin = inst_node.min;
+    const float3 inst_bmax = inst_node.max;
+
+    float inst_dmin, inst_dmax;
+    if (CheckBox(inst_bmin, inst_dmin, inst_bmax, inst_dmax, rayhit.org, rayhit.tmin, rayhit.dir, rayhit.tmax))
+    {
+      inst_stride += 1;
+      continue;
+    }
+    inst_stride += inst_node.count;
+  }
+  return;
 }

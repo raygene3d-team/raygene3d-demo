@@ -34,21 +34,6 @@ namespace RayGene3D
 {
   void XAtlasBroker::Initialize()
   {
-    const auto& prop_tree = wrap.GetUtil()->GetStorage()->GetTree();
-
-    prop_scene = prop_tree->GetObjectItem("scene");
-    {
-      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
-    }
-
-    prop_illumination = prop_tree->GetObjectItem("illumination");
-    {
-      prop_maps = prop_illumination->GetObjectItem("maps");
-      prop_quality = prop_illumination->GetObjectItem("quality");
-      prop_density = prop_illumination->GetObjectItem("density");
-    }
   }
 
   void XAtlasBroker::Use()
@@ -59,7 +44,7 @@ namespace RayGene3D
     const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
     const auto [vrt_array, vrt_count] = prop_vertices->GetTypedBytes<Vertex>(0);
 
-    auto atlas = xatlas::Create();
+    const auto atlas = xatlas::Create();
 
     for (uint32_t i = 0; i < ins_count; ++i)
     {
@@ -114,7 +99,7 @@ namespace RayGene3D
       const auto& mesh = atlas->meshes[i];
 
       updated_vrt_count += mesh.vertexCount;
-      updated_trg_count += mesh.indexCount * 3;
+      updated_trg_count += mesh.indexCount / 3;
       updated_ins_count += 1u;
     }
 
@@ -137,7 +122,7 @@ namespace RayGene3D
       {
         const auto& vertex = mesh.vertexArray[j];
 
-        Vertex updated_vrt = vrt_array[ins_array[i].vert_offset + mesh.vertexArray[j].xref];
+        auto updated_vrt = vrt_array[ins_array[i].vert_offset + mesh.vertexArray[j].xref];
         updated_vrt.msk = vertex.atlasIndex;
         updated_vrt.tc1 = { vertex.uv[0] / atlas->width, vertex.uv[1] / atlas->height };
         updated_prop_vrt->SetTypedBytes<Vertex>({ &updated_vrt, 1 }, updated_vrt_offset + j);
@@ -149,7 +134,7 @@ namespace RayGene3D
         const auto idx1 = mesh.indexArray[j * 3 + 1];
         const auto idx2 = mesh.indexArray[j * 3 + 2];
 
-        Triangle updated_trg = trg_array[ins_array[i].prim_offset + j];
+        auto updated_trg = trg_array[ins_array[i].prim_offset + j];
         updated_trg.idx = { idx0, idx1, idx2 };
         updated_prop_trg->SetTypedBytes<Triangle>({ &updated_trg, 1 }, updated_trg_offset + j);
       }
@@ -187,9 +172,7 @@ namespace RayGene3D
         }
       }
 
-
-
-      Instance updated_ins = ins_array[i];
+      auto updated_ins = ins_array[i];
       updated_ins.vert_count = mesh.vertexCount;
       updated_ins.vert_offset = updated_vrt_offset;
       updated_ins.prim_count = mesh.indexCount / 3;
@@ -209,76 +192,61 @@ namespace RayGene3D
     prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->SetArrayItem(0, updated_prop_vrt);
     prop_scene->GetObjectItem("vertices")->GetObjectItem("count")->SetUint(updated_vrt_count);
 
+    prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
+    prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
+    prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
 
-    extent_x = atlas->width;
-    extent_y = atlas->height;
-    layers = atlas->atlasCount;
-
-    for (uint32_t i = 0; i < atlas->meshCount; ++i)
-    {
-      const auto& mesh = atlas->meshes[i];
-
-      for (uint32_t j = 0; j < mesh.chartCount; ++j)
-      {
-        const auto& chart = mesh.chartArray[j];
-
-        const auto color = glm::u8vec4
-        {
-          uint8_t((rand() % 255 + 192) * 0.5f),
-          uint8_t((rand() % 255 + 192) * 0.5f),
-          uint8_t((rand() % 255 + 192) * 0.5f),
-          uint8_t(255)
-        };
-
-        for (uint32_t k = 0; k < chart.faceCount; ++k)
-        {
-          const auto face = chart.faceArray[k];
-
-          auto& vtx0 = mesh.vertexArray[mesh.indexArray[3 * face + 0]];
-          auto& vtx1 = mesh.vertexArray[mesh.indexArray[3 * face + 1]];
-          auto& vtx2 = mesh.vertexArray[mesh.indexArray[3 * face + 2]];
-
-
-          const int v0[2] = { int(vtx0.uv[0]), int(vtx0.uv[1]) };
-          const int v1[2] = { int(vtx1.uv[0]), int(vtx1.uv[1]) };
-          const int v2[2] = { int(vtx2.uv[0]), int(vtx2.uv[1]) };
-        }
-      }
-    }
+    prop_atlas_size_x->SetUint(atlas->width);
+    prop_atlas_size_y->SetUint(atlas->height);
+    prop_atlas_layers->SetUint(atlas->atlasCount);
 
     xatlas::Destroy(atlas);
 
-    const auto atlas_property = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
-    prop_scene->SetObjectItem("atlas", atlas_property);
-
-    const auto extent_x_property = std::shared_ptr<Property>(new Property(Property::TYPE_UINT));
-    extent_x_property->SetUint(extent_x);
-    atlas_property->SetObjectItem("extent_x", extent_x_property);
-
-    const auto extent_y_property = std::shared_ptr<Property>(new Property(Property::TYPE_UINT));
-    extent_y_property->SetUint(extent_y);
-    atlas_property->SetObjectItem("extent_y", extent_y_property);
-
-    const auto layers_property = std::shared_ptr<Property>(new Property(Property::TYPE_UINT));
-    layers_property->SetUint(layers);
-    atlas_property->SetObjectItem("layers", layers_property);
+    prop_illumination->SetObjectItem("atlas_size_x", prop_atlas_size_x);
+    prop_illumination->SetObjectItem("atlas_size_y", prop_atlas_size_y);
+    prop_illumination->SetObjectItem("atlas_layers", prop_atlas_layers);
   }
 
   void XAtlasBroker::Discard()
+  {
+  }
+
+  XAtlasBroker::XAtlasBroker(Wrap& wrap)
+    : Broker("xatlas_broker", wrap)
+  {
+    const auto& prop_tree = wrap.GetUtil()->GetStorage()->GetTree();
+
+    prop_scene = prop_tree->GetObjectItem("scene");
+    {
+      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+    }
+
+    prop_illumination = prop_tree->GetObjectItem("illumination");
+    {
+      prop_maps = prop_illumination->GetObjectItem("maps");
+      prop_quality = prop_illumination->GetObjectItem("quality");
+      prop_density = prop_illumination->GetObjectItem("density");
+    }
+
+    prop_atlas_size_x = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
+    prop_atlas_size_y = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
+    prop_atlas_layers = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_UINT));
+  }
+
+  XAtlasBroker::~XAtlasBroker()
   {
     prop_vertices.reset();
     prop_triangles.reset();
     prop_instances.reset();
 
     prop_scene.reset();
-  }
 
-  XAtlasBroker::XAtlasBroker(Wrap& wrap)
-    : Broker("xatlas_broker", wrap)
-  {
-  }
+    prop_maps.reset();
+    prop_quality.reset();
+    prop_density.reset();
 
-  XAtlasBroker::~XAtlasBroker()
-  {
+    prop_illumination.reset();
   }
 }

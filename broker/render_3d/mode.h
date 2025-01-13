@@ -28,33 +28,60 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../render_3d_mode.h"
+#include "scope.h"
 
 namespace RayGene3D
 {
-  class SWTracedShadow : public Render3DMode
+  namespace Render3D
   {
-  protected:
-    SPtrPass sw_traced_pass;
-    SPtrConfig sw_traced_config;
-    SPtrBatch sw_traced_batch;
+    class Mode
+    {
+    protected:
+      const Scope& scope;
 
-  protected:
-    void CreateSWTracedPass();
-    void CreateSWTracedConfig();
-    void CreateSWTracedBatch();
+    protected:
+      SPtrPass geometry_pass;
+      SPtrConfig geometry_config;
+      SPtrBatch geometry_batch;
 
-  protected:
-    void DestroySWTracedBatch();
-    void DestroySWTracedConfig();
-    void DestroySWTracedPass();
+      SPtrConfig skybox_config;
+      SPtrBatch skybox_batch;
 
-  public:
-    void Enable() override;
-    void Disable() override;
+      SPtrPass present_pass;
+      SPtrConfig present_config;
+      SPtrBatch present_batch;
 
-  public:
-    SWTracedShadow(const Render3DScope& scope);
-    virtual ~SWTracedShadow();
-  };
+    protected:
+      void CreateGeometryPass();
+      void CreateGeometryConfig();
+      void CreateGeometryBatch();
+
+      void CreateSkyboxConfig();
+      void CreateSkyboxBatch();
+
+      void CreatePresentPass();
+      void CreatePresentConfig();
+      void CreatePresentBatch();
+
+    protected:
+      void DestroyGeometryBatch();
+      void DestroyGeometryConfig();
+      void DestroyGeometryPass();
+
+      void DestroySkyboxBatch();
+      void DestroySkyboxConfig();
+
+      void DestroyPresentBatch();
+      void DestroyPresentConfig();
+      void DestroyPresentPass();
+
+    public:
+      virtual void Enable() = 0;
+      virtual void Disable() = 0;
+
+    public:
+      Mode(const Scope& scope);
+      virtual ~Mode();
+    };
+  }
 }

@@ -28,25 +28,35 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../raygene3d-wrap/wrap.h"
+#include "lightmap/mode/sw_traced_atlas.h"
+#include "lightmap/mode/hw_traced_atlas.h"
 
 namespace RayGene3D
 {
   class LightmapBroker : public Broker
   {
   protected:
-    std::shared_ptr<Property> prop_scene;
+    Lightmap::Scope scope;
 
   protected:
-    std::shared_ptr<Property> prop_instances;
-    std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
+    std::unique_ptr<Lightmap::Mode> sw_traced_lightmap;
+    std::unique_ptr<Lightmap::Mode> hw_traced_lightmap;
+
+  public:
+    enum BakingMode
+    {
+      SW_TRACED_BAKING = 0,
+      HW_TRACED_BAKING = 1,
+    };
 
   protected:
-    std::shared_ptr<Property> prop_atlas;
+    BakingMode mode{ SW_TRACED_BAKING };
+    uint32_t samples_max{ 0u };
+    uint32_t samples_cur{ 0u };
 
-  protected:
-    std::shared_ptr<Property> prop_lightmaps;
+  public:
+    void SetBakingMode(BakingMode mode) { this->mode = mode; }
+    BakingMode GetBakingMode() const { return mode; }
 
   public:
     void Initialize() override;

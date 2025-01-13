@@ -28,45 +28,39 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../render_3d_mode.h"
+#include "scope.h"
 
 namespace RayGene3D
 {
-  class CubemapShadow : public Render3DMode
+  namespace Lightmap
   {
-  protected:
-    SPtrPass shadowmap_pass;
-    SPtrConfig shadowmap_config;
-    SPtrBatch shadowmap_batch;
+    class Mode
+    {
+    protected:
+      const Scope& scope;
 
-    SPtrPass shadowed_pass;
-    SPtrConfig shadowed_config;
-    SPtrBatch shadowed_batch;
+    protected:
+      SPtrPass average_pass;
+      SPtrConfig average_config;
+      SPtrBatch average_batch;
 
-  protected:
-    void CreateShadowmapPass();
-    void CreateShadowmapConfig();
-    void CreateShadowmapBatch();
+    protected:
+      void CreateAveragePass();
+      void CreateAverageConfig();
+      void CreateAverageBatch();
 
-    void CreateShadowedPass();
-    void CreateShadowedConfig();
-    void CreateShadowedBatch();
+    protected:
+      void DestroyAverageBatch();
+      void DestroyAverageConfig();
+      void DestroyAveragePass();
 
-  protected:
-    void DestroyShadowmapBatch();
-    void DestroyShadowmapConfig();
-    void DestroyShadowmapPass();
+    public:
+      virtual void Enable() = 0;
+      virtual void Disable() = 0;
 
-    void DestroyShadowedBatch();
-    void DestroyShadowedConfig();
-    void DestroyShadowedPass();
-
-  public:
-    void Enable() override;
-    void Disable() override;
-
-  public:
-    CubemapShadow(const Render3DScope& scope);
-    virtual ~CubemapShadow();
-  };
+    public:
+      Mode(const Scope& scope);
+      virtual ~Mode();
+    };
+  }
 }
