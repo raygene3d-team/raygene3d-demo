@@ -156,7 +156,7 @@ namespace RayGene3D
 				const auto d_sq = glm::distance2(node->position, position);
 
 				if (d_sq < max_d_sq)
-					queue.push(Entry(node, distance_sq));
+					queue.push(Entry(node, d_sq));
 
 				if (delta > 0.0f)
 				{
