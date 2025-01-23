@@ -40,7 +40,7 @@ namespace RayGene3D
       const auto layers = scope.prop_atlas_layers->GetUint();
 
       hw_traced_pass = scope.core->GetDevice()->CreatePass("lightmap_hw_traced_pass",
-        Pass::TYPE_RAYTRACING,
+        Pass::TYPE_TRACING,
         size_x,
         size_y,
         layers,

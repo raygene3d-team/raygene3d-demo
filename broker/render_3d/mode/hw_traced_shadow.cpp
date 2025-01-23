@@ -40,7 +40,7 @@ namespace RayGene3D
       const auto layers = 1u;
 
       hw_traced_pass = scope.core->GetDevice()->CreatePass("spark_hw_traced_pass",
-        Pass::TYPE_RAYTRACING,
+        Pass::TYPE_TRACING,
         size_x,
         size_y,
         layers,
