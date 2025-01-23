@@ -29,6 +29,8 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
+  const uint32_t EnvironmentBroker::levels;
+
   void EnvironmentBroker::Initialize()
   {
     const auto& prop_tree = wrap.GetUtil()->GetStorage()->GetTree();
