@@ -39,6 +39,7 @@ namespace RayGene3D
 
   void MeshoptimizerBroker::Use()
   {
+    //meshopt_generateVertexRemap()
   }
 
   void MeshoptimizerBroker::Discard()
