@@ -198,9 +198,13 @@ namespace RayGene3D
 
   void ImportBroker::Discard()
   {
-    instances.clear();
-    triangles.clear();
-    vertices.clear();
+    //instances.clear();
+    //triangles.clear();
+    //vertices.clear();
+
+    meshes.clear();
+    buffers.clear();
+    textures.clear();
   }
 
   void ImportBroker::ImportGLTF()

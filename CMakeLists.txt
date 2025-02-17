@@ -98,12 +98,22 @@ set(lightmap_source
   broker/lightmap/mode/hw_traced_atlas.cpp
 )
 
+set(io_source
+  broker/io/mode.h
+  broker/io/mode.cpp
+  broker/io/scope.h
+  broker/io/scope.cpp
+  broker/io/mode/gltf_converter.h
+  broker/io/mode/gltf_converter.cpp
+  broker/io/mode/obj_converter.h
+  broker/io/mode/obj_converter.cpp
+)
 
 set(SOURCE main.cpp
   broker/environment_broker.h
   broker/environment_broker.cpp
-  broker/import_broker.h
-  broker/import_broker.cpp
+  broker/io_broker.h
+  broker/io_broker.cpp
   broker/lightmap_broker.h
   broker/lightmap_broker.cpp
   broker/mikktspace_broker.h
@@ -123,6 +133,7 @@ set(SOURCE main.cpp
   broker/xatlas_broker.h
   broker/xatlas_broker.cpp
   ${render_3d_source}
+  ${io_source}
   ${lightmap_source}
   ${imgui_source}
   ${xatlas_source}

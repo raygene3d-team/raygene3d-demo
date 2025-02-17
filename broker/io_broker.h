@@ -49,31 +49,26 @@ namespace RayGene3D
   //  uint32_t degenerated_geom_tris_count{ 0u };
   //  uint32_t degenerated_wrap_tris_count{ 0u };
 
-  protected:
-    std::vector<Vertex> vertices;
-    std::vector<Triangle> triangles;
+  //protected:
+  //  std::vector<Vertex> vertices;
+  //  std::vector<Triangle> triangles;
+  //  std::vector<Instance> instances;
+
+  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_0;
+  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1;
+  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2;
+  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_3;
+  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_4;
+  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_5;
+  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_6;
+  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_7;
+
+    //Scene scene;
+
+    
+    std::vector<Buffer> buffers;
+    std::vector<Texture> textures;
     std::vector<Instance> instances;
-
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_0;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_3;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_4;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_5;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_6;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_7;
-
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_0;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_1;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_2;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_3;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_4;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_5;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_6;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_7;
-
-    std::vector<Mesh> meshes;
-    std::vector<std::tuple<Raw, uint32_t, uint32_t>> arrays_0;
 
   public:
     void Initialize() override;
