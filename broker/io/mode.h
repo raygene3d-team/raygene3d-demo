@@ -32,31 +32,12 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  namespace Lightmap
+  namespace IO
   {
     class Mode
     {
     protected:
       const Scope& scope;
-
-    protected:
-      SPtrPass average_pass;
-      SPtrConfig average_config;
-      SPtrBatch average_batch;
-
-    protected:
-      void CreateAveragePass();
-      void CreateAverageConfig();
-      void CreateAverageBatch();
-
-    protected:
-      void DestroyAverageBatch();
-      void DestroyAverageConfig();
-      void DestroyAveragePass();
-
-    public:
-      virtual void Enable() = 0;
-      virtual void Disable() = 0;
 
     public:
       Mode(const Scope& scope);

@@ -32,32 +32,13 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  namespace Lightmap
+  namespace IO
   {
-    class HWTracedAtlas : public Mode
+    class OBJConverter : public Mode
     {
-    protected:
-      SPtrPass hw_traced_pass;
-      SPtrConfig hw_traced_config;
-      SPtrBatch hw_traced_batch;
-
-    protected:
-      void CreateHWTracedPass();
-      void CreateHWTracedConfig();
-      void CreateHWTracedBatch();
-
-    protected:
-      void DestroyHWTracedBatch();
-      void DestroyHWTracedConfig();
-      void DestroyHWTracedPass();
-
     public:
-      void Enable() override;
-      void Disable() override;
-
-    public:
-      HWTracedAtlas(const Scope& scope);
-      virtual ~HWTracedAtlas();
+      OBJConverter(const Scope& scope);
+      virtual ~OBJConverter();
     };
   }
 }

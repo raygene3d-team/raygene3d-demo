@@ -28,22 +28,18 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "../raygene3d-wrap/wrap.h"
+#include "io/mode/obj_converter.h"
+#include "io/mode/gltf_converter.h"
 
 namespace RayGene3D
 {
-  //class Core;
-
-  class ImportBroker : public Broker
+  class IOBroker : public Broker
   {
   protected:
-    std::string file_name;
-    std::string path_name;
+    IO::Scope scope;
 
   protected:
-    float position_scale{ 1.0f };
-    bool conversion_from_rhs{ false };
-    uint32_t texture_level{ 10u };
+    std::unique_ptr<IO::Mode> mode;
 
   //protected:
   //  uint32_t degenerated_geom_tris_count{ 0u };
@@ -65,10 +61,10 @@ namespace RayGene3D
 
     //Scene scene;
 
-    
-    std::vector<Buffer> buffers;
-    std::vector<Texture> textures;
-    std::vector<Instance> instances;
+   //protected:
+   // std::vector<Buffer> buffers;
+   // std::vector<Texture> textures;
+   // std::vector<Instance> instances;
 
   public:
     void Initialize() override;
@@ -76,29 +72,20 @@ namespace RayGene3D
     void Discard() override;
 
   public:
-    void SetFileName(const std::string& file_name) { this->file_name = file_name; }
-    void SetPathName(const std::string& path_name) { this->path_name = path_name; }
+    void SetFileName(const std::string& file_name) { scope.file_name = file_name; }
+    void SetPathName(const std::string& path_name) { scope.path_name = path_name; }
 
   public:
-    void SetPositionScale(float position_scale) { this->position_scale = position_scale; }
-    void SetCoordinateConversion(bool conversion_from_rhs) { this->conversion_from_rhs = conversion_from_rhs; }
-    void SetTextureLevel(uint32_t texture_level) { this->texture_level = texture_level; }
+    void SetPositionScale(float position_scale) { scope.position_scale = position_scale; }
+    void SetConversionRHS(bool conversion_rhs) { scope.conversion_rhs = conversion_rhs; }
+    void SetTextureLevel(uint32_t texture_level) { scope.texture_level = texture_level; }
 
   public:
     void Export(std::shared_ptr<Property>& property) const;
     void Import(const std::shared_ptr<Property>& property);
 
-  private:
-    void ImportGLTF();
-    void ImportOBJM();
-
   public:
-    ImportBroker(Wrap& wrap);
-    virtual ~ImportBroker();
+    IOBroker(Wrap& wrap);
+    virtual ~IOBroker();
   };
-
-  //std::shared_ptr<Property> ImportAsPanoEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
-  //std::shared_ptr<Property> ImportAsCubeMapEXR(const std::string& path, const std::string& name, float exposure, uint32_t mipmaps);
-
-  //std::shared_ptr<Property> ImportPanoram(const std::string& path, const std::string& name, uint32_t mipmaps);
 }

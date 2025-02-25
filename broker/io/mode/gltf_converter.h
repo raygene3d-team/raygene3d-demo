@@ -32,32 +32,13 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  namespace Lightmap
+  namespace IO
   {
-    class SWTracedAtlas : public Mode
+    class GLTFConverter : public Mode
     {
-    protected:
-      SPtrPass sw_traced_pass;
-      SPtrConfig sw_traced_config;
-      SPtrBatch sw_traced_batch;
-
-    protected:
-      void CreateSWTracedPass();
-      void CreateSWTracedConfig();
-      void CreateSWTracedBatch();
-
-    protected:
-      void DestroySWTracedBatch();
-      void DestroySWTracedConfig();
-      void DestroySWTracedPass();
-
     public:
-      void Enable() override;
-      void Disable() override;
-
-    public:
-      SWTracedAtlas(const Scope& scope);
-      virtual ~SWTracedAtlas();
+      GLTFConverter(const Scope& scope);
+      virtual ~GLTFConverter();
     };
   }
 }
