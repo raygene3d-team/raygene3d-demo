@@ -53,11 +53,11 @@ namespace RayGene3D
 
     if (std::strcmp(extension.c_str(), "obm") == 0)
     {
-      ImportOBJM();
+      mode = std::unique_ptr<IO::Mode>(new IO::OBJConverter(scope));
     }
     else if (std::strcmp(extension.c_str(), "gltf") == 0)
     {
-      ImportGLTF();
+      mode = std::unique_ptr<IO::Mode>(new IO::GLTFConverter(scope));
     }
   }
 

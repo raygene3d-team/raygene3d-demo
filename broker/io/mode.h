@@ -37,10 +37,10 @@ namespace RayGene3D
     class Mode
     {
     protected:
-      const Scope& scope;
+      Scope& scope;
 
     public:
-      Mode(const Scope& scope);
+      Mode(Scope& scope);
       virtual ~Mode();
     };
   }

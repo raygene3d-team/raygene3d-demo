@@ -50,8 +50,10 @@ namespace RayGene3D
       uint32_t texture_level{ 10u };
 
     public:
-      std::vector<Buffer> buffers;
-      std::vector<Texture> textures;
+      //std::vector<Buffer> buffers;
+      //std::vector<Texture> textures;
+      std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers; //elements-stride-count
+      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures; //texels-stride-count
       std::vector<Instance> instances;
 
     public:

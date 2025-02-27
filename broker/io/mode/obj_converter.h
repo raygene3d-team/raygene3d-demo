@@ -37,7 +37,10 @@ namespace RayGene3D
     class OBJConverter : public Mode
     {
     public:
-      OBJConverter(const Scope& scope);
+      void ImportOBJM();
+
+    public:
+      OBJConverter(Scope& scope);
       virtual ~OBJConverter();
     };
   }
