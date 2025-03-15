@@ -174,7 +174,7 @@ namespace RayGene3D
       return { vertices, triangles, bb_min, bb_max };
     }
 
-    void OBJConverter::ImportOBJM()
+    void OBJConverter::Import()
     {
       tinyobj::attrib_t obj_attrib;
       std::vector<tinyobj::shape_t> obj_shapes;
@@ -361,6 +361,10 @@ namespace RayGene3D
           scope.textures[i] = load_texture_fn(texture_names[i]);
         }
       }
+    }
+
+    void OBJConverter::Export()
+    {
     }
 
     OBJConverter::OBJConverter(Scope& scope)

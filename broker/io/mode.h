@@ -40,6 +40,10 @@ namespace RayGene3D
       Scope& scope;
 
     public:
+      virtual void Import() = 0;
+      virtual void Export() = 0;
+
+    public:
       Mode(Scope& scope);
       virtual ~Mode();
     };

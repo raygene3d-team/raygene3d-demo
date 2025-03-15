@@ -53,8 +53,12 @@ namespace RayGene3D
       //std::vector<Buffer> buffers;
       //std::vector<Texture> textures;
       std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers; //elements-stride-count
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures; //texels-stride-count
+      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures; //texels-size-size
       std::vector<Instance> instances;
+
+    public:
+      void Load();
+      void Save();
 
     public:
       Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util);

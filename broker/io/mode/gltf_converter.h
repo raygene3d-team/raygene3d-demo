@@ -37,7 +37,8 @@ namespace RayGene3D
     class GLTFConverter : public Mode
     {
     public:
-      void ImportGLTF();
+      virtual void Import() override;
+      virtual void Export() override;
 
     public:
       GLTFConverter(Scope& scope);

@@ -27,20 +27,6 @@ THE SOFTWARE.
 ================================================================================*/
 #include "io_broker.h"
 
-
-
-
-
-//#define TINYEXR_IMPLEMENTATION
-//#include <tinyexr/tinyexr.h>
-
-//#define STB_IMAGE_IMPLEMENTATION
-//#define STB_IMAGE_WRITE_IMPLEMENTATION
-//#define STB_IMAGE_RESIZE_IMPLEMENTATION
-//#include <stb/stb_image.h>
-//#include <stb/stb_image_write.h>
-//#include <stb/stb_image_resize.h>
-
 namespace RayGene3D
 {
   void IOBroker::Initialize()
@@ -59,6 +45,10 @@ namespace RayGene3D
     {
       mode = std::unique_ptr<IO::Mode>(new IO::GLTFConverter(scope));
     }
+
+    mode->Import();
+
+
   }
 
   void IOBroker::Discard()
@@ -73,6 +63,8 @@ namespace RayGene3D
   {
     auto root = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
     //property->setSetValue(Property::object());
+
+
   
     {
       const auto data = instances.data();

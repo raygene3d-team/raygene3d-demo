@@ -174,7 +174,7 @@ namespace RayGene3D
       return { vertices, triangles, bb_min, bb_max };
     }
 
-    void GLTFConverter::ImportGLTF()
+    void GLTFConverter::Import()
     {
       tinygltf::TinyGLTF gltf_ctx;
 
@@ -414,6 +414,10 @@ namespace RayGene3D
       {
         scope.textures[i] = tex_prepare_fn(texture_indices[i]);
       }
+    }
+
+    void GLTFConverter::Export()
+    {
     }
 
     GLTFConverter::GLTFConverter(Scope& scope)
