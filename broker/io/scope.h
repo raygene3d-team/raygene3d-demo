@@ -57,8 +57,11 @@ namespace RayGene3D
       std::vector<Instance> instances;
 
     public:
-      void Load();
-      void Save();
+      std::shared_ptr<Property> prop_scene;
+
+    public:
+      void Import();
+      void Export();
 
     public:
       Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util);

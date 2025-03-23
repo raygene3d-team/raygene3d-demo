@@ -81,8 +81,7 @@ namespace RayGene3D
     void SetTextureLevel(uint32_t texture_level) { scope.texture_level = texture_level; }
 
   public:
-    void Export(std::shared_ptr<Property>& property) const;
-    void Import(const std::shared_ptr<Property>& property);
+    void SetPropScene(const std::shared_ptr<Property>& prop_scene) { scope.prop_scene = prop_scene; }
 
   public:
     IOBroker(Wrap& wrap);

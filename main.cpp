@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include "broker/trace_broker.h"
 #include "broker/xatlas_broker.h"
 #include "broker/mikktspace_broker.h"
-#include "broker/import_broker.h"
+#include "broker/io_broker.h"
 #include "broker/scene_broker.h"
 #include "broker/lightmap_broker.h"
 #include "broker/environment_broker.h"
@@ -418,33 +418,32 @@ namespace RayGene3D
       input.close();
       const auto config_property = RayGene3D::ParseJSON(json);
 
-      //scene_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
-        const auto scene_name = config_property->GetObjectItem("scene")->GetObjectItem("path")->GetString();
-        const auto scene_path = config_path;
+        const auto& scene_name = config_property->GetObjectItem("scene")->GetObjectItem("path")->GetString();
+        const auto& scene_path = config_path;
 
-        //std::shared_ptr<Property> scene_property;
         wrap->GetUtil()->GetStorage()->Load(ExtractName(scene_name), scene_property);
 
         if (!scene_property)
         {
-          auto import_broker = std::shared_ptr<RayGene3D::ImportBroker>(new RayGene3D::ImportBroker(*wrap));
+          auto io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*wrap));
 
-          import_broker->SetFileName(scene_name);
-          import_broker->SetPathName(scene_path);
+          io_broker->SetFileName(scene_name);
+          io_broker->SetPathName(scene_path);
 
           const auto scene_rhs = config_property->GetObjectItem("scene")->GetObjectItem("rhs")->GetBool();
           const auto scene_scale = config_property->GetObjectItem("scene")->GetObjectItem("scale")->GetReal();
           const auto scene_quality = config_property->GetObjectItem("scene")->GetObjectItem("quality")->GetUint();
 
-          import_broker->SetCoordinateConversion(scene_rhs);
-          import_broker->SetPositionScale(scene_scale);
-          import_broker->SetTextureLevel(scene_quality);
+          io_broker->SetConversionRHS(scene_rhs);
+          io_broker->SetPositionScale(scene_scale);
+          io_broker->SetTextureLevel(scene_quality);
 
-          import_broker->Initialize();
-          import_broker->Export(scene_property);
+          io_broker->SetPropScene(scene_property);
 
-          import_broker.reset();
+          io_broker->Use();
+
+          io_broker.reset();
 
           wrap->GetUtil()->GetStorage()->Save(ExtractName(scene_name), scene_property);
         }

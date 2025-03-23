@@ -33,14 +33,15 @@ namespace RayGene3D
 {
   namespace IO
   {
-    void Scope::Load()
+    void Scope::Import()
     {
+      const auto& prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
 
     }
 
-    void Scope::Save()
+    void Scope::Export()
     {
-      auto root = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
+      //auto prop_scene = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
 
       auto prop_instances = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
       prop_instances->SetArraySize(uint32_t(instances.size()));      
@@ -87,7 +88,7 @@ namespace RayGene3D
 
         prop_instances->SetArrayItem(i, item_property);
       }
-      root->SetObjectItem("instances", prop_instances);
+      prop_scene->SetObjectItem("instances", prop_instances);
 
       auto prop_buffers = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
       prop_buffers->SetArraySize(uint32_t(buffers.size()));
@@ -97,7 +98,7 @@ namespace RayGene3D
         const auto item_property = CreateBufferProperty({ &raw, 1u }, stride, count);
         prop_buffers->SetArrayItem(i, item_property);
       }
-      root->SetObjectItem("buffers", prop_buffers);
+      prop_scene->SetObjectItem("buffers", prop_buffers);
 
       auto prop_textures = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
       prop_textures->SetArraySize(uint32_t(textures.size()));
@@ -107,17 +108,21 @@ namespace RayGene3D
         const auto item_property = CreateTextureProperty({ &raw, 1u }, size_x, size_y, 1u, 1u);
         prop_textures->SetArrayItem(i, item_property);
       }
-      root->SetObjectItem("textures", prop_textures);
+      prop_scene->SetObjectItem("textures", prop_textures);
+
+      //util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }
 
     Scope::Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)
       : core(core)
       , util(util)
     {
+      //prop_scene = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
     }
 
     Scope::~Scope()
     {
+      //prop_scene.reset();
     }
   }
 }
