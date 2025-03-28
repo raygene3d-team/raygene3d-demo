@@ -359,7 +359,7 @@ namespace RayGene3D
       present_pass->SetEnabled(false);
     }
 
-    CubemapShadow::CubemapShadow(const Scope& scope)
+    CubemapShadow::CubemapShadow(Scope& scope)
       : Mode(scope)
     {
 

@@ -41,7 +41,7 @@ namespace RayGene3D
 
     void Scope::Export()
     {
-      //auto prop_scene = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
+      auto prop_scene = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
 
       auto prop_instances = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
       prop_instances->SetArraySize(uint32_t(instances.size()));      
@@ -105,12 +105,12 @@ namespace RayGene3D
       for (auto i = 0u; i < uint32_t(textures.size()); ++i)
       {
         auto& [raw, size_x, size_y] = textures[i];
-        const auto item_property = CreateTextureProperty({ &raw, 1u }, size_x, size_y, 1u, 1u);
+        const auto item_property = CreateTextureProperty({ &raw, 1u }, Format::FORMAT_R8G8B8A8_SNORM, size_x, size_y, 0u);
         prop_textures->SetArrayItem(i, item_property);
       }
       prop_scene->SetObjectItem("textures", prop_textures);
 
-      //util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
+      util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }
 
     Scope::Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)

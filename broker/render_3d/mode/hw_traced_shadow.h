@@ -56,7 +56,7 @@ namespace RayGene3D
       void Disable() override;
 
     public:
-      HWTracedShadow(const Scope& scope);
+      HWTracedShadow(Scope& scope);
       virtual ~HWTracedShadow();
     };
   }

@@ -196,7 +196,7 @@ namespace RayGene3D
       present_pass->SetEnabled(false);
     }
 
-    NoShadow::NoShadow(const Scope& scope)
+    NoShadow::NoShadow(Scope& scope)
       : Mode(scope)
     {
       CreateGeometryPass();

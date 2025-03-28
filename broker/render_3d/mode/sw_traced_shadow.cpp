@@ -222,7 +222,7 @@ namespace RayGene3D
       present_pass->SetEnabled(false);
     }
 
-    SWTracedShadow::SWTracedShadow(const Scope& scope)
+    SWTracedShadow::SWTracedShadow(Scope& scope)
       : Mode(scope)
     {
       CreateGeometryPass();

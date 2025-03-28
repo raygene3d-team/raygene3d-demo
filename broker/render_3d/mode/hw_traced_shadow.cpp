@@ -195,7 +195,7 @@ namespace RayGene3D
       present_pass->SetEnabled(false);
     }
 
-    HWTracedShadow::HWTracedShadow(const Scope& scope)
+    HWTracedShadow::HWTracedShadow(Scope& scope)
       : Mode(scope)
     {
       CreateGeometryPass();

@@ -37,7 +37,7 @@ namespace RayGene3D
     class Mode
     {
     protected:
-      const Scope& scope;
+      Scope& scope;
 
     protected:
       SPtrPass geometry_pass;
@@ -80,7 +80,7 @@ namespace RayGene3D
       virtual void Disable() = 0;
 
     public:
-      Mode(const Scope& scope);
+      Mode(Scope& scope);
       virtual ~Mode();
     };
   }

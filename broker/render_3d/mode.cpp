@@ -512,7 +512,7 @@ namespace RayGene3D
       present_pass.reset();
     }
 
-    Mode::Mode(const Scope& scope)
+    Mode::Mode(Scope& scope)
       : scope(scope)
     {
     }

@@ -68,7 +68,7 @@ namespace RayGene3D
       void Disable() override;
 
     public:
-      CubemapShadow(const Scope& scope);
+      CubemapShadow(Scope& scope);
       virtual ~CubemapShadow();
     };
   }

@@ -407,9 +407,9 @@ namespace RayGene3D
   SceneBroker::SceneBroker(Wrap& wrap)
     : Broker("scene_broker", wrap)
   {
-    const auto& tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& util = wrap.GetUtil();
 
-    prop_scene = tree->GetObjectItem("scene");
+    prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
     {
       prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
       prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);

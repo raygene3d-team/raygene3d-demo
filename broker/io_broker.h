@@ -41,35 +41,25 @@ namespace RayGene3D
   protected:
     std::unique_ptr<IO::Mode> mode;
 
-  //protected:
-  //  uint32_t degenerated_geom_tris_count{ 0u };
-  //  uint32_t degenerated_wrap_tris_count{ 0u };
+  public:
+    enum DataOperation
+    {
+      NO_OPERATTION = 0,
+      SAVE_OPERATION = 1,
+      LOAD_OPERATION = 2,
+    };
 
-  //protected:
-  //  std::vector<Vertex> vertices;
-  //  std::vector<Triangle> triangles;
-  //  std::vector<Instance> instances;
-
-  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_0;
-  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1;
-  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2;
-  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_3;
-  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_4;
-  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_5;
-  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_6;
-  //  std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_7;
-
-    //Scene scene;
-
-   //protected:
-   // std::vector<Buffer> buffers;
-   // std::vector<Texture> textures;
-   // std::vector<Instance> instances;
+  protected:
+    DataOperation operation{ NO_OPERATTION };
 
   public:
     void Initialize() override;
     void Use() override;
     void Discard() override;
+
+  public:
+    void SetDataOperation(DataOperation operation) { this->operation = operation; }
+    DataOperation GetDataOperation() const { return operation; }
 
   public:
     void SetFileName(const std::string& file_name) { scope.file_name = file_name; }
@@ -80,8 +70,8 @@ namespace RayGene3D
     void SetConversionRHS(bool conversion_rhs) { scope.conversion_rhs = conversion_rhs; }
     void SetTextureLevel(uint32_t texture_level) { scope.texture_level = texture_level; }
 
-  public:
-    void SetPropScene(const std::shared_ptr<Property>& prop_scene) { scope.prop_scene = prop_scene; }
+  //public:
+  //  void SetPropScene(const std::shared_ptr<Property>& prop_scene) { scope.prop_scene = prop_scene; }
 
   public:
     IOBroker(Wrap& wrap);

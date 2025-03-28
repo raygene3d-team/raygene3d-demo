@@ -116,7 +116,8 @@ namespace RayGene3D
       std::move(cube_mipmaps.begin(), cube_mipmaps.end(), std::back_inserter(raws));
     }
 
-    const auto prop_skybox = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, extent, extent, mipmap, layers);
+    const auto prop_skybox = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, 
+      Format::FORMAT_R16G16B16A16_FLOAT, extent, extent, extent, mipmap, layers);
     prop_tree->GetObjectItem("environment")->SetObjectItem("skybox_cubemap", prop_skybox);
 
     CreateSkyboxCubemap();

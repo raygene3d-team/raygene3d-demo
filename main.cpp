@@ -428,9 +428,6 @@ namespace RayGene3D
         {
           auto io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*wrap));
 
-          io_broker->SetFileName(scene_name);
-          io_broker->SetPathName(scene_path);
-
           const auto scene_rhs = config_property->GetObjectItem("scene")->GetObjectItem("rhs")->GetBool();
           const auto scene_scale = config_property->GetObjectItem("scene")->GetObjectItem("scale")->GetReal();
           const auto scene_quality = config_property->GetObjectItem("scene")->GetObjectItem("quality")->GetUint();
@@ -439,9 +436,13 @@ namespace RayGene3D
           io_broker->SetPositionScale(scene_scale);
           io_broker->SetTextureLevel(scene_quality);
 
-          io_broker->SetPropScene(scene_property);
+          io_broker->SetFileName(scene_name);
+          io_broker->SetPathName(scene_path);
+          io_broker->SetDataOperation(IOBroker::LOAD_OPERATION);
 
+          io_broker->Initialize();
           io_broker->Use();
+          io_broker->Discard();
 
           io_broker.reset();
 

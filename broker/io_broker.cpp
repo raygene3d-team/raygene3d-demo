@@ -35,21 +35,20 @@ namespace RayGene3D
 
   void IOBroker::Use()
   {
-    const auto extension = ExtractExtension(scope.file_name);
-
-    if (std::strcmp(extension.c_str(), "obm") == 0)
+    switch (operation)
     {
-      mode = std::unique_ptr<IO::Mode>(new IO::OBJConverter(scope));
-    }
-    else if (std::strcmp(extension.c_str(), "gltf") == 0)
+    case SAVE_OPERATION:
     {
-      mode = std::unique_ptr<IO::Mode>(new IO::GLTFConverter(scope));
+    } break;
+    case LOAD_OPERATION:
+    {
+      const auto extension = ExtractExtension(scope.file_name);
+      if (std::strcmp(extension.c_str(), "obm") == 0) { mode = std::unique_ptr<IO::Mode>(new IO::OBJConverter(scope)); } else
+      if (std::strcmp(extension.c_str(), "gltf") == 0) { mode = std::unique_ptr<IO::Mode>(new IO::GLTFConverter(scope)); }
+      mode->Import();
+      scope.Export();
+    } break;
     }
-
-    mode->Import();
-
-    scope.Export();
-
   }
 
   void IOBroker::Discard()

@@ -56,7 +56,7 @@ namespace RayGene3D
       void Disable() override;
 
     public:
-      NoShadow(const Scope& scope);
+      NoShadow(Scope& scope);
       virtual ~NoShadow();
     };
   }

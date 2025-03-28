@@ -142,17 +142,17 @@ namespace RayGene3D
     }
 
     {
-      auto bb_min = glm::f32vec3( FLT_MAX, FLT_MAX, FLT_MAX);
-      auto bb_max = glm::f32vec3(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+      auto aabb_min = glm::f32vec3( FLT_MAX, FLT_MAX, FLT_MAX);
+      auto aabb_max = glm::f32vec3(-FLT_MAX,-FLT_MAX,-FLT_MAX);
       const auto [instance_data, instance_count] = scope.prop_instances->GetTypedBytes<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
       {
-        bb_min = glm::min(bb_min, instance_data[i].bb_min); 
-        bb_max = glm::max(bb_max, instance_data[i].bb_max);
+        aabb_min = glm::min(aabb_min, instance_data[i].aabb_min);
+        aabb_max = glm::max(aabb_max, instance_data[i].aabb_max);
       }
 
-      const auto bb_center = 0.5f * (bb_max + bb_min);
-      const auto bb_extent = 0.5f * (bb_max - bb_min);
+      const auto bb_center = 0.5f * (aabb_max + aabb_min);
+      const auto bb_extent = 0.5f * (aabb_max - aabb_min);
 
       const auto radius = glm::length(bb_extent);
       const auto proj = glm::ortho(-radius, radius,-radius, radius, 0.01f, 2.0f * radius);
