@@ -32,7 +32,7 @@ namespace RayGene3D
 {
   void SceneBroker::CreateSceneInstances()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    const auto [data, count] = prop_instances->GetRawTyped<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Instance)) * count },
     };
@@ -51,7 +51,7 @@ namespace RayGene3D
 
   void SceneBroker::CreateSceneTriangles()
   {
-    const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
+    const auto [data, count] = prop_triangles->GetRawTyped<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Triangle)) * count },
     };
@@ -70,7 +70,7 @@ namespace RayGene3D
 
   void SceneBroker::CreateSceneVertices()
   {
-    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
+    const auto [data, count] = prop_vertices->GetRawTyped<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Vertex)) * count },
     };

@@ -285,7 +285,7 @@ namespace RayGene3D
 
   void TraceBroker::CreateTraceTBoxes()
   {
-    const auto [data, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetTypedBytes<Box>(0);
+    const auto [data, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawTyped<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Box)) * count },
     };
@@ -304,7 +304,7 @@ namespace RayGene3D
 
   void TraceBroker::CreateTraceBBoxes()
   {
-    const auto [data, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetTypedBytes<Box>(0);
+    const auto [data, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawTyped<Box>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Box)) * count },
     };
@@ -323,7 +323,7 @@ namespace RayGene3D
 
   void TraceBroker::CreateTraceInstances()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+    const auto [data, count] = prop_instances->GetRawTyped<Instance>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Instance)) * count },
     };
@@ -342,7 +342,7 @@ namespace RayGene3D
 
   void TraceBroker::CreateTraceTriangles()
   {
-    const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
+    const auto [data, count] = prop_triangles->GetRawTyped<Triangle>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Triangle)) * count },
     };
@@ -361,7 +361,7 @@ namespace RayGene3D
 
   void TraceBroker::CreateTraceVertices()
   {
-    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
+    const auto [data, count] = prop_vertices->GetRawTyped<Vertex>(0);
     std::pair<const void*, uint32_t> interops[] = {
       { data, uint32_t(sizeof(Vertex)) * count },
     };
@@ -417,9 +417,9 @@ namespace RayGene3D
     std::vector<Box> t_boxes;
     std::vector<Box> b_boxes;
 
-    const auto instance_items = prop_instances->GetTypedBytes<Instance>(0);
-    const auto triangle_items = prop_triangles->GetTypedBytes<Triangle>(0);
-    const auto vertex_items = prop_vertices->GetTypedBytes<Vertex>(0);
+    const auto instance_items = prop_instances->GetRawTyped<Instance>(0);
+    const auto triangle_items = prop_triangles->GetRawTyped<Triangle>(0);
+    const auto vertex_items = prop_vertices->GetRawTyped<Vertex>(0);
 
     CreateTraceInstances();
     CreateTraceTriangles();

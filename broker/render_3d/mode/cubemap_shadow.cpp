@@ -249,7 +249,7 @@ namespace RayGene3D
 
     void CubemapShadow::CreateShadowmapBatch()
     {
-      const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
+      const auto [data, count] = scope.prop_instances->GetRawTyped<Instance>(0);
       auto entities = std::vector<Batch::Entity>(count);
       for (auto i = 0u; i < count; ++i)
       {

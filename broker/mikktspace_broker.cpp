@@ -124,9 +124,9 @@ namespace RayGene3D
 
   void MikktspaceBroker::Use()
   {
-    const auto [ins_array, ins_count] = prop_instances->GetTypedBytes<Instance>(0);
-    const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
-    const auto [vrt_array, vrt_count] = prop_vertices->GetTypedBytes<Vertex>(0);
+    const auto [ins_array, ins_count] = prop_instances->GetRawTyped<Instance>(0);
+    const auto [trg_array, trg_count] = prop_triangles->GetRawTyped<Triangle>(0);
+    const auto [vrt_array, vrt_count] = prop_vertices->GetRawTyped<Vertex>(0);
 
     for (uint32_t i = 0; i < ins_count; ++i)
     {
@@ -212,7 +212,7 @@ namespace RayGene3D
 
       if (uint32_t(result.size()) == vrt_count)
       {
-        prop_vertices->SetTypedBytes<Vertex>({ result.data(), vrt_count }, vrt_offset);
+        prop_vertices->SetRawTyped<Vertex>({ result.data(), vrt_count }, vrt_offset);
       }
     }
   }

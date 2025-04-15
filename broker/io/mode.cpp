@@ -126,7 +126,7 @@ namespace RayGene3D
         std::vector<Vertex> vertices;
         std::vector<Triangle> triangles;
         auto bb_min = glm::fvec3{ FLT_MAX, FLT_MAX, FLT_MAX };
-        auto bb_max = glm::fvec3{ -FLT_MAX,-FLT_MAX,-FLT_MAX };
+        auto bb_max = glm::fvec3{-FLT_MAX,-FLT_MAX,-FLT_MAX };
 
         auto degenerated_geom_tris_count = 0u;
         auto degenerated_wrap_tris_count = 0u;

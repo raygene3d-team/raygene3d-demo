@@ -39,7 +39,31 @@ namespace RayGene3D
 
   void MeshoptimizerBroker::Use()
   {
-    //meshopt_generateVertexRemap()
+    auto [ins_array, ins_count] = prop_instances->AccessRawTyped<Instance>();
+    auto [trg_array, trg_count] = prop_triangles->AccessRawTyped<Triangle>();
+    auto [vrt_array, vrt_count] = prop_vertices->AccessRawTyped<Vertex>();
+
+
+    for (uint32_t i = 0; i < ins_count; ++i)
+    {
+      const auto trg_offset = ins_array[i].prim_offset;
+      auto trg_items = trg_array + trg_offset;
+      const auto trg_count = ins_array[i].prim_count;
+      //auto trg_holder = std::vector<Triangle>(trg_items, trg_items + trg_count);
+
+      const auto vrt_offset = ins_array[i].vert_offset;
+      auto vrt_items = vrt_array + vrt_offset;
+      const auto vrt_count = ins_array[i].vert_count;
+      //auto vrt_holder = std::vector<Vertex>(vrt_items, vrt_items + vrt_count);
+
+      meshopt_optimizeVertexCache((uint32_t*)trg_items, (const uint32_t*)trg_items, trg_count, vrt_count);
+     
+      meshopt_optimizeOverdraw((uint32_t*)trg_items, (const uint32_t*)trg_items, trg_count, (const float*)vrt_items, vrt_count, sizeof(Vertex), 1.0f);
+
+      meshopt_optimizeVertexFetch((float*)vrt_items, (uint32_t*)trg_items, trg_count, (const float*)vrt_items, vrt_count, sizeof(Vertex));
+
+
+    }
   }
 
   void MeshoptimizerBroker::Discard()
@@ -48,8 +72,23 @@ namespace RayGene3D
 
   MeshoptimizerBroker::MeshoptimizerBroker(Wrap& wrap)
     : Broker("meshoptimizer_broker", wrap)
-  {}
+  {
+    const auto& prop_tree = wrap.GetUtil()->GetStorage()->GetTree();
+
+    prop_scene = prop_tree->GetObjectItem("scene");
+    {
+      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+    }
+  }
 
   MeshoptimizerBroker::~MeshoptimizerBroker()
-  {}
+  {
+    prop_vertices.reset();
+    prop_triangles.reset();
+    prop_instances.reset();
+
+    prop_scene.reset();
+  }
 }
