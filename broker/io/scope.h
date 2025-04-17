@@ -55,6 +55,7 @@ namespace RayGene3D
       std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers; //elements-stride-count
       std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures; //texels-size-size
       std::vector<Instance> instances;
+      std::vector<Meshlet> meshlets;
 
     public:
       std::shared_ptr<Property> prop_scene;
