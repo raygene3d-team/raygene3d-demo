@@ -29,7 +29,7 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  void RecursiveBuild2(std::vector<Box>& leaves, uint32_t begin, uint32_t end, std::vector<Box>& nodes, uint32_t depth)
+  void RecursiveBuild2(std::vector<Box>& leaves, size_t begin, size_t end, std::vector<Box>& nodes, uint32_t depth)
   {
     Box node;
 
@@ -152,9 +152,9 @@ namespace RayGene3D
     }
   }
 
-  void MainBuild(std::pair<const Instance*, uint32_t> instances,
-    std::pair<const Triangle*, uint32_t> triangles,
-    std::pair<const Vertex*, uint32_t> vertices,
+  void MainBuild(std::pair<const Instance*, size_t> instances,
+    std::pair<const Triangle*, size_t> triangles,
+    std::pair<const Vertex*, size_t> vertices,
     std::vector<Box>& instance_boxes, std::vector<Box>& triangle_boxes)
   {
     instance_boxes.clear();
@@ -184,7 +184,7 @@ namespace RayGene3D
       }
 
       std::vector<Box> nodes;
-      RecursiveBuild2(triangle_leaves, 0, uint32_t(triangle_leaves.size()), nodes, 0);
+      RecursiveBuild2(triangle_leaves, 0u, triangle_leaves.size(), nodes, 0);
 
       uint32_t counter = 0;
       for (uint32_t j = 0; j < nodes.size(); ++j)
@@ -234,19 +234,19 @@ namespace RayGene3D
 
 
     std::vector<Box> instance_leaves(instance_count);
-    for (uint32_t i = 0; i < instance_leaves.size(); ++i)
+    for (size_t i = 0; i < instance_leaves.size(); ++i)
     {
       const auto& instance = instance_items[i];
 
       auto& leaf = instance_leaves[i];
       leaf.offset = i;
       leaf.count = 1;
-      leaf.min = instance.prim_count == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[instance.prim_offset * 2 - i].min;
-      leaf.max = instance.prim_count == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[instance.prim_offset * 2 - i].max;
+      leaf.min = instance.prim_count == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[size_t(instance.prim_offset) * 2 - i].min;
+      leaf.max = instance.prim_count == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[size_t(instance.prim_offset) * 2 - i].max;
     }
 
     std::vector<Box> nodes;
-    RecursiveBuild2(instance_leaves, 0, uint32_t(instance_leaves.size()), nodes, 0);
+    RecursiveBuild2(instance_leaves, 0, instance_leaves.size(), nodes, 0);
 
     uint32_t counter = 0;
     for (uint32_t i = 0; i < nodes.size(); ++i)
@@ -286,95 +286,95 @@ namespace RayGene3D
   void TraceBroker::CreateTraceTBoxes()
   {
     const auto [data, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawTyped<Box>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Box)) * count },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Box) * count },
     };
 
     trace_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_t_boxes",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Box)),
+        sizeof(Box),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { interops, std::size(interops) }
       );
   }
 
   void TraceBroker::CreateTraceBBoxes()
   {
     const auto [data, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawTyped<Box>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Box)) * count },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Box) * count },
     };
 
     trace_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_b_boxes",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Box)),
+        sizeof(Box),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { interops, std::size(interops) }
       );
   }
 
   void TraceBroker::CreateTraceInstances()
   {
     const auto [data, count] = prop_instances->GetRawTyped<Instance>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Instance)) * count },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Instance) * count },
     };
 
     trace_instances = wrap.GetCore()->GetDevice()->CreateResource("trace_instances",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Instance)),
+        sizeof(Instance),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { interops, std::size(interops) }
       );
   }
 
   void TraceBroker::CreateTraceTriangles()
   {
     const auto [data, count] = prop_triangles->GetRawTyped<Triangle>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Triangle)) * count },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Triangle) * count },
     };
 
     trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("trace_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-        uint32_t(sizeof(Triangle)),
+        sizeof(Triangle),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { interops, uint32_t(std::size(interops)) }
+      { interops, std::size(interops) }
       );
   }
 
   void TraceBroker::CreateTraceVertices()
   {
     const auto [data, count] = prop_vertices->GetRawTyped<Vertex>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Vertex)) * count },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Vertex) * count },
     };
 
     trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("trace_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-        uint32_t(sizeof(Vertex)),
+        sizeof(Vertex),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { interops, uint32_t(std::size(interops)) }
+      { interops, std::size(interops) }
       );
   }
 
@@ -429,9 +429,9 @@ namespace RayGene3D
     MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
 
     {
-      const auto data = t_boxes.data();
-      const auto stride = uint32_t(sizeof(RayGene3D::Box));
-      const auto count = uint32_t(t_boxes.size());
+      const auto data = reinterpret_cast<uint8_t*>(t_boxes.data());
+      const auto stride = sizeof(RayGene3D::Box);
+      const auto count = t_boxes.size();
       auto raw = Raw({ data, stride * count });
       prop_t_boxes = CreateBufferProperty({ &raw, 1u }, stride, count);
       prop_scene->SetObjectItem("t_boxes", prop_t_boxes);
@@ -439,9 +439,9 @@ namespace RayGene3D
     CreateTraceTBoxes();
 
     {
-      const auto data = b_boxes.data();
-      const auto stride = uint32_t(sizeof(RayGene3D::Box));
-      const auto count = uint32_t(b_boxes.size());
+      const auto data = reinterpret_cast<uint8_t*>(b_boxes.data());
+      const auto stride = sizeof(RayGene3D::Box);
+      const auto count = b_boxes.size();
       auto raw = Raw({ data, stride * count });
       prop_b_boxes = CreateBufferProperty({ &raw, 1u }, stride, count);
       prop_scene->SetObjectItem("b_boxes", prop_b_boxes);

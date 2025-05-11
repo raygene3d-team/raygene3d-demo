@@ -73,12 +73,12 @@ namespace RayGene3D
 
       std::vector<std::string> texture_names;
 
-      for (uint32_t i = 0; i < uint32_t(obj_shapes.size()); ++i)
+      for (size_t i = 0; i < obj_shapes.size(); ++i)
       {
         const auto& obj_mesh = obj_shapes[i].mesh;
 
         std::unordered_map<int, std::vector<glm::uvec3>> material_id_map;
-        for (uint32_t j = 0; j < uint32_t(obj_mesh.material_ids.size()); ++j)
+        for (size_t j = 0; j < obj_mesh.material_ids.size(); ++j)
         {
           const auto id = obj_mesh.material_ids[j];
 
@@ -134,16 +134,18 @@ namespace RayGene3D
 
           instance.buffer0_idx = uint32_t(scope.buffers.size());
           {
-            const auto stride = uint32_t(sizeof(Vertex));
-            const auto count = uint32_t(vertices.size());
-            scope.buffers.emplace_back(std::move(Raw({ vertices.data(), stride * count })), stride, count);
+            const auto stride = sizeof(Vertex);
+            const auto count = vertices.size();
+            const auto data = reinterpret_cast<const uint8_t*>(vertices.data());
+            scope.buffers.emplace_back(Raw({data, stride * count }), stride, count);
           }
 
           instance.buffer1_idx = uint32_t(scope.buffers.size());
           {
-            const auto stride = uint32_t(sizeof(Triangle));
-            const auto count = uint32_t(triangles.size());
-            scope.buffers.emplace_back(std::move(Raw({ triangles.data(), stride * count })), stride, count);
+            const auto stride = sizeof(Triangle);
+            const auto count = triangles.size();
+            const auto data = reinterpret_cast<const uint8_t*>(triangles.data());
+            scope.buffers.emplace_back(Raw({ data, stride * count }), stride, count);
           }
           
 
@@ -226,7 +228,7 @@ namespace RayGene3D
       if (!texture_names.empty())
       {
         scope.textures.resize(texture_names.size());
-        for (uint32_t i = 0; i < uint32_t(texture_names.size()); ++i)
+        for (size_t i = 0; i < texture_names.size(); ++i)
         {
           scope.textures[i] = load_texture_fn(texture_names[i]);
         }

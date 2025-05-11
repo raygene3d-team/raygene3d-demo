@@ -67,8 +67,8 @@ namespace RayGene3D
         size_x,
         size_y,
         layers,
-        { rt_attachments, uint32_t(std::size(rt_attachments)) },
-        { ds_attachments, uint32_t(std::size(ds_attachments)) }
+        { rt_attachments, std::size(rt_attachments) },
+        { ds_attachments, std::size(ds_attachments) }
       );
     }
 
@@ -127,7 +127,7 @@ namespace RayGene3D
       geometry_config = geometry_pass->CreateConfig("spark_geometry_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        { defines.data(), uint32_t(defines.size()) },
+        { defines.data(), defines.size() },
         ia_config,
         rc_config,
         ds_config,
@@ -158,7 +158,7 @@ namespace RayGene3D
 
         const auto geometry_graphic_arguments = scope.graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
           Usage(USAGE_ARGUMENT_LIST),
-          { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
+          { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
         );
 
         const auto& ins_range = View::Range{ 0u,  1u };
@@ -168,8 +168,8 @@ namespace RayGene3D
         const auto& push_data = std::nullopt;
 
         entities[i] = {
-          { va_views, va_views + uint32_t(std::size(va_views)) },
-          { ia_views, ia_views + uint32_t(std::size(ia_views)) },
+          { va_views, va_views + std::size(va_views) },
+          { ia_views, ia_views + std::size(ia_views) },
           nullptr, // geometry_graphic_arguments,
           ins_range,
           vtx_range,
@@ -193,7 +193,7 @@ namespace RayGene3D
 
       auto geometry_shadow_data = scope.shadow_data->CreateView("spark_geometry_shadow_data",
         Usage(USAGE_CONSTANT_DATA),
-        { 0, uint32_t(sizeof(Frustum)) }
+        { 0, sizeof(Frustum) }
       );
 
       const std::shared_ptr<View> ub_views[] = {
@@ -205,7 +205,7 @@ namespace RayGene3D
 
       auto geometry_scene_instances = scope.scene_instances->CreateView("spark_geometry_scene_instances",
         Usage(USAGE_CONSTANT_DATA),
-        { 0, uint32_t(sizeof(Instance)) }
+        { 0, sizeof(Instance) }
       );
 
       const std::shared_ptr<View> sb_views[] = {
@@ -251,8 +251,8 @@ namespace RayGene3D
 
       auto geometry_reflection_map = scope.reflection_map->CreateView("spark_geometry_reflection_map",
         Usage(USAGE_SHADER_RESOURCE),
-        { 0u, uint32_t(-1) },
-        { 0u, uint32_t(-1) },
+        { 0u, size_t(-1) },
+        { 0u, size_t(-1) },
         View::BIND_CUBEMAP_LAYER
       );
 
@@ -270,11 +270,11 @@ namespace RayGene3D
       };
 
       geometry_batch = geometry_config->CreateBatch("spark_geometry_batch",
-        { entities.data(), uint32_t(entities.size()) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
-        { sb_views, uint32_t(std::size(sb_views)) },
-        { ri_views, uint32_t(std::size(ri_views)) },
+        { entities.data(), entities.size() },
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
+        { sb_views, std::size(sb_views) },
+        { ri_views, std::size(ri_views) },
         {},
         {},
         {}
@@ -332,7 +332,7 @@ namespace RayGene3D
       skybox_config = geometry_pass->CreateConfig("spark_skybox_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        { defines, uint32_t(std::size(defines)) },
+        { defines, std::size(defines) },
         ia_config,
         rc_config,
         ds_config,
@@ -379,11 +379,11 @@ namespace RayGene3D
       };
 
       skybox_batch = skybox_config->CreateBatch("spark_skybox_batch",
-        { entities, uint32_t(std::size(entities)) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { entities, std::size(entities) },
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
+        { ri_views, std::size(ri_views) },
         {},
         {},
         {}
@@ -453,12 +453,12 @@ namespace RayGene3D
       };
 
       present_batch = present_config->CreateBatch("spark_present_batch",
-        { entities, uint32_t(std::size(entities)) },
+        { entities, std::size(entities) },
         {},
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
-        { wi_views, uint32_t(std::size(wi_views)) },
+        { ri_views, std::size(ri_views) },
+        { wi_views, std::size(wi_views) },
         {},
         {}
       );

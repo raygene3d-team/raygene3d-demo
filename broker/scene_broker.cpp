@@ -33,57 +33,57 @@ namespace RayGene3D
   void SceneBroker::CreateSceneInstances()
   {
     const auto [data, count] = prop_instances->GetRawTyped<Instance>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Instance)) * count },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Instance) * count },
     };
 
     scene_instances = wrap.GetCore()->GetDevice()->CreateResource("scene_instances",
       Resource::BufferDesc
       {
         Usage(USAGE_CONSTANT_DATA),
-        uint32_t(sizeof(Instance)),
+        sizeof(Instance),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { interops, std::size(interops) }
       );
   }
 
   void SceneBroker::CreateSceneTriangles()
   {
     const auto [data, count] = prop_triangles->GetRawTyped<Triangle>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Triangle)) * count },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Triangle) * count },
     };
 
     scene_triangles = wrap.GetCore()->GetDevice()->CreateResource("scene_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
-        uint32_t(sizeof(Triangle)),
+        sizeof(Triangle),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { interops, std::size(interops) }
       );
   }
 
   void SceneBroker::CreateSceneVertices()
   {
     const auto [data, count] = prop_vertices->GetRawTyped<Vertex>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Vertex)) * count },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Vertex) * count },
     };
 
     scene_vertices = wrap.GetCore()->GetDevice()->CreateResource("scene_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(Vertex)),
+        sizeof(Vertex),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { interops, std::size(interops) }
       );
   }
 
@@ -95,11 +95,10 @@ namespace RayGene3D
     const auto& extent_y = prop_textures0->GetObjectItem("extent_y");
     const auto& raws = prop_textures0->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+    for (size_t i = 0u; i < interops.size(); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws->GetArrayItem(i)->GetRawBytes();
     }
 
     scene_textures0 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures0",
@@ -113,7 +112,7 @@ namespace RayGene3D
         extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      { interops.data(), interops.size() }
       );
   }
 
@@ -125,11 +124,10 @@ namespace RayGene3D
     const auto& extent_y = prop_textures1->GetObjectItem("extent_y");
     const auto& raws = prop_textures1->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+    for (size_t i = 0u; i < interops.size(); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
     }
 
     scene_textures1 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures1",
@@ -143,7 +141,7 @@ namespace RayGene3D
         extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      { interops.data(), interops.size() }
       );
   }
 
@@ -155,11 +153,10 @@ namespace RayGene3D
     const auto& extent_y = prop_textures2->GetObjectItem("extent_y");
     const auto& raws = prop_textures2->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+    for (size_t i = 0u; i < interops.size(); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
     }
 
     scene_textures2 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures2",
@@ -173,7 +170,7 @@ namespace RayGene3D
         extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      { interops.data(), interops.size() }
       );
   }
 
@@ -185,11 +182,10 @@ namespace RayGene3D
     const auto& extent_y = prop_textures3->GetObjectItem("extent_y");
     const auto& raws = prop_textures3->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+    for (size_t i = 0u; i < interops.size(); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
     }
 
     scene_textures3 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures3",
@@ -203,7 +199,7 @@ namespace RayGene3D
         extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      { interops.data(), interops.size() }
       );
   }
 
@@ -215,11 +211,10 @@ namespace RayGene3D
     const auto& extent_y = prop_textures4->GetObjectItem("extent_y");
     const auto& raws = prop_textures4->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+    for (size_t i = 0u; i < interops.size(); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
     }
 
     scene_textures4 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures4",
@@ -233,7 +228,7 @@ namespace RayGene3D
         extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      { interops.data(), interops.size() }
       );
   }
 
@@ -245,11 +240,10 @@ namespace RayGene3D
     const auto& extent_y = prop_textures5->GetObjectItem("extent_y");
     const auto& raws = prop_textures5->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+    for (size_t i = 0u; i < interops.size(); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws->GetArrayItem(i)->GetRawBytes();
     }
 
     scene_textures5 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures5",
@@ -263,7 +257,7 @@ namespace RayGene3D
         extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      { interops.data(), interops.size() }
       );
   }
 
@@ -275,11 +269,10 @@ namespace RayGene3D
     const auto& extent_y = prop_textures6->GetObjectItem("extent_y");
     const auto& raws = prop_textures6->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+    for (size_t i = 0u; i < interops.size(); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
     }
 
     scene_textures6 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures6",
@@ -293,7 +286,7 @@ namespace RayGene3D
         extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      { interops.data(), interops.size() }
       );
   }
 
@@ -305,11 +298,10 @@ namespace RayGene3D
     const auto& extent_y = prop_textures7->GetObjectItem("extent_y");
     const auto& raws = prop_textures7->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+    for (size_t i = 0u; i < interops.size(); ++i)
     {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
+      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
     }
 
     scene_textures7 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures7",
@@ -323,7 +315,7 @@ namespace RayGene3D
         extent_y->GetUint(),
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      { interops.data(), interops.size() }
       );
   }
 

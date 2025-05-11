@@ -51,7 +51,7 @@ namespace RayGene3D
         size_x,
         size_y,
         layers,
-        { rt_attachments, uint32_t(std::size(rt_attachments)) },
+        { rt_attachments, std::size(rt_attachments) },
         {}
       );
     }
@@ -103,7 +103,7 @@ namespace RayGene3D
       sw_traced_config = sw_traced_pass->CreateConfig("spark_sw_traced_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        { defines.data(), uint32_t(defines.size()) },
+        { defines.data(), defines.size() },
         ia_Config,
         rc_Config,
         ds_Config,
@@ -179,13 +179,13 @@ namespace RayGene3D
       };
 
       sw_traced_batch = sw_traced_config->CreateBatch("spark_sw_traced_batch",
-        { entities, uint32_t(std::size(entities)) },
+        { entities, std::size(entities) },
         {},
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
+        { ri_views, std::size(ri_views) },
         {},
-        { rb_views, uint32_t(std::size(rb_views)) },
+        { rb_views, std::size(rb_views) },
         {}
       );
     }

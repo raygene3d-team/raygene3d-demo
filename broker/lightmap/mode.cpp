@@ -92,12 +92,12 @@ namespace RayGene3D
       };
 
       average_batch = average_config->CreateBatch("spark_present_batch",
-        { entities, uint32_t(std::size(entities)) },
+        { entities, std::size(entities) },
         {},
         {},
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
-        { wi_views, uint32_t(std::size(wi_views)) },
+        { ri_views, std::size(ri_views) },
+        { wi_views, std::size(wi_views) },
         {},
         {}
       );

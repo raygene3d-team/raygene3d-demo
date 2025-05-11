@@ -44,8 +44,8 @@ namespace RayGene3D
       auto prop_scene = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
 
       auto prop_instances = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-      prop_instances->SetArraySize(uint32_t(instances.size()));      
-      for (auto i = 0u; i < uint32_t(instances.size()); ++i)
+      prop_instances->SetArraySize(instances.size());      
+      for (size_t i = 0u; i < instances.size(); ++i)
       {
         const auto& instance = instances[i];
 
@@ -91,8 +91,8 @@ namespace RayGene3D
       prop_scene->SetObjectItem("instances", prop_instances);
 
       auto prop_buffers = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-      prop_buffers->SetArraySize(uint32_t(buffers.size()));
-      for (auto i = 0u; i < uint32_t(buffers.size()); ++i)
+      prop_buffers->SetArraySize(buffers.size());
+      for (size_t i = 0u; i < buffers.size(); ++i)
       {
         auto& [raw, stride, count] = buffers[i];
         const auto item_property = CreateBufferProperty({ &raw, 1u }, stride, count);
@@ -101,8 +101,8 @@ namespace RayGene3D
       prop_scene->SetObjectItem("buffers", prop_buffers);
 
       auto prop_textures = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-      prop_textures->SetArraySize(uint32_t(textures.size()));
-      for (auto i = 0u; i < uint32_t(textures.size()); ++i)
+      prop_textures->SetArraySize(textures.size());
+      for (size_t i = 0u; i < textures.size(); ++i)
       {
         auto& [raw, size_x, size_y] = textures[i];
         const auto item_property = CreateTextureProperty({ &raw, 1u }, Format::FORMAT_R8G8B8A8_SNORM, size_x, size_y, 0u);

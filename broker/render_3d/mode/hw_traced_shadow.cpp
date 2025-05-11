@@ -63,7 +63,7 @@ namespace RayGene3D
       hw_traced_config = hw_traced_pass->CreateConfig("spark_hw_traced_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
-        { defines.data(), uint32_t(defines.size()) },
+        { defines.data(), defines.size() },
         {},
         {},
         {},
@@ -98,8 +98,8 @@ namespace RayGene3D
         const auto& push_data = std::nullopt;
 
         entities[i] = {
-          { va_views, va_views + uint32_t(std::size(va_views)) },
-          { ia_views, ia_views + uint32_t(std::size(ia_views)) },
+          { va_views, va_views + std::size(va_views) },
+          { ia_views, ia_views + std::size(ia_views) },
           nullptr,
           ins_range,
           vtx_range,
@@ -152,12 +152,12 @@ namespace RayGene3D
       };
 
       hw_traced_batch = hw_traced_config->CreateBatch("spark_hw_traced_batch",
-        { entities.data(), uint32_t(entities.size()) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { entities.data(), entities.size() },
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
-        { wi_views, uint32_t(std::size(wi_views)) },
+        { ri_views, std::size(ri_views) },
+        { wi_views, std::size(wi_views) },
         {},
         {}
       );

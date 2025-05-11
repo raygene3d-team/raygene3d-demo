@@ -114,7 +114,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
-          uint32_t(sizeof(Screen)),
+          sizeof(Screen),
           1,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -127,7 +127,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
-          uint32_t(sizeof(Frustum)),
+          sizeof(Frustum),
           1,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -140,7 +140,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
-          uint32_t(sizeof(Frustum)),
+          sizeof(Frustum),
           1,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -251,19 +251,19 @@ namespace RayGene3D
         glm::f32vec2( 1.0f,-1.0f),
       };
 
-      std::pair<const void*, uint32_t> interops[] = {
-        { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec2)) },
+      std::pair<const uint8_t*, size_t> interops[] = {
+        { reinterpret_cast<const uint8_t*>(quad_vtx.data()), quad_vtx.size() * sizeof(glm::f32vec2) },
       };
 
       screen_quad_vertices = core->GetDevice()->CreateResource("spark_screen_quad_vertices",
         Resource::BufferDesc
         {
           Usage(USAGE_VERTEX_ARRAY),
-          uint32_t(sizeof(glm::f32vec2)),
-          uint32_t(quad_vtx.size()),
+          sizeof(glm::f32vec2),
+          quad_vtx.size(),
         },
         Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-        { interops, uint32_t(std::size(interops)) }
+        { interops, std::size(interops) }
       );
     }
 
@@ -274,19 +274,19 @@ namespace RayGene3D
         glm::u32vec3(3u, 2u, 1u),
       };
 
-      std::pair<const void*, uint32_t> interops[] = {
-        { quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3)) },
+      std::pair<const uint8_t*, size_t> interops[] = {
+        { reinterpret_cast<const uint8_t*>(quad_idx.data()), quad_idx.size() * sizeof(glm::u32vec3) },
       };
 
       screen_quad_triangles = core->GetDevice()->CreateResource("spark_screen_quad_triangles",
         Resource::BufferDesc
         {
           Usage(USAGE_INDEX_ARRAY),
-          uint32_t(sizeof(glm::u32vec3)),
-          uint32_t(quad_idx.size()),
+          sizeof(glm::u32vec3),
+          quad_idx.size(),
         },
         Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-        { interops, uint32_t(std::size(interops)) }
+        { interops, std::size(interops) }
       );
     }
 
@@ -308,8 +308,8 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_ARGUMENT_LIST),
-          uint32_t(sizeof(Batch::Graphic)),
-          uint32_t(count),
+          sizeof(Batch::Graphic),
+          count,
         },
         Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
         );
@@ -321,7 +321,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_ARGUMENT_LIST),
-          uint32_t(sizeof(Batch::Compute)),
+          sizeof(Batch::Compute),
           1u,
         },
         Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)

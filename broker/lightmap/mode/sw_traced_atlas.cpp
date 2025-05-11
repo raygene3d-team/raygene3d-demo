@@ -62,7 +62,7 @@ namespace RayGene3D
       sw_traced_config = sw_traced_pass->CreateConfig("lightmap_sw_traced_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_CS),
-        { defines.data(), uint32_t(defines.size()) },
+        { defines.data(), defines.size() },
         {},
         {},
         {},
@@ -162,13 +162,13 @@ namespace RayGene3D
       };
 
       sw_traced_batch = sw_traced_config->CreateBatch("lightmap_sw_traced_batch",
-        { entities, uint32_t(std::size(entities)) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { entities, std::size(entities) },
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
-        { wi_views, uint32_t(std::size(wi_views)) },
-        { rb_views, uint32_t(std::size(rb_views)) },
+        { ri_views, std::size(ri_views) },
+        { wi_views, std::size(wi_views) },
+        { rb_views, std::size(rb_views) },
         {}
       );
     }

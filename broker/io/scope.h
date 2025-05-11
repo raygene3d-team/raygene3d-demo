@@ -52,19 +52,19 @@ namespace RayGene3D
     public:
       //std::vector<Buffer> buffers;
       //std::vector<Texture> textures;
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers; //elements-stride-count
+      std::vector<std::tuple<Raw, size_t, size_t>> buffers; //elements-stride-count
       std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures; //texels-size-size
       std::vector<Instance> instances;
       //std::vector<Meshlet> meshlets;
 
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_0; //vertices
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_1; //indices
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_2;
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> buffers_3; 
+      std::vector<std::tuple<Raw, size_t, size_t>> buffers_0; //vertices
+      std::vector<std::tuple<Raw, size_t, size_t>> buffers_1; //indices
+      std::vector<std::tuple<Raw, size_t, size_t>> buffers_2;
+      std::vector<std::tuple<Raw, size_t, size_t>> buffers_3; 
 
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_0; //AS
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1; //MNAO
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2;
+      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_0; //albedo-metallic
+      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1; //smoothness-normal-occlusion
+      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2; //emission-transparency
       std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_3;
 
     public:

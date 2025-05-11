@@ -150,16 +150,16 @@ namespace RayGene3D
       const float R = static_cast<float>(prop_extent_x->GetUint());
       const float B = static_cast<float>(prop_extent_y->GetUint());
       const float T = 0.0f;
-      const float mvp[4][4] = {
+      const auto mvp = glm::f32mat4x4{
         { 2.0f / (R - L),     0.0f,               0.0f,       0.0f },
         { 0.0f,               2.0f / (T - B),     0.0f,       0.0f },
         { 0.0f,               0.0f,               0.5f,       0.0f },
         { (R + L) / (L - R),  (T + B) / (B - T),  0.5f,       1.0f },
       };
       proj_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-      proj_property->RawAllocate(uint32_t(sizeof(mvp)));
-      proj_property->SetRawBytes({ &mvp[0][0], uint32_t(sizeof(mvp)) }, 0);
-      std::pair<const void*, uint32_t> interops[] =
+      proj_property->RawAllocate(sizeof(glm::f32mat4x4));
+      proj_property->SetRawTyped<glm::f32mat4x4>({ &mvp, 1 });
+      std::pair<const uint8_t*, size_t> interops[] =
       {
         proj_property->GetRawBytes(0)
       };
@@ -168,11 +168,11 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
-          sizeof(float),
-          16,
+          sizeof(glm::f32mat4x4),
+          1u,
         },
         Resource::HINT_UNKNOWN,
-        { interops, uint32_t(std::size(interops)) }
+        { interops, std::size(interops) }
       );
     }
 
@@ -188,7 +188,7 @@ namespace RayGene3D
       font_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
       font_property->RawAllocate(font_stride * font_size_x * font_size_y);
       font_property->SetRawBytes({ font_data, font_stride * font_size_x * font_size_y }, 0);
-      std::pair<const void*, uint32_t> interops[] =
+      std::pair<const uint8_t*, size_t> interops[] =
       {
         font_property->GetRawBytes(0)
       };
@@ -204,7 +204,7 @@ namespace RayGene3D
           uint32_t(font_size_y),
         },
         Resource::HINT_UNKNOWN,
-        { interops, uint32_t(std::size(interops)) }
+        { interops, std::size(interops) }
       );
     }
 
@@ -213,7 +213,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_VERTEX_ARRAY),
-          uint32_t(sizeof(ImDrawVert)),
+          sizeof(ImDrawVert),
           vtx_limit * sub_limit,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -223,7 +223,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_INDEX_ARRAY),
-          uint32_t(sizeof(ImDrawIdx)),
+          sizeof(ImDrawIdx),
           idx_limit * sub_limit,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -233,7 +233,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_ARGUMENT_LIST),
-          uint32_t(sizeof(Batch::Graphic)),
+          sizeof(Batch::Graphic),
           arg_limit * sub_limit,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -254,7 +254,7 @@ namespace RayGene3D
         size_x,
         size_y,
         layers,
-        { rt_attachments, uint32_t(std::size(rt_attachments)) },
+        { rt_attachments, std::size(rt_attachments) },
         {}
       );
     }
@@ -370,12 +370,12 @@ namespace RayGene3D
       {
         const auto vtx_view = vtx_resource->CreateView("vtx_view_" + std::to_string(i),
           Usage(USAGE_VERTEX_ARRAY),
-          { i * uint32_t(sizeof(ImDrawVert)) * vtx_limit, uint32_t(sizeof(ImDrawVert)) * vtx_limit }
+          { i * sizeof(ImDrawVert) * vtx_limit, sizeof(ImDrawVert) * vtx_limit }
         );
 
         const auto idx_view = idx_resource->CreateView("idx_view_" + std::to_string(i),
           Usage(USAGE_INDEX_ARRAY),
-          { i * uint32_t(sizeof(ImDrawIdx)) * idx_limit, uint32_t(sizeof(ImDrawIdx)) * idx_limit }
+          { i * sizeof(ImDrawIdx) * idx_limit, sizeof(ImDrawIdx) * idx_limit }
         );
 
         for (uint32_t j = 0; j < arg_limit; ++j)
@@ -407,11 +407,11 @@ namespace RayGene3D
       };
 
       batch = config->CreateBatch("imgui_layout",
-        { entities.data(), uint32_t(entities.size())},
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { entities.data(), entities.size()},
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
+        { ri_views, std::size(ri_views) },
         {},
         {},
         {}

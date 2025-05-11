@@ -51,7 +51,7 @@ namespace RayGene3D
         size_x,
         size_y,
         layers,
-        { rt_attachments, uint32_t(std::size(rt_attachments)) },
+        { rt_attachments, std::size(rt_attachments) },
         {}
       );
     }
@@ -102,7 +102,7 @@ namespace RayGene3D
       unshadowed_config = unshadowed_pass->CreateConfig("spark_unshadowed_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        { defines.data(), uint32_t(defines.size()) },
+        { defines.data(), defines.size() },
         ia_Config,
         rc_Config,
         ds_Config,
@@ -132,7 +132,7 @@ namespace RayGene3D
       );
       auto unshadowed_shadow_data = scope.shadow_data->CreateView("spark_unshadowed_shadow_data",
         Usage(USAGE_CONSTANT_DATA),
-        { 0, uint32_t(sizeof(Frustum)) }
+        { 0, sizeof(Frustum) }
       );
       const std::shared_ptr<View> ub_views[] = {
         unshadowed_screen_data,
@@ -156,11 +156,11 @@ namespace RayGene3D
       };
 
       unshadowed_batch = unshadowed_config->CreateBatch("spark_unshadowed_batch",
-        { entities, uint32_t(std::size(entities)) },
+        { entities, std::size(entities) },
         {},
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) }
+        { ri_views, std::size(ri_views) }
       );
     }
 

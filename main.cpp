@@ -366,15 +366,15 @@ namespace RayGene3D
       wrap->GetCore()->Initialize();
 
       {
-        const auto stride = uint32_t(sizeof(glm::u8vec4));
-        const auto count = uint32_t(extent_x * extent_y);
+        const auto stride = sizeof(glm::u8vec4);
+        const auto count = extent_x * extent_y;
         auto raw = RayGene3D::Raw{ stride * count };
         for (auto i = 0u; i < count; ++i)
         {
           raw.SetElement<glm::u8vec4>({ 0, 0, 0, 0 }, i);
         }
         prop_screen = CreateBufferProperty({ &raw, 1 }, stride, count);
-        std::pair<const void*, uint32_t> interops[] =
+        std::pair<const uint8_t*, size_t> interops[] =
         {
           prop_screen->GetObjectItem("raws")->GetArrayItem(0)->GetRawBytes(0)
         };
@@ -390,7 +390,7 @@ namespace RayGene3D
             uint32_t(extent_y),
           },
           Resource::HINT_UNKNOWN,
-          { interops, uint32_t(std::size(interops)) }
+          { interops, std::size(interops) }
         );
         wrap->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
 

@@ -51,7 +51,7 @@ namespace RayGene3D
         size_x,
         size_y,
         layers,
-        { rt_attachments, uint32_t(std::size(rt_attachments)) },
+        { rt_attachments, std::size(rt_attachments) },
         {}
       );
     }
@@ -102,7 +102,7 @@ namespace RayGene3D
       shadowed_config = shadowed_pass->CreateConfig("spark_shadowed_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        { defines.data(), uint32_t(defines.size()) },
+        { defines.data(), defines.size() },
         ia_Config,
         rc_Config,
         ds_Config,
@@ -162,11 +162,11 @@ namespace RayGene3D
       };
 
       shadowed_batch = shadowed_config->CreateBatch("spark_shadowed_batch",
-        { entities, uint32_t(std::size(entities)) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { entities, std::size(entities) },
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) }
+        { ri_views, std::size(ri_views) }
       );
     }
 
@@ -191,7 +191,7 @@ namespace RayGene3D
         size_y,
         layers,
         {},
-        { ds_attachments, uint32_t(std::size(ds_attachments)) }
+        { ds_attachments, std::size(ds_attachments) }
       );
     }
 
@@ -251,7 +251,7 @@ namespace RayGene3D
     {
       const auto [data, count] = scope.prop_instances->GetRawTyped<Instance>(0);
       auto entities = std::vector<Batch::Entity>(count);
-      for (auto i = 0u; i < count; ++i)
+      for (size_t i = 0u; i < count; ++i)
       {
         const auto shadowmap_scene_vertices = scope.scene_vertices->CreateView("spark_shadowmap_scene_vertices_" + std::to_string(i),
           Usage(USAGE_VERTEX_ARRAY)
@@ -263,7 +263,7 @@ namespace RayGene3D
 
         const auto shadowmap_graphic_arguments = scope.graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(i),
           Usage(USAGE_ARGUMENT_LIST),
-          { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
+          { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
         );
 
         const auto& ins_range = View::Range{ 0u,  1u };
@@ -286,7 +286,7 @@ namespace RayGene3D
 
       auto shadowmap_shadow_data = scope.shadow_data->CreateView("spark_shadowmap_shadow_data",
         USAGE_CONSTANT_DATA,
-        { 0u, uint32_t(sizeof(Frustum)) }
+        { 0u, sizeof(Frustum) }
       );
 
       const std::shared_ptr<View> ub_views[] = {
@@ -294,9 +294,9 @@ namespace RayGene3D
       };
 
       shadowmap_batch = shadowmap_config->CreateBatch("spark_shadowmap_batch",
-        { entities.data(), uint32_t(entities.size()) },
+        { entities.data(), entities.size() },
         {},
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { ub_views, std::size(ub_views) },
         {},
         {},
         {},

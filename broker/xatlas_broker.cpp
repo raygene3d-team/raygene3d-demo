@@ -104,13 +104,13 @@ namespace RayGene3D
     }
 
     const auto updated_prop_vrt = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    updated_prop_vrt->RawAllocate(updated_vrt_count * uint32_t(sizeof(Vertex)));
+    updated_prop_vrt->RawAllocate(updated_vrt_count * sizeof(Vertex));
 
     const auto updated_prop_trg = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    updated_prop_trg->RawAllocate(updated_trg_count * uint32_t(sizeof(Triangle)));
+    updated_prop_trg->RawAllocate(updated_trg_count * sizeof(Triangle));
 
     const auto updated_prop_ins = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    updated_prop_ins->RawAllocate(updated_ins_count * uint32_t(sizeof(Instance)));
+    updated_prop_ins->RawAllocate(updated_ins_count * sizeof(Instance));
 
     auto updated_vrt_offset = 0u;
     auto updated_trg_offset = 0u;

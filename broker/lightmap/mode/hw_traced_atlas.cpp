@@ -63,7 +63,7 @@ namespace RayGene3D
       hw_traced_config = hw_traced_pass->CreateConfig("lightmap_hw_traced_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
-        { defines.data(), uint32_t(defines.size()) },
+        { defines.data(), defines.size() },
         {},
         {},
         {},

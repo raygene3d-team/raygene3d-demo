@@ -232,8 +232,8 @@ namespace RayGene3D
         }
       }
 
-      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
-      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+      auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws.size());
+      for (size_t i = 0u; i < interops.size(); ++i)
       {
         interops[i] = raws[i].AccessBytes();
       }
@@ -249,17 +249,17 @@ namespace RayGene3D
           prop_atlas_size_y->GetUint(),
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), uint32_t(interops.size()) }
+        { interops.data(), interops.size() }
         );
     }
 
     void Scope::CreateLightmapsAccum()
     {
-      const auto stride = uint32_t(sizeof(glm::f32vec4));
-      const auto count = uint32_t(prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint());
+      const auto stride = sizeof(glm::f32vec4);
+      const auto count = prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint();
       
       auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
-      for (auto i = 0u; i < uint32_t(raws.size()); ++i)
+      for (size_t i = 0u; i < raws.size(); ++i)
       {
         auto raw = RayGene3D::Raw{ stride * count };
         for (auto j = 0u; j < count; ++j)
@@ -269,8 +269,8 @@ namespace RayGene3D
         raws[i] = std::move(raw);
       }
 
-      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
-      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+      auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws.size());
+      for (size_t i = 0u; i < interops.size(); ++i)
       {
         interops[i] = raws[i].AccessBytes();
       }
@@ -286,17 +286,17 @@ namespace RayGene3D
           prop_atlas_size_y->GetUint(),
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), uint32_t(interops.size()) }
+        { interops.data(), interops.size() }
         );
     }
 
     void Scope::CreateLightmapsFinal()
     {
-      const auto stride = uint32_t(sizeof(glm::f32vec4));
-      const auto count = uint32_t(prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint());
+      const auto stride = sizeof(glm::f32vec4);
+      const auto count = prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint();
 
       auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
-      for (auto i = 0u; i < uint32_t(raws.size()); ++i)
+      for (size_t i = 0u; i < raws.size(); ++i)
       {
         auto raw = RayGene3D::Raw{ stride * count };
         for (auto j = 0u; j < count; ++j)
@@ -306,8 +306,8 @@ namespace RayGene3D
         raws[i] = std::move(raw);
       }
 
-      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
-      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
+      auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws.size());
+      for (size_t i = 0u; i < interops.size(); ++i)
       {
         interops[i] = raws[i].AccessBytes();
       }
@@ -323,7 +323,7 @@ namespace RayGene3D
           prop_atlas_size_y->GetUint(),
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), uint32_t(interops.size()) }
+        { interops.data(), interops.size() }
         );
     }
 
