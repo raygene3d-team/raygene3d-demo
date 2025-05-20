@@ -52,8 +52,8 @@ namespace RayGene3D
     public:
       //std::vector<Buffer> buffers;
       //std::vector<Texture> textures;
-      std::vector<std::tuple<Raw, size_t, size_t>> buffers; //elements-stride-count
-      std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures; //texels-size-size
+      //std::vector<std::tuple<Raw, size_t, size_t>> buffers; //elements-stride-count
+      //std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures; //texels-size-size
       std::vector<Instance> instances;
       //std::vector<Meshlet> meshlets;
 

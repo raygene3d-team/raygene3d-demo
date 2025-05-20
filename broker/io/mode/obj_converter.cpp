@@ -132,20 +132,20 @@ namespace RayGene3D
           instance.aabb_max = aabb_max;
           instance.brdf_idx = 0;
 
-          instance.buffer0_idx = uint32_t(scope.buffers.size());
+          instance.buffer0_idx = uint32_t(scope.buffers_0.size());
           {
             const auto stride = sizeof(Vertex);
             const auto count = vertices.size();
             const auto data = reinterpret_cast<const uint8_t*>(vertices.data());
-            scope.buffers.emplace_back(Raw({data, stride * count }), stride, count);
+            scope.buffers_0.emplace_back(Raw({data, stride * count }), stride, count);
           }
 
-          instance.buffer1_idx = uint32_t(scope.buffers.size());
+          instance.buffer1_idx = uint32_t(scope.buffers_1.size());
           {
             const auto stride = sizeof(Triangle);
             const auto count = triangles.size();
             const auto data = reinterpret_cast<const uint8_t*>(triangles.data());
-            scope.buffers.emplace_back(Raw({ data, stride * count }), stride, count);
+            scope.buffers_1.emplace_back(Raw({ data, stride * count }), stride, count);
           }
           
 
@@ -225,14 +225,14 @@ namespace RayGene3D
         return std::make_tuple(std::move(raw), uint32_t(tex_x), uint32_t(tex_y));
       };
 
-      if (!texture_names.empty())
-      {
-        scope.textures.resize(texture_names.size());
-        for (size_t i = 0; i < texture_names.size(); ++i)
-        {
-          scope.textures[i] = load_texture_fn(texture_names[i]);
-        }
-      }
+      //if (!texture_names.empty())
+      //{
+      //  scope.textures.resize(texture_names.size());
+      //  for (size_t i = 0; i < texture_names.size(); ++i)
+      //  {
+      //    scope.textures[i] = load_texture_fn(texture_names[i]);
+      //  }
+      //}
     }
 
     void OBJConverter::Export()

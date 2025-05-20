@@ -49,18 +49,18 @@ namespace RayGene3D
     {
     }
 
-    std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(uint32_t idx_count, uint32_t idx_align,
+    std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(size_t idx_count, uint32_t idx_align,
       const glm::uvec3& idx_order, const glm::fmat4x4& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
-      std::pair<const uint8_t*, uint32_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, uint32_t> pos_idx_data, uint32_t pos_idx_stride,
-      std::pair<const uint8_t*, uint32_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, uint32_t> nrm_idx_data, uint32_t nrm_idx_stride,
-      std::pair<const uint8_t*, uint32_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, uint32_t> tc0_idx_data, uint32_t tc0_idx_stride)
+      std::pair<const uint8_t*, size_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, size_t> pos_idx_data, uint32_t pos_idx_stride,
+      std::pair<const uint8_t*, size_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, size_t> nrm_idx_data, uint32_t nrm_idx_stride,
+      std::pair<const uint8_t*, size_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, size_t> tc0_idx_data, uint32_t tc0_idx_stride)
     {
       const auto create_vertex_fn = [idx_align,
         pos_transform, nrm_transform, tc0_transform,
         pos_data, pos_stride, pos_idx_data, pos_idx_stride,
         nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
         tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride]
-        (uint32_t index)
+        (size_t index)
         {
           const auto pos_idx =
             idx_align == 4 ? *(reinterpret_cast<const uint32_t*>(pos_idx_data.first + pos_idx_stride * index)) :
@@ -131,7 +131,7 @@ namespace RayGene3D
         auto degenerated_geom_tris_count = 0u;
         auto degenerated_wrap_tris_count = 0u;
 
-        for (uint32_t k = 0; k < idx_count / 3; ++k)
+        for (size_t k = 0; k < idx_count / 3; ++k)
         {
           const auto vtx0 = create_vertex_fn(k * 3 + 0);
           bb_min = glm::min(bb_min, vtx0.pos);
