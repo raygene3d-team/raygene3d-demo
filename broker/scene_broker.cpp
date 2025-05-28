@@ -49,18 +49,18 @@ namespace RayGene3D
       );
   }
 
-  void SceneBroker::CreateSceneTriangles()
+  void SceneBroker::CreateSceneBuffers0()
   {
-    const auto [data, count] = prop_triangles->GetRawTyped<Triangle>(0);
+    const auto [data, count] = prop_buffers0->GetRawTyped<Vertex>(0);
     std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(data), sizeof(Triangle) * count },
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Vertex) * count },
     };
 
-    scene_triangles = wrap.GetCore()->GetDevice()->CreateResource("scene_triangles",
+    scene_buffers0 = wrap.GetCore()->GetDevice()->CreateResource("scene_buffers0",
       Resource::BufferDesc
       {
-        Usage(USAGE_INDEX_ARRAY),
-        sizeof(Triangle),
+        Usage(USAGE_VERTEX_ARRAY),
+        sizeof(Vertex),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
@@ -68,18 +68,18 @@ namespace RayGene3D
       );
   }
 
-  void SceneBroker::CreateSceneVertices()
+  void SceneBroker::CreateSceneBuffers1()
   {
-    const auto [data, count] = prop_vertices->GetRawTyped<Vertex>(0);
+    const auto [data, count] = prop_buffers1->GetRawTyped<Triangle>(0);
     std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(data), sizeof(Vertex) * count },
+      { reinterpret_cast<const uint8_t*>(data), sizeof(Triangle) * count },
     };
 
-    scene_vertices = wrap.GetCore()->GetDevice()->CreateResource("scene_vertices",
+    scene_buffers1 = wrap.GetCore()->GetDevice()->CreateResource("prop_buffers1",
       Resource::BufferDesc
       {
-        Usage(USAGE_VERTEX_ARRAY),
-        sizeof(Vertex),
+        Usage(USAGE_INDEX_ARRAY),
+        sizeof(Triangle),
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
@@ -203,121 +203,121 @@ namespace RayGene3D
       );
   }
 
-  void SceneBroker::CreateSceneTextures4()
-  {
-    const auto& layers = prop_textures4->GetObjectItem("layers");
-    const auto& mipmap = prop_textures4->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures4->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures4->GetObjectItem("extent_y");
-    const auto& raws = prop_textures4->GetObjectItem("raws");
+  //void SceneBroker::CreateSceneTextures4()
+  //{
+  //  const auto& layers = prop_textures4->GetObjectItem("layers");
+  //  const auto& mipmap = prop_textures4->GetObjectItem("mipmap");
+  //  const auto& extent_x = prop_textures4->GetObjectItem("extent_x");
+  //  const auto& extent_y = prop_textures4->GetObjectItem("extent_y");
+  //  const auto& raws = prop_textures4->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
-    for (size_t i = 0u; i < interops.size(); ++i)
-    {
-      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
-    }
+  //  auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+  //  for (size_t i = 0u; i < interops.size(); ++i)
+  //  {
+  //    interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
+  //  }
 
-    scene_textures4 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures4",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_SRGB,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), interops.size() }
-      );
-  }
+  //  scene_textures4 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures4",
+  //    Resource::Tex2DDesc
+  //    {
+  //      Usage(USAGE_SHADER_RESOURCE),
+  //      mipmap->GetUint(),
+  //      layers->GetUint(),
+  //      FORMAT_R8G8B8A8_SRGB,
+  //      extent_x->GetUint(),
+  //      extent_y->GetUint(),
+  //    },
+  //    Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+  //    { interops.data(), interops.size() }
+  //    );
+  //}
 
-  void SceneBroker::CreateSceneTextures5()
-  {
-    const auto& layers = prop_textures5->GetObjectItem("layers");
-    const auto& mipmap = prop_textures5->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures5->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures5->GetObjectItem("extent_y");
-    const auto& raws = prop_textures5->GetObjectItem("raws");
+  //void SceneBroker::CreateSceneTextures5()
+  //{
+  //  const auto& layers = prop_textures5->GetObjectItem("layers");
+  //  const auto& mipmap = prop_textures5->GetObjectItem("mipmap");
+  //  const auto& extent_x = prop_textures5->GetObjectItem("extent_x");
+  //  const auto& extent_y = prop_textures5->GetObjectItem("extent_y");
+  //  const auto& raws = prop_textures5->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
-    for (size_t i = 0u; i < interops.size(); ++i)
-    {
-      interops[i] = raws->GetArrayItem(i)->GetRawBytes();
-    }
+  //  auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+  //  for (size_t i = 0u; i < interops.size(); ++i)
+  //  {
+  //    interops[i] = raws->GetArrayItem(i)->GetRawBytes();
+  //  }
 
-    scene_textures5 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures5",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_UNORM,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), interops.size() }
-      );
-  }
+  //  scene_textures5 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures5",
+  //    Resource::Tex2DDesc
+  //    {
+  //      Usage(USAGE_SHADER_RESOURCE),
+  //      mipmap->GetUint(),
+  //      layers->GetUint(),
+  //      FORMAT_R8G8B8A8_UNORM,
+  //      extent_x->GetUint(),
+  //      extent_y->GetUint(),
+  //    },
+  //    Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+  //    { interops.data(), interops.size() }
+  //    );
+  //}
 
-  void SceneBroker::CreateSceneTextures6()
-  {
-    const auto& layers = prop_textures6->GetObjectItem("layers");
-    const auto& mipmap = prop_textures6->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures6->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures6->GetObjectItem("extent_y");
-    const auto& raws = prop_textures6->GetObjectItem("raws");
+  //void SceneBroker::CreateSceneTextures6()
+  //{
+  //  const auto& layers = prop_textures6->GetObjectItem("layers");
+  //  const auto& mipmap = prop_textures6->GetObjectItem("mipmap");
+  //  const auto& extent_x = prop_textures6->GetObjectItem("extent_x");
+  //  const auto& extent_y = prop_textures6->GetObjectItem("extent_y");
+  //  const auto& raws = prop_textures6->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
-    for (size_t i = 0u; i < interops.size(); ++i)
-    {
-      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
-    }
+  //  auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+  //  for (size_t i = 0u; i < interops.size(); ++i)
+  //  {
+  //    interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
+  //  }
 
-    scene_textures6 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures6",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_UNORM,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), interops.size() }
-      );
-  }
+  //  scene_textures6 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures6",
+  //    Resource::Tex2DDesc
+  //    {
+  //      Usage(USAGE_SHADER_RESOURCE),
+  //      mipmap->GetUint(),
+  //      layers->GetUint(),
+  //      FORMAT_R8G8B8A8_UNORM,
+  //      extent_x->GetUint(),
+  //      extent_y->GetUint(),
+  //    },
+  //    Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+  //    { interops.data(), interops.size() }
+  //    );
+  //}
 
-  void SceneBroker::CreateSceneTextures7()
-  {
-    const auto& layers = prop_textures7->GetObjectItem("layers");
-    const auto& mipmap = prop_textures7->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures7->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures7->GetObjectItem("extent_y");
-    const auto& raws = prop_textures7->GetObjectItem("raws");
+  //void SceneBroker::CreateSceneTextures7()
+  //{
+  //  const auto& layers = prop_textures7->GetObjectItem("layers");
+  //  const auto& mipmap = prop_textures7->GetObjectItem("mipmap");
+  //  const auto& extent_x = prop_textures7->GetObjectItem("extent_x");
+  //  const auto& extent_y = prop_textures7->GetObjectItem("extent_y");
+  //  const auto& raws = prop_textures7->GetObjectItem("raws");
 
-    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
-    for (size_t i = 0u; i < interops.size(); ++i)
-    {
-      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
-    }
+  //  auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
+  //  for (size_t i = 0u; i < interops.size(); ++i)
+  //  {
+  //    interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
+  //  }
 
-    scene_textures7 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures7",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_UNORM,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), interops.size() }
-      );
-  }
+  //  scene_textures7 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures7",
+  //    Resource::Tex2DDesc
+  //    {
+  //      Usage(USAGE_SHADER_RESOURCE),
+  //      mipmap->GetUint(),
+  //      layers->GetUint(),
+  //      FORMAT_R8G8B8A8_UNORM,
+  //      extent_x->GetUint(),
+  //      extent_y->GetUint(),
+  //    },
+  //    Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+  //    { interops.data(), interops.size() }
+  //    );
+  //}
 
  
 
@@ -327,16 +327,28 @@ namespace RayGene3D
     scene_instances.reset();
   }
 
-  void SceneBroker::DestroySceneTriangles()
+  void SceneBroker::DestroySceneBuffers0()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_triangles);
-    scene_triangles.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffers0);
+    scene_buffers0.reset();
   }
 
-  void SceneBroker::DestroySceneVertices()
+  void SceneBroker::DestroySceneBuffers1()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_vertices);
-    scene_vertices.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffers1);
+    scene_buffers1.reset();
+  }
+
+  void SceneBroker::DestroySceneBuffers2()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffers2);
+    scene_buffers2.reset();
+  }
+
+  void SceneBroker::DestroySceneBuffers3()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffers3);
+    scene_buffers3.reset();
   }
 
   void SceneBroker::DestroySceneTextures0()
@@ -363,30 +375,6 @@ namespace RayGene3D
     scene_textures3.reset();
   }
 
-  void SceneBroker::DestroySceneTextures4()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures4);
-    scene_textures4.reset();
-  }
-
-  void SceneBroker::DestroySceneTextures5()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures5);
-    scene_textures5.reset();
-  }
-
-  void SceneBroker::DestroySceneTextures6()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures6);
-    scene_textures6.reset();
-  }
-
-  void SceneBroker::DestroySceneTextures7()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures7);
-    scene_textures7.reset();
-  }
-
   void SceneBroker::Initialize()
   {}
 
@@ -404,31 +392,29 @@ namespace RayGene3D
     prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
     {
       prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+
+      prop_buffers0 = prop_scene->GetObjectItem("buffers0")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_buffers1 = prop_scene->GetObjectItem("buffers1")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_buffers2 = prop_scene->GetObjectItem("buffers2")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_buffers3 = prop_scene->GetObjectItem("buffers3")->GetObjectItem("raws")->GetArrayItem(0);
 
       prop_textures0 = prop_scene->GetObjectItem("textures_0");
       prop_textures1 = prop_scene->GetObjectItem("textures_1");
       prop_textures2 = prop_scene->GetObjectItem("textures_2");
       prop_textures3 = prop_scene->GetObjectItem("textures_3");
-      prop_textures4 = prop_scene->GetObjectItem("textures_4");
-      prop_textures5 = prop_scene->GetObjectItem("textures_5");
-      prop_textures6 = prop_scene->GetObjectItem("textures_6");
-      prop_textures7 = prop_scene->GetObjectItem("textures_7");
     }
 
     CreateSceneInstances();
-    CreateSceneTriangles();
-    CreateSceneVertices();
+
+    CreateSceneBuffers0();
+    CreateSceneBuffers1();
+    CreateSceneBuffers2();
+    CreateSceneBuffers3();
 
     CreateSceneTextures0();
     CreateSceneTextures1();
     CreateSceneTextures2();
     CreateSceneTextures3();
-    CreateSceneTextures4();
-    CreateSceneTextures5();
-    CreateSceneTextures6();
-    CreateSceneTextures7();
   }
 
   SceneBroker::~SceneBroker()
@@ -436,29 +422,15 @@ namespace RayGene3D
     prop_scene.reset();
 
     prop_instances.reset();
-    prop_triangles.reset();
-    prop_vertices.reset();
+
+    prop_buffers0.reset();
+    prop_buffers1.reset();
+    prop_buffers2.reset();
+    prop_buffers3.reset();
 
     prop_textures0.reset();
     prop_textures1.reset();
     prop_textures2.reset();
     prop_textures3.reset();
-    prop_textures4.reset();
-    prop_textures5.reset();
-    prop_textures6.reset();
-    prop_textures7.reset();
-
-    //DestroySceneTextures0();
-    //DestroySceneTextures1();
-    //DestroySceneTextures2();
-    //DestroySceneTextures3();
-    //DestroySceneTextures4();
-    //DestroySceneTextures5();
-    //DestroySceneTextures6();
-    //DestroySceneTextures7();
-
-    //DestroySceneInstances();
-    //DestroySceneTriangles();
-    //DestroySceneVertices();
   }
 }

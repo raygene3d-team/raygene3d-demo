@@ -39,59 +39,67 @@ namespace RayGene3D
 
   protected:
     std::shared_ptr<Property> prop_instances;
-    std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
+
+    std::shared_ptr<Property> prop_buffers0;
+    std::shared_ptr<Property> prop_buffers1;
+    std::shared_ptr<Property> prop_buffers2;
+    std::shared_ptr<Property> prop_buffers3;
 
     std::shared_ptr<Property> prop_textures0;
     std::shared_ptr<Property> prop_textures1;
     std::shared_ptr<Property> prop_textures2;
     std::shared_ptr<Property> prop_textures3;
-    std::shared_ptr<Property> prop_textures4;
-    std::shared_ptr<Property> prop_textures5;
-    std::shared_ptr<Property> prop_textures6;
-    std::shared_ptr<Property> prop_textures7;
 
   protected:
     SPtrResource scene_instances;
-    SPtrResource scene_triangles;
-    SPtrResource scene_vertices;
+
+    SPtrResource scene_buffers0;
+    SPtrResource scene_buffers1;
+    SPtrResource scene_buffers2;
+    SPtrResource scene_buffers3;
 
     SPtrResource scene_textures0;
     SPtrResource scene_textures1;
     SPtrResource scene_textures2;
     SPtrResource scene_textures3;
-    SPtrResource scene_textures4;
-    SPtrResource scene_textures5;
-    SPtrResource scene_textures6;
-    SPtrResource scene_textures7;
+    //SPtrResource scene_textures4;
+    //SPtrResource scene_textures5;
+    //SPtrResource scene_textures6;
+    //SPtrResource scene_textures7;
 
   protected:
     void CreateSceneInstances();
-    void CreateSceneTriangles();
-    void CreateSceneVertices();
+
+    void CreateSceneBuffers0();
+    void CreateSceneBuffers1();
+    void CreateSceneBuffers2();
+    void CreateSceneBuffers3();
 
     void CreateSceneTextures0();
     void CreateSceneTextures1();
     void CreateSceneTextures2();
     void CreateSceneTextures3();
-    void CreateSceneTextures4();
-    void CreateSceneTextures5();
-    void CreateSceneTextures6();
-    void CreateSceneTextures7();
+    //void CreateSceneTextures4();
+    //void CreateSceneTextures5();
+    //void CreateSceneTextures6();
+    //void CreateSceneTextures7();
 
   protected:
     void DestroySceneInstances();
-    void DestroySceneTriangles();
-    void DestroySceneVertices();
+
+    void DestroySceneBuffers0();
+    void DestroySceneBuffers1();
+    void DestroySceneBuffers2();
+    void DestroySceneBuffers3();
 
     void DestroySceneTextures0();
     void DestroySceneTextures1();
     void DestroySceneTextures2();
     void DestroySceneTextures3();
-    void DestroySceneTextures4();
-    void DestroySceneTextures5();
-    void DestroySceneTextures6();
-    void DestroySceneTextures7();
+    //void DestroySceneTextures4();
+    //void DestroySceneTextures5();
+    //void DestroySceneTextures6();
+    //void DestroySceneTextures7();
 
   public:
     void Initialize() override;
