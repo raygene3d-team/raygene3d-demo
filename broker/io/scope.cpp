@@ -95,7 +95,7 @@ namespace RayGene3D
       for (size_t i = 0u; i < buffers_0.size(); ++i)
       {
         auto& [raw, stride, count] = buffers_0[i];
-        const auto item_property = CreateBufferProperty({ &raw, 1u }, stride, count);
+        const auto item_property = CreateBufferProperty(std::move(raw), stride, count);
         prop_buffers_0->SetArrayItem(i, item_property);
       }
       prop_scene->SetObjectItem("buffers_0", prop_buffers_0);
@@ -105,7 +105,7 @@ namespace RayGene3D
       for (size_t i = 0u; i < buffers_1.size(); ++i)
       {
         auto& [raw, stride, count] = buffers_1[i];
-        const auto item_property = CreateBufferProperty({ &raw, 1u }, stride, count);
+        const auto item_property = CreateBufferProperty(std::move(raw), stride, count);
         prop_buffers_1->SetArrayItem(i, item_property);
       }
       prop_scene->SetObjectItem("buffers_1", prop_buffers_1);

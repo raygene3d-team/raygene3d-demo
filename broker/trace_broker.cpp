@@ -433,7 +433,7 @@ namespace RayGene3D
       const auto stride = sizeof(RayGene3D::Box);
       const auto count = t_boxes.size();
       auto raw = Raw({ data, stride * count });
-      prop_t_boxes = CreateBufferProperty({ &raw, 1u }, stride, count);
+      prop_t_boxes = CreateBufferProperty(std::move(raw), stride, count);
       prop_scene->SetObjectItem("t_boxes", prop_t_boxes);
     }
     CreateTraceTBoxes();
@@ -443,7 +443,7 @@ namespace RayGene3D
       const auto stride = sizeof(RayGene3D::Box);
       const auto count = b_boxes.size();
       auto raw = Raw({ data, stride * count });
-      prop_b_boxes = CreateBufferProperty({ &raw, 1u }, stride, count);
+      prop_b_boxes = CreateBufferProperty(std::move(raw), stride, count);
       prop_scene->SetObjectItem("b_boxes", prop_b_boxes);
     }
     CreateTraceBBoxes();

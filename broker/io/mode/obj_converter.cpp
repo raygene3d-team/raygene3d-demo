@@ -137,7 +137,7 @@ namespace RayGene3D
             const auto stride = sizeof(Vertex);
             const auto count = vertices.size();
             const auto data = reinterpret_cast<const uint8_t*>(vertices.data());
-            scope.buffers_0.emplace_back(Raw({data, stride * count }), stride, count);
+            scope.buffers_0.emplace_back(Raw({data, stride * count }));
           }
 
           instance.buffer1_idx = uint32_t(scope.buffers_1.size());
@@ -145,7 +145,7 @@ namespace RayGene3D
             const auto stride = sizeof(Triangle);
             const auto count = triangles.size();
             const auto data = reinterpret_cast<const uint8_t*>(triangles.data());
-            scope.buffers_1.emplace_back(Raw({ data, stride * count }), stride, count);
+            scope.buffers_1.emplace_back(Raw({ data, stride * count }));
           }
           
 

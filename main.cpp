@@ -373,7 +373,7 @@ namespace RayGene3D
         {
           raw.SetElement<glm::u8vec4>({ 0, 0, 0, 0 }, i);
         }
-        prop_screen = CreateBufferProperty({ &raw, 1 }, stride, count);
+        prop_screen = CreateBufferProperty(std::move(raw), stride, count);
         std::pair<const uint8_t*, size_t> interops[] =
         {
           prop_screen->GetObjectItem("raws")->GetArrayItem(0)->GetRawBytes(0)

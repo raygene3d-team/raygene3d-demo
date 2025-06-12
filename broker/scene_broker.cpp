@@ -408,8 +408,8 @@ namespace RayGene3D
 
     CreateSceneBuffers0();
     CreateSceneBuffers1();
-    CreateSceneBuffers2();
-    CreateSceneBuffers3();
+    //CreateSceneBuffers2();
+    //CreateSceneBuffers3();
 
     CreateSceneTextures0();
     CreateSceneTextures1();

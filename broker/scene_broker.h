@@ -72,8 +72,8 @@ namespace RayGene3D
 
     void CreateSceneBuffers0();
     void CreateSceneBuffers1();
-    void CreateSceneBuffers2();
-    void CreateSceneBuffers3();
+    //void CreateSceneBuffers2();
+    //void CreateSceneBuffers3();
 
     void CreateSceneTextures0();
     void CreateSceneTextures1();
