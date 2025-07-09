@@ -118,10 +118,10 @@ namespace RayGene3D
 
 
 
-      std::vector<std::vector<Vertex>> vtx_segments;
-      std::vector<std::vector<Triangle>> trg_segments;
+      //std::vector<Vertex> structures_0;
+      //std::vector<Triangle> structures_1;
 
-      const auto geometry_convert_fn = [&gltf_model, &vtx_segments, &trg_segments]
+      const auto geometry_convert_fn = [&gltf_model, this]
         (const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool to_lhs, bool flip_v)
         {
           BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
@@ -181,211 +181,139 @@ namespace RayGene3D
 
           auto degenerated_geom_tris_count = 0u;
           auto degenerated_wrap_tris_count = 0u;
-          const auto [vtx_segment, trg_segment, aabb_min, aabb_max] = PopulateInstance(idx_count, idx_stride,
+          const auto [vert_structures, prim_structures, aabb_min, aabb_max] = PopulateInstance(idx_count, idx_stride,
             idx_order, pos_transform, nrm_transform, tc0_transform,
             pos_data, pos_stride, idx_data, idx_stride,
             nrm_data, nrm_stride, idx_data, idx_stride,
             tc0_data, tc0_stride, idx_data, idx_stride);
 
-          const auto vtx_segment_idx = vtx_segment.empty() ? size_t(-1) : vtx_segments.size();
-          vtx_segments.push_back(std::move(vtx_segment));
+          const auto vert_offset = scope.buffer_0.Length();
+          const auto vert_count = vert_structures.size();
+          const auto vert_stride = sizeof(Vertex);
+          const auto vert_data = reinterpret_cast<const uint8_t*>(vert_structures.data());
+          scope.buffer_0.Append(Raw({ vert_data, vert_stride * vert_count }));
 
-          const auto trg_segment_idx = trg_segment.empty() ? size_t(-1) : trg_segments.size();
-          trg_segments.push_back(std::move(trg_segment));
+          const auto prim_offset = scope.buffer_1.Length();
+          const auto prim_count = prim_structures.size();
+          const auto prim_stride = sizeof(Triangle);
+          const auto prim_data = reinterpret_cast<const uint8_t*>(prim_structures.data());
+          scope.buffer_1.Append(Raw({ prim_data, prim_stride * prim_count }));
 
-          return std::make_tuple(vtx_segment_idx, trg_segment_idx, aabb_min, aabb_max);
+          const auto bone_offset = 0u;
+          const auto bone_count = 0u;
+
+          const auto mlet_offset = 0u;
+          const auto mlet_count = 0u;
+
+          return std::make_tuple(
+            vert_offset, vert_count,
+            prim_offset, prim_count,
+            bone_offset, bone_count,
+            mlet_offset, mlet_count,
+            aabb_min, aabb_max);
         };
 
-      //std::vector<uint32_t> texture_0_indices;
-      //std::vector<uint32_t> texture_1_indices;
-      //std::vector<uint32_t> texture_2_indices;
-      //std::vector<uint32_t> texture_3_indices;
-      //std::vector<uint32_t> texture_4_indices;
-      //std::vector<uint32_t> texture_5_indices;
-      //std::vector<uint32_t> texture_6_indices;
-      //std::vector<uint32_t> texture_7_indices;
-
-      std::unordered_map<uint32_t, std::tuple<Raw, uint32_t, uint32_t>> texture_items;
-
-      std::unordered_map<std::string, uint32_t> texture_0_indices;
-      std::unordered_map<std::string, uint32_t> texture_1_indices;
-      std::unordered_map<std::string, uint32_t> texture_2_indices;
-      std::unordered_map<std::string, uint32_t> texture_3_indices;
-      //std::vector< std::tuple<Raw, uint32_t, uint32_t>> texture_items;
-
-      //std::vector<std::tuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t>> instance_indices;
-
-      //const auto tex_prepare_fn = [&gltf_model](uint32_t texture_index)
-      //  {
-      //    const auto image_index = gltf_model.textures[texture_index].source;
-
-      //    const auto tex_x = gltf_model.images[image_index].width;
-      //    const auto tex_y = gltf_model.images[image_index].height;
-      //    const auto tex_n = gltf_model.images[image_index].component;
-      //    const auto tex_data = gltf_model.images[image_index].image.data();
-
-      //    auto raw = Raw(tex_x * tex_y * uint32_t(sizeof(glm::u8vec4)));
-
-      //    for (uint32_t i = 0; i < tex_x * tex_y; ++i)
-      //    {
-      //      const auto r = tex_n > 0 ? tex_data[i * tex_n + 0] : 0; //0xFF;
-      //      const auto g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
-      //      const auto b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
-      //      const auto a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
-      //      raw.SetElement<glm::u8vec4>({ r, g, b, a }, i);
-      //    }
-
-      //    return std::make_tuple(std::move(raw), uint32_t(tex_x), uint32_t(tex_y));
-      //  };
-
-      std::unordered_map<uint32_t, Raw> texture_cache;
-      std::vector<std::pair<glm::u32vec4, Raw>> textures_0;
-      std::vector<std::pair<glm::u32vec4, Raw>> textures_1;
-
-      const auto extent_x = 1u << scope.texture_level - 1;
-      const auto extent_y = 1u << scope.texture_level - 1;
 
 
+      auto texture_cache = std::vector<Raw>();
+      for (const auto& image : gltf_model.images)
+      {
+        const auto src_extent_x = image.width;
+        const auto src_extent_y = image.height;
+        const auto src_channels = image.component;
+        const auto src_data = image.image.data();
 
-      const auto texture_pack_fn = [&gltf_model, &textures_0, &textures_1, &texture_cache, extent_x, extent_y]
-      (const tinygltf::Primitive& gltf_primitive)
+        auto dst_extent_x = 1u << scope.texture_level - 1;
+        auto dst_extent_y = 1u << scope.texture_level - 1;
+        auto raw = Raw(sizeof(glm::u8vec4) * dst_extent_x * dst_extent_y);
+        auto dst_data = reinterpret_cast<uint8_t*>(raw.AccessBytes().first);
+
+        stbir_resize_uint8(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4);
+        texture_cache.push_back(std::move(raw));
+      }
+
+      std::unordered_map<glm::u32vec4, uint32_t> texture_0_indices;
+      std::unordered_map<glm::u32vec4, uint32_t> texture_1_indices;
+      const auto material_convert_fn = [&gltf_model, this, &texture_cache, &texture_0_indices, &texture_1_indices]
+      (const tinygltf::Primitive& gltf_primitive, uint32_t texture_level)
         {
-          const auto find_by_id_fn = [&gltf_model, &texture_cache, extent_x, extent_y](uint32_t texture_id)
+          const auto extent_x = 1u << texture_level - 1;
+          const auto extent_y = 1u << texture_level - 1;
+
+          const auto repack_texture_0_fn = [&gltf_model, this, &texture_cache, &texture_0_indices, extent_x, extent_y]
+          (const tinygltf::Primitive& gltf_primitive)
             {
-              const auto res = texture_cache.find(texture_id);
-              if (res != texture_cache.cend()) return std::forward<Raw&&>(res->second);
+              const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
 
-              const auto image_index = gltf_model.textures[texture_id].source;
+              const auto key = glm::u32vec4(
+                gltf_material.pbrMetallicRoughness.baseColorTexture.index,
+                gltf_material.pbrMetallicRoughness.baseColorTexture.index,
+                gltf_material.pbrMetallicRoughness.baseColorTexture.index,
+                gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index
+              );
 
-              const auto tex_x = gltf_model.images[image_index].width;
-              const auto tex_y = gltf_model.images[image_index].height;
-              const auto tex_n = gltf_model.images[image_index].component;
-              const auto tex_data = gltf_model.images[image_index].image.data();
-
-              auto src_extent_x = gltf_model.images[image_index].width;
-              auto src_extent_y = gltf_model.images[image_index].height;
-              auto src_channels = gltf_model.images[image_index].component;
-              auto src_data = gltf_model.images[image_index].image.data();
+              const auto res = texture_0_indices.find(key);
+              if (res != texture_0_indices.cend()) return res->second;
 
               auto raw = Raw(sizeof(glm::u8vec4) * extent_x * extent_y);
-
-              auto dst_extent_x = extent_x;
-              auto dst_extent_y = extent_y;
-              auto dst_data = reinterpret_cast<uint8_t*>(raw.AccessBytes().first);
-
-              stbir_resize_uint8(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4);
-
-              return std::forward<Raw&&>(texture_cache[texture_id] = std::move(raw));
-            };
-
-          const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
-
-          const auto&& baseColor = find_by_id_fn(gltf_material.pbrMetallicRoughness.baseColorTexture.index);
-          const auto&& emission = find_by_id_fn(gltf_material.emissiveTexture.index);
-          const auto&& metallicRoughness = find_by_id_fn(gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index);
-          const auto&& normal = find_by_id_fn(gltf_material.normalTexture.index);
-          const auto&& occlusion = find_by_id_fn(gltf_material.occlusionTexture.index);
-
-          const auto key_0 = glm::u32vec4(
-            gltf_material.pbrMetallicRoughness.baseColorTexture.index,
-            gltf_material.pbrMetallicRoughness.baseColorTexture.index,
-            gltf_material.pbrMetallicRoughness.baseColorTexture.index,
-            gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index
-          );
-
-            const auto find_by_key_fn = [](const glm::u32vec4& key)
-            {
-            };
-
-          const auto& res_0 = std::find_if(textures_0.begin(), textures_0.end(),
-            [&key_0](const std::pair<glm::u32vec4, Raw>& item) { return key_0 == item.first; });
-
-          if(res_0 == textures_0.end())
-          {
-
-
-          {
-            auto texture_0 = PopulateTextureLDR(extent_x, extent_y, [&gltf_material, &texture_items](uint32_t i)
+              for (size_t i = 0; size_t(extent_x * extent_y); ++i)
               {
-                const auto baseColor = gltf_material.pbrMetallicRoughness.baseColorTexture.index == -1 ? glm::u8vec4(255u, 255u, 255u, 0u) :
-                  std::get<0>(texture_items.at(gltf_material.pbrMetallicRoughness.baseColorTexture.index)).GetElement<glm::u8vec4>(i);
-                const auto metallicRoughness = gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index == -1 ? glm::u8vec4(0u, 0u, 0u, 0u) :
-                  std::get<0>(texture_items.at(gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index)).GetElement<glm::u8vec4>(i);
+                raw.SetElement<glm::u8vec4>(glm::u8vec4(
+                  key[0] == -1 ? 255u : texture_cache[key[0]].GetElement<glm::u8vec4>(i).r,
+                  key[1] == -1 ? 255u : texture_cache[key[1]].GetElement<glm::u8vec4>(i).g,
+                  key[2] == -1 ? 255u : texture_cache[key[2]].GetElement<glm::u8vec4>(i).b,
+                  key[3] == -1 ? 000u : texture_cache[key[3]].GetElement<glm::u8vec4>(i).r),
+                  i);
+              }
+              scope.array_0.Insert(texture_0_indices.size(), std::move(raw));
+              texture_0_indices[key] = texture_0_indices.size();
 
-                return glm::u8vec4(baseColor.r, baseColor.g, baseColor.b, metallicRoughness.r);
-              });
-        }
+              return uint32_t(texture_0_indices.size()) - 1;
+            };
 
-      const auto&& t0 = texture_find_fn(1);
-            
-
-          return texture_cache.find(texture_id) == texture_cache.cend()
-
-            return { std::move(raw), extent_x, extent_y };
-
-            auto raw = Raw(tex_x * tex_y * sizeof(glm::u8vec4));
-
-            for (size_t i = 0u; i < tex_x* tex_y; ++i)
+          const auto repack_texture_1_fn = [&gltf_model, &texture_cache, &texture_1_proxy, extent_x, extent_y]
+          (const tinygltf::Primitive& gltf_primitive)
             {
-              const auto r = tex_n > 0 ? tex_data[i * tex_n + 0] : 0; //0xFF;
-              const auto g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
-              const auto b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
-              const auto a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
-              raw.SetElement<glm::u8vec4>({ r, g, b, a }, i);
-            }
+              const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
 
-            texture_items.at(texture_id) = ResizeTextureLDR(extent_x, extent_y,
-              { std::move(raw), uint32_t(tex_x), uint32_t(tex_y) });
+              const auto key = glm::u32vec4(
+                gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index,
+                gltf_material.normalTexture.index,
+                gltf_material.normalTexture.index,
+                gltf_material.occlusionTexture.index
+              );
 
+              for (size_t i = 0; i < textures_1.size(); ++i) { if (textures_1[i].first == key) return i; }
 
+              auto raw = Raw(sizeof(glm::u8vec4) * extent_x * extent_y);
+              for (size_t i = 0; size_t(extent_x * extent_y); ++i)
+              {
+                raw.SetElement<glm::u8vec4>(glm::u8vec4(
+                  key[0] == -1 ? 0u : texture_cache[key[0]].GetElement<glm::u8vec4>(i).g,
+                  key[1] == -1 ? 0u : texture_cache[key[1]].GetElement<glm::u8vec4>(i).r,
+                  key[2] == -1 ? 0u : texture_cache[key[2]].GetElement<glm::u8vec4>(i).g,
+                  key[3] == -1 ? 0u : texture_cache[key[3]].GetElement<glm::u8vec4>(i).r),
+                  i);
+              }
+              textures_1.emplace_back(key, std::move(raw));
 
+              return textures_1.size() - 1;
+            };
 
+          const auto tex_0_idx = repack_texture_0_fn(gltf_primitive);
+          const auto tex_1_idx = repack_texture_0_fn(gltf_primitive);
+          const auto tex_2_idx = -1;
+          const auto tex_3_idx = -1;
 
-      const auto texture_cache_fn = [&texture_items, &extent_x, &extent_y, &gltf_model](uint32_t texture_id)
-        {
-          if (texture_items.find(texture_id) == texture_items.cend())
-          {
-            const auto image_index = gltf_model.textures[texture_id].source;
+          const auto param_0 = glm::f32vec4(0.0f, 0.0f, 0.0f, 0.0f);
+          const auto param_1 = glm::f32vec4(0.0f, 0.0f, 0.0f, 0.0f);
+          const auto param_2 = glm::f32vec4(0.0f, 0.0f, 0.0f, 0.0f);
+          const auto param_3 = glm::f32vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-            const auto tex_x = gltf_model.images[image_index].width;
-            const auto tex_y = gltf_model.images[image_index].height;
-            const auto tex_n = gltf_model.images[image_index].component;
-            const auto tex_data = gltf_model.images[image_index].image.data();
-
-            auto raw = Raw(tex_x * tex_y * sizeof(glm::u8vec4));
-
-            for (size_t i = 0u; i < tex_x * tex_y; ++i)
-            {
-              const auto r = tex_n > 0 ? tex_data[i * tex_n + 0] : 0; //0xFF;
-              const auto g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
-              const auto b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
-              const auto a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
-              raw.SetElement<glm::u8vec4>({ r, g, b, a }, i);
-            }
-
-            texture_items.at(texture_id) = ResizeTextureLDR(extent_x, extent_y,
-                { std::move(raw), uint32_t(tex_x), uint32_t(tex_y) });
-          }
-
-          return texture_id;
+          return std::make_tuple(
+            tex_0_idx, tex_1_idx, tex_2_idx, tex_3_idx,
+            param_0, param_1, param_2, param_3);
         };
-
-      //const auto tex_reindex_fn = [](std::vector<uint32_t>& tex_ids, uint32_t tex_id)
-      //  {
-      //    if (tex_id == -1)
-      //    {
-      //      return uint32_t(-1);
-      //    }
-
-      //    const auto tex_iter = std::find_if(tex_ids.cbegin(), tex_ids.cend(), [&tex_id](const auto& index) { return tex_id == index; });
-      //    const auto tex_index = tex_iter == tex_ids.cend() ? uint32_t(tex_ids.size()) : uint32_t(tex_iter - tex_ids.cbegin());
-      //    if (tex_index == tex_ids.size())
-      //    {
-      //      tex_ids.push_back(tex_id);
-      //    }
-      //    return tex_index;
-      //  };
-
 
 
       for (const auto& [mesh_id, transform] : mesh_relations)
@@ -394,83 +322,41 @@ namespace RayGene3D
         for (size_t k = 0; k < gltf_mesh.primitives.size(); ++k)
         {
           const auto& gltf_primitive = gltf_mesh.primitives[k];
-          const auto [vtx_segment_idx, trg_segment_idx, aabb_min, aabb_max] =
+
+          const auto [vert_offset, vert_count, prim_offset, prim_count, bone_offset, bone_count, mlet_offset, mlet_count, aabb_min, aabb_max] =
             geometry_convert_fn(gltf_primitive, transform, scope.position_scale, scope.conversion_rhs, false);
 
-          if (vtx_segment_idx == -1 || trg_segment_idx == -1) continue;
+          const auto [tex_0_layer, tex_1_layer, tex_2_layer, tex_3_layer, surface_param_0, surface_param_1, surface_param_2, surface_param_3] =
+            material_convert_fn(gltf_primitive, scope.texture_level);
+
+          if (vert_count == 0 || prim_count == 0) continue;
 
           Instance instance;
+          instance.offset_0 = vert_offset;
+          instance.count_0 = vert_count;
+          instance.offset_1 = prim_offset;
+          instance.count_1 = prim_count;
+          instance.offset_2 = bone_offset;
+          instance.count_2 = bone_count;
+          instance.offset_3 = mlet_offset;
+          instance.count_3 = mlet_count;
+
           instance.transform = glm::identity<glm::fmat3x4>();
+
           instance.aabb_min = aabb_min;
           instance.geom_idx = uint32_t(scope.instances.size());
           instance.aabb_max = aabb_max;
           instance.brdf_idx = 1;
-          instance.segment0_idx = vtx_segment_idx;
-          instance.segment1_idx = trg_segment_idx;
 
-          const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
+          instance.layer_0 = tex_0_layer;
+          instance.layer_1 = tex_1_layer;
+          instance.layer_2 = tex_2_layer;
+          instance.layer_3 = tex_3_layer;
 
-          const auto texture_0_id = texture_cache_fn(gltf_material.pbrMetallicRoughness.baseColorTexture.index);
-          const auto texture_1_id = texture_cache_fn(gltf_material.emissiveTexture.index);
-          const auto texture_2_id = texture_cache_fn(gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index);
-          const auto texture_3_id = texture_cache_fn(gltf_material.normalTexture.index);
-          const auto texture_4_id = texture_cache_fn(gltf_material.occlusionTexture.index);
-
-          {
-            auto texture_0 = PopulateTextureLDR(extent_x, extent_y, [&gltf_material, &texture_items](uint32_t i)
-              {
-                const auto baseColor = gltf_material.pbrMetallicRoughness.baseColorTexture.index == -1 ? glm::u8vec4(255u, 255u, 255u, 0u) :
-                  std::get<0>(texture_items.at(gltf_material.pbrMetallicRoughness.baseColorTexture.index)).GetElement<glm::u8vec4>(i);
-                const auto metallicRoughness = gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index == -1 ? glm::u8vec4(0u, 0u, 0u, 0u) :
-                  std::get<0>(texture_items.at(gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index)).GetElement<glm::u8vec4>(i);
-
-                return glm::u8vec4(baseColor.r, baseColor.g, baseColor.b, metallicRoughness.r);
-              });
-
-            digestpp::md5 hash_provider;
-            const auto [bytes, size] = std::get<0>(texture_0).GetBytes(0);
-            const auto hash = hash_provider.absorb(bytes, size).hexdigest();
-
-            if (const auto res = texture_0_indices.find(hash); res == texture_0_indices.cend())
-            {
-              instance.texture0_idx = scope.textures_0.size(); 
-              texture_0_indices[hash] = scope.textures_0.size();
-              scope.textures_0.push_back(std::move(texture_0));
-            }
-            else
-            {
-              instance.texture0_idx = res->second;
-            }
-          }
-
-          {
-            auto texture_1 = PopulateTextureLDR(extent_x, extent_y, [&gltf_material, &texture_items](uint32_t i)
-              {
-                const auto metallicRoughness = gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index == -1 ? glm::u8vec4(0u, 0u, 0u, 0u) :
-                  std::get<0>(texture_items.at(gltf_material.pbrMetallicRoughness.metallicRoughnessTexture.index)).GetElement<glm::u8vec4>(i);
-                const auto normal = gltf_material.normalTexture.index == -1 ? glm::u8vec4(0u, 0u, 255u, 0u) :
-                  std::get<0>(texture_items.at(gltf_material.normalTexture.index)).GetElement<glm::u8vec4>(i);
-                const auto occlusion = gltf_material.occlusionTexture.index == -1 ? glm::u8vec4(255u, 0u, 0u, 0u) :
-                  std::get<0>(texture_items.at(gltf_material.occlusionTexture.index)).GetElement<glm::u8vec4>(i);
-
-                return glm::u8vec4(metallicRoughness.g, normal.r, normal.g, occlusion.r);
-              });
-
-            digestpp::md5 hash_provider;
-            const auto [bytes, size] = std::get<0>(texture_1).GetBytes(0);
-            const auto hash = hash_provider.absorb(bytes, size).hexdigest();
-
-            if (const auto res = texture_1_indices.find(hash); res == texture_1_indices.cend())
-            {
-              instance.texture1_idx = scope.textures_1.size();
-              texture_0_indices[hash] = scope.textures_1.size();
-              scope.textures_1.push_back(std::move(texture_1));
-            }
-            else
-            {
-              instance.texture1_idx = res->second;
-            }
-          }
+          instance.param_0 = surface_param_0;
+          instance.param_1 = surface_param_1;
+          instance.param_2 = surface_param_2;
+          instance.param_3 = surface_param_3;
 
           scope.instances.push_back(instance);
         }

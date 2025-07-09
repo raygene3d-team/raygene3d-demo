@@ -52,26 +52,15 @@ namespace RayGene3D
     public:
       std::vector<Instance> instances;
 
-      SegmentedBuffer segments_0; //vertices
-      SegmentedBuffer segments_1; //indices
-      SegmentedBuffer segments_2; //bones
-      SegmentedBuffer segments_3;
+      StructureBuffer buffer_0; //vertices
+      StructureBuffer buffer_1; //indices
+      StructureBuffer buffer_2; //bones
+      StructureBuffer buffer_3;
 
-      TextureArrayLDR textures_0; //albedo-metallic
-      TextureArrayLDR textures_1; //smoothness-normal-occlusion
-      TextureArrayLDR textures_2; //emission-transparency
-      TextureArrayLDR textures_2;
-
-
-      //std::vector<Raw> buffers_0; 
-      //std::vector<Raw> buffers_1; 
-      //std::vector<Raw> buffers_2; 
-      //std::vector<Raw> buffers_3;
-
-      //std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_0; 
-      //std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_1; 
-      //std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_2; 
-      //std::vector<std::tuple<Raw, uint32_t, uint32_t>> textures_3;
+      TextureArrayLDR array_0; //albedo-metallic
+      TextureArrayLDR array_1; //smoothness-normal-occlusion
+      TextureArrayLDR array_2; //emission-transparency
+      TextureArrayLDR array_2;
 
     public:
       std::shared_ptr<Property> prop_scene;

@@ -53,62 +53,42 @@ namespace RayGene3D
 
         const auto transform_property = CreateFMat3x4Property();   transform_property->FromFMat3x4(instance.transform);     item_property->SetObjectItem("transform", transform_property);
 
-        const auto prim_offset_property = CreateUIntProperty();    prim_offset_property->FromUInt(instance.prim_offset);    item_property->SetObjectItem("prim_offset", prim_offset_property);
-        const auto prim_count_property = CreateUIntProperty();     prim_count_property->FromUInt(instance.prim_count);      item_property->SetObjectItem("prim_count", prim_count_property);
-        const auto vert_offset_property = CreateUIntProperty();    vert_offset_property->FromUInt(instance.vert_offset);    item_property->SetObjectItem("vert_offset", vert_offset_property);
-        const auto vert_count_property = CreateUIntProperty();     vert_count_property->FromUInt(instance.vert_count);      item_property->SetObjectItem("vert_count", vert_count_property);
+        const auto layer_0_property = CreateUIntProperty();   layer_0_property->FromUInt(instance.layer_0);  item_property->SetObjectItem("layer_0", layer_0_property);
+        const auto layer_1_property = CreateUIntProperty();   layer_1_property->FromUInt(instance.layer_1);  item_property->SetObjectItem("layer_1", layer_1_property);
+        const auto layer_2_property = CreateUIntProperty();   layer_2_property->FromUInt(instance.layer_2);  item_property->SetObjectItem("layer_2", layer_2_property);
+        const auto layer_3_property = CreateUIntProperty();   layer_3_property->FromUInt(instance.layer_3);  item_property->SetObjectItem("layer_3", layer_3_property);
 
-        const auto brdf_param0_property = CreateFVec4Property();   brdf_param0_property->FromFVec4(instance.brdf_param0);   item_property->SetObjectItem("brdf_param0", brdf_param0_property);
-        const auto brdf_param1_property = CreateFVec4Property();   brdf_param1_property->FromFVec4(instance.brdf_param1);   item_property->SetObjectItem("brdf_param1", brdf_param1_property);
-        const auto brdf_param2_property = CreateFVec4Property();   brdf_param2_property->FromFVec4(instance.brdf_param2);   item_property->SetObjectItem("brdf_param2", brdf_param2_property);
-        const auto brdf_param3_property = CreateFVec4Property();   brdf_param3_property->FromFVec4(instance.brdf_param3);   item_property->SetObjectItem("brdf_param3", brdf_param3_property);
+        const auto offset_0_property = CreateUIntProperty();  offset_0_property->FromUInt(instance.offset_0);   item_property->SetObjectItem("offset_0", offset_0_property);
+        const auto count_0_property = CreateUIntProperty();   count_0_property->FromUInt(instance.count_0);     item_property->SetObjectItem("count_0", count_0_property);
+        const auto offset_1_property = CreateUIntProperty();  offset_1_property->FromUInt(instance.offset_1);   item_property->SetObjectItem("offset_1", offset_1_property);
+        const auto count_1_property = CreateUIntProperty();   count_1_property->FromUInt(instance.count_1);     item_property->SetObjectItem("count_1", count_1_property);
+        const auto offset_2_property = CreateUIntProperty();  offset_2_property->FromUInt(instance.offset_2);   item_property->SetObjectItem("offset_2", offset_2_property);
+        const auto count_2_property = CreateUIntProperty();   count_2_property->FromUInt(instance.count_2);     item_property->SetObjectItem("count_2", count_2_property);
+        const auto offset_3_property = CreateUIntProperty();  offset_3_property->FromUInt(instance.offset_3);   item_property->SetObjectItem("offset_3", offset_3_property);
+        const auto count_3_property = CreateUIntProperty();   count_3_property->FromUInt(instance.count_3);     item_property->SetObjectItem("count_3", count_3_property);
+        
+        const auto aabb_min_property = CreateFVec3Property(); aabb_min_property->FromFVec3(instance.aabb_min);  item_property->SetObjectItem("aabb_min", aabb_min_property);
+        const auto geom_idx_property = CreateUIntProperty();  geom_idx_property->FromUInt(instance.geom_idx);   item_property->SetObjectItem("geom_idx", geom_idx_property);
+        const auto aabb_max_property = CreateFVec3Property(); aabb_max_property->FromFVec3(instance.aabb_max);  item_property->SetObjectItem("aabb_max", aabb_max_property);
+        const auto brdf_idx_property = CreateUIntProperty();  brdf_idx_property->FromUInt(instance.brdf_idx);   item_property->SetObjectItem("brdf_idx", brdf_idx_property);
 
-        const auto texture0_idx_property = CreateUIntProperty();   texture0_idx_property->FromUInt(instance.texture0_idx);  item_property->SetObjectItem("texture0_idx", texture0_idx_property);
-        const auto texture1_idx_property = CreateUIntProperty();   texture1_idx_property->FromUInt(instance.texture1_idx);  item_property->SetObjectItem("texture1_idx", texture1_idx_property);
-        const auto texture2_idx_property = CreateUIntProperty();   texture2_idx_property->FromUInt(instance.texture2_idx);  item_property->SetObjectItem("texture2_idx", texture2_idx_property);
-        const auto texture3_idx_property = CreateUIntProperty();   texture3_idx_property->FromUInt(instance.texture3_idx);  item_property->SetObjectItem("texture3_idx", texture3_idx_property);
-        const auto texture4_idx_property = CreateUIntProperty();   texture4_idx_property->FromUInt(instance.texture4_idx);  item_property->SetObjectItem("texture4_idx", texture4_idx_property);
-        const auto texture5_idx_property = CreateUIntProperty();   texture5_idx_property->FromUInt(instance.texture5_idx);  item_property->SetObjectItem("texture5_idx", texture5_idx_property);
-        const auto texture6_idx_property = CreateUIntProperty();   texture6_idx_property->FromUInt(instance.texture6_idx);  item_property->SetObjectItem("texture6_idx", texture6_idx_property);
-        const auto texture7_idx_property = CreateUIntProperty();   texture7_idx_property->FromUInt(instance.texture7_idx);  item_property->SetObjectItem("texture7_idx", texture7_idx_property);
-
-        const auto aabb_min_property = CreateFVec3Property();      aabb_min_property->FromFVec3(instance.aabb_min);         item_property->SetObjectItem("aabb_min", aabb_min_property);
-        const auto geom_idx_property = CreateUIntProperty();       geom_idx_property->FromUInt(instance.geom_idx);          item_property->SetObjectItem("geom_idx", geom_idx_property);
-        const auto aabb_max_property = CreateFVec3Property();      aabb_max_property->FromFVec3(instance.aabb_max);         item_property->SetObjectItem("aabb_max", aabb_max_property);
-        const auto brdf_idx_property = CreateUIntProperty();       brdf_idx_property->FromUInt(instance.brdf_idx);          item_property->SetObjectItem("brdf_idx", brdf_idx_property);
-
-        const auto buffer0_idx_property = CreateUIntProperty();    buffer0_idx_property->FromUInt(instance.buffer0_idx);    item_property->SetObjectItem("buffer0_idx", buffer0_idx_property);
-        const auto buffer1_idx_property = CreateUIntProperty();    buffer1_idx_property->FromUInt(instance.buffer1_idx);    item_property->SetObjectItem("buffer1_idx", buffer1_idx_property);
-        const auto buffer2_idx_property = CreateUIntProperty();    buffer2_idx_property->FromUInt(instance.buffer2_idx);    item_property->SetObjectItem("buffer2_idx", buffer2_idx_property);
-        const auto buffer3_idx_property = CreateUIntProperty();    buffer3_idx_property->FromUInt(instance.buffer3_idx);    item_property->SetObjectItem("buffer3_idx", buffer3_idx_property);
-        const auto buffer4_idx_property = CreateUIntProperty();    buffer4_idx_property->FromUInt(instance.buffer4_idx);    item_property->SetObjectItem("buffer4_idx", buffer4_idx_property);
-        const auto buffer5_idx_property = CreateUIntProperty();    buffer5_idx_property->FromUInt(instance.buffer5_idx);    item_property->SetObjectItem("buffer5_idx", buffer5_idx_property);
-        const auto buffer6_idx_property = CreateUIntProperty();    buffer6_idx_property->FromUInt(instance.buffer6_idx);    item_property->SetObjectItem("buffer6_idx", buffer6_idx_property);
-        const auto buffer7_idx_property = CreateUIntProperty();    buffer7_idx_property->FromUInt(instance.buffer7_idx);    item_property->SetObjectItem("buffer7_idx", buffer7_idx_property);
+        const auto param_0_property = CreateFVec4Property();   param_0_property->FromFVec4(instance.param_0);   item_property->SetObjectItem("param_0", param_0_property);
+        const auto param_1_property = CreateFVec4Property();   param_1_property->FromFVec4(instance.param_1);   item_property->SetObjectItem("param_1", param_1_property);
+        const auto param_2_property = CreateFVec4Property();   param_2_property->FromFVec4(instance.param_2);   item_property->SetObjectItem("param_2", param_2_property);
+        const auto param_3_property = CreateFVec4Property();   param_3_property->FromFVec4(instance.param_3);   item_property->SetObjectItem("param_3", param_3_property);        
 
         prop_instances->SetArrayItem(i, item_property);
       }
       prop_scene->SetObjectItem("instances", prop_instances);
 
-      auto prop_buffers_0 = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-      prop_buffers_0->SetArraySize(buffers_0.size());
-      for (size_t i = 0u; i < buffers_0.size(); ++i)
-      {
-        auto& [raw, stride, count] = buffers_0[i];
-        const auto item_property = CreateBufferProperty(std::move(raw), stride, count);
-        prop_buffers_0->SetArrayItem(i, item_property);
-      }
-      prop_scene->SetObjectItem("buffers_0", prop_buffers_0);
 
-      auto prop_buffers_1 = std::shared_ptr<Property>(new Property(Property::TYPE_ARRAY));
-      prop_buffers_1->SetArraySize(buffers_1.size());
-      for (size_t i = 0u; i < buffers_1.size(); ++i)
-      {
-        auto& [raw, stride, count] = buffers_1[i];
-        const auto item_property = CreateBufferProperty(std::move(raw), stride, count);
-        prop_buffers_1->SetArrayItem(i, item_property);
-      }
-      prop_scene->SetObjectItem("buffers_1", prop_buffers_1);
+      const auto prop_buffer_0 = CreateBufferProperty(std::move(buffer_0->raw), buffer_0->stride, buffer_0->count);
+      prop_scene->SetObjectItem("buffer_0", prop_buffer_0);
+
+      const auto prop_buffer_1 = CreateBufferProperty(std::move(buffer_1->raw), buffer_1->stride, buffer_1->count);
+      prop_scene->SetObjectItem("buffer_1", prop_buffer_1);
+
+      //CreateTextureProperty()
 
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }
