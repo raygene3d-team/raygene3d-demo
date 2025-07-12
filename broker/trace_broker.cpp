@@ -168,13 +168,13 @@ namespace RayGene3D
     {
       const auto& instance = instance_items[i];
 
-      std::vector<Box> triangle_leaves(instance.prim_count);
+      std::vector<Box> triangle_leaves(instance.count_1);
       for (uint32_t j = 0; j < triangle_leaves.size(); ++j)
       {
-        const auto& triangle = triangle_items[j + instance.prim_offset];
-        const auto& vertex0 = vertex_items[triangle.idx[0] + instance.vert_offset];
-        const auto& vertex1 = vertex_items[triangle.idx[1] + instance.vert_offset];
-        const auto& vertex2 = vertex_items[triangle.idx[2] + instance.vert_offset];
+        const auto& triangle = triangle_items[j + instance.offset_1];
+        const auto& vertex0 = vertex_items[triangle.idx[0] + instance.offset_0];
+        const auto& vertex1 = vertex_items[triangle.idx[1] + instance.offset_0];
+        const auto& vertex2 = vertex_items[triangle.idx[2] + instance.offset_0];
 
         auto& leaf = triangle_leaves[j];
         leaf.offset = j;
@@ -201,10 +201,10 @@ namespace RayGene3D
       {
         if (node.count == 1)
         {
-          const auto& triangle = triangle_items[node.offset + instance.prim_offset];
-          const auto& vertex0 = vertex_items[triangle.idx[0] + instance.vert_offset];
-          const auto& vertex1 = vertex_items[triangle.idx[1] + instance.vert_offset];
-          const auto& vertex2 = vertex_items[triangle.idx[2] + instance.vert_offset];
+          const auto& triangle = triangle_items[node.offset + instance.offset_1];
+          const auto& vertex0 = vertex_items[triangle.idx[0] + instance.offset_1];
+          const auto& vertex1 = vertex_items[triangle.idx[1] + instance.offset_1];
+          const auto& vertex2 = vertex_items[triangle.idx[2] + instance.offset_1];
 
           auto center = (vertex0.pos + vertex1.pos + vertex2.pos) / 3.0f;
           center.x = glm::unpackHalf2x16(glm::packHalf2x16(glm::f32vec2(center.x, center.x))).x;
@@ -241,8 +241,8 @@ namespace RayGene3D
       auto& leaf = instance_leaves[i];
       leaf.offset = i;
       leaf.count = 1;
-      leaf.min = instance.prim_count == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[size_t(instance.prim_offset) * 2 - i].min;
-      leaf.max = instance.prim_count == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[size_t(instance.prim_offset) * 2 - i].max;
+      leaf.min = instance.count_1 == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[size_t(instance.offset_1) * 2 - i].min;
+      leaf.max = instance.count_1 == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[size_t(instance.offset_1) * 2 - i].max;
     }
 
     std::vector<Box> nodes;

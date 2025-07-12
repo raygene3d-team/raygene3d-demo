@@ -53,6 +53,35 @@ namespace RayGene3D
       std::string err, warn;
       BLAST_ASSERT(true == tinyobj::LoadObj(&obj_attrib, &obj_shapes, &obj_materials, &warn, &err, (scope.path_name + scope.file_name).c_str(), scope.path_name.c_str(), true));
 
+      const auto texture_load_resize_fn = [](const std::string& path, const std::string& name,  uint32_t level)
+      {
+        int32_t src_extent_x = 0;
+        int32_t src_extent_y = 0;
+        int32_t src_channels = 0;
+        unsigned char* src_data = stbi_load((path + name).c_str(), &src_extent_x, &src_extent_y, &src_channels, STBI_default);
+
+        auto dst_extent_x = 1u << level - 1;
+        auto dst_extent_y = 1u << level - 1;
+        auto dst_channels = 4;
+        auto raw = Raw(sizeof(glm::u8vec4) * dst_extent_x * dst_extent_y);
+        auto dst_data = reinterpret_cast<uint8_t*>(raw.AccessBytes().first);
+
+        stbir_resize_uint8(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, dst_channels);
+
+        stbi_image_free(src_data);
+
+        for (uint32_t i = 0; i < dst_extent_x * dst_extent_y; ++i)
+        {
+          const auto r = dst_channels > 0 ? dst_data[i * dst_channels + 0] : 0; //0xFF;
+          const auto g = dst_channels > 1 ? dst_data[i * dst_channels + 1] : r; //0xFF;
+          const auto b = dst_channels > 2 ? dst_data[i * dst_channels + 2] : r; //0xFF;
+          const auto a = dst_channels > 3 ? dst_data[i * dst_channels + 3] : r; //0xFF;
+          raw.SetElement<glm::u8vec4>({ r, g, b, a }, i);
+        }
+        
+        return raw;
+      };
+
       const auto pos_data = std::pair{ reinterpret_cast<const uint8_t*>(obj_attrib.vertices.data()), uint32_t(obj_attrib.vertices.size()) };
       const auto pos_stride = 12;
 
@@ -62,16 +91,16 @@ namespace RayGene3D
       const auto tc0_data = std::pair{ reinterpret_cast<const uint8_t*>(obj_attrib.texcoords.data()), uint32_t(obj_attrib.texcoords.size()) };
       const auto tc0_stride = 8;
 
-      //std::vector<std::string> textures_0_names;
-      //std::vector<std::string> textures_1_names;
-      //std::vector<std::string> textures_2_names;
-      //std::vector<std::string> textures_3_names;
-      //std::vector<std::string> textures_4_names;
-      //std::vector<std::string> textures_5_names;
-      //std::vector<std::string> textures_6_names;
-      //std::vector<std::string> textures_7_names;
+      std::vector<std::string> texture_0_names;
+      std::vector<std::string> texture_1_names;
+      std::vector<std::string> texture_2_names;
+      std::vector<std::string> texture_3_names;
 
-      std::vector<std::string> texture_names;
+
+      size_t vert_offset = 0;
+      size_t prim_offset = 0;
+      size_t mlet_offset = 0;
+      size_t bone_offset = 0;
 
       for (size_t i = 0; i < obj_shapes.size(); ++i)
       {
@@ -132,21 +161,28 @@ namespace RayGene3D
           instance.aabb_max = aabb_max;
           instance.brdf_idx = 0;
 
-          instance.buffer0_idx = uint32_t(scope.buffers_0.size());
-          {
-            const auto stride = sizeof(Vertex);
-            const auto count = vertices.size();
-            const auto data = reinterpret_cast<const uint8_t*>(vertices.data());
-            scope.buffers_0.emplace_back(Raw({data, stride * count }));
-          }
+          const auto vert_count = vertices.size();
+          const auto vert_stride = sizeof(Vertex);
+          const auto vert_data = reinterpret_cast<const uint8_t*>(vertices.data());
+          scope.buffer_0.Append(Raw({ vert_data, vert_stride * vert_count }));
 
-          instance.buffer1_idx = uint32_t(scope.buffers_1.size());
-          {
-            const auto stride = sizeof(Triangle);
-            const auto count = triangles.size();
-            const auto data = reinterpret_cast<const uint8_t*>(triangles.data());
-            scope.buffers_1.emplace_back(Raw({ data, stride * count }));
-          }
+          const auto prim_count = triangles.size();
+          const auto prim_stride = sizeof(Triangle);
+          const auto prim_data = reinterpret_cast<const uint8_t*>(triangles.data());
+          scope.buffer_1.Append(Raw({ prim_data, prim_stride * prim_count }));
+
+          const auto mlet_count = 0u;
+
+          const auto bone_count = 0u;
+
+          instance.offset_0 = vert_offset;
+          instance.count_0 = vert_count;
+          instance.offset_1 = prim_offset;
+          instance.count_1 = prim_count;
+          instance.offset_2 = bone_offset;
+          instance.count_2 = bone_count;
+          instance.offset_3 = mlet_offset;
+          instance.count_3 = mlet_count;
           
 
           const auto& obj_material = obj_materials[material_id.first];
@@ -154,17 +190,17 @@ namespace RayGene3D
           const auto debug = false;
           if (debug)
           {
-            instance.brdf_param0 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-            instance.brdf_param1 = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-            instance.brdf_param2 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-            instance.brdf_param3 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            instance.param_0 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            instance.param_1 = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+            instance.param_2 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            instance.param_3 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
           }
           else
           {
-            instance.brdf_param0 = glm::vec4(obj_material.emission[0], obj_material.emission[1], obj_material.emission[2], obj_material.illum);
-            instance.brdf_param1 = glm::vec4(obj_material.diffuse[0], obj_material.diffuse[1], obj_material.diffuse[2], obj_material.dissolve);
-            instance.brdf_param2 = glm::vec4(obj_material.specular[0], obj_material.specular[1], obj_material.specular[2], obj_material.shininess);
-            instance.brdf_param3 = glm::vec4(obj_material.transmittance[0], obj_material.transmittance[1], obj_material.transmittance[2], obj_material.ior);
+            instance.param_0 = glm::vec4(obj_material.emission[0], obj_material.emission[1], obj_material.emission[2], obj_material.illum);
+            instance.param_1 = glm::vec4(obj_material.diffuse[0], obj_material.diffuse[1], obj_material.diffuse[2], obj_material.dissolve);
+            instance.param_2 = glm::vec4(obj_material.specular[0], obj_material.specular[1], obj_material.specular[2], obj_material.shininess);
+            instance.param_3 = glm::vec4(obj_material.transmittance[0], obj_material.transmittance[1], obj_material.transmittance[2], obj_material.ior);
 
             const auto tex_reindex_fn = [](std::vector<std::string>& tex_names, const std::string& tex_name)
             {
@@ -184,17 +220,17 @@ namespace RayGene3D
             };
 
             const auto& texture_0_name = obj_material.diffuse_texname;
-            instance.texture0_idx = texture_0_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_names, texture_0_name);
+            instance.layer_0 = texture_0_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_0_names, texture_0_name);
             const auto& texture_1_name = obj_material.alpha_texname;
-            instance.texture1_idx = texture_1_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_names, texture_1_name);
+            instance.layer_1 = texture_1_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_1_names, texture_1_name);
             const auto& texture_2_name = obj_material.specular_texname;
-            instance.texture2_idx = texture_2_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_names, texture_2_name);
+            instance.layer_2 = texture_2_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_2_names, texture_2_name);
             const auto& texture_3_name = obj_material.bump_texname;
-            instance.texture3_idx = texture_3_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_names, texture_3_name);
+            instance.layer_3 = texture_3_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_3_names, texture_3_name);
 
             if (obj_material.illum != 7) // glass material
             {
-              instance.brdf_param3 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+              instance.param_3 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             }
           }
 
@@ -203,36 +239,26 @@ namespace RayGene3D
       }
 
 
-      const auto load_texture_fn = [this](const std::string& file_name)
+      for (size_t i = 0; i < texture_0_names.size(); ++i)
       {
-        int32_t tex_x = 0;
-        int32_t tex_y = 0;
-        int32_t tex_n = 0;
-        unsigned char* tex_data = stbi_load((scope.path_name + scope.file_name).c_str(), &tex_x, &tex_y, &tex_n, STBI_default);
+        scope.array_0.Insert(i, texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level));
+      }
 
-        auto raw = Raw(tex_x * tex_y * uint32_t(sizeof(glm::u8vec4)));
+      for (size_t i = 0; i < texture_1_names.size(); ++i)
+      {
+        scope.array_1.Insert(i, texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level));
+      }
 
-        for (uint32_t i = 0; i < tex_x * tex_y; ++i)
-        {
-          const auto r = tex_n > 0 ? tex_data[i * tex_n + 0] : 0; //0xFF;
-          const auto g = tex_n > 1 ? tex_data[i * tex_n + 1] : r; //0xFF;
-          const auto b = tex_n > 2 ? tex_data[i * tex_n + 2] : r; //0xFF;
-          const auto a = tex_n > 3 ? tex_data[i * tex_n + 3] : r; //0xFF;
-          raw.SetElement<glm::u8vec4>({ r, g, b, a }, i);
-        }
-        stbi_image_free(tex_data);
+      for (size_t i = 0; i < texture_2_names.size(); ++i)
+      {
+        scope.array_2.Insert(i, texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level));
+      }
 
-        return std::make_tuple(std::move(raw), uint32_t(tex_x), uint32_t(tex_y));
-      };
+      for (size_t i = 0; i < texture_3_names.size(); ++i)
+      {
+        scope.array_3.Insert(i, texture_load_resize_fn(scope.path_name, texture_3_names[i], scope.texture_level));
+      }
 
-      //if (!texture_names.empty())
-      //{
-      //  scope.textures.resize(texture_names.size());
-      //  for (size_t i = 0; i < texture_names.size(); ++i)
-      //  {
-      //    scope.textures[i] = load_texture_fn(texture_names[i]);
-      //  }
-      //}
     }
 
     void OBJConverter::Export()

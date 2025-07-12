@@ -88,8 +88,6 @@ namespace RayGene3D
       const auto prop_buffer_1 = CreateBufferProperty(std::move(buffer_1->raw), buffer_1->stride, buffer_1->count);
       prop_scene->SetObjectItem("buffer_1", prop_buffer_1);
 
-      //CreateTextureProperty()
-
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }
 

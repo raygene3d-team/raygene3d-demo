@@ -46,13 +46,13 @@ namespace RayGene3D
 
     for (uint32_t i = 0; i < ins_count; ++i)
     {
-      const auto trg_offset = ins_array[i].prim_offset;
-      auto trg_items = trg_array + trg_offset;
-      const auto trg_count = ins_array[i].prim_count;
-
-      const auto vrt_offset = ins_array[i].vert_offset;
+      const auto vrt_offset = ins_array[i].offset_0;
       auto vrt_items = vrt_array + vrt_offset;
-      const auto vrt_count = ins_array[i].vert_count;
+      const auto vrt_count = ins_array[i].count_0;
+
+      const auto trg_offset = ins_array[i].offset_0;
+      auto trg_items = trg_array + trg_offset;
+      const auto trg_count = ins_array[i].count_0;      
 
       meshopt_optimizeVertexCache((uint32_t*)trg_items, (const uint32_t*)trg_items, trg_count * 3, vrt_count);
      

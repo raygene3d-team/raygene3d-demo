@@ -130,13 +130,13 @@ namespace RayGene3D
 
     for (uint32_t i = 0; i < ins_count; ++i)
     {
-      const auto trg_offset = ins_array[i].prim_offset;
-      const auto trg_items = trg_array + trg_offset;
-      const auto trg_count = ins_array[i].prim_count;
-
-      const auto vrt_offset = ins_array[i].vert_offset;
+      const auto vrt_offset = ins_array[i].offset_0;
       const auto vrt_items = vrt_array + vrt_offset;
-      const auto vrt_count = ins_array[i].vert_count;
+      const auto vrt_count = ins_array[i].count_0;
+
+      const auto trg_offset = ins_array[i].offset_1;
+      const auto trg_items = trg_array + trg_offset;
+      const auto trg_count = ins_array[i].count_1;
 
       auto result = std::vector<Vertex>(vrt_items, vrt_items + vrt_count);
 

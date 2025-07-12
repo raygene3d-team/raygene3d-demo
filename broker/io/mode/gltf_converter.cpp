@@ -115,12 +115,6 @@ namespace RayGene3D
       }
 
 
-
-
-
-      //std::vector<Vertex> structures_0;
-      //std::vector<Triangle> structures_1;
-
       const auto geometry_convert_fn = [&gltf_model, this]
         (const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool to_lhs, bool flip_v)
         {
@@ -187,30 +181,21 @@ namespace RayGene3D
             nrm_data, nrm_stride, idx_data, idx_stride,
             tc0_data, tc0_stride, idx_data, idx_stride);
 
-          const auto vert_offset = scope.buffer_0.Length();
           const auto vert_count = vert_structures.size();
           const auto vert_stride = sizeof(Vertex);
           const auto vert_data = reinterpret_cast<const uint8_t*>(vert_structures.data());
           scope.buffer_0.Append(Raw({ vert_data, vert_stride * vert_count }));
 
-          const auto prim_offset = scope.buffer_1.Length();
           const auto prim_count = prim_structures.size();
           const auto prim_stride = sizeof(Triangle);
           const auto prim_data = reinterpret_cast<const uint8_t*>(prim_structures.data());
           scope.buffer_1.Append(Raw({ prim_data, prim_stride * prim_count }));
 
-          const auto bone_offset = 0u;
-          const auto bone_count = 0u;
-
-          const auto mlet_offset = 0u;
           const auto mlet_count = 0u;
 
-          return std::make_tuple(
-            vert_offset, vert_count,
-            prim_offset, prim_count,
-            bone_offset, bone_count,
-            mlet_offset, mlet_count,
-            aabb_min, aabb_max);
+          const auto bone_count = 0u;
+
+          return std::make_tuple(vert_count, prim_count, mlet_count, bone_count, aabb_min, aabb_max);
         };
 
 
@@ -271,7 +256,7 @@ namespace RayGene3D
               return uint32_t(texture_0_indices.size()) - 1;
             };
 
-          const auto repack_texture_1_fn = [&gltf_model, &texture_cache, &texture_1_proxy, extent_x, extent_y]
+          const auto repack_texture_1_fn = [&gltf_model, this, &texture_cache, &texture_1_indices, extent_x, extent_y]
           (const tinygltf::Primitive& gltf_primitive)
             {
               const auto& gltf_material = gltf_model.materials[gltf_primitive.material];
@@ -283,38 +268,37 @@ namespace RayGene3D
                 gltf_material.occlusionTexture.index
               );
 
-              for (size_t i = 0; i < textures_1.size(); ++i) { if (textures_1[i].first == key) return i; }
+              const auto res = texture_1_indices.find(key);
+              if (res != texture_1_indices.cend()) return res->second;
 
               auto raw = Raw(sizeof(glm::u8vec4) * extent_x * extent_y);
               for (size_t i = 0; size_t(extent_x * extent_y); ++i)
               {
                 raw.SetElement<glm::u8vec4>(glm::u8vec4(
-                  key[0] == -1 ? 0u : texture_cache[key[0]].GetElement<glm::u8vec4>(i).g,
-                  key[1] == -1 ? 0u : texture_cache[key[1]].GetElement<glm::u8vec4>(i).r,
-                  key[2] == -1 ? 0u : texture_cache[key[2]].GetElement<glm::u8vec4>(i).g,
-                  key[3] == -1 ? 0u : texture_cache[key[3]].GetElement<glm::u8vec4>(i).r),
+                  key[0] == -1 ? 000u : texture_cache[key[0]].GetElement<glm::u8vec4>(i).r,
+                  key[1] == -1 ? 000u : texture_cache[key[1]].GetElement<glm::u8vec4>(i).g,
+                  key[2] == -1 ? 000u : texture_cache[key[2]].GetElement<glm::u8vec4>(i).b,
+                  key[3] == -1 ? 255u : texture_cache[key[3]].GetElement<glm::u8vec4>(i).r),
                   i);
               }
-              textures_1.emplace_back(key, std::move(raw));
+              scope.array_1.Insert(texture_1_indices.size(), std::move(raw));
+              texture_1_indices[key] = texture_1_indices.size();
 
-              return textures_1.size() - 1;
+              return uint32_t(texture_1_indices.size()) - 1;
             };
 
           const auto tex_0_idx = repack_texture_0_fn(gltf_primitive);
-          const auto tex_1_idx = repack_texture_0_fn(gltf_primitive);
+          const auto tex_1_idx = repack_texture_1_fn(gltf_primitive);
           const auto tex_2_idx = -1;
           const auto tex_3_idx = -1;
 
-          const auto param_0 = glm::f32vec4(0.0f, 0.0f, 0.0f, 0.0f);
-          const auto param_1 = glm::f32vec4(0.0f, 0.0f, 0.0f, 0.0f);
-          const auto param_2 = glm::f32vec4(0.0f, 0.0f, 0.0f, 0.0f);
-          const auto param_3 = glm::f32vec4(0.0f, 0.0f, 0.0f, 0.0f);
-
-          return std::make_tuple(
-            tex_0_idx, tex_1_idx, tex_2_idx, tex_3_idx,
-            param_0, param_1, param_2, param_3);
+          return std::make_tuple(tex_0_idx, tex_1_idx, tex_2_idx, tex_3_idx);
         };
 
+      size_t vert_offset = 0;
+      size_t prim_offset = 0;
+      size_t mlet_offset = 0;
+      size_t bone_offset = 0;
 
       for (const auto& [mesh_id, transform] : mesh_relations)
       {
@@ -323,10 +307,10 @@ namespace RayGene3D
         {
           const auto& gltf_primitive = gltf_mesh.primitives[k];
 
-          const auto [vert_offset, vert_count, prim_offset, prim_count, bone_offset, bone_count, mlet_offset, mlet_count, aabb_min, aabb_max] =
+          const auto [vert_count, prim_count, mlet_count, bone_count, aabb_min, aabb_max] =
             geometry_convert_fn(gltf_primitive, transform, scope.position_scale, scope.conversion_rhs, false);
 
-          const auto [tex_0_layer, tex_1_layer, tex_2_layer, tex_3_layer, surface_param_0, surface_param_1, surface_param_2, surface_param_3] =
+          const auto [texture_0_layer, texture_1_layer, texture_2_layer, texture_3_layer] =
             material_convert_fn(gltf_primitive, scope.texture_level);
 
           if (vert_count == 0 || prim_count == 0) continue;
@@ -348,17 +332,22 @@ namespace RayGene3D
           instance.aabb_max = aabb_max;
           instance.brdf_idx = 1;
 
-          instance.layer_0 = tex_0_layer;
-          instance.layer_1 = tex_1_layer;
-          instance.layer_2 = tex_2_layer;
-          instance.layer_3 = tex_3_layer;
+          instance.layer_0 = texture_0_layer;
+          instance.layer_1 = texture_1_layer;
+          instance.layer_2 = texture_2_layer;
+          instance.layer_3 = texture_3_layer;
 
-          instance.param_0 = surface_param_0;
-          instance.param_1 = surface_param_1;
-          instance.param_2 = surface_param_2;
-          instance.param_3 = surface_param_3;
+          instance.param_0 = glm::zero<glm::f32vec4>();
+          instance.param_1 = glm::zero<glm::f32vec4>();
+          instance.param_2 = glm::zero<glm::f32vec4>();
+          instance.param_3 = glm::zero<glm::f32vec4>();
 
           scope.instances.push_back(instance);
+
+          vert_offset += vert_count;
+          prim_offset += prim_count;
+          mlet_offset += mlet_count;
+          bone_offset += bone_count;
         }
       }
     }

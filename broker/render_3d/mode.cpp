@@ -162,8 +162,8 @@ namespace RayGene3D
         );
 
         const auto& ins_range = View::Range{ 0u,  1u };
-        const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-        const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
+        const auto& vtx_range = View::Range{ data[i].offset_0 * 1, data[i].count_0 * 1 };
+        const auto& idx_range = View::Range{ data[i].offset_1 * 3, data[i].count_1 * 3 };
         const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
         const auto& push_data = std::nullopt;
 
