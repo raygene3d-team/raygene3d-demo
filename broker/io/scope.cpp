@@ -33,6 +33,20 @@ namespace RayGene3D
 {
   namespace IO
   {
+    void Scope::TextureArrayLDR::Finalize(uint32_t extent_x, uint32_t extent_y, size_t mipmap, size_t layers)
+    {
+    }
+
+    void Scope::TextureArrayHDR::Finalize(uint32_t extent_x, uint32_t extent_y, size_t mipmap, size_t layers)
+    {
+    }
+
+    void Scope::StructureBuffer::Finalize(size_t stride, size_t count)
+    {
+    }
+
+
+
     void Scope::Import()
     {
       const auto& prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
@@ -82,10 +96,10 @@ namespace RayGene3D
       prop_scene->SetObjectItem("instances", prop_instances);
 
 
-      const auto prop_buffer_0 = CreateBufferProperty(std::move(buffer_0->raw), buffer_0->stride, buffer_0->count);
+      const auto prop_buffer_0 = CreateBufferProperty(std::move(buffer_0.raw), buffer_0.stride, buffer_0.count);
       prop_scene->SetObjectItem("buffer_0", prop_buffer_0);
 
-      const auto prop_buffer_1 = CreateBufferProperty(std::move(buffer_1->raw), buffer_1->stride, buffer_1->count);
+      const auto prop_buffer_1 = CreateBufferProperty(std::move(buffer_1.raw), buffer_1.stride, buffer_1.count);
       prop_scene->SetObjectItem("buffer_1", prop_buffer_1);
 
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
