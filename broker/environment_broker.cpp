@@ -40,13 +40,10 @@ namespace RayGene3D
     quality = prop_environment->GetObjectItem("quality")->GetUint();
 
     const auto mipmap = std::max(quality, levels);
-    const auto layers = 6u;
     const auto extent = 1u << int32_t(quality) - 1;
 
-    const auto [pano_raws, pano_size_x, pano_size_y] =
-      MipmapTextureHDR(1u,
-        ResizeTextureHDR(2u * extent, extent,
-          LoadTextureHDR(path)));
+    const auto pano_texture = TextureHDR(2 * extent, extent);
+    pano_texture.Load(path);
 
     enum CUBEMAP_FACE
     {
@@ -90,34 +87,32 @@ namespace RayGene3D
       return glm::f32vec2(u, v);
     };
 
-    auto raws = std::vector<Raw>();
+    auto cube_textures = std::array<TextureHDR, 6>{
+      TextureHDR(extent, extent, mipmap),
+      TextureHDR(extent, extent, mipmap),
+      TextureHDR(extent, extent, mipmap),
+      TextureHDR(extent, extent, mipmap),
+      TextureHDR(extent, extent, mipmap),
+      TextureHDR(extent, extent, mipmap),
+    };
 
-    for (auto k = 0u; k < layers; ++k)
+    for (auto k = 0u; k < cube_textures.size(); ++k)
     {
-      auto raw = Raw(extent * extent * sizeof(glm::f32vec4));
-
       for (auto j = 0u; j < extent; ++j)
       {
         for (auto i = 0u; i < extent; ++i)
         {
           const auto cube_uv = glm::f32vec2{ (i + 0.5f) / extent, (j + 0.5f) / extent };
           const auto pano_uv = pano_from_xyz(xyz_from_cube(cube_uv, CUBEMAP_FACE(k)));
-
-          const auto texel = glm::i32vec2(pano_uv * glm::f32vec2(pano_size_x, pano_size_y));
-          const auto& value = pano_raws[0].GetElement<glm::f32vec4>(texel.y * pano_size_x + texel.x);
-
-          raw.SetElement(value, j * extent + i);
+          const auto pano_texel = glm::i32vec2(pano_uv * glm::f32vec2(2 * extent, extent));
+          cube_textures[k].Set(pano_texture.Get(pano_texel.x, pano_texel.y), i, j);
         }
       }
-
-      auto [cube_mipmaps, cube_size_x, cube_size_y] =
-        MipmapTextureHDR(mipmap, { std::move(raw), extent, extent });
-
-      std::move(cube_mipmaps.begin(), cube_mipmaps.end(), std::back_inserter(raws));
+      cube_textures[k].Update();
     }
 
-    const auto prop_skybox = CreateTextureHDRProperty({ raws.data(), uint32_t(raws.size()) }, 
-      extent, extent, mipmap, layers);
+
+    const auto prop_skybox = CreateTexturesHDRProperty({ cube_textures.data(), cube_textures.size() }, extent, extent, mipmap, 6);
     prop_tree->GetObjectItem("environment")->SetObjectItem("skybox_cubemap", prop_skybox);
 
     CreateSkyboxCubemap();
