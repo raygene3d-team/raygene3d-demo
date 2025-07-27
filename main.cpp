@@ -173,7 +173,7 @@ namespace RayGene3D
     double delta_ypos{ 0.0 };
     double delta_time{ 0.0 };
 
-    std::shared_ptr<Property> prop_screen;
+    //std::shared_ptr<Property> prop_screen;
 
     std::shared_ptr<Property> prop_eye;
     std::shared_ptr<Property> prop_lookat;
@@ -366,6 +366,7 @@ namespace RayGene3D
       wrap->GetCore()->Initialize();
 
       {
+        auto array = TextureArrayLDR(extent_x, extent_y);
         const auto stride = sizeof(glm::u8vec4);
         const auto count = extent_x * extent_y;
         auto raw = RayGene3D::Raw{ stride * count };
@@ -373,7 +374,7 @@ namespace RayGene3D
         {
           raw.SetElement<glm::u8vec4>({ 0, 0, 0, 0 }, i);
         }
-        prop_screen = CreateBufferProperty(std::move(raw), stride, count);
+        prop_screen = CreateStructureBufferProperty(std::move(raw), stride, count);
         std::pair<const uint8_t*, size_t> interops[] =
         {
           prop_screen->GetObjectItem("raws")->GetArrayItem(0)->GetRawBytes(0)

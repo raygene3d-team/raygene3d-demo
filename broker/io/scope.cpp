@@ -96,11 +96,11 @@ namespace RayGene3D
       prop_scene->SetObjectItem("instances", prop_instances);
 
 
-      const auto prop_buffer_0 = CreateBufferProperty(std::move(buffer_0.raw), buffer_0.stride, buffer_0.count);
-      prop_scene->SetObjectItem("buffer_0", prop_buffer_0);
+      const auto prop_buffer_0 = CreateItemBuffersProperty({ buffers_0.data(), buffers_0.size() }, buffer_0.stride, buffer_0.count);
+      prop_scene->SetObjectItem("buffers_0", prop_buffer_0);
 
-      const auto prop_buffer_1 = CreateBufferProperty(std::move(buffer_1.raw), buffer_1.stride, buffer_1.count);
-      prop_scene->SetObjectItem("buffer_1", prop_buffer_1);
+      const auto prop_buffer_1 = CreateItemBuffersProperty(std::move(buffer_1.raw), buffer_1.stride, buffer_1.count);
+      prop_scene->SetObjectItem("buffers_1", prop_buffer_1);
 
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }
