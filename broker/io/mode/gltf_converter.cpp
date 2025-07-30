@@ -184,12 +184,12 @@ namespace RayGene3D
           const auto vert_count = vert_structures.size();
           const auto vert_stride = sizeof(Vertex);
           const auto vert_data = reinterpret_cast<const uint8_t*>(vert_structures.data());
-          scope.buffer_0.Append(Raw({ vert_data, vert_stride * vert_count }));
+          scope.buffers_0.Append(Raw({ vert_data, vert_stride * vert_count }));
 
           const auto prim_count = prim_structures.size();
           const auto prim_stride = sizeof(Triangle);
           const auto prim_data = reinterpret_cast<const uint8_t*>(prim_structures.data());
-          scope.buffer_1.Append(Raw({ prim_data, prim_stride * prim_count }));
+          scope.buffers_1.Append(Raw({ prim_data, prim_stride * prim_count }));
 
           const auto mlet_count = 0u;
 
