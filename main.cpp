@@ -28,6 +28,9 @@ THE SOFTWARE.
 
 #include "raygene3d-wrap/wrap.h"
 
+#include "raygene3d-util/util/array.h"
+#include "raygene3d-util/util/buffer.h"
+
 #include "broker/render_3d_broker.h"
 #include "broker/render_ui_broker.h"
 
@@ -366,18 +369,11 @@ namespace RayGene3D
       wrap->GetCore()->Initialize();
 
       {
-        auto array = TextureArrayLDR(extent_x, extent_y);
-        const auto stride = sizeof(glm::u8vec4);
-        const auto count = extent_x * extent_y;
-        auto raw = RayGene3D::Raw{ stride * count };
-        for (auto i = 0u; i < count; ++i)
-        {
-          raw.SetElement<glm::u8vec4>({ 0, 0, 0, 0 }, i);
-        }
-        prop_screen = CreateStructureBufferProperty(std::move(raw), stride, count);
+        auto array = TextureArrayLDR(FORMAT_B8G8R8A8_UNORM, extent_x, extent_y, 1);
+        array.Initialize(0, glm::zero<glm::u8vec4>());
         std::pair<const uint8_t*, size_t> interops[] =
         {
-          prop_screen->GetObjectItem("raws")->GetArrayItem(0)->GetRawBytes(0)
+          array.Access(0)
         };
 
         const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",

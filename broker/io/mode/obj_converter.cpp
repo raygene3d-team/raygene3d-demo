@@ -164,12 +164,12 @@ namespace RayGene3D
           const auto vert_count = vertices.size();
           const auto vert_stride = sizeof(Vertex);
           const auto vert_data = reinterpret_cast<const uint8_t*>(vertices.data());
-          scope.buffer_0.Append(Raw({ vert_data, vert_stride * vert_count }));
+          scope.buffer_0->Push(Raw({ vert_data, vert_stride * vert_count }));
 
           const auto prim_count = triangles.size();
           const auto prim_stride = sizeof(Triangle);
           const auto prim_data = reinterpret_cast<const uint8_t*>(triangles.data());
-          scope.buffer_1.Append(Raw({ prim_data, prim_stride * prim_count }));
+          scope.buffer_1->Push(Raw({ prim_data, prim_stride * prim_count }));
 
           const auto mlet_count = 0u;
 
@@ -241,22 +241,22 @@ namespace RayGene3D
 
       for (size_t i = 0; i < texture_0_names.size(); ++i)
       {
-        scope.array_0.Insert(i, texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level));
+        scope.array_0->Add(i, texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level));
       }
 
       for (size_t i = 0; i < texture_1_names.size(); ++i)
       {
-        scope.array_1.Insert(i, texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level));
+        scope.array_1->Add(i, texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level));
       }
 
       for (size_t i = 0; i < texture_2_names.size(); ++i)
       {
-        scope.array_2.Insert(i, texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level));
+        scope.array_2->Add(i, texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level));
       }
 
       for (size_t i = 0; i < texture_3_names.size(); ++i)
       {
-        scope.array_3.Insert(i, texture_load_resize_fn(scope.path_name, texture_3_names[i], scope.texture_level));
+        scope.array_3->Add(i, texture_load_resize_fn(scope.path_name, texture_3_names[i], scope.texture_level));
       }
 
     }

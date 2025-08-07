@@ -184,12 +184,12 @@ namespace RayGene3D
           const auto vert_count = vert_structures.size();
           const auto vert_stride = sizeof(Vertex);
           const auto vert_data = reinterpret_cast<const uint8_t*>(vert_structures.data());
-          scope.buffers_0.Append(Raw({ vert_data, vert_stride * vert_count }));
+          scope.buffer_0->Push(Raw({ vert_data, vert_stride * vert_count }));
 
           const auto prim_count = prim_structures.size();
           const auto prim_stride = sizeof(Triangle);
           const auto prim_data = reinterpret_cast<const uint8_t*>(prim_structures.data());
-          scope.buffers_1.Append(Raw({ prim_data, prim_stride * prim_count }));
+          scope.buffer_1->Push(Raw({ prim_data, prim_stride * prim_count }));
 
           const auto mlet_count = 0u;
 
@@ -250,7 +250,7 @@ namespace RayGene3D
                   key[3] == -1 ? 000u : texture_cache[key[3]].GetElement<glm::u8vec4>(i).r),
                   i);
               }
-              scope.array_0.Insert(texture_0_indices.size(), std::move(raw));
+              scope.array_0->Add(texture_0_indices.size(), std::move(raw));
               texture_0_indices[key] = texture_0_indices.size();
 
               return uint32_t(texture_0_indices.size()) - 1;
@@ -281,7 +281,7 @@ namespace RayGene3D
                   key[3] == -1 ? 255u : texture_cache[key[3]].GetElement<glm::u8vec4>(i).r),
                   i);
               }
-              scope.array_1.Insert(texture_1_indices.size(), std::move(raw));
+              scope.array_1->Add(texture_1_indices.size(), std::move(raw));
               texture_1_indices[key] = texture_1_indices.size();
 
               return uint32_t(texture_1_indices.size()) - 1;

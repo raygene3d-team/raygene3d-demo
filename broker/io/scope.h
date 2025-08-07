@@ -30,74 +30,15 @@ THE SOFTWARE.
 #pragma once
 #include "../raygene3d-wrap/wrap.h"
 
+#include "../raygene3d-util/util/array.h"
+#include "../raygene3d-util/util/buffer.h"
+
 namespace RayGene3D
 {
   namespace IO
   {
     class Scope
     {
-      struct TextureArrayLDR
-      {
-        std::vector<Raw> raws;
-
-        uint32_t extent_x{ 0u };
-        uint32_t extent_y{ 0u };
-        size_t mipmap{ 0u };
-        size_t layers{ 0u };
-        Raw raw;
-
-      public:
-        void Insert(size_t layer, Raw&& raw) { raws.insert(raws.cbegin() + layer, std::move(raw)); }
-        Raw Remove(size_t layer) { auto raw = std::move(raws.at(layer)); raws.erase(raws.cbegin() + layer); return raw; }
-        size_t Length() const { return raws.size(); }
-        void Finalize(uint32_t extent_x, uint32_t extent_y, size_t mipmap = 1, size_t layers = 1);
-
-      public:
-        TextureArrayLDR() {}
-        ~TextureArrayLDR() {}
-      };
-
-      struct TextureArrayHDR
-      {
-        std::vector<Raw> raws;
-
-        uint32_t extent_x{ 0u };
-        uint32_t extent_y{ 0u };
-        size_t mipmap{ 0u };
-        size_t layers{ 0u };
-        Raw raw;
-
-      public:
-        void Insert(size_t layer, Raw&& raw) { raws.insert(raws.cbegin() + layer, std::move(raw)); }
-        Raw Remove(size_t layer) { auto raw = std::move(raws.at(layer)); raws.erase(raws.cbegin() + layer); return raw; }
-        size_t Length() const { return raws.size(); }
-        void Finalize(uint32_t extent_x, uint32_t extent_y, size_t mipmap = 1, size_t layers = 1);
-
-      public:
-        TextureArrayHDR() {}
-        ~TextureArrayHDR() {}
-      };
-
-
-      struct StructureBuffer
-      {
-        std::list<Raw> raws;
-
-        size_t stride{ 0u };
-        size_t count{ 0u };
-        Raw raw;
-
-      public:
-        void Append(Raw&& raw) { raws.push_back(std::move(raw)); }
-        Raw Consume() { auto raw = std::move(raws.back()); raws.pop_back(); return raw; }
-        size_t Length() const { return raws.size(); }
-        void Finalize(size_t stride, size_t count = 1);
-
-      public:
-        StructureBuffer() {}
-        ~StructureBuffer() {}
-      };
-
     public:
       const std::unique_ptr<Core>& core;
       const std::unique_ptr<Util>& util;

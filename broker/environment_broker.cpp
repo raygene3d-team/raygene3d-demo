@@ -42,8 +42,9 @@ namespace RayGene3D
     const auto mipmap = std::max(quality, levels);
     const auto extent = 1u << int32_t(quality) - 1;
 
-    const auto pano_texture = TextureHDR(2 * extent, extent);
-    pano_texture.Load(path);
+    auto pano_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, 2 * extent, extent, 1);
+    pano_texture.Initialize(0, glm::zero<glm::f32vec4>());
+    pano_texture.Load(0, path.c_str());
 
     enum CUBEMAP_FACE
     {
@@ -87,33 +88,24 @@ namespace RayGene3D
       return glm::f32vec2(u, v);
     };
 
-    auto cube_textures = std::array<TextureHDR, 6>{
-      TextureHDR(extent, extent, mipmap),
-      TextureHDR(extent, extent, mipmap),
-      TextureHDR(extent, extent, mipmap),
-      TextureHDR(extent, extent, mipmap),
-      TextureHDR(extent, extent, mipmap),
-      TextureHDR(extent, extent, mipmap),
-    };
-
-    for (auto k = 0u; k < cube_textures.size(); ++k)
+    auto cube_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent, extent, 6);
+    
+    for (auto k = 0u; k < 6; ++k)
     {
-      for (auto j = 0u; j < extent; ++j)
+      cube_texture.Initialize(k);
+
+      for (auto i = 0u; i < cube_texture.Count(); ++i)
       {
-        for (auto i = 0u; i < extent; ++i)
-        {
-          const auto cube_uv = glm::f32vec2{ (i + 0.5f) / extent, (j + 0.5f) / extent };
-          const auto pano_uv = pano_from_xyz(xyz_from_cube(cube_uv, CUBEMAP_FACE(k)));
-          const auto pano_texel = glm::i32vec2(pano_uv * glm::f32vec2(2 * extent, extent));
-          cube_textures[k].Set(pano_texture.Get(pano_texel.x, pano_texel.y), i, j);
-        }
+        const auto cube_texel = glm::i32vec2(i % extent, i / extent);
+        const auto cube_uv = glm::f32vec2((cube_texel.x + 0.5f) / extent, (cube_texel.y + 0.5f) / extent);
+        const auto pano_uv = pano_from_xyz(xyz_from_cube(cube_uv, CUBEMAP_FACE(k)));
+        const auto pano_texel = glm::i32vec2(pano_uv * glm::f32vec2(2 * extent, extent));
+
+        cube_texture.Set(k, i, pano_texture.Get(0, 2ull * extent * pano_texel.y + pano_texel.x));
       }
-      cube_textures[k].Update();
     }
 
-
-    const auto prop_skybox = CreateTexturesHDRProperty({ cube_textures.data(), cube_textures.size() }, extent, extent, mipmap, 6);
-    prop_tree->GetObjectItem("environment")->SetObjectItem("skybox_cubemap", prop_skybox);
+    prop_tree->GetObjectItem("environment")->SetObjectItem("skybox_cubemap", cube_texture.Export());
 
     CreateSkyboxCubemap();
     CreateReflectionMap();
