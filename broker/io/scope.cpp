@@ -33,20 +33,6 @@ namespace RayGene3D
 {
   namespace IO
   {
-    void Scope::TextureArrayLDR::Finalize(uint32_t extent_x, uint32_t extent_y, size_t mipmap, size_t layers)
-    {
-    }
-
-    void Scope::TextureArrayHDR::Finalize(uint32_t extent_x, uint32_t extent_y, size_t mipmap, size_t layers)
-    {
-    }
-
-    void Scope::StructureBuffer::Finalize(size_t stride, size_t count)
-    {
-    }
-
-
-
     void Scope::Import()
     {
       const auto& prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
@@ -95,11 +81,10 @@ namespace RayGene3D
       }
       prop_scene->SetObjectItem("instances", prop_instances);
 
-
-      const auto prop_buffer_0 = CreateItemBuffersProperty({ buffers_0.data(), buffers_0.size() }, buffer_0.stride, buffer_0.count);
+      const auto prop_buffer_0 = buffer_0.Export();
       prop_scene->SetObjectItem("buffers_0", prop_buffer_0);
 
-      const auto prop_buffer_1 = CreateItemBuffersProperty(std::move(buffer_1.raw), buffer_1.stride, buffer_1.count);
+      const auto prop_buffer_1 = buffer_1.Export();
       prop_scene->SetObjectItem("buffers_1", prop_buffer_1);
 
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
@@ -108,7 +93,12 @@ namespace RayGene3D
     Scope::Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)
       : core(core)
       , util(util)
+      , array_0(Format::FORMAT_R8G8B8A8_SRGB, 1u << texture_level, 1u << texture_level)
+      , array_1(Format::FORMAT_R8G8B8A8_UNORM, 1u << texture_level, 1u << texture_level)
+      , array_2(Format::FORMAT_R8G8B8A8_UNORM, 1u << texture_level, 1u << texture_level)
+      , array_3(Format::FORMAT_R8G8B8A8_UNORM, 1u << texture_level, 1u << texture_level)
     {
+      //array_0.Resize(5);
       //prop_scene = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
     }
 

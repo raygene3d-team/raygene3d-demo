@@ -30,6 +30,9 @@ THE SOFTWARE.
 #pragma once
 #include "../raygene3d-wrap/wrap.h"
 
+#include "../raygene3d-util/util/array.h"
+#include "../raygene3d-util/util/buffer.h"
+
 namespace RayGene3D
 {
   class TraceBroker : public Broker

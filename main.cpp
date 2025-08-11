@@ -369,7 +369,8 @@ namespace RayGene3D
       wrap->GetCore()->Initialize();
 
       {
-        auto array = TextureArrayLDR(FORMAT_B8G8R8A8_UNORM, extent_x, extent_y, 1);
+        auto array = TextureArrayLDR(FORMAT_B8G8R8A8_UNORM, extent_x, extent_y);
+        array.Resize(1);
         array.Initialize(0, glm::zero<glm::u8vec4>());
         std::pair<const uint8_t*, size_t> interops[] =
         {

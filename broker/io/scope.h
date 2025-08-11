@@ -55,15 +55,15 @@ namespace RayGene3D
     public:
       std::vector<Instance> instances;
 
-      std::unique_ptr<StructureBuffer> buffer_0; //vertices
-      std::unique_ptr<StructureBuffer> buffer_1; //indices
-      std::unique_ptr<StructureBuffer> buffer_2; //bones
-      std::unique_ptr<StructureBuffer> buffer_3;
+      StructureBuffer<Vertex> buffer_0; //vertices
+      StructureBuffer<Triangle> buffer_1; //indices
+      StructureBuffer<uint8_t> buffer_2; //bones
+      StructureBuffer<uint8_t> buffer_3;
 
-      std::unique_ptr<TextureArrayLDR> array_0; //albedo-metallic
-      std::unique_ptr<TextureArrayLDR> array_1; //smoothness-normal-occlusion
-      std::unique_ptr<TextureArrayLDR> array_2; //emission-transparency
-      std::unique_ptr<TextureArrayLDR> array_3;
+      TextureArrayLDR array_0; //albedo-metallic
+      TextureArrayLDR array_1; //smoothness-normal-occlusion
+      TextureArrayLDR array_2; //emission-transparency
+      TextureArrayLDR array_3;
 
     public:
       std::shared_ptr<Property> prop_scene;

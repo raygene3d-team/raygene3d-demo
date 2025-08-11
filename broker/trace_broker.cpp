@@ -429,22 +429,16 @@ namespace RayGene3D
     MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
 
     {
-      const auto data = reinterpret_cast<uint8_t*>(t_boxes.data());
-      const auto stride = sizeof(RayGene3D::Box);
-      const auto count = t_boxes.size();
-      auto raw = Raw({ data, stride * count });
-      prop_t_boxes = CreateStructureBufferProperty(std::move(raw), stride, count);
-      prop_scene->SetObjectItem("t_boxes", prop_t_boxes);
+      const auto t_boxes_buffer = StructureBuffer<Box>({ { t_boxes.data(), t_boxes.size() } });
+      const auto t_boxes_prop = t_boxes_buffer.Export();
+      prop_scene->SetObjectItem("t_boxes", t_boxes_prop);
     }
     CreateTraceTBoxes();
 
     {
-      const auto data = reinterpret_cast<uint8_t*>(b_boxes.data());
-      const auto stride = sizeof(RayGene3D::Box);
-      const auto count = b_boxes.size();
-      auto raw = Raw({ data, stride * count });
-      prop_b_boxes = CreateStructureBufferProperty(std::move(raw), stride, count);
-      prop_scene->SetObjectItem("b_boxes", prop_b_boxes);
+      const auto b_boxes_buffer = StructureBuffer<Box>({ { b_boxes.data(), b_boxes.size() } });
+      const auto b_boxes_prop = b_boxes_buffer.Export();
+      prop_scene->SetObjectItem("b_boxes", b_boxes_prop);
     }
     CreateTraceBBoxes();
   }
