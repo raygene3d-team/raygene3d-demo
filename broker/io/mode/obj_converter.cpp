@@ -241,22 +241,22 @@ namespace RayGene3D
 
       for (size_t i = 0; i < texture_0_names.size(); ++i)
       {
-        scope.array_0.Add(i, texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level));
+        scope.array_0[i] = texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level);
       }
 
       for (size_t i = 0; i < texture_1_names.size(); ++i)
       {
-        scope.array_1.Add(i, texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level));
+        scope.array_1[i] = texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level);
       }
 
       for (size_t i = 0; i < texture_2_names.size(); ++i)
       {
-        scope.array_2.Add(i, texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level));
+        scope.array_2[i] = texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level);
       }
 
       for (size_t i = 0; i < texture_3_names.size(); ++i)
       {
-        scope.array_3.Add(i, texture_load_resize_fn(scope.path_name, texture_3_names[i], scope.texture_level));
+        scope.array_3[i] = texture_load_resize_fn(scope.path_name, texture_3_names[i], scope.texture_level);
       }
 
     }
