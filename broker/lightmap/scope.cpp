@@ -212,13 +212,13 @@ namespace RayGene3D
         {
           const auto& ins = ins_array[i];
 
-          for (uint32_t j = 0; j < ins.prim_count; ++j)
+          for (uint32_t j = 0; j < ins.offset_1; ++j)
           {
-            const auto& trg = trg_array[ins.prim_offset + j];
+            const auto& trg = trg_array[ins.offset_1 + j];
 
-            const auto& vtx0 = vrt_array[ins.vert_offset + trg.idx[0]];
-            const auto& vtx1 = vrt_array[ins.vert_offset + trg.idx[1]];
-            const auto& vtx2 = vrt_array[ins.vert_offset + trg.idx[2]];
+            const auto& vtx0 = vrt_array[ins.offset_0 + trg.idx[0]];
+            const auto& vtx1 = vrt_array[ins.offset_0 + trg.idx[1]];
+            const auto& vtx2 = vrt_array[ins.offset_0 + trg.idx[2]];
 
             const auto& layer = vtx0.msk;
             const auto& color = vtx0.col;

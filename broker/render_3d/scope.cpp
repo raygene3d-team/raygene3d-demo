@@ -207,25 +207,25 @@ namespace RayGene3D
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures3", scene_textures3));
     }
 
-    void Scope::CreateSceneTextures4()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures4", scene_textures4));
-    }
+    //void Scope::CreateSceneTextures4()
+    //{
+    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures4", scene_textures4));
+    //}
 
-    void Scope::CreateSceneTextures5()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures5", scene_textures5));
-    }
+    //void Scope::CreateSceneTextures5()
+    //{
+    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures5", scene_textures5));
+    //}
 
-    void Scope::CreateSceneTextures6()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures6", scene_textures6));
-    }
+    //void Scope::CreateSceneTextures6()
+    //{
+    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures6", scene_textures6));
+    //}
 
-    void Scope::CreateSceneTextures7()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures7", scene_textures7));
-    }
+    //void Scope::CreateSceneTextures7()
+    //{
+    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures7", scene_textures7));
+    //}
 
     void Scope::CreateLightmapsInput()
     {
@@ -448,29 +448,29 @@ namespace RayGene3D
       scene_textures3.reset();
     }
 
-    void Scope::DestroySceneTextures4()
-    {
-      core->GetDevice()->DestroyResource(scene_textures4);
-      scene_textures4.reset();
-    }
+    //void Scope::DestroySceneTextures4()
+    //{
+    //  core->GetDevice()->DestroyResource(scene_textures4);
+    //  scene_textures4.reset();
+    //}
 
-    void Scope::DestroySceneTextures5()
-    {
-      core->GetDevice()->DestroyResource(scene_textures5);
-      scene_textures5.reset();
-    }
+    //void Scope::DestroySceneTextures5()
+    //{
+    //  core->GetDevice()->DestroyResource(scene_textures5);
+    //  scene_textures5.reset();
+    //}
 
-    void Scope::DestroySceneTextures6()
-    {
-      core->GetDevice()->DestroyResource(scene_textures6);
-      scene_textures6.reset();
-    }
+    //void Scope::DestroySceneTextures6()
+    //{
+    //  core->GetDevice()->DestroyResource(scene_textures6);
+    //  scene_textures6.reset();
+    //}
 
-    void Scope::DestroySceneTextures7()
-    {
-      core->GetDevice()->DestroyResource(scene_textures7);
-      scene_textures7.reset();
-    }
+    //void Scope::DestroySceneTextures7()
+    //{
+    //  core->GetDevice()->DestroyResource(scene_textures7);
+    //  scene_textures7.reset();
+    //}
 
     void Scope::DestroyScreenQuadVertices()
     {

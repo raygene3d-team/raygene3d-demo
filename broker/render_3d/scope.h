@@ -122,10 +122,10 @@ namespace RayGene3D
       SPtrResource scene_textures1;
       SPtrResource scene_textures2;
       SPtrResource scene_textures3;
-      SPtrResource scene_textures4;
-      SPtrResource scene_textures5;
-      SPtrResource scene_textures6;
-      SPtrResource scene_textures7;
+      //SPtrResource scene_textures4;
+      //SPtrResource scene_textures5;
+      //SPtrResource scene_textures6;
+      //SPtrResource scene_textures7;
 
       SPtrResource trace_t_boxes;
       SPtrResource trace_b_boxes;

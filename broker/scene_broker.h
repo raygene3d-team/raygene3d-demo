@@ -40,28 +40,28 @@ namespace RayGene3D
   protected:
     std::shared_ptr<Property> prop_instances;
 
-    std::shared_ptr<Property> prop_buffers0;
-    std::shared_ptr<Property> prop_buffers1;
-    std::shared_ptr<Property> prop_buffers2;
-    std::shared_ptr<Property> prop_buffers3;
+    std::shared_ptr<Property> prop_buffer_0;
+    std::shared_ptr<Property> prop_buffer_1;
+    std::shared_ptr<Property> prop_buffer_2;
+    std::shared_ptr<Property> prop_buffer_3;
 
-    std::shared_ptr<Property> prop_textures0;
-    std::shared_ptr<Property> prop_textures1;
-    std::shared_ptr<Property> prop_textures2;
-    std::shared_ptr<Property> prop_textures3;
+    std::shared_ptr<Property> prop_array_0;
+    std::shared_ptr<Property> prop_array_1;
+    std::shared_ptr<Property> prop_array_2;
+    std::shared_ptr<Property> prop_array_3;
 
   protected:
     SPtrResource scene_instances;
 
-    SPtrResource scene_buffers0;
-    SPtrResource scene_buffers1;
-    SPtrResource scene_buffers2;
-    SPtrResource scene_buffers3;
+    SPtrResource scene_buffer_0;
+    SPtrResource scene_buffer_1;
+    SPtrResource scene_buffer_2;
+    SPtrResource scene_buffer_3;
 
-    SPtrResource scene_textures0;
-    SPtrResource scene_textures1;
-    SPtrResource scene_textures2;
-    SPtrResource scene_textures3;
+    SPtrResource scene_array_0;
+    SPtrResource scene_array_1;
+    SPtrResource scene_array_2;
+    SPtrResource scene_array_3;
     //SPtrResource scene_textures4;
     //SPtrResource scene_textures5;
     //SPtrResource scene_textures6;
@@ -70,15 +70,15 @@ namespace RayGene3D
   protected:
     void CreateSceneInstances();
 
-    void CreateSceneBuffers0();
-    void CreateSceneBuffers1();
+    void CreateSceneBuffer0();
+    void CreateSceneBuffer1();
     //void CreateSceneBuffers2();
     //void CreateSceneBuffers3();
 
-    void CreateSceneTextures0();
-    void CreateSceneTextures1();
-    void CreateSceneTextures2();
-    void CreateSceneTextures3();
+    void CreateSceneArray0();
+    void CreateSceneArray1();
+    void CreateSceneArray2();
+    void CreateSceneArray3();
     //void CreateSceneTextures4();
     //void CreateSceneTextures5();
     //void CreateSceneTextures6();
@@ -87,15 +87,15 @@ namespace RayGene3D
   protected:
     void DestroySceneInstances();
 
-    void DestroySceneBuffers0();
-    void DestroySceneBuffers1();
-    void DestroySceneBuffers2();
-    void DestroySceneBuffers3();
+    void DestroySceneBuffer0();
+    void DestroySceneBuffer1();
+    void DestroySceneBuffer2();
+    void DestroySceneBuffer3();
 
-    void DestroySceneTextures0();
-    void DestroySceneTextures1();
-    void DestroySceneTextures2();
-    void DestroySceneTextures3();
+    void DestroySceneArray0();
+    void DestroySceneArray1();
+    void DestroySceneArray2();
+    void DestroySceneArray3();
     //void DestroySceneTextures4();
     //void DestroySceneTextures5();
     //void DestroySceneTextures6();

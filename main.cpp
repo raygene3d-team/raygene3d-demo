@@ -36,7 +36,6 @@ THE SOFTWARE.
 
 #include "broker/trace_broker.h"
 #include "broker/xatlas_broker.h"
-#include "broker/mikktspace_broker.h"
 #include "broker/io_broker.h"
 #include "broker/scene_broker.h"
 #include "broker/lightmap_broker.h"
@@ -369,7 +368,7 @@ namespace RayGene3D
       wrap->GetCore()->Initialize();
 
       {
-        auto array = TextureArrayLDR(FORMAT_B8G8R8A8_UNORM, extent_x, extent_y);
+        auto array = TextureArrayLDR(FORMAT_B8G8R8A8_UNORM, extent_x, extent_y, 1);
         array.Create(0, glm::zero<glm::u8vec4>());
         std::pair<const uint8_t*, size_t> interops[] =
         {
@@ -443,6 +442,7 @@ namespace RayGene3D
 
           io_broker.reset();
 
+          scene_property = wrap->GetUtil()->GetStorage()->GetTree()->GetObjectItem("scene");
           wrap->GetUtil()->GetStorage()->Save(ExtractName(scene_name), scene_property);
         }
       }
@@ -473,46 +473,35 @@ namespace RayGene3D
       }
       tree_property->SetObjectItem("camera", camera_property);
 
-      //environment_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
-      //{
-      //  const auto environment_path = "./";
-      //  const auto environment_name = config_property->GetObjectItem("environment")->GetObjectItem("file")->GetString();
-      //  const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
+      environment_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+      {
+        const auto environment_path = "./";
+        const auto environment_name = config_property->GetObjectItem("environment")->GetObjectItem("path")->GetString();
+        const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
 
-      //  const auto extent_x = 1u << int32_t(environment_quality) - 1;
-      //  const auto extent_y = 1u << int32_t(environment_quality) - 2;
-      //  auto [raws, size_x, size_y] = 
-      //    MipmapTextureHDR(environment_quality, 
-      //      ResizeTextureHDR(extent_x, extent_y,
-      //        LoadTextureHDR(environment_path + environment_name)));
-      //  environment_property = CreateTextureProperty({raws.data(), uint32_t(raws.size())}, 
-      //    extent_x, extent_y, environment_quality, 1u);
-      //}
+        const auto extent_x = 1u << int32_t(environment_quality) - 1;
+        const auto extent_y = 1u << int32_t(environment_quality) - 2;
+        auto environment_array = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent_x, extent_y, 1);
+        environment_array.Create(0);
+        environment_array.Load(0, (environment_path + environment_name).c_str());
+
+        environment_property = environment_array.Export();
+      }
       tree_property->SetObjectItem("environment", config_property->GetObjectItem("environment"));
 
-      //lighting_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
-      //{
-      //  const auto lighting_theta = config_property->GetObjectItem("lighting")->GetObjectItem("theta");
-      //  const auto lighting_phi = config_property->GetObjectItem("lighting")->GetObjectItem("phi");
-      //  const auto lighting_intensity = config_property->GetObjectItem("lighting")->GetObjectItem("intensity");
+      lighting_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+      {
+        const auto lighting_theta = config_property->GetObjectItem("lighting")->GetObjectItem("theta");
+        const auto lighting_phi = config_property->GetObjectItem("lighting")->GetObjectItem("phi");
+        const auto lighting_intensity = config_property->GetObjectItem("lighting")->GetObjectItem("intensity");
 
-      //  lighting_property->SetObjectItem("theta", lighting_theta);
-      //  lighting_property->SetObjectItem("phi", lighting_phi);
-      //  lighting_property->SetObjectItem("intensity", lighting_intensity);
-      //}
+        lighting_property->SetObjectItem("theta", lighting_theta);
+        lighting_property->SetObjectItem("phi", lighting_phi);
+        lighting_property->SetObjectItem("intensity", lighting_intensity);
+      }
       tree_property->SetObjectItem("lighting", config_property->GetObjectItem("lighting"));
 
       tree_property->SetObjectItem("illumination", config_property->GetObjectItem("illumination"));
-
-      {
-        auto mikktspace_broker = std::shared_ptr<RayGene3D::MikktspaceBroker>(new RayGene3D::MikktspaceBroker(*wrap));
-
-        mikktspace_broker->Initialize();
-        mikktspace_broker->Use();
-        mikktspace_broker->Discard();
-
-        mikktspace_broker.reset();
-      }
 
       {
         auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
