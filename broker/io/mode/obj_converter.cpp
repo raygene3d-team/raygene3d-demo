@@ -146,29 +146,31 @@ namespace RayGene3D
           const auto tc0_transform = true ? flip_v_tranform : glm::identity<glm::fmat2x2>();
           const auto idx_order = scope.conversion_rhs ? glm::uvec3{ 0u, 2u, 1u } : glm::uvec3{ 0u, 1u, 2u };
 
-          const auto [vertices, triangles, aabb_min, aabb_max] = PopulateInstance(idx_count, idx_align,
-            idx_order, pos_transform, nrm_transform, tc0_transform,
-            pos_data, pos_stride, pos_idx_data, pos_idx_stride,
-            nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride,
-            tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride);
+          auto geometry = Geometry(idx_count, idx_align, idx_order,
+            pos_data, pos_stride, pos_idx_data, pos_idx_stride, pos_transform,
+            nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride, nrm_transform,
+            tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride, tc0_transform);
 
-          if (vertices.empty() || triangles.empty()) continue;
+          if (geometry.vertices.empty() || geometry.triangles.empty()) continue;
+
+          geometry.CalculateTangents();
+          geometry.CalculateMeshlets();
 
           Instance instance;
           instance.transform = glm::identity<glm::fmat3x4>();
-          instance.aabb_min = aabb_min;
+          instance.aabb_min = geometry.aabb_min;
           instance.geom_idx = uint32_t(scope.instances.size());
-          instance.aabb_max = aabb_max;
+          instance.aabb_max = geometry.aabb_max;
           instance.brdf_idx = 0;
 
-          const auto vert_count = vertices.size();
+          const auto vert_count = geometry.vertices.size();
           const auto vert_stride = sizeof(Vertex);
-          const auto vert_data = reinterpret_cast<const uint8_t*>(vertices.data());
+          const auto vert_data = reinterpret_cast<const uint8_t*>(geometry.vertices.data());
           scope.buffer_0.Push(Raw({ vert_data, vert_stride * vert_count }));
 
-          const auto prim_count = triangles.size();
+          const auto prim_count = geometry.triangles.size();
           const auto prim_stride = sizeof(Triangle);
-          const auto prim_data = reinterpret_cast<const uint8_t*>(triangles.data());
+          const auto prim_data = reinterpret_cast<const uint8_t*>(geometry.triangles.data());
           scope.buffer_1.Push(Raw({ prim_data, prim_stride * prim_count }));
 
           const auto mlet_count = 0u;
@@ -190,17 +192,17 @@ namespace RayGene3D
           const auto debug = false;
           if (debug)
           {
-            instance.param_0 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-            instance.param_1 = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-            instance.param_2 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-            instance.param_3 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            instance.fparam_0 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            instance.fparam_1 = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+            instance.fparam_2 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            instance.fparam_3 = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
           }
           else
           {
-            instance.param_0 = glm::vec4(obj_material.emission[0], obj_material.emission[1], obj_material.emission[2], obj_material.illum);
-            instance.param_1 = glm::vec4(obj_material.diffuse[0], obj_material.diffuse[1], obj_material.diffuse[2], obj_material.dissolve);
-            instance.param_2 = glm::vec4(obj_material.specular[0], obj_material.specular[1], obj_material.specular[2], obj_material.shininess);
-            instance.param_3 = glm::vec4(obj_material.transmittance[0], obj_material.transmittance[1], obj_material.transmittance[2], obj_material.ior);
+            instance.fparam_0 = glm::vec4(obj_material.emission[0], obj_material.emission[1], obj_material.emission[2], obj_material.illum);
+            instance.fparam_1 = glm::vec4(obj_material.diffuse[0], obj_material.diffuse[1], obj_material.diffuse[2], obj_material.dissolve);
+            instance.fparam_2 = glm::vec4(obj_material.specular[0], obj_material.specular[1], obj_material.specular[2], obj_material.shininess);
+            instance.fparam_3 = glm::vec4(obj_material.transmittance[0], obj_material.transmittance[1], obj_material.transmittance[2], obj_material.ior);
 
             const auto tex_reindex_fn = [](std::vector<std::string>& tex_names, const std::string& tex_name)
             {
@@ -230,7 +232,7 @@ namespace RayGene3D
 
             if (obj_material.illum != 7) // glass material
             {
-              instance.param_3 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+              instance.fparam_3 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             }
           }
 

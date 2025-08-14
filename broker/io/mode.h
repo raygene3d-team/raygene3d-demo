@@ -47,11 +47,38 @@ namespace RayGene3D
       virtual ~Mode();
     };
 
+    struct Geometry
+    {
+      std::vector<Vertex> vertices;
+      std::vector<Triangle> triangles;
+      //std::vector<Meshlet> meshlets;
 
-    std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(size_t idx_count, uint32_t idx_align,
-      const glm::uvec3& idx_order, const glm::fmat4x4& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
-      std::pair<const uint8_t*, size_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, size_t> pos_idx_data, uint32_t pos_idx_stride,
-      std::pair<const uint8_t*, size_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, size_t> nrm_idx_data, uint32_t nrm_idx_stride,
-      std::pair<const uint8_t*, size_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, size_t> tc0_idx_data, uint32_t tc0_idx_stride);
+      glm::f32vec3 aabb_min = glm::f32vec3{ FLT_MAX, FLT_MAX, FLT_MAX };
+      glm::f32vec3 aabb_max = glm::f32vec3{-FLT_MAX,-FLT_MAX,-FLT_MAX };
+
+      size_t degenerated_geom_tris_count{ 0u };
+      size_t degenerated_wrap_tris_count{ 0u };
+
+      double meshopt_avg_vertices{ 0.0 };
+      double meshopt_avg_triangles{ 0.0 };
+      double meshopt_avg_boundary{ 0.0 };
+      double meshopt_avg_connected{ 0.0 };
+      size_t meshopt_not_full{ 0u };
+
+    public:
+      void CalculateTangents();
+      void CalculateMeshlets();
+
+    public:
+      Geometry(size_t idx_count, uint32_t idx_align, const glm::uvec3& idx_order,
+        CByteData pos_data, uint32_t pos_stride, CByteData pos_idx_data, uint32_t pos_idx_stride, const glm::fmat4x4& pos_transform,
+        CByteData nrm_data, uint32_t nrm_stride, CByteData nrm_idx_data, uint32_t nrm_idx_stride, const glm::fmat3x3& nrm_transform,
+        CByteData tc0_data, uint32_t tc0_stride, CByteData tc0_idx_data, uint32_t tc0_idx_stride, const glm::fmat2x2& tc0_transform);
+      ~Geometry() {}
+    };
+
+    struct Material
+    {
+    };
   }
 }

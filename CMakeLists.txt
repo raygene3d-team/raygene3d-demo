@@ -116,10 +116,6 @@ set(SOURCE main.cpp
   broker/io_broker.cpp
   broker/lightmap_broker.h
   broker/lightmap_broker.cpp
-  broker/mikktspace_broker.h
-  broker/mikktspace_broker.cpp
-  broker/meshoptimizer_broker.h
-  broker/meshoptimizer_broker.cpp
   broker/photonmap_broker.h
   broker/photonmap_broker.cpp
   broker/render_3d_broker.h

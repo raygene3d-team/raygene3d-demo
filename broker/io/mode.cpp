@@ -36,6 +36,9 @@ THE SOFTWARE.
 //#include <stb/stb_image_write.h>
 //#include <stb/stb_image_resize.h>
 
+#include <mikktspace/mikktspace.h>
+#include <meshoptimizer/src/meshoptimizer.h>
+
 namespace RayGene3D
 {
   namespace IO
@@ -49,11 +52,10 @@ namespace RayGene3D
     {
     }
 
-    std::tuple<std::vector<Vertex>, std::vector<Triangle>, glm::fvec3, glm::fvec3> PopulateInstance(size_t idx_count, uint32_t idx_align,
-      const glm::uvec3& idx_order, const glm::fmat4x4& pos_transform, const glm::fmat3x3& nrm_transform, const glm::fmat2x2& tc0_transform,
-      std::pair<const uint8_t*, size_t> pos_data, uint32_t pos_stride, std::pair<const uint8_t*, size_t> pos_idx_data, uint32_t pos_idx_stride,
-      std::pair<const uint8_t*, size_t> nrm_data, uint32_t nrm_stride, std::pair<const uint8_t*, size_t> nrm_idx_data, uint32_t nrm_idx_stride,
-      std::pair<const uint8_t*, size_t> tc0_data, uint32_t tc0_stride, std::pair<const uint8_t*, size_t> tc0_idx_data, uint32_t tc0_idx_stride)
+    Geometry::Geometry(size_t idx_count, uint32_t idx_align, const glm::uvec3& idx_order,
+      CByteData pos_data, uint32_t pos_stride, CByteData pos_idx_data, uint32_t pos_idx_stride, const glm::fmat4x4& pos_transform,
+      CByteData nrm_data, uint32_t nrm_stride, CByteData nrm_idx_data, uint32_t nrm_idx_stride, const glm::fmat3x3& nrm_transform,
+      CByteData tc0_data, uint32_t tc0_stride, CByteData tc0_idx_data, uint32_t tc0_idx_stride, const glm::fmat2x2& tc0_transform)
     {
       const auto create_vertex_fn = [idx_align,
         pos_transform, nrm_transform, tc0_transform,
@@ -97,86 +99,268 @@ namespace RayGene3D
           return vertex;
         };
 
-        const auto hash_vertex_fn = [](const Vertex& vertex)
-          {
-            const auto uref = reinterpret_cast<const glm::u32vec4*>(&vertex);
-
-            auto hash = 0u;
-            hash ^= std::hash<glm::u32vec4>()(uref[0]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            hash ^= std::hash<glm::u32vec4>()(uref[1]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            hash ^= std::hash<glm::u32vec4>()(uref[2]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            hash ^= std::hash<glm::u32vec4>()(uref[3]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-
-            return hash;
-          };
-
-        const auto compare_vertex_fn = [](const Vertex& l, const Vertex& r) { return (memcmp(&l, &r, sizeof(Vertex)) == 0); };
-        std::unordered_map<Vertex, uint32_t, decltype(hash_vertex_fn), decltype(compare_vertex_fn)> vertex_map(8, hash_vertex_fn, compare_vertex_fn);
-
-        const auto remap_vertex_fn = [&vertex_map](std::vector<Vertex>& vertices, const Vertex& vertex)
-          {
-            const auto result = vertex_map.emplace(vertex, uint32_t(vertices.size()));
-            if (result.second)
-            {
-              vertices.push_back(vertex);
-            }
-            return result.first->second;
-          };
-
-        std::vector<Vertex> vertices;
-        std::vector<Triangle> triangles;
-        auto bb_min = glm::fvec3{ FLT_MAX, FLT_MAX, FLT_MAX };
-        auto bb_max = glm::fvec3{-FLT_MAX,-FLT_MAX,-FLT_MAX };
-
-        auto degenerated_geom_tris_count = 0u;
-        auto degenerated_wrap_tris_count = 0u;
-
-        for (size_t k = 0; k < idx_count / 3; ++k)
+      const auto hash_vertex_fn = 
+        [](const Vertex& vertex)
         {
-          const auto vtx0 = create_vertex_fn(k * 3 + 0);
-          bb_min = glm::min(bb_min, vtx0.pos);
-          bb_max = glm::max(bb_max, vtx0.pos);
+          const auto uref = reinterpret_cast<const glm::u32vec4*>(&vertex);
 
-          const auto vtx1 = create_vertex_fn(k * 3 + 1);
-          bb_min = glm::min(bb_min, vtx1.pos);
-          bb_max = glm::max(bb_max, vtx1.pos);
+          auto hash = 0u;
+          hash ^= std::hash<glm::u32vec4>()(uref[0]) + 0x9e3779b9 + (size_t(hash) << 6) + (hash >> 2);
+          hash ^= std::hash<glm::u32vec4>()(uref[1]) + 0x9e3779b9 + (size_t(hash) << 6) + (hash >> 2);
+          hash ^= std::hash<glm::u32vec4>()(uref[2]) + 0x9e3779b9 + (size_t(hash) << 6) + (hash >> 2);
+          hash ^= std::hash<glm::u32vec4>()(uref[3]) + 0x9e3779b9 + (size_t(hash) << 6) + (hash >> 2);
 
-          const auto vtx2 = create_vertex_fn(k * 3 + 2);
-          bb_min = glm::min(bb_min, vtx2.pos);
-          bb_max = glm::max(bb_max, vtx2.pos);
+          return hash;
+        };
 
-          const auto dp_10 = vtx1.pos - vtx0.pos;
-          const auto dp_20 = vtx2.pos - vtx0.pos;
-          const auto ng = glm::cross(dp_10, dp_20);
-          if (glm::length(ng) == 0.0f)
+      const auto compare_vertex_fn = [](const Vertex& l, const Vertex& r) { return (memcmp(&l, &r, sizeof(Vertex)) == 0); };
+      std::unordered_map<Vertex, uint32_t, decltype(hash_vertex_fn), decltype(compare_vertex_fn)> vertex_map(8, hash_vertex_fn, compare_vertex_fn);
+
+      const auto remap_vertex_fn = 
+        [&vertex_map](std::vector<Vertex>& vertices, const Vertex& vertex)
+        {
+          const auto result = vertex_map.emplace(vertex, uint32_t(vertices.size()));
+          if (result.second)
           {
-            ++degenerated_geom_tris_count;
-            continue;
+            vertices.push_back(vertex);
           }
+          return result.first->second;
+        };
 
-          auto has_textures = false;
-          if (has_textures)
-          {
-            const auto duv_10 = vtx1.tc0 - vtx0.tc0;
-            const auto duv_20 = vtx2.tc0 - vtx0.tc0;
-            const auto det = glm::determinant(glm::fmat2x2(duv_10, duv_20));
-            if (det == 0.0f)
-            {
-              ++degenerated_wrap_tris_count;
-              continue;
-            }
-          }
+      
 
-          Triangle triangle;
+      for (size_t i = 0; i < idx_count / 3; ++i)
+      {
+        const auto vtx0 = create_vertex_fn(i * 3 + 0);
+        aabb_min = glm::min(aabb_min, vtx0.pos);
+        aabb_max = glm::max(aabb_max, vtx0.pos);
 
-          triangle.idx[idx_order[0]] = remap_vertex_fn(vertices, vtx0);
-          triangle.idx[idx_order[1]] = remap_vertex_fn(vertices, vtx1);
-          triangle.idx[idx_order[2]] = remap_vertex_fn(vertices, vtx2);
+        const auto vtx1 = create_vertex_fn(i * 3 + 1);
+        aabb_min = glm::min(aabb_min, vtx1.pos);
+        aabb_max = glm::max(aabb_max, vtx1.pos);
 
-          triangles.push_back(triangle);
+        const auto vtx2 = create_vertex_fn(i * 3 + 2);
+        aabb_min = glm::min(aabb_min, vtx2.pos);
+        aabb_max = glm::max(aabb_max, vtx2.pos);
+
+        const auto dp_10 = vtx1.pos - vtx0.pos;
+        const auto dp_20 = vtx2.pos - vtx0.pos;
+        const auto ng = glm::cross(dp_10, dp_20);
+        if (glm::length(ng) == 0.0f)
+        {
+          ++degenerated_geom_tris_count;
+          continue;
         }
 
-        return { vertices, triangles, bb_min, bb_max };
+        auto has_textures = false;
+        if (has_textures)
+        {
+          const auto duv_10 = vtx1.tc0 - vtx0.tc0;
+          const auto duv_20 = vtx2.tc0 - vtx0.tc0;
+          const auto det = glm::determinant(glm::fmat2x2(duv_10, duv_20));
+          if (det == 0.0f)
+          {
+            ++degenerated_wrap_tris_count;
+            continue;
+          }
+        }
+
+        Triangle triangle;
+
+        triangle.idx[idx_order[0]] = remap_vertex_fn(vertices, vtx0);
+        triangle.idx[idx_order[1]] = remap_vertex_fn(vertices, vtx1);
+        triangle.idx[idx_order[2]] = remap_vertex_fn(vertices, vtx2);
+
+        triangles.push_back(triangle);
+      }
+    }
+
+    void Geometry::CalculateTangents()
+    {
+      //auto result = std::vector<Vertex>(vertices.size());
+
+      //struct SMikkTSpaceUserData
+      //{
+      //  std::pair<const Triangle*, uint32_t> prims;
+      //  std::pair<const Vertex*, uint32_t> verts;
+      //  std::pair<Vertex*, uint32_t> tangent_verts;
+      //} data{ triangles, vertices, { result.data(), uint32_t(result.size())} };
+
+      SMikkTSpaceInterface input = { 0 };
+      input.m_getNumFaces = 
+        [](const SMikkTSpaceContext* ctx)
+        {
+          const auto geometry = reinterpret_cast<const Geometry*>(ctx->m_pUserData);
+          return int32_t(geometry->triangles.size());
+        };
+
+      input.m_getNumVerticesOfFace = 
+        [](const SMikkTSpaceContext* ctx, const int iFace)
+        {
+          const auto geometry = reinterpret_cast<const Geometry*>(ctx->m_pUserData);
+          return 3;
+        };
+
+      //input.m_getPosition = &GetPositionCb;
+      //input.m_getNormal = &GetNormalCb;
+      //input.m_getTexCoord = &GetTexCoordCb;
+      //input.m_setTSpaceBasic = &SetTspaceBasicCb;
+      //input.m_setTSpace = NULL;
+
+
+      input.m_getPosition = [](const SMikkTSpaceContext* ctx, float fvPosOut[], int iFace, int iVert)
+        {
+          const auto geometry = reinterpret_cast<const Geometry*>(ctx->m_pUserData);
+          const auto idx = geometry->triangles[iFace].idx[iVert];
+          const auto& pos = geometry->vertices[idx].pos;
+          fvPosOut[0] = pos.x;
+          fvPosOut[1] = pos.y;
+          fvPosOut[2] = pos.z;
+        };
+
+      input.m_getNormal = [](const SMikkTSpaceContext* ctx, float fvNormOut[], int iFace, int iVert)
+        {
+          const auto geometry = reinterpret_cast<const Geometry*>(ctx->m_pUserData);
+          const auto idx = geometry->triangles[iFace].idx[iVert];
+          const auto& nrm = geometry->vertices[idx].nrm;
+          fvNormOut[0] = nrm.x;
+          fvNormOut[1] = nrm.y;
+          fvNormOut[2] = nrm.z;
+        };
+
+      input.m_getTexCoord = [](const SMikkTSpaceContext* ctx, float fvTexcOut[], int iFace, int iVert)
+        {
+          const auto geometry = reinterpret_cast<const Geometry*>(ctx->m_pUserData);
+          const auto idx = geometry->triangles[iFace].idx[iVert];
+          const auto& tc0 = geometry->vertices[idx].tc0;
+          fvTexcOut[0] = tc0.x;
+          fvTexcOut[1] = tc0.y;
+        };
+
+      input.m_setTSpaceBasic = [](const SMikkTSpaceContext* ctx, const float fvTangent[], float fSign, int iFace, int iVert)
+        {
+          auto geometry = reinterpret_cast<Geometry*>(ctx->m_pUserData);
+          const auto idx = geometry->triangles[iFace].idx[iVert];
+          auto& tng = geometry->vertices[idx].tng;
+          tng.x = fvTangent[0];
+          tng.y = fvTangent[1];
+          tng.z = fvTangent[2];
+          auto& sgn = geometry->vertices[idx].sgn;
+          sgn = fSign;
+        };
+
+      SMikkTSpaceContext context;
+      context.m_pInterface = &input;
+      context.m_pUserData = this;
+
+      BLAST_ASSERT(1 == genTangSpaceDefault(&context));
+    }
+
+    void Geometry::CalculateMeshlets()
+    {
+
+      meshopt_optimizeVertexCache((uint32_t*)triangles.data(), (const uint32_t*)triangles.data(), triangles.size() * 3, vertices.size());
+
+      meshopt_optimizeOverdraw((uint32_t*)triangles.data(), (const uint32_t*)triangles.data(), triangles.size() * 3, (const float*)vertices.data(), vertices.size(), sizeof(Vertex), 1.0f);
+
+      meshopt_optimizeVertexFetch((float*)vertices.data(), (uint32_t*)triangles.data(), triangles.size() * 3, (const float*)vertices.data(), vertices.size(), sizeof(Vertex));
+
+
+      const size_t vrt_limit = 64;
+      const size_t trg_limit = 128; // : 124;
+
+      //// note: should be set to 0 unless cone culling is used at runtime!
+      //const float cone_weight = flex ? -1.0f : 0.25f;
+      //const float split_factor = flex ? 2.0f : 0.0f;
+
+      //// note: input mesh is assumed to be optimized for vertex cache and vertex fetch
+      //double start = timestamp();
+      auto meshlet_count = meshopt_buildMeshletsBound(triangles.size() * 3, vrt_limit, trg_limit);
+      std::vector<meshopt_Meshlet> meshlets_opt(meshlet_count);
+      std::vector<uint32_t> meshlet_vrt(meshlet_count * vrt_limit);
+      std::vector<uint8_t> meshlet_trg(meshlet_count * trg_limit * 3);
+
+      //if (scan)
+      //  meshlets.resize(meshopt_buildMeshletsScan(&meshlets[0], &meshlet_vertices[0], &meshlet_triangles[0], &mesh.indices[0], mesh.indices.size(), mesh.vertices.size(), max_vertices, max_triangles));
+      //else if (flex)
+      //  meshlets.resize(meshopt_buildMeshletsFlex(&meshlets[0], &meshlet_vertices[0], &meshlet_triangles[0], &mesh.indices[0], mesh.indices.size(), &mesh.vertices[0].px, mesh.vertices.size(), sizeof(Vertex), max_vertices, min_triangles, max_triangles, cone_weight, split_factor));
+      //else // note: equivalent to the call of buildMeshletsFlex() with non-negative cone_weight and split_factor = 0
+      meshlets_opt.resize(meshopt_buildMeshlets(&meshlets_opt[0], &meshlet_vrt[0], &meshlet_trg[0],
+        (const uint32_t*)triangles.data(), triangles.size() * 3, (const float*)vertices.data(), vertices.size(), sizeof(Vertex), vrt_limit, trg_limit, 0.0f));
+
+      for (size_t i = 0; i < meshlets_opt.size(); ++i)
+      {
+        meshopt_optimizeMeshlet(&meshlet_vrt[meshlets_opt[i].vertex_offset], &meshlet_trg[meshlets_opt[i].triangle_offset], meshlets_opt[i].triangle_count, meshlets_opt[i].vertex_count);
+      }
+
+      if (meshlets_opt.size())
+      {
+        const meshopt_Meshlet& last = meshlets_opt.back();
+
+        // this is an example of how to trim the vertex/triangle arrays when copying data out to GPU storage
+        meshlet_vrt.resize(last.vertex_offset + last.vertex_count);
+        meshlet_trg.resize(last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3));
+      }
+
+      uint32_t max_vrt = 0;
+      uint32_t max_trg = 0;
+
+      for (size_t i = 0; i < meshlets_opt.size(); ++i)
+      {
+        //meshopt_optimizeMeshlet(&meshlet_vrt[meshlets_opt[i].vertex_offset], &meshlet_trg[meshlets_opt[i].triangle_offset], meshlets_opt[i].triangle_count, meshlets_opt[i].vertex_count);
+      }
+
+
+
+      std::vector<int> boundary(vertices.size());
+
+      for (const auto& meshlet : meshlets_opt)
+      {
+        meshopt_avg_vertices += meshlet.vertex_count;
+        meshopt_avg_triangles += meshlet.triangle_count;
+        meshopt_not_full += meshlet.triangle_count < trg_limit;
+
+        for (uint32_t j = 0; j < meshlet.vertex_count; ++j)
+        {
+          const auto counter = boundary[meshlet_vrt[meshlet.vertex_offset + j]]++;
+          meshopt_avg_boundary += counter == 2 ? 1 : 0;
+        }
+
+        std::array<int, vrt_limit> parents;
+        for (auto j = 0u; j < meshlet.vertex_count; ++j)
+        {
+          parents[j] = int(j);
+        }
+
+        const auto follow = [&parents](int index)
+          {
+            while (index != parents[index])
+            {
+              const auto parent = parents[index];
+              parents[index] = parents[parent];
+              index = parent;
+            }
+
+            return index;
+          };
+
+        for (auto j = 0u; j < meshlet.triangle_count * 3; ++j)
+        {
+          const auto v0 = follow(meshlet_trg[meshlet.triangle_offset + j]);
+          const auto v1 = follow(meshlet_trg[meshlet.triangle_offset + j + (j % 3 == 2 ? -2 : 1)]);
+
+          parents[v0] = v1;
+        }
+
+        int roots = 0;
+        for (auto j = 0u; j < meshlet.vertex_count; ++j)
+        {
+          roots += follow(j) == int(j);
+        }
+
+        assert(roots != 0);
+        meshopt_avg_connected += roots;
+      }
     }
   }
 }

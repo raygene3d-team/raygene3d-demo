@@ -42,7 +42,7 @@ namespace RayGene3D
     const auto mipmap = std::max(quality, levels);
     const auto extent = 1u << int32_t(quality) - 1;
 
-    auto pano_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, 2 * extent, extent);
+    auto pano_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, 2 * extent, extent, 1);
     pano_texture.Create(0, glm::zero<glm::f32vec4>());
     pano_texture.Load(0, path.c_str());
 
@@ -93,7 +93,7 @@ namespace RayGene3D
     {
       cube_texture.Create(k);
 
-      for (auto i = 0u; i < cube_texture.Count(); ++i)
+      for (auto i = 0u; i < cube_texture.Count(k); ++i)
       {
         const auto cube_texel = glm::i32vec2(i % extent, i / extent);
         const auto cube_uv = glm::f32vec2((cube_texel.x + 0.5f) / extent, (cube_texel.y + 0.5f) / extent);

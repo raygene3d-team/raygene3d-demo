@@ -72,20 +72,32 @@ namespace RayGene3D
         const auto aabb_max_property = CreateFVec3Property(); aabb_max_property->FromFVec3(instance.aabb_max);  item_property->SetObjectItem("aabb_max", aabb_max_property);
         const auto brdf_idx_property = CreateUIntProperty();  brdf_idx_property->FromUInt(instance.brdf_idx);   item_property->SetObjectItem("brdf_idx", brdf_idx_property);
 
-        const auto param_0_property = CreateFVec4Property();   param_0_property->FromFVec4(instance.param_0);   item_property->SetObjectItem("param_0", param_0_property);
-        const auto param_1_property = CreateFVec4Property();   param_1_property->FromFVec4(instance.param_1);   item_property->SetObjectItem("param_1", param_1_property);
-        const auto param_2_property = CreateFVec4Property();   param_2_property->FromFVec4(instance.param_2);   item_property->SetObjectItem("param_2", param_2_property);
-        const auto param_3_property = CreateFVec4Property();   param_3_property->FromFVec4(instance.param_3);   item_property->SetObjectItem("param_3", param_3_property);        
+        const auto param_0_property = CreateFVec4Property();   param_0_property->FromFVec4(instance.fparam_0);   item_property->SetObjectItem("fparam_0", param_0_property);
+        const auto param_1_property = CreateFVec4Property();   param_1_property->FromFVec4(instance.fparam_1);   item_property->SetObjectItem("fparam_1", param_1_property);
+        const auto param_2_property = CreateFVec4Property();   param_2_property->FromFVec4(instance.fparam_2);   item_property->SetObjectItem("fparam_2", param_2_property);
+        const auto param_3_property = CreateFVec4Property();   param_3_property->FromFVec4(instance.fparam_3);   item_property->SetObjectItem("fparam_3", param_3_property);        
 
         prop_instances->SetArrayItem(i, item_property);
       }
       prop_scene->SetObjectItem("instances", prop_instances);
 
       const auto prop_buffer_0 = buffer_0.Export();
-      prop_scene->SetObjectItem("buffers_0", prop_buffer_0);
+      prop_scene->SetObjectItem("buffer_0", prop_buffer_0);
 
       const auto prop_buffer_1 = buffer_1.Export();
-      prop_scene->SetObjectItem("buffers_1", prop_buffer_1);
+      prop_scene->SetObjectItem("buffer_1", prop_buffer_1);
+
+      const auto prop_array_0 = array_0.Export();
+      prop_scene->SetObjectItem("array_0", prop_array_0);
+
+      const auto prop_array_1 = array_1.Export();
+      prop_scene->SetObjectItem("array_1", prop_array_1);
+
+      const auto prop_array_2 = array_2.Export();
+      prop_scene->SetObjectItem("array_2", prop_array_2);
+
+      const auto prop_array_3 = array_3.Export();
+      prop_scene->SetObjectItem("array_3", prop_array_3);
 
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }
@@ -93,18 +105,19 @@ namespace RayGene3D
     Scope::Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)
       : core(core)
       , util(util)
-      , array_0(Format::FORMAT_R8G8B8A8_SRGB, 1u << texture_level, 1u << texture_level)
-      , array_1(Format::FORMAT_R8G8B8A8_UNORM, 1u << texture_level, 1u << texture_level)
-      , array_2(Format::FORMAT_R8G8B8A8_UNORM, 1u << texture_level, 1u << texture_level)
-      , array_3(Format::FORMAT_R8G8B8A8_UNORM, 1u << texture_level, 1u << texture_level)
+      , array_0(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , array_1(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , array_2(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , array_3(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
     {
-      //array_0.Resize(5);
-      //prop_scene = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
+      array_0.Create(0);
+      array_1.Create(0);
+      array_2.Create(0);
+      array_3.Create(0);
     }
 
     Scope::~Scope()
     {
-      //prop_scene.reset();
     }
   }
 }
