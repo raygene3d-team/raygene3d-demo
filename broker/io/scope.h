@@ -58,7 +58,7 @@ namespace RayGene3D
       StructureBuffer<Vertex> buffer_0; //vertices
       StructureBuffer<Triangle> buffer_1; //triangles
       StructureBuffer<uint8_t> buffer_2; //bones
-      StructureBuffer<uint8_t> buffer_3; //meshlets
+      StructureBuffer<Meshlet> buffer_3; //meshlets
 
       TextureArrayLDR array_0; //albedo-metallic
       TextureArrayLDR array_1; //smoothness-normal-occlusion

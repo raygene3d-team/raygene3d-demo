@@ -117,7 +117,7 @@ namespace RayGene3D
       auto buffer_0 = StructureBuffer<Vertex>();
       auto buffer_1 = StructureBuffer<Triangle>();
       auto buffer_2 = StructureBuffer<uint8_t>();
-      auto buffer_3 = StructureBuffer<uint8_t>();
+      auto buffer_3 = StructureBuffer<Meshlet>();
 
       const auto geometry_convert_fn = [&gltf_model, &buffer_0, &buffer_1, &buffer_2, &buffer_3]
         (const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool to_lhs, bool flip_v)
@@ -205,39 +205,79 @@ namespace RayGene3D
           return std::make_tuple(vert_count, prim_count, mlet_count, bone_count, aabb_min, aabb_max);
         };
 
+      std::unordered_map<int, Raw> texture_all_cache;
+      std::unordered_map<glm::u32vec4, uint32_t> texture_0_indices;
+      std::unordered_map<glm::u32vec4, uint32_t> texture_1_indices;
+      std::unordered_map<glm::u32vec4, uint32_t> texture_2_indices;
 
-      std::vector<int> remap_array_0;
-      std::vector<int> remap_array_1;
-      std::vector<int> remap_array_2;
-      std::vector<int> remap_array_3;
-
-      const auto material_convert_fn = [&gltf_model, &remap_array_0, &remap_array_1, &remap_array_2, &remap_array_3]
+      const auto material_convert_fn = [this, &gltf_model, &texture_all_cache, &texture_0_indices, &texture_1_indices, &texture_2_indices]
       (const tinygltf::Primitive& gltf_primitive, uint32_t texture_level)
       {
-        const auto remap_fn = [](int index, std::vector<int>& remap)->size_t
-        {
-          if (index == -1) return index;
+        const auto extent_x = 1u << texture_level - 1;
+        const auto extent_y = 1u << texture_level - 1;
 
-          const auto res = std::find(remap.begin(), remap.end(), index);
-          if (res != remap.end()) return *res;
+        const auto cache_texture_fn = [gltf_model, &texture_all_cache, extent_x, extent_y]
+          (int index, bool srgb)
+          {
+            if (index == -1) return;
 
-          remap.push_back(index);
-          return remap.size() - 1;
-        };
+            const auto iterator = texture_all_cache.find(index);
+            if (iterator != texture_all_cache.cend()) return;
+            
+            const auto& image = gltf_model.images[index];
+            const auto src_extent_x = image.width;
+            const auto src_extent_y = image.height;
+            const auto src_data = image.image.data();
+
+            auto dst_extent_x = extent_x;
+            auto dst_extent_y = extent_y;
+            auto raw = Raw(dst_extent_x * dst_extent_y, glm::zero<glm::u8vec4>());
+            auto dst_data = raw.AccessBytes().first;
+
+            if (srgb) { stbir_resize_uint8_srgb(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4, 3, 0); }
+            else { stbir_resize_uint8(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4); }
+
+            texture_all_cache[index] = std::move(raw);
+          };
 
         const auto& material = gltf_model.materials[gltf_primitive.material];
 
-        const auto index_0 = material.pbrMetallicRoughness.baseColorTexture.index;
-        const auto index_1 = material.pbrMetallicRoughness.metallicRoughnessTexture.index;
-        const auto index_2 = material.normalTexture.index;
-        const auto index_3 = material.occlusionTexture.index;
+        cache_texture_fn(material.pbrMetallicRoughness.baseColorTexture.index, true);
+        cache_texture_fn(material.pbrMetallicRoughness.metallicRoughnessTexture.index, false);
+        cache_texture_fn(material.normalTexture.index, false);
+        cache_texture_fn(material.occlusionTexture.index, false);
+        cache_texture_fn(material.emissiveTexture.index, true);
 
-        const auto remap_index_0 = remap_fn(index_0, remap_array_0);
-        const auto remap_index_1 = remap_fn(index_1, remap_array_1);
-        const auto remap_index_2 = remap_fn(index_2, remap_array_2);
-        const auto remap_index_3 = remap_fn(index_3, remap_array_3);
+        const auto key_0 = glm::u32vec4(
+          material.pbrMetallicRoughness.baseColorTexture.index,
+          material.pbrMetallicRoughness.baseColorTexture.index,
+          material.pbrMetallicRoughness.baseColorTexture.index,
+          material.pbrMetallicRoughness.metallicRoughnessTexture.index
+        );
+        const auto res_0 = texture_0_indices.find(key_0);
+        const auto idx_0 = res_0 != texture_0_indices.cend() ? res_0->second : texture_0_indices[key_0] = texture_0_indices.size();
 
-        return std::make_tuple(remap_index_0, remap_index_1, remap_index_2, remap_index_3);
+        const auto key_1 = glm::u32vec4(
+          material.pbrMetallicRoughness.metallicRoughnessTexture.index,
+          material.normalTexture.index,
+          material.normalTexture.index,
+          material.occlusionTexture.index
+        );
+        const auto res_1 = texture_1_indices.find(key_1);
+        const auto idx_1 = res_1 != texture_1_indices.cend() ? res_1->second : texture_1_indices[key_1] = texture_1_indices.size();
+
+        const auto key_2 = glm::u32vec4(
+          material.emissiveTexture.index,
+          material.emissiveTexture.index,
+          material.emissiveTexture.index,
+          material.pbrMetallicRoughness.baseColorTexture.index
+        );
+        const auto res_2 = texture_2_indices.find(key_2);
+        const auto idx_2 = res_2 != texture_2_indices.cend() ? res_2->second : texture_2_indices[key_2] = texture_2_indices.size();
+
+        const auto idx_3 = uint32_t(-1);
+
+        return std::make_tuple(idx_0, idx_1, idx_2, idx_3);
       };
 
       
@@ -276,7 +316,7 @@ namespace RayGene3D
           instance.transform = glm::identity<glm::fmat3x4>();
 
           instance.aabb_min = aabb_min;
-          instance.geom_idx = uint32_t(scope.instances.size());
+          instance.geom_idx = scope.instances.size();
           instance.aabb_max = aabb_max;
           instance.brdf_idx = 1;
 
@@ -303,38 +343,55 @@ namespace RayGene3D
       const auto extent_x = 1u << scope.texture_level - 1;
       const auto extent_y = 1u << scope.texture_level - 1;
 
-      auto array_0 = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, remap_array_0.size());
-      auto array_1 = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, remap_array_1.size());
-      auto array_2 = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, remap_array_2.size());
-      auto array_3 = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, remap_array_3.size());
-
-      const auto resize_texture_fn = [&gltf_model, extent_x, extent_y](int index, bool srgb)
+      auto array_0 = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_0_indices.size());
+      for (const auto& [key, index] : texture_0_indices)
       {
-        const auto& image = gltf_model.images[index];
-        const auto src_extent_x = image.width;
-        const auto src_extent_y = image.height;
-        const auto src_data = image.image.data();
+        array_0.Create(index);
+        for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
+        {
+          array_0[index].SetElement(glm::u8vec4(
+            key[0] == -1 ? 255u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).r,
+            key[1] == -1 ? 255u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).g,
+            key[2] == -1 ? 255u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).b,
+            key[3] == -1 ? 000u : texture_all_cache[key[3]].GetElement<glm::u8vec4>(i).r),
+            i);
+        }
+      }
 
-        auto dst_extent_x = extent_x;
-        auto dst_extent_y = extent_y;
-        auto raw = Raw(extent_x * extent_y, glm::zero<glm::u8vec4>());
-        auto dst_data = raw.AccessBytes().first;
+      auto array_1 = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, texture_1_indices.size());
+      for (const auto& [key, index] : texture_1_indices)
+      {
+        array_1.Create(index);
+        for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
+        {
+          array_1[index].SetElement(glm::u8vec4(
+            key[0] == -1 ? 0u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).g,
+            key[1] == -1 ? 0u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).r,
+            key[2] == -1 ? 0u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).g,
+            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetElement<glm::u8vec4>(i).r),
+            i);
+        }
+      }     
 
-        if (srgb) { stbir_resize_uint8_srgb(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4, 3, 0); }
-        else { stbir_resize_uint8(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4); }
-
-        return raw;
-      };
-
-      for (auto i = 0ull; i < array_0.Size(); ++i) array_0[i] = resize_texture_fn(remap_array_0[i], true);
-      for (auto i = 0ull; i < array_1.Size(); ++i) array_1[i] = resize_texture_fn(remap_array_1[i], false);
-      for (auto i = 0ull; i < array_2.Size(); ++i) array_2[i] = resize_texture_fn(remap_array_2[i], false);
-      for (auto i = 0ull; i < array_3.Size(); ++i) array_3[i] = resize_texture_fn(remap_array_3[i], false);
+      auto array_2 = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_2_indices.size());
+      for (const auto& [key, index] : texture_2_indices)
+      {
+        array_2.Create(index);
+        for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
+        {
+          array_2[index].SetElement(glm::u8vec4(
+            key[0] == -1 ? 0u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).r,
+            key[1] == -1 ? 0u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).g,
+            key[2] == -1 ? 0u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).b,
+            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetElement<glm::u8vec4>(i).a),
+            i);
+        }
+      }
 
       std::swap(scope.array_0, array_0);
       std::swap(scope.array_1, array_1);
       std::swap(scope.array_2, array_2);
-      std::swap(scope.array_3, array_3);
+      //std::swap(scope.array_3, array_3);
     }
 
     void GLTFConverter::Export()

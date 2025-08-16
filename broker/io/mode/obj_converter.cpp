@@ -158,8 +158,9 @@ namespace RayGene3D
 
           Instance instance;
           instance.transform = glm::identity<glm::fmat3x4>();
+
           instance.aabb_min = geometry.aabb_min;
-          instance.geom_idx = uint32_t(scope.instances.size());
+          instance.geom_idx = scope.buffer_3.Size();
           instance.aabb_max = geometry.aabb_max;
           instance.brdf_idx = 0;
 
