@@ -34,7 +34,7 @@ namespace RayGene3D
   namespace Lightmap
   {
     void RasterizeTriangle(const glm::f32vec2& p0, const glm::f32vec2& p1, const glm::f32vec2& p2,
-      uint32_t inst_id, uint32_t prim_id, uint32_t size_x, uint32_t size_y, Raw& raw)
+      uint32_t inst_id, uint32_t prim_id, uint32_t size_x, uint32_t size_y, uint32_t layer, Raw& raw)
     {
       const auto eval_barycentric_fn = [](const glm::f32vec2& p,
         const glm::f32vec2& a, const glm::f32vec2& b, const glm::f32vec2& c)
@@ -88,7 +88,7 @@ namespace RayGene3D
           const auto value = glm::u32vec4{ inst_id, prim_id, u, v };
           const auto index = n * size_x + m;
 
-          raw.SetElement<glm::u32vec4>(value, index);
+          raw.SetElement<glm::u32vec4>(value, size_t(size_x * size_y) * layer + index);
         }
       }
     }
@@ -188,21 +188,13 @@ namespace RayGene3D
 
     void Scope::CreateLightmapsInput()
     {
-      const auto atlas_size_x = prop_atlas_size_x->GetUint();
-      const auto atlas_size_y = prop_atlas_size_y->GetUint();
-      const auto atlas_layers = prop_atlas_layers->GetUint();
+      const auto format = FORMAT_R32G32B32A32_UINT;
+      const auto size_x = prop_atlas_size_x->GetUint();
+      const auto size_y = prop_atlas_size_y->GetUint();
+      const auto layers = prop_atlas_layers->GetUint();
+      const auto mipmap = 1u;
 
-      auto raws = std::vector<Raw>(atlas_layers);
-      for (auto& raw : raws)
-      {
-        raw.Allocate(atlas_size_x * atlas_size_y * uint32_t(sizeof(glm::u32vec4)));
-
-        for (auto i = 0u; i < atlas_size_x * atlas_size_y; ++i)
-        {
-          raw.SetElement(glm::u32vec4{ uint32_t(-1), uint32_t(-1), 0, 0 }, i);
-        }
-      }
-
+      auto raw = Raw(size_x * size_y * layers, glm::u32vec4{ uint32_t(-1), uint32_t(-1), 0, 0 });
       {
         const auto [ins_array, ins_count] = prop_instances->GetRawTyped<Instance>(0);
         const auto [trg_array, trg_count] = prop_triangles->GetRawTyped<Triangle>(0);
@@ -223,108 +215,75 @@ namespace RayGene3D
             const auto& layer = vtx0.msk;
             const auto& color = vtx0.col;
 
-            const auto p0 = vtx0.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
-            const auto p1 = vtx1.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
-            const auto p2 = vtx2.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
+            const auto p0 = vtx0.tc1 * glm::f32vec2(size_x, size_y);
+            const auto p1 = vtx1.tc1 * glm::f32vec2(size_x, size_y);
+            const auto p2 = vtx2.tc1 * glm::f32vec2(size_x, size_y);
 
-            RasterizeTriangle(p0, p1, p2, i, j, atlas_size_x, atlas_size_y, raws[layer]);
+            RasterizeTriangle(p0, p1, p2, i, j, size_x, size_y, layer, raw);
           }
         }
-      }
-
-      auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws.size());
-      for (size_t i = 0u; i < interops.size(); ++i)
-      {
-        interops[i] = raws[i].AccessBytes();
       }
 
       lightmaps_input = core->GetDevice()->CreateResource("lightmaps_input",
         Resource::Tex2DDesc
         {
           Usage(USAGE_SHADER_RESOURCE),
-          1u,
-          prop_atlas_layers->GetUint(),
-          FORMAT_R32G32B32A32_UINT,
-          prop_atlas_size_x->GetUint(),
-          prop_atlas_size_y->GetUint(),
+          mipmap,
+          layers,
+          format,
+          size_x,
+          size_y,
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), interops.size() }
-        );
+        raw.GetBytes());
     }
 
     void Scope::CreateLightmapsAccum()
     {
-      const auto stride = sizeof(glm::f32vec4);
-      const auto count = prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint();
-      
-      auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
-      for (size_t i = 0u; i < raws.size(); ++i)
-      {
-        auto raw = RayGene3D::Raw{ stride * count };
-        for (auto j = 0u; j < count; ++j)
-        {
-          raw.SetElement<glm::f32vec4>({ 0.0f, 0.0f, 0.0f, 0.0f }, j);
-        }
-        raws[i] = std::move(raw);
-      }
+      const auto format = FORMAT_R32G32B32A32_FLOAT;
+      const auto size_x = prop_atlas_size_x->GetUint();
+      const auto size_y = prop_atlas_size_y->GetUint();
+      const auto layers = prop_atlas_layers->GetUint();
+      const auto mipmap = 1u;
 
-      auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws.size());
-      for (size_t i = 0u; i < interops.size(); ++i)
-      {
-        interops[i] = raws[i].AccessBytes();
-      }
+      const auto raw = Raw(size_x * size_y * layers);
 
       lightmaps_accum = core->GetDevice()->CreateResource("lightmaps_accum",
         Resource::Tex2DDesc
         {
           Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
-          1u,
-          prop_atlas_layers->GetUint(),
-          FORMAT_R32G32B32A32_FLOAT,
-          prop_atlas_size_x->GetUint(),
-          prop_atlas_size_y->GetUint(),
+          mipmap,
+          layers,
+          format,
+          size_x,
+          size_y,
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), interops.size() }
-        );
+        raw.GetBytes());
     }
 
     void Scope::CreateLightmapsFinal()
     {
-      const auto stride = sizeof(glm::f32vec4);
-      const auto count = prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint();
+      const auto format = FORMAT_R32G32B32A32_FLOAT;
+      const auto size_x = prop_atlas_size_x->GetUint();
+      const auto size_y = prop_atlas_size_y->GetUint();
+      const auto layers = prop_atlas_layers->GetUint();
+      const auto mipmap = 1u;
 
-      auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
-      for (size_t i = 0u; i < raws.size(); ++i)
-      {
-        auto raw = RayGene3D::Raw{ stride * count };
-        for (auto j = 0u; j < count; ++j)
-        {
-          raw.SetElement<glm::f32vec4>({ 0, 0, 0, 0 }, j);
-        }
-        raws[i] = std::move(raw);
-      }
-
-      auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws.size());
-      for (size_t i = 0u; i < interops.size(); ++i)
-      {
-        interops[i] = raws[i].AccessBytes();
-      }
+      const auto raw = Raw(size_x * size_y * layers);
 
       lightmaps_final = core->GetDevice()->CreateResource("lightmaps_final",
         Resource::Tex2DDesc
         {
           Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
-          1u,
-          prop_atlas_layers->GetUint(),
-          FORMAT_R32G32B32A32_FLOAT,
-          prop_atlas_size_x->GetUint(),
-          prop_atlas_size_y->GetUint(),
+          mipmap,
+          layers,
+          format,
+          size_x,
+          size_y,
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), interops.size() }
-        );
+        raw.GetBytes());
     }
 
     void Scope::DestroyScreenData()

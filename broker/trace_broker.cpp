@@ -286,95 +286,85 @@ namespace RayGene3D
   void TraceBroker::CreateTraceTBoxes()
   {
     const auto [data, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawTyped<Box>(0);
-    std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(data), sizeof(Box) * count },
-    };
+    const auto stride = sizeof(Box);
 
     trace_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_t_boxes",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        sizeof(Box),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, std::size(interops) }
+      { reinterpret_cast<const uint8_t*>(data), count * stride }
       );
   }
 
   void TraceBroker::CreateTraceBBoxes()
   {
     const auto [data, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawTyped<Box>(0);
-    std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(data), sizeof(Box) * count },
-    };
+    const auto stride = sizeof(Box);
 
     trace_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_b_boxes",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        sizeof(Box),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, std::size(interops) }
+      { reinterpret_cast<const uint8_t*>(data), count * stride }
       );
   }
 
   void TraceBroker::CreateTraceInstances()
   {
     const auto [data, count] = prop_instances->GetRawTyped<Instance>(0);
-    std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(data), sizeof(Instance) * count },
-    };
+    const auto stride = sizeof(Instance);
 
     trace_instances = wrap.GetCore()->GetDevice()->CreateResource("trace_instances",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        sizeof(Instance),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, std::size(interops) }
+      { reinterpret_cast<const uint8_t*>(data), count * stride }
       );
   }
 
   void TraceBroker::CreateTraceTriangles()
   {
     const auto [data, count] = prop_triangles->GetRawTyped<Triangle>(0);
-    std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(data), sizeof(Triangle) * count },
-    };
+    const auto stride = sizeof(Triangle);
 
     trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("trace_triangles",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-        sizeof(Triangle),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { interops, std::size(interops) }
+      { reinterpret_cast<const uint8_t*>(data), count * stride }
       );
   }
 
   void TraceBroker::CreateTraceVertices()
   {
     const auto [data, count] = prop_vertices->GetRawTyped<Vertex>(0);
-    std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(data), sizeof(Vertex) * count },
-    };
+    const auto stride = sizeof(Vertex);
 
     trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("trace_vertices",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-        sizeof(Vertex),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { interops, std::size(interops) }
+      { reinterpret_cast<const uint8_t*>(data), count * stride }
       );
   }
 

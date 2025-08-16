@@ -229,21 +229,21 @@ namespace RayGene3D
         Usage(USAGE_SHADER_RESOURCE)
       );
 
-      auto geometry_scene_textures4 = scope.scene_textures4->CreateView("spark_geometry_scene_textures4",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
+      //auto geometry_scene_textures4 = scope.scene_textures4->CreateView("spark_geometry_scene_textures4",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
 
-      auto geometry_scene_textures5 = scope.scene_textures5->CreateView("spark_geometry_scene_textures5",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
+      //auto geometry_scene_textures5 = scope.scene_textures5->CreateView("spark_geometry_scene_textures5",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
 
-      auto geometry_scene_textures6 = scope.scene_textures6->CreateView("spark_geometry_scene_textures6",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
+      //auto geometry_scene_textures6 = scope.scene_textures6->CreateView("spark_geometry_scene_textures6",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
 
-      auto geometry_scene_textures7 = scope.scene_textures7->CreateView("spark_geometry_scene_textures7",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
+      //auto geometry_scene_textures7 = scope.scene_textures7->CreateView("spark_geometry_scene_textures7",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
 
       auto geometry_scene_lightmaps = scope.lightmaps_final->CreateView("spark_geometry_scene_lightmaps",
         Usage(USAGE_SHADER_RESOURCE)
@@ -261,10 +261,6 @@ namespace RayGene3D
         geometry_scene_textures1,
         geometry_scene_textures2,
         geometry_scene_textures3,
-        geometry_scene_textures4,
-        geometry_scene_textures5,
-        geometry_scene_textures6,
-        geometry_scene_textures7,
         geometry_scene_lightmaps,
         geometry_reflection_map,
       };

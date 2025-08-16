@@ -156,13 +156,6 @@ namespace RayGene3D
         { 0.0f,               0.0f,               0.5f,       0.0f },
         { (R + L) / (L - R),  (T + B) / (B - T),  0.5f,       1.0f },
       };
-      proj_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-      proj_property->RawAllocate(sizeof(glm::f32mat4x4));
-      proj_property->SetRawTyped<glm::f32mat4x4>({ &mvp, 1 });
-      std::pair<const uint8_t*, size_t> interops[] =
-      {
-        proj_property->GetRawBytes(0)
-      };
 
       proj_resource = device->CreateResource("imgui_proj_resource",
         Resource::BufferDesc
@@ -172,7 +165,7 @@ namespace RayGene3D
           1u,
         },
         Resource::HINT_UNKNOWN,
-        { interops, std::size(interops) }
+        { reinterpret_cast<const uint8_t*>(&mvp), sizeof(glm::f32mat4x4) }
       );
     }
 
@@ -185,14 +178,6 @@ namespace RayGene3D
       int font_size_y{ 0 };
       ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&font_data, &font_size_x, &font_size_y);
 
-      font_property = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-      font_property->RawAllocate(font_stride * font_size_x * font_size_y);
-      font_property->SetRawBytes({ font_data, font_stride * font_size_x * font_size_y }, 0);
-      std::pair<const uint8_t*, size_t> interops[] =
-      {
-        font_property->GetRawBytes(0)
-      };
-
       font_resource = device->CreateResource("imgui_font_resource",
         Resource::Tex2DDesc
         {
@@ -204,7 +189,7 @@ namespace RayGene3D
           uint32_t(font_size_y),
         },
         Resource::HINT_UNKNOWN,
-        { interops, std::size(interops) }
+        { font_data, font_stride * font_size_x * font_size_y }
       );
     }
 

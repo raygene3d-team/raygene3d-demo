@@ -370,10 +370,6 @@ namespace RayGene3D
       {
         auto array = TextureArrayLDR(FORMAT_B8G8R8A8_UNORM, extent_x, extent_y, 1);
         array.Create(0, glm::zero<glm::u8vec4>());
-        std::pair<const uint8_t*, size_t> interops[] =
-        {
-          array.Access(0)
-        };
 
         const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",
           Resource::Tex2DDesc
@@ -386,7 +382,7 @@ namespace RayGene3D
             uint32_t(extent_y),
           },
           Resource::HINT_UNKNOWN,
-          { interops, std::size(interops) }
+          array.Access(0)
         );
         wrap->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
 

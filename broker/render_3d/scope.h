@@ -175,10 +175,10 @@ namespace RayGene3D
       void CreateSceneTextures1();
       void CreateSceneTextures2();
       void CreateSceneTextures3();
-      void CreateSceneTextures4();
-      void CreateSceneTextures5();
-      void CreateSceneTextures6();
-      void CreateSceneTextures7();
+      //void CreateSceneTextures4();
+      //void CreateSceneTextures5();
+      //void CreateSceneTextures6();
+      //void CreateSceneTextures7();
 
       void CreateTraceTBoxes();
       void CreateTraceBBoxes();
@@ -220,10 +220,10 @@ namespace RayGene3D
       void DestroySceneTextures1();
       void DestroySceneTextures2();
       void DestroySceneTextures3();
-      void DestroySceneTextures4();
-      void DestroySceneTextures5();
-      void DestroySceneTextures6();
-      void DestroySceneTextures7();
+      //void DestroySceneTextures4();
+      //void DestroySceneTextures5();
+      //void DestroySceneTextures6();
+      //void DestroySceneTextures7();
 
       void DestroyTraceTBoxes();
       void DestroyTraceBBoxes();

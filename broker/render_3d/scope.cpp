@@ -251,10 +251,6 @@ namespace RayGene3D
         glm::f32vec2( 1.0f,-1.0f),
       };
 
-      std::pair<const uint8_t*, size_t> interops[] = {
-        { reinterpret_cast<const uint8_t*>(quad_vtx.data()), quad_vtx.size() * sizeof(glm::f32vec2) },
-      };
-
       screen_quad_vertices = core->GetDevice()->CreateResource("spark_screen_quad_vertices",
         Resource::BufferDesc
         {
@@ -263,7 +259,7 @@ namespace RayGene3D
           quad_vtx.size(),
         },
         Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-        { interops, std::size(interops) }
+        { reinterpret_cast<const uint8_t*>(quad_vtx.data()), quad_vtx.size() * sizeof(glm::f32vec2) }
       );
     }
 
@@ -274,10 +270,6 @@ namespace RayGene3D
         glm::u32vec3(3u, 2u, 1u),
       };
 
-      std::pair<const uint8_t*, size_t> interops[] = {
-        { reinterpret_cast<const uint8_t*>(quad_idx.data()), quad_idx.size() * sizeof(glm::u32vec3) },
-      };
-
       screen_quad_triangles = core->GetDevice()->CreateResource("spark_screen_quad_triangles",
         Resource::BufferDesc
         {
@@ -286,7 +278,7 @@ namespace RayGene3D
           quad_idx.size(),
         },
         Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-        { interops, std::size(interops) }
+        { reinterpret_cast<const uint8_t*>(quad_idx.data()), quad_idx.size() * sizeof(glm::u32vec3) }
       );
     }
 
@@ -604,10 +596,10 @@ namespace RayGene3D
       CreateSceneTextures1();
       CreateSceneTextures2();
       CreateSceneTextures3();
-      CreateSceneTextures4();
-      CreateSceneTextures5();
-      CreateSceneTextures6();
-      CreateSceneTextures7();
+      //CreateSceneTextures4();
+      //CreateSceneTextures5();
+      //CreateSceneTextures6();
+      //CreateSceneTextures7();
 
       CreateScreenQuadVertices();
       CreateScreenQuadTriangles();
@@ -642,10 +634,10 @@ namespace RayGene3D
       DestroySceneTextures1();
       DestroySceneTextures2();
       DestroySceneTextures3();
-      DestroySceneTextures4();
-      DestroySceneTextures5();
-      DestroySceneTextures6();
-      DestroySceneTextures7();
+      //DestroySceneTextures4();
+      //DestroySceneTextures5();
+      //DestroySceneTextures6();
+      //DestroySceneTextures7();
 
       DestroyTraceInstances();
       DestroyTraceTriangles();

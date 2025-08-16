@@ -186,10 +186,6 @@ namespace RayGene3D
       glm::f32vec4( 1.0f,-1.0f, 1.0f, 1.0f),
     };
 
-    std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(quad_vtx.data()), quad_vtx.size() * sizeof(glm::f32vec4) },
-    };
-
     vtx_array = core->GetDevice()->CreateResource("environment_vtx_array",
       Resource::BufferDesc
       {
@@ -198,7 +194,7 @@ namespace RayGene3D
         quad_vtx.size(),
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, std::size(interops) }
+      { reinterpret_cast<const uint8_t*>(quad_vtx.data()), quad_vtx.size() * sizeof(glm::f32vec4) }
     );
   }
 
@@ -209,10 +205,6 @@ namespace RayGene3D
       glm::u32vec3(3u, 2u, 1u),
     };
 
-    std::pair<const uint8_t*, size_t> interops[] = {
-      { reinterpret_cast<const uint8_t*>(quad_idx.data()), quad_idx.size() * sizeof(glm::u32vec3) },
-    };
-
     idx_array = core->GetDevice()->CreateResource("environment_idx_array",
       Resource::BufferDesc
       {
@@ -221,24 +213,27 @@ namespace RayGene3D
         quad_idx.size(),
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, std::size(interops) }
+      { reinterpret_cast<const uint8_t*>(quad_idx.data()), quad_idx.size() * sizeof(glm::u32vec3) }
     );
   }
 
   void EnvironmentBroker::CreateReflectionMap()
   {
+    const auto format = FORMAT_R16G16B16A16_FLOAT;
     const auto layers = 6u;
-    const auto extent = 1u << int32_t(levels) - 1;
+    const auto mipmap = levels;
+    const auto size_x = 1u << int32_t(levels) - 1;
+    const auto size_y = 1u << int32_t(levels) - 1;
 
     reflection_map = core->GetDevice()->CreateResource("environment_reflection_map",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
-        levels,
+        mipmap,
         layers,
-        FORMAT_R16G16B16A16_FLOAT,
-        extent,
-        extent,
+        format,
+        size_x,
+        size_y,
       },
       Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE)
     );
@@ -250,30 +245,25 @@ namespace RayGene3D
     const auto& prop_environment = prop_tree->GetObjectItem("environment");
     const auto& prop_skybox = prop_environment->GetObjectItem("skybox_cubemap");
 
-    const auto& layers = prop_skybox->GetObjectItem("layers");
-    const auto& mipmap = prop_skybox->GetObjectItem("mipmap");
-    const auto& extent_x = prop_skybox->GetObjectItem("extent_x");
-    const auto& extent_y = prop_skybox->GetObjectItem("extent_y");
-    const auto& raws = prop_skybox->GetObjectItem("raws");
-
-    auto interops = std::vector<std::pair<const uint8_t*, size_t>>(raws->GetArraySize());
-    for (size_t i = 0u; i < interops.size(); ++i)
-    {
-      interops[i] = raws->GetArrayItem(i)->GetRawBytes(0);
-    }
+    const auto format = Format(prop_skybox->GetObjectItem("format")->GetUint());
+    const auto layers = prop_skybox->GetObjectItem("layers")->GetUint();
+    const auto mipmap = prop_skybox->GetObjectItem("mipmap")->GetUint();
+    const auto size_x = prop_skybox->GetObjectItem("size_x")->GetUint();
+    const auto size_y = prop_skybox->GetObjectItem("size_y")->GetUint();
+    const auto bytes = prop_skybox->GetObjectItem("raw")->GetRawBytes();
 
     skybox_cubemap = core->GetDevice()->CreateResource("environment_skybox_cubemap",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R32G32B32A32_FLOAT,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
+        mipmap,
+        layers,
+        format,
+        size_x,
+        size_y,
       },
       Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), interops.size() }
+      bytes
     );
   }
 
@@ -284,6 +274,7 @@ namespace RayGene3D
     const auto data = reinterpret_cast<const uint8_t*>(&constant);
     const auto count = 1u;
     const auto stride = sizeof(glm::u32vec4);
+    const auto bytes = std::pair{ reinterpret_cast<const uint8_t*>(&constant), count * stride };
 
     std::pair<const uint8_t*, size_t> interops[] = {
       { data, count * stride },
@@ -297,8 +288,8 @@ namespace RayGene3D
         count,
       },
       Resource::Hint(Resource::HINT_UNKNOWN),
-      { interops, std::size(interops) }
-      );
+      bytes
+    );
   }
 
 
