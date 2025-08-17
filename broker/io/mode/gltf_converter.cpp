@@ -114,12 +114,12 @@ namespace RayGene3D
         parse_node_hierarchy(parse_node_hierarchy, node, glm::identity<glm::fmat4x4>());
       }
 
-      auto buffer_0 = StructureBuffer<Vertex>();
-      auto buffer_1 = StructureBuffer<Triangle>();
-      auto buffer_2 = StructureBuffer<uint8_t>();
-      auto buffer_3 = StructureBuffer<Meshlet>();
+      auto vert_buffer = StructureBuffer<Vertex>();
+      auto trng_buffer = StructureBuffer<Triangle>();
+      auto mlet_buffer = StructureBuffer<Meshlet>();
+      auto bone_buffer = StructureBuffer<uint8_t>();
 
-      const auto geometry_convert_fn = [&gltf_model, &buffer_0, &buffer_1, &buffer_2, &buffer_3]
+      const auto geometry_convert_fn = [&gltf_model, &vert_buffer, &trng_buffer, &mlet_buffer, &bone_buffer]
         (const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool to_lhs, bool flip_v)
         {
           BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
@@ -188,12 +188,12 @@ namespace RayGene3D
           const auto vert_count = geometry.vertices.size();
           const auto vert_stride = sizeof(Vertex);
           const auto vert_data = reinterpret_cast<const uint8_t*>(geometry.vertices.data());
-          buffer_0.Push(Raw({ vert_data, vert_stride * vert_count }));
+          vert_buffer.Push(Raw({ vert_data, vert_stride * vert_count }));
 
           const auto prim_count = geometry.triangles.size();
           const auto prim_stride = sizeof(Triangle);
           const auto prim_data = reinterpret_cast<const uint8_t*>(geometry.triangles.data());
-          buffer_1.Push(Raw({ prim_data, prim_stride * prim_count }));
+          trng_buffer.Push(Raw({ prim_data, prim_stride * prim_count }));
 
           const auto mlet_count = 0u;
 
@@ -283,10 +283,10 @@ namespace RayGene3D
       
 
 
-      size_t vert_offset = 0;
-      size_t prim_offset = 0;
-      size_t mlet_offset = 0;
-      size_t bone_offset = 0;
+      auto vert_offset{ 0ull };
+      auto trng_offset{ 0ull };
+      auto mlet_offset{ 0ull };
+      auto bone_offset{ 0ull };
 
       for (const auto& [mesh_id, transform] : mesh_relations)
       {
@@ -295,61 +295,61 @@ namespace RayGene3D
         {
           const auto& gltf_primitive = gltf_mesh.primitives[k];
 
-          const auto [vert_count, prim_count, mlet_count, bone_count, aabb_min, aabb_max] =
+          const auto [vert_count, trng_count, mlet_count, bone_count, aabb_min, aabb_max] =
             geometry_convert_fn(gltf_primitive, transform, scope.position_scale, scope.conversion_rhs, false);
 
-          const auto [texture_0_layer, texture_1_layer, texture_2_layer, texture_3_layer] =
+          const auto [am_layer, snao_layer, et_layer, mask_layer] =
             material_convert_fn(gltf_primitive, scope.texture_level);
 
-          if (vert_count == 0 || prim_count == 0) continue;
+          if (vert_count == 0 || trng_count == 0) continue;
 
           Instance instance;
-          instance.offset_0 = vert_offset;
-          instance.count_0 = vert_count;
-          instance.offset_1 = prim_offset;
-          instance.count_1 = prim_count;
-          instance.offset_2 = bone_offset;
-          instance.count_2 = bone_count;
-          instance.offset_3 = mlet_offset;
-          instance.count_3 = mlet_count;
+          instance.vert_offset = vert_offset;
+          instance.vert_count = vert_count;
+          instance.trng_offset = trng_offset;
+          instance.trng_count = trng_count;
+          instance.mlet_offset = mlet_offset;
+          instance.mlet_count = mlet_count;
+          instance.bone_offset = bone_offset;
+          instance.bone_count = bone_count;
 
           instance.transform = glm::identity<glm::fmat3x4>();
 
           instance.aabb_min = aabb_min;
-          instance.geom_idx = scope.instances.size();
+          instance.index = scope.inst_buffer.Size();
           instance.aabb_max = aabb_max;
-          instance.brdf_idx = 1;
+          instance.flags = 0;
 
-          instance.layer_0 = texture_0_layer;
-          instance.layer_1 = texture_1_layer;
-          instance.layer_2 = texture_2_layer;
-          instance.layer_3 = texture_3_layer;
+          instance.am_layer = am_layer;
+          instance.snao_layer = snao_layer;
+          instance.et_layer = et_layer;
+          instance.mask_layer = mask_layer;
 
-          scope.instances.push_back(instance);
+          scope.inst_buffer.Create(1, instance);
 
           vert_offset += vert_count;
-          prim_offset += prim_count;
+          trng_offset += trng_count;
           mlet_offset += mlet_count;
           bone_offset += bone_count;
         }
       }
 
-      std::swap(scope.buffer_0, buffer_0);
-      std::swap(scope.buffer_1, buffer_1);
-      std::swap(scope.buffer_2, buffer_2);
-      std::swap(scope.buffer_3, buffer_3);
+      std::swap(scope.vert_buffer, vert_buffer);
+      std::swap(scope.trng_buffer, trng_buffer);
+      std::swap(scope.mlet_buffer, mlet_buffer);
+      std::swap(scope.bone_buffer, bone_buffer);
 
 
       const auto extent_x = 1u << scope.texture_level - 1;
       const auto extent_y = 1u << scope.texture_level - 1;
 
-      auto array_0 = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_0_indices.size());
+      auto am_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_0_indices.size());
       for (const auto& [key, index] : texture_0_indices)
       {
-        array_0.Create(index);
+        am_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          array_0[index].SetElement(glm::u8vec4(
+          am_array[index].SetElement(glm::u8vec4(
             key[0] == -1 ? 255u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).r,
             key[1] == -1 ? 255u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).g,
             key[2] == -1 ? 255u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).b,
@@ -358,13 +358,13 @@ namespace RayGene3D
         }
       }
 
-      auto array_1 = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, texture_1_indices.size());
+      auto snao_array = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, texture_1_indices.size());
       for (const auto& [key, index] : texture_1_indices)
       {
-        array_1.Create(index);
+        snao_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          array_1[index].SetElement(glm::u8vec4(
+          snao_array[index].SetElement(glm::u8vec4(
             key[0] == -1 ? 0u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).g,
             key[1] == -1 ? 0u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).r,
             key[2] == -1 ? 0u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).g,
@@ -373,13 +373,13 @@ namespace RayGene3D
         }
       }     
 
-      auto array_2 = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_2_indices.size());
+      auto et_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_2_indices.size());
       for (const auto& [key, index] : texture_2_indices)
       {
-        array_2.Create(index);
+        et_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          array_2[index].SetElement(glm::u8vec4(
+          et_array[index].SetElement(glm::u8vec4(
             key[0] == -1 ? 0u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).r,
             key[1] == -1 ? 0u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).g,
             key[2] == -1 ? 0u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).b,
@@ -388,9 +388,9 @@ namespace RayGene3D
         }
       }
 
-      std::swap(scope.array_0, array_0);
-      std::swap(scope.array_1, array_1);
-      std::swap(scope.array_2, array_2);
+      std::swap(scope.am_array, am_array);
+      std::swap(scope.snao_array, snao_array);
+      std::swap(scope.et_array, et_array);
       //std::swap(scope.array_3, array_3);
     }
 

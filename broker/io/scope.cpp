@@ -36,36 +36,40 @@ namespace RayGene3D
     void Scope::Import()
     {
       const auto& prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
-
     }
 
     void Scope::Export()
     {
       auto prop_scene = std::shared_ptr<Property>(new Property(Property::TYPE_OBJECT));
 
-      const auto prop_buffer_0 = buffer_0.Export();
-      prop_scene->SetObjectItem("buffer_0", prop_buffer_0);
+      const auto prop_vert_buffer = vert_buffer.Export();
+      prop_scene->SetObjectItem("buffer_vert", prop_vert_buffer);
 
-      const auto prop_buffer_1 = buffer_1.Export();
-      prop_scene->SetObjectItem("buffer_1", prop_buffer_1);
+      const auto prop_trng_buffer = trng_buffer.Export();
+      prop_scene->SetObjectItem("buffer_trng", prop_trng_buffer);
 
-      const auto prop_buffer_2 = buffer_2.Export();
-      prop_scene->SetObjectItem("buffer_2", prop_buffer_2);
+      const auto prop_mlet_buffer = mlet_buffer.Export();
+      prop_scene->SetObjectItem("buffer_mlet", prop_mlet_buffer);
 
-      const auto prop_buffer_3 = buffer_3.Export();
-      prop_scene->SetObjectItem("buffer_3", prop_buffer_3);
 
-      const auto prop_array_0 = array_0.Export();
-      prop_scene->SetObjectItem("array_0", prop_array_0);
+      const auto prop_am_array = am_array.Export();
+      prop_scene->SetObjectItem("array_am", prop_am_array);
 
-      const auto prop_array_1 = array_1.Export();
-      prop_scene->SetObjectItem("array_1", prop_array_1);
+      const auto prop_snao_array = snao_array.Export();
+      prop_scene->SetObjectItem("array_snao", prop_snao_array);
 
-      const auto prop_array_2 = array_2.Export();
-      prop_scene->SetObjectItem("array_2", prop_array_2);
+      const auto prop_et_array = et_array.Export();
+      prop_scene->SetObjectItem("array_et", prop_et_array);
 
-      const auto prop_array_3 = array_3.Export();
-      prop_scene->SetObjectItem("array_3", prop_array_3);
+
+      const auto prop_inst_buffer = inst_buffer.Export();
+      prop_scene->SetObjectItem("buffer_inst", prop_inst_buffer);
+
+      const auto prop_tbox_buffer = tbox_buffer.Export();
+      prop_scene->SetObjectItem("buffer_tbox", prop_tbox_buffer);
+
+      const auto prop_bbox_buffer = bbox_buffer.Export();
+      prop_scene->SetObjectItem("buffer_bbox", prop_bbox_buffer);
 
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }
@@ -73,15 +77,15 @@ namespace RayGene3D
     Scope::Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)
       : core(core)
       , util(util)
-      , array_0(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
-      , array_1(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
-      , array_2(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
-      , array_3(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , am_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , snao_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , et_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , mask_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
     {
-      array_0.Create(0);
-      array_1.Create(0);
-      array_2.Create(0);
-      array_3.Create(0);
+      am_array.Create(0);
+      snao_array.Create(0);
+      et_array.Create(0);
+      mask_array.Create(0);
     }
 
     Scope::~Scope()

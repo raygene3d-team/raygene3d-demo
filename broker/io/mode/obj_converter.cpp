@@ -98,7 +98,7 @@ namespace RayGene3D
 
 
       size_t vert_offset = 0;
-      size_t prim_offset = 0;
+      size_t trng_offset = 0;
       size_t mlet_offset = 0;
       size_t bone_offset = 0;
 
@@ -160,32 +160,32 @@ namespace RayGene3D
           instance.transform = glm::identity<glm::fmat3x4>();
 
           instance.aabb_min = geometry.aabb_min;
-          instance.geom_idx = scope.buffer_3.Size();
+          instance.index = scope.inst_buffer.Size();
           instance.aabb_max = geometry.aabb_max;
-          instance.brdf_idx = 0;
+          instance.flags = 0;
 
           const auto vert_count = geometry.vertices.size();
           const auto vert_stride = sizeof(Vertex);
           const auto vert_data = reinterpret_cast<const uint8_t*>(geometry.vertices.data());
-          scope.buffer_0.Push(Raw({ vert_data, vert_stride * vert_count }));
+          scope.vert_buffer.Push(Raw({ vert_data, vert_stride * vert_count }));
 
-          const auto prim_count = geometry.triangles.size();
-          const auto prim_stride = sizeof(Triangle);
-          const auto prim_data = reinterpret_cast<const uint8_t*>(geometry.triangles.data());
-          scope.buffer_1.Push(Raw({ prim_data, prim_stride * prim_count }));
+          const auto trng_count = geometry.triangles.size();
+          const auto trng_stride = sizeof(Triangle);
+          const auto trng_data = reinterpret_cast<const uint8_t*>(geometry.triangles.data());
+          scope.trng_buffer.Push(Raw({ trng_data, trng_stride * trng_count }));
 
           const auto mlet_count = 0u;
 
           const auto bone_count = 0u;
 
-          instance.offset_0 = vert_offset;
-          instance.count_0 = vert_count;
-          instance.offset_1 = prim_offset;
-          instance.count_1 = prim_count;
-          instance.offset_2 = bone_offset;
-          instance.count_2 = bone_count;
-          instance.offset_3 = mlet_offset;
-          instance.count_3 = mlet_count;
+          instance.vert_offset = vert_offset;
+          instance.vert_count = vert_count;
+          instance.trng_offset = trng_offset;
+          instance.trng_count = trng_count;
+          instance.mlet_offset = mlet_offset;
+          instance.mlet_count = mlet_count;
+          instance.bone_offset = bone_offset;
+          instance.bone_count = bone_count;
           
 
           const auto& obj_material = obj_materials[material_id.first];
@@ -223,13 +223,13 @@ namespace RayGene3D
             };
 
             const auto& texture_0_name = obj_material.diffuse_texname;
-            instance.layer_0 = texture_0_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_0_names, texture_0_name);
-            const auto& texture_1_name = obj_material.alpha_texname;
-            instance.layer_1 = texture_1_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_1_names, texture_1_name);
+            instance.am_layer = texture_0_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_0_names, texture_0_name);
+            const auto& texture_1_name = obj_material.bump_texname;
+            instance.snao_layer = texture_1_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_1_names, texture_1_name);
             const auto& texture_2_name = obj_material.specular_texname;
-            instance.layer_2 = texture_2_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_2_names, texture_2_name);
-            const auto& texture_3_name = obj_material.bump_texname;
-            instance.layer_3 = texture_3_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_3_names, texture_3_name);
+            instance.et_layer = texture_2_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_2_names, texture_2_name);
+            //const auto& texture_3_name = obj_material.alpha_texname;
+            //instance.layer_3 = texture_3_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_3_names, texture_3_name);
 
             if (obj_material.illum != 7) // glass material
             {
@@ -237,30 +237,30 @@ namespace RayGene3D
             }
           }
 
-          scope.instances.push_back(instance);
+          scope.inst_buffer.Create(1, instance);
         }
       }
 
 
       for (size_t i = 0; i < texture_0_names.size(); ++i)
       {
-        scope.array_0[i] = texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level);
+        scope.am_array[i] = texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level);
       }
 
       for (size_t i = 0; i < texture_1_names.size(); ++i)
       {
-        scope.array_1[i] = texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level);
+        scope.snao_array[i] = texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level);
       }
 
       for (size_t i = 0; i < texture_2_names.size(); ++i)
       {
-        scope.array_2[i] = texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level);
+        scope.et_array[i] = texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level);
       }
 
-      for (size_t i = 0; i < texture_3_names.size(); ++i)
-      {
-        scope.array_3[i] = texture_load_resize_fn(scope.path_name, texture_3_names[i], scope.texture_level);
-      }
+      //for (size_t i = 0; i < texture_3_names.size(); ++i)
+      //{
+      //  scope.array_3[i] = texture_load_resize_fn(scope.path_name, texture_3_names[i], scope.texture_level);
+      //}
 
     }
 

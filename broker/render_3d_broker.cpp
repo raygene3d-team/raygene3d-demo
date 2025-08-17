@@ -62,10 +62,10 @@ namespace RayGene3D
       const auto [instance_data, instance_count] = scope.prop_instances->GetRawTyped<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
       {
-        graphic_arg[i].idx_count = instance_data[i].count_1 * 3u;
+        graphic_arg[i].idx_count = instance_data[i].trng_count * 3u;
         graphic_arg[i].ins_count = 1u;
-        graphic_arg[i].idx_offset = instance_data[i].offset_1 * 3u;
-        graphic_arg[i].vtx_offset = instance_data[i].offset_0 * 1u;
+        graphic_arg[i].idx_offset = instance_data[i].trng_offset * 3u;
+        graphic_arg[i].vtx_offset = instance_data[i].vert_offset * 1u;
         graphic_arg[i].ins_offset = 0u;
       }
 
