@@ -73,7 +73,7 @@ namespace RayGene3D
 
     void HWTracedShadow::CreateHWTracedBatch()
     {
-      const auto [data, count] = scope.prop_instances->GetRawTyped<Instance>(0);
+      const auto [items, count] = scope.prop_instances->GetRawItems<Instance>(0);
       auto entities = std::vector<Batch::Entity>(count);
       for (auto i = 0u; i < count; ++i)
       {
@@ -92,8 +92,8 @@ namespace RayGene3D
         };
 
         const auto& ins_range = View::Range{ 1u,  0u };
-        const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-        const auto& idx_range = View::Range{ data[i].trng_offset * 3, data[i].trng_count * 3 };
+        const auto& vtx_range = View::Range{ items[i].vert_offset * 1, items[i].vert_count * 1 };
+        const auto& idx_range = View::Range{ items[i].trng_offset * 3, items[i].trng_count * 3 };
         const auto& sb_offset = std::nullopt;
         const auto& push_data = std::nullopt;
 

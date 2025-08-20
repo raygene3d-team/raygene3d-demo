@@ -88,7 +88,7 @@ namespace RayGene3D
           const auto value = glm::u32vec4{ inst_id, prim_id, u, v };
           const auto index = n * size_x + m;
 
-          raw.SetElement<glm::u32vec4>(value, size_t(size_x * size_y) * layer + index);
+          raw.SetItem<glm::u32vec4>(value, size_t(size_x * size_y) * layer + index);
         }
       }
     }
@@ -196,9 +196,9 @@ namespace RayGene3D
 
       auto raw = Raw(size_x * size_y * layers, glm::u32vec4{ uint32_t(-1), uint32_t(-1), 0, 0 });
       {
-        const auto [ins_array, ins_count] = prop_instances->GetRawTyped<Instance>(0);
-        const auto [trg_array, trg_count] = prop_triangles->GetRawTyped<Triangle>(0);
-        const auto [vrt_array, vrt_count] = prop_vertices->GetRawTyped<Vertex>(0);
+        const auto [ins_array, ins_count] = prop_instances->GetRawItems<Instance>(0);
+        const auto [trg_array, trg_count] = prop_triangles->GetRawItems<Triangle>(0);
+        const auto [vrt_array, vrt_count] = prop_vertices->GetRawItems<Vertex>(0);
 
         for (uint32_t i = 0; i < ins_count; ++i)
         {

@@ -44,9 +44,9 @@ namespace RayGene3D
 
   void PhotonmapBroker::Use()
   {
-    const auto [ins_array, ins_count] = prop_instances->GetRawTyped<Instance>(0);
-    const auto [trg_array, trg_count] = prop_triangles->GetRawTyped<Triangle>(0);
-    const auto [vrt_array, vrt_count] = prop_vertices->GetRawTyped<Vertex>(0);
+    const auto [ins_array, ins_count] = prop_instances->GetRawItems<Instance>(0);
+    const auto [trg_array, trg_count] = prop_triangles->GetRawItems<Triangle>(0);
+    const auto [vrt_array, vrt_count] = prop_vertices->GetRawItems<Vertex>(0);
 
     //glm::f32vec3 src = { 34.217, 0.957, 7.187 };
 

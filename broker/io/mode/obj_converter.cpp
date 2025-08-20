@@ -76,7 +76,7 @@ namespace RayGene3D
           const auto g = dst_channels > 1 ? dst_data[i * dst_channels + 1] : r; //0xFF;
           const auto b = dst_channels > 2 ? dst_data[i * dst_channels + 2] : r; //0xFF;
           const auto a = dst_channels > 3 ? dst_data[i * dst_channels + 3] : r; //0xFF;
-          raw.SetElement<glm::u8vec4>({ r, g, b, a }, i);
+          raw.SetItem<glm::u8vec4>({ r, g, b, a }, i);
         }
         
         return raw;
@@ -160,19 +160,19 @@ namespace RayGene3D
           instance.transform = glm::identity<glm::fmat3x4>();
 
           instance.aabb_min = geometry.aabb_min;
-          instance.index = scope.inst_buffer.Size();
+          instance.index = scope.inst_buffer.Count();
           instance.aabb_max = geometry.aabb_max;
           instance.flags = 0;
 
           const auto vert_count = geometry.vertices.size();
-          const auto vert_stride = sizeof(Vertex);
-          const auto vert_data = reinterpret_cast<const uint8_t*>(geometry.vertices.data());
-          scope.vert_buffer.Push(Raw({ vert_data, vert_stride * vert_count }));
+          const auto vert_items = geometry.vertices.data();
+          scope.vert_buffer.Resize(scope.vert_buffer.Count() + vert_count);
+          scope.vert_buffer.Set({ vert_items, vert_count });
 
           const auto trng_count = geometry.triangles.size();
-          const auto trng_stride = sizeof(Triangle);
-          const auto trng_data = reinterpret_cast<const uint8_t*>(geometry.triangles.data());
-          scope.trng_buffer.Push(Raw({ trng_data, trng_stride * trng_count }));
+          const auto trng_items = geometry.triangles.data();
+          scope.trng_buffer.Resize(scope.trng_buffer.Count() + trng_count);
+          scope.trng_buffer.Set({ trng_items, trng_count });
 
           const auto mlet_count = 0u;
 
@@ -237,7 +237,7 @@ namespace RayGene3D
             }
           }
 
-          scope.inst_buffer.Create(1, instance);
+          scope.inst_buffer.Resize(1, instance);
         }
       }
 

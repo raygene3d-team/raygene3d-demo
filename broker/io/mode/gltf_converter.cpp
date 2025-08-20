@@ -186,14 +186,14 @@ namespace RayGene3D
           //geometry.CalculateMeshlets();
 
           const auto vert_count = geometry.vertices.size();
-          const auto vert_stride = sizeof(Vertex);
-          const auto vert_data = reinterpret_cast<const uint8_t*>(geometry.vertices.data());
-          vert_buffer.Push(Raw({ vert_data, vert_stride * vert_count }));
+          const auto vert_items = geometry.vertices.data();
+          vert_buffer.Resize(vert_buffer.Count() + vert_count);
+          vert_buffer.Set({ vert_items, vert_count });
 
-          const auto prim_count = geometry.triangles.size();
-          const auto prim_stride = sizeof(Triangle);
-          const auto prim_data = reinterpret_cast<const uint8_t*>(geometry.triangles.data());
-          trng_buffer.Push(Raw({ prim_data, prim_stride * prim_count }));
+          const auto trng_count = geometry.triangles.size();
+          const auto trng_items = geometry.triangles.data();
+          trng_buffer.Resize(trng_buffer.Count() + trng_count);
+          trng_buffer.Set({ trng_items, trng_count });
 
           const auto mlet_count = 0u;
 
@@ -202,7 +202,7 @@ namespace RayGene3D
           const auto aabb_min = geometry.aabb_min;
           const auto aabb_max = geometry.aabb_max;
 
-          return std::make_tuple(vert_count, prim_count, mlet_count, bone_count, aabb_min, aabb_max);
+          return std::make_tuple(vert_count, trng_count, mlet_count, bone_count, aabb_min, aabb_max);
         };
 
       std::unordered_map<int, Raw> texture_all_cache;
@@ -316,7 +316,7 @@ namespace RayGene3D
           instance.transform = glm::identity<glm::fmat3x4>();
 
           instance.aabb_min = aabb_min;
-          instance.index = scope.inst_buffer.Size();
+          instance.index = scope.inst_buffer.Count();
           instance.aabb_max = aabb_max;
           instance.flags = 0;
 
@@ -325,7 +325,7 @@ namespace RayGene3D
           instance.et_layer = et_layer;
           instance.mask_layer = mask_layer;
 
-          scope.inst_buffer.Create(1, instance);
+          scope.inst_buffer.Resize(1, instance);
 
           vert_offset += vert_count;
           trng_offset += trng_count;
@@ -349,11 +349,11 @@ namespace RayGene3D
         am_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          am_array[index].SetElement(glm::u8vec4(
-            key[0] == -1 ? 255u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).r,
-            key[1] == -1 ? 255u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).g,
-            key[2] == -1 ? 255u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).b,
-            key[3] == -1 ? 000u : texture_all_cache[key[3]].GetElement<glm::u8vec4>(i).r),
+          am_array[index].SetItem(glm::u8vec4(
+            key[0] == -1 ? 255u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).r,
+            key[1] == -1 ? 255u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).g,
+            key[2] == -1 ? 255u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).b,
+            key[3] == -1 ? 000u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).r),
             i);
         }
       }
@@ -364,11 +364,11 @@ namespace RayGene3D
         snao_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          snao_array[index].SetElement(glm::u8vec4(
-            key[0] == -1 ? 0u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).g,
-            key[1] == -1 ? 0u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).r,
-            key[2] == -1 ? 0u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).g,
-            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetElement<glm::u8vec4>(i).r),
+          snao_array[index].SetItem(glm::u8vec4(
+            key[0] == -1 ? 0u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).g,
+            key[1] == -1 ? 0u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).r,
+            key[2] == -1 ? 0u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).g,
+            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).r),
             i);
         }
       }     
@@ -379,11 +379,11 @@ namespace RayGene3D
         et_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          et_array[index].SetElement(glm::u8vec4(
-            key[0] == -1 ? 0u : texture_all_cache[key[0]].GetElement<glm::u8vec4>(i).r,
-            key[1] == -1 ? 0u : texture_all_cache[key[1]].GetElement<glm::u8vec4>(i).g,
-            key[2] == -1 ? 0u : texture_all_cache[key[2]].GetElement<glm::u8vec4>(i).b,
-            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetElement<glm::u8vec4>(i).a),
+          et_array[index].SetItem(glm::u8vec4(
+            key[0] == -1 ? 0u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).r,
+            key[1] == -1 ? 0u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).g,
+            key[2] == -1 ? 0u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).b,
+            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).a),
             i);
         }
       }

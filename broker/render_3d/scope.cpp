@@ -294,7 +294,7 @@ namespace RayGene3D
 
     void Scope::CreateGraphicArguments()
     {
-      const auto [data, count] = prop_instances->GetRawTyped<Instance>(0);
+      const auto [data, count] = prop_instances->GetRawItems<Instance>(0);
 
       graphic_arguments = core->GetDevice()->CreateResource("spark_graphic_arguments",
         Resource::BufferDesc

@@ -32,7 +32,7 @@ namespace RayGene3D
 {
   void SceneBroker::CreateSceneInstances()
   {
-    const auto [data, count] = prop_instances->GetRawTyped<Instance>(0);
+    const auto [data, count] = prop_instances->GetRawItems<Instance>(0);
     const auto stride = sizeof(Instance);
 
     scene_instances = wrap.GetCore()->GetDevice()->CreateResource("scene_instances",
@@ -49,7 +49,7 @@ namespace RayGene3D
 
   void SceneBroker::CreateSceneBuffer0()
   {
-    const auto [data, count] = prop_buffer_0->GetRawTyped<Vertex>(0);
+    const auto [data, count] = prop_buffer_0->GetRawItems<Vertex>(0);
     const auto stride = sizeof(Vertex);
 
     scene_buffer_0 = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_0",
@@ -66,7 +66,7 @@ namespace RayGene3D
 
   void SceneBroker::CreateSceneBuffer1()
   {
-    const auto [data, count] = prop_buffer_1->GetRawTyped<Triangle>(0);
+    const auto [data, count] = prop_buffer_1->GetRawItems<Triangle>(0);
     const auto stride = sizeof(Triangle);
 
     scene_buffer_1 = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_1",

@@ -40,9 +40,9 @@ namespace RayGene3D
   {
     //if (prop_maps->GetBool() == false) return;
 
-    const auto [ins_array, ins_count] = prop_instances->GetRawTyped<Instance>(0);
-    const auto [trg_array, trg_count] = prop_triangles->GetRawTyped<Triangle>(0);
-    const auto [vrt_array, vrt_count] = prop_vertices->GetRawTyped<Vertex>(0);
+    const auto [ins_array, ins_count] = prop_instances->GetRawItems<Instance>(0);
+    const auto [trg_array, trg_count] = prop_triangles->GetRawItems<Triangle>(0);
+    const auto [vrt_array, vrt_count] = prop_vertices->GetRawItems<Vertex>(0);
 
     const auto atlas = xatlas::Create();
 
@@ -105,13 +105,13 @@ namespace RayGene3D
     }
 
     const auto updated_prop_vrt = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    updated_prop_vrt->RawAllocate(updated_vrt_count * sizeof(Vertex));
+    updated_prop_vrt->AllocateRaw(updated_vrt_count * sizeof(Vertex));
 
     const auto updated_prop_trg = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    updated_prop_trg->RawAllocate(updated_trg_count * sizeof(Triangle));
+    updated_prop_trg->AllocateRaw(updated_trg_count * sizeof(Triangle));
 
     const auto updated_prop_ins = std::shared_ptr<Property>(new Property(Property::TYPE_RAW));
-    updated_prop_ins->RawAllocate(updated_ins_count * sizeof(Instance));
+    updated_prop_ins->AllocateRaw(updated_ins_count * sizeof(Instance));
 
     auto updated_vrt_offset = 0u;
     auto updated_trg_offset = 0u;
@@ -126,7 +126,7 @@ namespace RayGene3D
         auto updated_vrt = vrt_array[ins_array[i].vert_offset + mesh.vertexArray[j].xref];
         updated_vrt.msk = vertex.atlasIndex;
         updated_vrt.tc1 = { vertex.uv[0] / atlas->width, vertex.uv[1] / atlas->height };
-        updated_prop_vrt->SetRawTyped<Vertex>({ &updated_vrt, 1 }, updated_vrt_offset + j);
+        updated_prop_vrt->SetRawItems<Vertex>({ &updated_vrt, 1 }, size_t(updated_vrt_offset) + j);
       }
 
       for (uint32_t j = 0; j < mesh.indexCount / 3; j++)
@@ -137,7 +137,7 @@ namespace RayGene3D
 
         auto updated_trg = trg_array[ins_array[i].trng_offset + j];
         updated_trg.idx = { idx0, idx1, idx2 };
-        updated_prop_trg->SetRawTyped<Triangle>({ &updated_trg, 1 }, updated_trg_offset + j);
+        updated_prop_trg->SetRawItems<Triangle>({ &updated_trg, 1 }, size_t(updated_trg_offset) + j);
       }
 
       for (uint32_t j = 0; j < mesh.chartCount; ++j)
@@ -157,19 +157,19 @@ namespace RayGene3D
           const auto face = chart.faceArray[k];
 
           const auto idx_0 = mesh.indexArray[3 * face + 0];
-          auto vtx_0 = *updated_prop_vrt->GetRawTyped<Vertex>(updated_vrt_offset + idx_0).first;
+          auto vtx_0 = *updated_prop_vrt->GetRawItems<Vertex>(updated_vrt_offset + idx_0).first;
           vtx_0.col = color;
-          updated_prop_vrt->SetRawTyped<Vertex>({ &vtx_0, 1 }, updated_vrt_offset + idx_0);
+          updated_prop_vrt->SetRawItems<Vertex>({ &vtx_0, 1 }, updated_vrt_offset + idx_0);
 
           const auto idx_1 = mesh.indexArray[3 * face + 1];
-          auto vtx_1 = *updated_prop_vrt->GetRawTyped<Vertex>(updated_vrt_offset + idx_1).first;
+          auto vtx_1 = *updated_prop_vrt->GetRawItems<Vertex>(updated_vrt_offset + idx_1).first;
           vtx_1.col = color;
-          updated_prop_vrt->SetRawTyped<Vertex>({ &vtx_1, 1 }, updated_vrt_offset + idx_1);
+          updated_prop_vrt->SetRawItems<Vertex>({ &vtx_1, 1 }, updated_vrt_offset + idx_1);
 
           const auto idx_2 = mesh.indexArray[3 * face + 2];
-          auto vtx_2 = *updated_prop_vrt->GetRawTyped<Vertex>(updated_vrt_offset + idx_2).first;
+          auto vtx_2 = *updated_prop_vrt->GetRawItems<Vertex>(updated_vrt_offset + idx_2).first;
           vtx_2.col = color;
-          updated_prop_vrt->SetRawTyped<Vertex>({ &vtx_2, 1 }, updated_vrt_offset + idx_2);
+          updated_prop_vrt->SetRawItems<Vertex>({ &vtx_2, 1 }, updated_vrt_offset + idx_2);
         }
       }
 
@@ -178,7 +178,7 @@ namespace RayGene3D
       updated_ins.vert_offset = updated_vrt_offset;
       updated_ins.trng_count = mesh.indexCount / 3;
       updated_ins.trng_offset = updated_trg_offset;
-      updated_prop_ins->SetRawTyped<Instance>({ &updated_ins, 1 }, i);
+      updated_prop_ins->SetRawItems<Instance>({ &updated_ins, 1 }, i);
 
       updated_vrt_offset += mesh.vertexCount;
       updated_trg_offset += mesh.indexCount / 3;

@@ -285,7 +285,7 @@ namespace RayGene3D
 
   void TraceBroker::CreateTraceTBoxes()
   {
-    const auto [data, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawTyped<Box>(0);
+    const auto [items, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawItems<Box>(0);
     const auto stride = sizeof(Box);
 
     trace_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_t_boxes",
@@ -296,13 +296,13 @@ namespace RayGene3D
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { reinterpret_cast<const uint8_t*>(data), count * stride }
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
       );
   }
 
   void TraceBroker::CreateTraceBBoxes()
   {
-    const auto [data, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawTyped<Box>(0);
+    const auto [items, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawItems<Box>(0);
     const auto stride = sizeof(Box);
 
     trace_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_b_boxes",
@@ -313,13 +313,13 @@ namespace RayGene3D
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { reinterpret_cast<const uint8_t*>(data), count * stride }
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
       );
   }
 
   void TraceBroker::CreateTraceInstances()
   {
-    const auto [data, count] = prop_instances->GetRawTyped<Instance>(0);
+    const auto [items, count] = prop_instances->GetRawItems<Instance>(0);
     const auto stride = sizeof(Instance);
 
     trace_instances = wrap.GetCore()->GetDevice()->CreateResource("trace_instances",
@@ -330,13 +330,13 @@ namespace RayGene3D
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { reinterpret_cast<const uint8_t*>(data), count * stride }
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
       );
   }
 
   void TraceBroker::CreateTraceTriangles()
   {
-    const auto [data, count] = prop_triangles->GetRawTyped<Triangle>(0);
+    const auto [items, count] = prop_triangles->GetRawItems<Triangle>(0);
     const auto stride = sizeof(Triangle);
 
     trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("trace_triangles",
@@ -347,13 +347,13 @@ namespace RayGene3D
         count,
       },
       Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { reinterpret_cast<const uint8_t*>(data), count * stride }
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
       );
   }
 
   void TraceBroker::CreateTraceVertices()
   {
-    const auto [data, count] = prop_vertices->GetRawTyped<Vertex>(0);
+    const auto [data, count] = prop_vertices->GetRawItems<Vertex>(0);
     const auto stride = sizeof(Vertex);
 
     trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("trace_vertices",
@@ -407,9 +407,9 @@ namespace RayGene3D
     std::vector<Box> t_boxes;
     std::vector<Box> b_boxes;
 
-    const auto instance_items = prop_instances->GetRawTyped<Instance>(0);
-    const auto triangle_items = prop_triangles->GetRawTyped<Triangle>(0);
-    const auto vertex_items = prop_vertices->GetRawTyped<Vertex>(0);
+    const auto instance_items = prop_instances->GetRawItems<Instance>(0);
+    const auto triangle_items = prop_triangles->GetRawItems<Triangle>(0);
+    const auto vertex_items = prop_vertices->GetRawItems<Vertex>(0);
 
     CreateTraceInstances();
     CreateTraceTriangles();
