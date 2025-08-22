@@ -187,12 +187,12 @@ namespace RayGene3D
 
           const auto vert_count = geometry.vertices.size();
           const auto vert_items = geometry.vertices.data();
-          vert_buffer.Resize(vert_buffer.Count() + vert_count);
+          vert_buffer.Resize(vert_buffer.Length() + vert_count);
           vert_buffer.Set({ vert_items, vert_count });
 
           const auto trng_count = geometry.triangles.size();
           const auto trng_items = geometry.triangles.data();
-          trng_buffer.Resize(trng_buffer.Count() + trng_count);
+          trng_buffer.Resize(trng_buffer.Length() + trng_count);
           trng_buffer.Set({ trng_items, trng_count });
 
           const auto mlet_count = 0u;
@@ -316,7 +316,7 @@ namespace RayGene3D
           instance.transform = glm::identity<glm::fmat3x4>();
 
           instance.aabb_min = aabb_min;
-          instance.index = scope.inst_buffer.Count();
+          instance.index = scope.inst_buffer.Length();
           instance.aabb_max = aabb_max;
           instance.flags = 0;
 
@@ -346,45 +346,45 @@ namespace RayGene3D
       auto am_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_0_indices.size());
       for (const auto& [key, index] : texture_0_indices)
       {
-        am_array.Create(index);
+        //am_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          am_array[index].SetItem(glm::u8vec4(
+          const auto value = glm::u8vec4(
             key[0] == -1 ? 255u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).r,
             key[1] == -1 ? 255u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).g,
             key[2] == -1 ? 255u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).b,
-            key[3] == -1 ? 000u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).r),
-            i);
+            key[3] == -1 ? 000u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).r);
+          am_array.Set(index, 0, { &value, 1 }, i);
         }
       }
 
       auto snao_array = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, texture_1_indices.size());
       for (const auto& [key, index] : texture_1_indices)
       {
-        snao_array.Create(index);
+        //snao_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          snao_array[index].SetItem(glm::u8vec4(
+          const auto value = glm::u8vec4(
             key[0] == -1 ? 0u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).g,
             key[1] == -1 ? 0u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).r,
             key[2] == -1 ? 0u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).g,
-            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).r),
-            i);
+            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).r);
+          snao_array.Set(index, 0, { &value, 1 }, i);
         }
       }     
 
       auto et_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_2_indices.size());
       for (const auto& [key, index] : texture_2_indices)
       {
-        et_array.Create(index);
+        //et_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
-          et_array[index].SetItem(glm::u8vec4(
+          const auto value = glm::u8vec4(
             key[0] == -1 ? 0u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).r,
             key[1] == -1 ? 0u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).g,
             key[2] == -1 ? 0u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).b,
-            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).a),
-            i);
+            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).a);
+          et_array.Set(index, 0, { &value, 1 }, i);
         }
       }
 

@@ -91,9 +91,9 @@ namespace RayGene3D
           hw_traced_trace_triangles,
         };
 
-        const auto& ins_range = View::Range{ 1u,  0u };
-        const auto& vtx_range = View::Range{ items[i].vert_offset * 1, items[i].vert_count * 1 };
-        const auto& idx_range = View::Range{ items[i].trng_offset * 3, items[i].trng_count * 3 };
+        const auto& ins_range = Range{ 1u,  0u };
+        const auto& vtx_range = Range{ items[i].vert_offset * 1, items[i].vert_count * 1 };
+        const auto& idx_range = Range{ items[i].trng_offset * 3, items[i].trng_count * 3 };
         const auto& sb_offset = std::nullopt;
         const auto& push_data = std::nullopt;
 

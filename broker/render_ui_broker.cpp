@@ -54,7 +54,7 @@ namespace RayGene3D
         const auto idx_count = static_cast<uint32_t>(cmd_list->IdxBuffer.Size);
         const auto idx_data = cmd_list->IdxBuffer.Data;
 
-        if (vtx_count > vtx_resource->GetMipmapsOrCount() || idx_count > idx_resource->GetMipmapsOrCount())
+        if (vtx_count > vtx_resource->GetLevelsOrLength() || idx_count > idx_resource->GetLevelsOrLength())
           continue;
 
         auto vtx_aligned = &reinterpret_cast<ImDrawVert*>(vtx_mapped)[i * vtx_limit];

@@ -82,10 +82,6 @@ namespace RayGene3D
       , et_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
       , mask_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
     {
-      am_array.Create(0);
-      snao_array.Create(0);
-      et_array.Create(0);
-      mask_array.Create(0);
     }
 
     Scope::~Scope()

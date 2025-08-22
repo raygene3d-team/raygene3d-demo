@@ -43,8 +43,7 @@ namespace RayGene3D
     const auto extent = 1u << int32_t(quality) - 1;
 
     auto pano_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, 2 * extent, extent, 1);
-    pano_texture.Create(0, glm::zero<glm::f32vec4>());
-    pano_texture.Load(0, path.c_str());
+    pano_texture.Load(path.c_str(), 0);
 
     enum CUBEMAP_FACE
     {
@@ -91,16 +90,14 @@ namespace RayGene3D
     auto cube_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent, extent, 6);   
     for (auto k = 0u; k < 6; ++k)
     {
-      cube_texture.Create(k);
-
-      for (auto i = 0u; i < cube_texture.Count(k); ++i)
+      for (auto i = 0ull; i < size_t(cube_texture.SizeX() * cube_texture.SizeY()); ++i)
       {
         const auto cube_texel = glm::i32vec2(i % extent, i / extent);
         const auto cube_uv = glm::f32vec2((cube_texel.x + 0.5f) / extent, (cube_texel.y + 0.5f) / extent);
         const auto pano_uv = pano_from_xyz(xyz_from_cube(cube_uv, CUBEMAP_FACE(k)));
         const auto pano_texel = glm::i32vec2(pano_uv * glm::f32vec2(2 * extent, extent));
 
-        cube_texture.Set(k, i, pano_texture.Get(0, 2ull * extent * pano_texel.y + pano_texel.x));
+        cube_texture.Set(k, 0, { pano_texture.Get(0, 0, 2ull * extent * pano_texel.y + pano_texel.x).first, 1 }, i);
       }
     }
 
@@ -416,9 +413,9 @@ namespace RayGene3D
       Usage(USAGE_ARGUMENT_LIST)
     );
 
-    const auto& ins_range = View::Range{ 0u, 6u };
-    const auto& vtx_range = View::Range{ 0u, 4u };
-    const auto& idx_range = View::Range{ 0u, 6u };
+    const auto& ins_range = Range{ 0u, 6u };
+    const auto& vtx_range = Range{ 0u, 4u };
+    const auto& idx_range = Range{ 0u, 6u };
     const auto& sb_offset = std::nullopt; // std::array<uint32_t, 4>{ 0u, 0u, 0u, 0u };
     const auto& push_data = std::nullopt;
 

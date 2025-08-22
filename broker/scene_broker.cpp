@@ -85,7 +85,7 @@ namespace RayGene3D
   {
     const auto format = Format(prop_array_0->GetObjectItem("format")->GetUint());
     const auto layers = prop_array_0->GetObjectItem("layers")->GetUint();
-    const auto mipmap = prop_array_0->GetObjectItem("mipmap")->GetUint();
+    const auto levels = prop_array_0->GetObjectItem("levels")->GetUint();
     const auto size_x = prop_array_0->GetObjectItem("size_x")->GetUint();
     const auto size_y = prop_array_0->GetObjectItem("size_y")->GetUint();
     const auto bytes = prop_array_0->GetObjectItem("raw")->GetRawBytes();
@@ -94,7 +94,7 @@ namespace RayGene3D
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap,
+        levels,
         layers,
         format,
         size_x,
@@ -108,7 +108,7 @@ namespace RayGene3D
   {
     const auto format = Format(prop_array_1->GetObjectItem("format")->GetUint());
     const auto layers = prop_array_1->GetObjectItem("layers")->GetUint();
-    const auto mipmap = prop_array_1->GetObjectItem("mipmap")->GetUint();
+    const auto levels = prop_array_1->GetObjectItem("levels")->GetUint();
     const auto size_x = prop_array_1->GetObjectItem("size_x")->GetUint();
     const auto size_y = prop_array_1->GetObjectItem("size_y")->GetUint();
     const auto bytes = prop_array_1->GetObjectItem("raw")->GetRawBytes();
@@ -117,7 +117,7 @@ namespace RayGene3D
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap,
+        levels,
         layers,
         format,
         size_x,
@@ -131,7 +131,7 @@ namespace RayGene3D
   {
     const auto format = Format(prop_array_2->GetObjectItem("format")->GetUint());
     const auto layers = prop_array_2->GetObjectItem("layers")->GetUint();
-    const auto mipmap = prop_array_2->GetObjectItem("mipmap")->GetUint();
+    const auto levels = prop_array_2->GetObjectItem("levels")->GetUint();
     const auto size_x = prop_array_2->GetObjectItem("size_x")->GetUint();
     const auto size_y = prop_array_2->GetObjectItem("size_y")->GetUint();
     const auto bytes = prop_array_2->GetObjectItem("raw")->GetRawBytes();
@@ -140,7 +140,7 @@ namespace RayGene3D
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap,
+        levels,
         layers,
         format,
         size_x,
@@ -154,7 +154,7 @@ namespace RayGene3D
   {
     const auto format = Format(prop_array_3->GetObjectItem("format")->GetUint());
     const auto layers = prop_array_3->GetObjectItem("layers")->GetUint();
-    const auto mipmap = prop_array_3->GetObjectItem("mipmap")->GetUint();
+    const auto levels = prop_array_3->GetObjectItem("levels")->GetUint();
     const auto size_x = prop_array_3->GetObjectItem("size_x")->GetUint();
     const auto size_y = prop_array_3->GetObjectItem("size_y")->GetUint();
     const auto bytes = prop_array_3->GetObjectItem("raw")->GetRawBytes();
@@ -163,7 +163,7 @@ namespace RayGene3D
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap,
+        levels,
         layers,
         format,
         size_x,

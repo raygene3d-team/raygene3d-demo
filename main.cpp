@@ -369,7 +369,6 @@ namespace RayGene3D
 
       {
         auto array = TextureArrayLDR(FORMAT_B8G8R8A8_UNORM, extent_x, extent_y, 1);
-        array.Create(0, glm::zero<glm::u8vec4>());
 
         const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",
           Resource::Tex2DDesc
@@ -382,7 +381,7 @@ namespace RayGene3D
             uint32_t(extent_y),
           },
           Resource::HINT_UNKNOWN,
-          array.Access(0)
+          array.Bytes()
         );
         wrap->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
 
@@ -478,8 +477,7 @@ namespace RayGene3D
         const auto extent_x = 1u << int32_t(environment_quality) - 1;
         const auto extent_y = 1u << int32_t(environment_quality) - 2;
         auto environment_array = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent_x, extent_y, 1);
-        environment_array.Create(0);
-        environment_array.Load(0, (environment_path + environment_name).c_str());
+        environment_array.Load((environment_path + environment_name).c_str(), 0);
 
         environment_property = environment_array.Export();
       }

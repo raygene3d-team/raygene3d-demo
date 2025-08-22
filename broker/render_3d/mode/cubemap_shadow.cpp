@@ -266,9 +266,9 @@ namespace RayGene3D
           { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
         );
 
-        const auto& ins_range = View::Range{ 0u,  1u };
-        const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-        const auto& idx_range = View::Range{ data[i].trng_offset * 3, data[i].trng_count * 3 };
+        const auto& ins_range = Range{ 0u,  1u };
+        const auto& vtx_range = Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
+        const auto& idx_range = Range{ data[i].trng_offset * 3, data[i].trng_count * 3 };
         const auto& sb_offset = std::nullopt;
         const auto& push_data = std::nullopt;
 

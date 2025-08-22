@@ -160,18 +160,18 @@ namespace RayGene3D
           instance.transform = glm::identity<glm::fmat3x4>();
 
           instance.aabb_min = geometry.aabb_min;
-          instance.index = scope.inst_buffer.Count();
+          instance.index = scope.inst_buffer.Length();
           instance.aabb_max = geometry.aabb_max;
           instance.flags = 0;
 
           const auto vert_count = geometry.vertices.size();
           const auto vert_items = geometry.vertices.data();
-          scope.vert_buffer.Resize(scope.vert_buffer.Count() + vert_count);
+          scope.vert_buffer.Resize(scope.vert_buffer.Length() + vert_count);
           scope.vert_buffer.Set({ vert_items, vert_count });
 
           const auto trng_count = geometry.triangles.size();
           const auto trng_items = geometry.triangles.data();
-          scope.trng_buffer.Resize(scope.trng_buffer.Count() + trng_count);
+          scope.trng_buffer.Resize(scope.trng_buffer.Length() + trng_count);
           scope.trng_buffer.Set({ trng_items, trng_count });
 
           const auto mlet_count = 0u;
@@ -244,17 +244,17 @@ namespace RayGene3D
 
       for (size_t i = 0; i < texture_0_names.size(); ++i)
       {
-        scope.am_array[i] = texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level);
+        scope.am_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level).GetItems<glm::u8vec4>());
       }
 
       for (size_t i = 0; i < texture_1_names.size(); ++i)
       {
-        scope.snao_array[i] = texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level);
+        scope.snao_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level).GetItems<glm::u8vec4>());
       }
 
       for (size_t i = 0; i < texture_2_names.size(); ++i)
       {
-        scope.et_array[i] = texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level);
+        scope.et_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level).GetItems<glm::u8vec4>());
       }
 
       //for (size_t i = 0; i < texture_3_names.size(); ++i)
