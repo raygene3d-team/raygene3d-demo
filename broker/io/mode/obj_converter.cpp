@@ -237,7 +237,7 @@ namespace RayGene3D
             }
           }
 
-          scope.inst_buffer.Resize(1, instance);
+          scope.inst_buffer.Resize(scope.inst_buffer.Length() + 1, instance);
         }
       }
 

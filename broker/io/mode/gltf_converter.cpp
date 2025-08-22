@@ -325,7 +325,7 @@ namespace RayGene3D
           instance.et_layer = et_layer;
           instance.mask_layer = mask_layer;
 
-          scope.inst_buffer.Resize(1, instance);
+          scope.inst_buffer.Resize(scope.inst_buffer.Length() + 1, instance);
 
           vert_offset += vert_count;
           trng_offset += trng_count;

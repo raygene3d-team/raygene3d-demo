@@ -90,7 +90,7 @@ namespace RayGene3D
     auto cube_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent, extent, 6);   
     for (auto k = 0u; k < 6; ++k)
     {
-      for (auto i = 0ull; i < size_t(cube_texture.SizeX() * cube_texture.SizeY()); ++i)
+      for (auto i = 0ull; i < size_t(extent * extent); ++i)
       {
         const auto cube_texel = glm::i32vec2(i % extent, i / extent);
         const auto cube_uv = glm::f32vec2((cube_texel.x + 0.5f) / extent, (cube_texel.y + 0.5f) / extent);
