@@ -139,19 +139,19 @@ namespace RayGene3D
         sw_traced_shadow_data,
       };
 
-      auto sw_traced_trace_t_boxes = scope.trace_t_boxes->CreateView("spark_sw_traced_trace_t_boxes",
+      auto sw_traced_trace_t_boxes = scope.trace_buffer_tbox->CreateView("spark_sw_traced_trace_t_boxes",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_trace_b_boxes = scope.trace_b_boxes->CreateView("spark_sw_traced_trace_b_boxes",
+      auto sw_traced_trace_b_boxes = scope.trace_buffer_bbox->CreateView("spark_sw_traced_trace_b_boxes",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_trace_instances = scope.trace_instances->CreateView("spark_sw_traced_trace_instances",
+      auto sw_traced_trace_instances = scope.trace_buffer_inst->CreateView("spark_sw_traced_trace_instances",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_trace_triangles = scope.trace_triangles->CreateView("spark_sw_traced_trace_triangles",
+      auto sw_traced_trace_triangles = scope.trace_buffer_trng->CreateView("spark_sw_traced_trace_triangles",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_trace_vertices = scope.trace_vertices->CreateView("spark_sw_traced_trace_vertices",
+      auto sw_traced_trace_vertices = scope.trace_buffer_vert->CreateView("spark_sw_traced_trace_vertices",
         Usage(USAGE_SHADER_RESOURCE)
       );
 

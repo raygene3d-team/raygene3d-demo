@@ -138,25 +138,25 @@ namespace RayGene3D
 
     void Mode::CreateGeometryBatch()
     {
-      const auto [data, count] = scope.prop_instances->GetRawItems<Instance>(0);
+      const auto [data, count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       auto entities = std::vector<Batch::Entity>(count);
       for (auto i = 0u; i < count; ++i)
       {
-        auto geometry_vertices = scope.scene_vertices->CreateView("spark_geometry_vertices_" + std::to_string(i),
+        const auto& geometry_vertices = scope.scene_buffer_vert->CreateView("spark_geometry_vertices_" + std::to_string(i),
           Usage(USAGE_VERTEX_ARRAY)
         );
         const std::shared_ptr<View> va_views[] = {
           geometry_vertices,
         };
 
-        auto geometry_triangles = scope.scene_triangles->CreateView("spark_geometry_triangles_" + std::to_string(i),
+        const auto& geometry_triangles = scope.scene_buffer_trng->CreateView("spark_geometry_triangles_" + std::to_string(i),
           Usage(USAGE_INDEX_ARRAY)
         );
         const std::shared_ptr<View> ia_views[] = {
           geometry_triangles,
         };
 
-        const auto geometry_graphic_arguments = scope.graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
+        const auto& geometry_graphic_arguments = scope.graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
           Usage(USAGE_ARGUMENT_LIST),
           { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
         );
@@ -203,7 +203,7 @@ namespace RayGene3D
       };
 
 
-      auto geometry_scene_instances = scope.scene_instances->CreateView("spark_geometry_scene_instances",
+      auto geometry_scene_instances = scope.scene_buffer_inst->CreateView("spark_geometry_scene_instances",
         Usage(USAGE_CONSTANT_DATA),
         { 0, sizeof(Instance) }
       );
@@ -213,21 +213,21 @@ namespace RayGene3D
       };
 
 
-      auto geometry_scene_textures0 = scope.scene_textures0->CreateView("spark_geometry_scene_textures0",
+      const auto& geometry_scene_array_aaam = scope.scene_array_aaam->CreateView("spark_geometry_scene_array_aaam",
         Usage(USAGE_SHADER_RESOURCE)
       );
 
-      auto geometry_scene_textures1 = scope.scene_textures1->CreateView("spark_geometry_scene_textures1",
+      const auto& geometry_scene_array_snno = scope.scene_array_snno->CreateView("spark_geometry_scene_array_snno",
         Usage(USAGE_SHADER_RESOURCE)
       );
 
-      auto geometry_scene_textures2 = scope.scene_textures2->CreateView("spark_geometry_scene_textures2",
+      const auto& geometry_scene_array_eeet = scope.scene_array_eeet->CreateView("spark_geometry_scene_array_eeet",
         Usage(USAGE_SHADER_RESOURCE)
       );
 
-      auto geometry_scene_textures3 = scope.scene_textures3->CreateView("spark_geometry_scene_textures3",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
+      //auto geometry_scene_textures3 = scope.scene_textures3->CreateView("spark_geometry_scene_textures3",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
 
       //auto geometry_scene_textures4 = scope.scene_textures4->CreateView("spark_geometry_scene_textures4",
       //  Usage(USAGE_SHADER_RESOURCE)
@@ -257,10 +257,10 @@ namespace RayGene3D
       );
 
       const std::shared_ptr<View> ri_views[] = {
-        geometry_scene_textures0,
-        geometry_scene_textures1,
-        geometry_scene_textures2,
-        geometry_scene_textures3,
+        geometry_scene_array_aaam,
+        geometry_scene_array_snno,
+        geometry_scene_array_eeet,
+        //geometry_scene_array_eeet,
         geometry_scene_lightmaps,
         geometry_reflection_map,
       };

@@ -59,7 +59,7 @@ namespace RayGene3D
     {
       auto graphic_arg = reinterpret_cast<Batch::Graphic*>(scope.graphic_arguments->Map());
 
-      const auto [instance_data, instance_count] = scope.prop_instances->GetRawItems<Instance>(0);
+      const auto [instance_data, instance_count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
       {
         graphic_arg[i].idx_count = instance_data[i].trng_count * 3u;
@@ -144,7 +144,7 @@ namespace RayGene3D
     {
       auto aabb_min = glm::f32vec3( FLT_MAX, FLT_MAX, FLT_MAX);
       auto aabb_max = glm::f32vec3(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-      const auto [instance_items, instance_count] = scope.prop_instances->GetRawItems<Instance>(0);
+      const auto [instance_items, instance_count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
       {
         aabb_min = glm::min(aabb_min, instance_items[i].aabb_min);

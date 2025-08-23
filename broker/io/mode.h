@@ -52,6 +52,7 @@ namespace RayGene3D
       std::vector<Vertex> vertices;
       std::vector<Triangle> triangles;
       //std::vector<Meshlet> meshlets;
+      std::vector<Box> b_boxes;
 
       glm::f32vec3 aabb_min = glm::f32vec3{ FLT_MAX, FLT_MAX, FLT_MAX };
       glm::f32vec3 aabb_max = glm::f32vec3{-FLT_MAX,-FLT_MAX,-FLT_MAX };
@@ -68,6 +69,7 @@ namespace RayGene3D
     public:
       void CalculateTangents();
       void CalculateMeshlets();
+      void CalculateBBoxes();
 
     public:
       Geometry(size_t idx_count, uint32_t idx_align, const glm::uvec3& idx_order,

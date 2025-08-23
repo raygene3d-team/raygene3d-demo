@@ -249,19 +249,19 @@ namespace RayGene3D
 
     void CubemapShadow::CreateShadowmapBatch()
     {
-      const auto [data, count] = scope.prop_instances->GetRawItems<Instance>(0);
+      const auto [data, count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       auto entities = std::vector<Batch::Entity>(count);
       for (size_t i = 0u; i < count; ++i)
       {
-        const auto shadowmap_scene_vertices = scope.scene_vertices->CreateView("spark_shadowmap_scene_vertices_" + std::to_string(i),
+        const auto& shadowmap_scene_vertices = scope.scene_buffer_vert->CreateView("spark_shadowmap_scene_vertices_" + std::to_string(i),
           Usage(USAGE_VERTEX_ARRAY)
         );
 
-        const auto shadowmap_scene_triangles = scope.scene_triangles->CreateView("spark_shadowmap_scene_triangles_" + std::to_string(i),
+        const auto& shadowmap_scene_triangles = scope.scene_buffer_trng->CreateView("spark_shadowmap_scene_triangles_" + std::to_string(i),
           Usage(USAGE_INDEX_ARRAY)
         );
 
-        const auto shadowmap_graphic_arguments = scope.graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(i),
+        const auto& shadowmap_graphic_arguments = scope.graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(i),
           Usage(USAGE_ARGUMENT_LIST),
           { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
         );

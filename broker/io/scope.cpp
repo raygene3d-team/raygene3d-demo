@@ -52,14 +52,14 @@ namespace RayGene3D
       prop_scene->SetObjectItem("buffer_mlet", prop_mlet_buffer);
 
 
-      const auto prop_am_array = am_array.Export();
-      prop_scene->SetObjectItem("array_am", prop_am_array);
+      const auto prop_aaam_array = aaam_array.Export();
+      prop_scene->SetObjectItem("array_aaam", prop_aaam_array);
 
-      const auto prop_snao_array = snao_array.Export();
-      prop_scene->SetObjectItem("array_snao", prop_snao_array);
+      const auto prop_snno_array = snno_array.Export();
+      prop_scene->SetObjectItem("array_snno", prop_snno_array);
 
-      const auto prop_et_array = et_array.Export();
-      prop_scene->SetObjectItem("array_et", prop_et_array);
+      const auto prop_eeet_array = eeet_array.Export();
+      prop_scene->SetObjectItem("array_eeet", prop_eeet_array);
 
 
       const auto prop_inst_buffer = inst_buffer.Export();
@@ -77,9 +77,9 @@ namespace RayGene3D
     Scope::Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)
       : core(core)
       , util(util)
-      , am_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
-      , snao_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
-      , et_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , aaam_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , snno_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
+      , eeet_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
       , mask_array(Format::FORMAT_R8G8B8A8_UNORM, 4, 4, 1u)
     {
     }

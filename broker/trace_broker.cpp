@@ -283,12 +283,12 @@ namespace RayGene3D
     instance_boxes.insert(instance_boxes.end(), nodes.begin(), nodes.end());;
   }
 
-  void TraceBroker::CreateTraceTBoxes()
+  void TraceBroker::CreateTraceBufferTBox()
   {
-    const auto [items, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawItems<Box>(0);
+    const auto [items, count] = prop_buffer_tbox->GetObjectItem("binary")->GetRawItems<Box>(0);
     const auto stride = sizeof(Box);
 
-    trace_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_t_boxes",
+    trace_buffer_tbox = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_tbox",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -300,12 +300,12 @@ namespace RayGene3D
       );
   }
 
-  void TraceBroker::CreateTraceBBoxes()
+  void TraceBroker::CreateTraceBufferBBox()
   {
-    const auto [items, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetRawItems<Box>(0);
+    const auto [items, count] = prop_buffer_bbox->GetObjectItem("binary")->GetRawItems<Box>(0);
     const auto stride = sizeof(Box);
 
-    trace_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_b_boxes",
+    trace_buffer_bbox = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_bbox",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -317,12 +317,12 @@ namespace RayGene3D
       );
   }
 
-  void TraceBroker::CreateTraceInstances()
+  void TraceBroker::CreateTraceBufferInst()
   {
-    const auto [items, count] = prop_instances->GetRawItems<Instance>(0);
+    const auto [items, count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
     const auto stride = sizeof(Instance);
 
-    trace_instances = wrap.GetCore()->GetDevice()->CreateResource("trace_instances",
+    trace_buffer_inst = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_inst",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -334,12 +334,12 @@ namespace RayGene3D
       );
   }
 
-  void TraceBroker::CreateTraceTriangles()
+  void TraceBroker::CreateTraceBufferTrng()
   {
-    const auto [items, count] = prop_triangles->GetRawItems<Triangle>(0);
+    const auto [items, count] = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
     const auto stride = sizeof(Triangle);
 
-    trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("trace_triangles",
+    trace_buffer_trng = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_trng",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
@@ -351,12 +351,12 @@ namespace RayGene3D
       );
   }
 
-  void TraceBroker::CreateTraceVertices()
+  void TraceBroker::CreateTraceBufferVert()
   {
-    const auto [data, count] = prop_vertices->GetRawItems<Vertex>(0);
+    const auto [data, count] = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
     const auto stride = sizeof(Vertex);
 
-    trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("trace_vertices",
+    trace_buffer_vert = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_vert",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
@@ -368,69 +368,69 @@ namespace RayGene3D
       );
   }
 
-  void TraceBroker::DestroyTraceTBoxes()
+  void TraceBroker::DestroyTraceBufferTBox()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_t_boxes);
-    trace_t_boxes.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_tbox);
+    trace_buffer_tbox.reset();
   }
 
-  void TraceBroker::DestroyTraceBBoxes()
+  void TraceBroker::DestroyTraceBufferBBox()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_b_boxes);
-    trace_b_boxes.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_bbox);
+    trace_buffer_bbox.reset();
   }
 
-  void TraceBroker::DestroyTraceInstances()
+  void TraceBroker::DestroyTraceBufferInst()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_instances);
-    trace_instances.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_inst);
+    trace_buffer_inst.reset();
   }
 
-  void TraceBroker::DestroyTraceTriangles()
+  void TraceBroker::DestroyTraceBufferTrng()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_triangles);
-    trace_triangles.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_trng);
+    trace_buffer_trng.reset();
   }
 
-  void TraceBroker::DestroyTraceVertices()
+  void TraceBroker::DestroyTraceBufferVert()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_vertices);
-    trace_vertices.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_vert);
+    trace_buffer_vert.reset();
   }
 
 
   void TraceBroker::Initialize()
   {
-    if (prop_scene->HasObjectItem("t_boxes")) return;
-    if (prop_scene->HasObjectItem("b_boxes")) return;
+    if (prop_scene->HasObjectItem("trace_buffer_bbox")) return;
+    if (prop_scene->HasObjectItem("trace_buffer_tbox")) return;
 
-    std::vector<Box> t_boxes;
-    std::vector<Box> b_boxes;
+    std::vector<Box> tbox_items;
+    std::vector<Box> bbox_items;
 
-    const auto instance_items = prop_instances->GetRawItems<Instance>(0);
-    const auto triangle_items = prop_triangles->GetRawItems<Triangle>(0);
-    const auto vertex_items = prop_vertices->GetRawItems<Vertex>(0);
+    const auto inst_items = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto trng_items = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+    const auto vert_items = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
 
-    CreateTraceInstances();
-    CreateTraceTriangles();
-    CreateTraceVertices();
+    CreateTraceBufferInst();
+    CreateTraceBufferTrng();
+    CreateTraceBufferVert();
 
 
-    MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
+    MainBuild(inst_items, trng_items, vert_items, tbox_items, bbox_items);
 
     {
-      const auto t_boxes_buffer = StructureBuffer<Box>({ { t_boxes.data(), t_boxes.size() } });
+      const auto t_boxes_buffer = StructureBuffer<Box>({ tbox_items.data(), tbox_items.size() });
       const auto t_boxes_prop = t_boxes_buffer.Export();
-      prop_scene->SetObjectItem("t_boxes", t_boxes_prop);
+      prop_scene->SetObjectItem("trace_buffer_tbox", t_boxes_prop);
     }
-    CreateTraceTBoxes();
+    CreateTraceBufferTBox();
 
     {
-      const auto b_boxes_buffer = StructureBuffer<Box>({ { b_boxes.data(), b_boxes.size() } });
+      const auto b_boxes_buffer = StructureBuffer<Box>({ bbox_items.data(), bbox_items.size() });
       const auto b_boxes_prop = b_boxes_buffer.Export();
-      prop_scene->SetObjectItem("b_boxes", b_boxes_prop);
+      prop_scene->SetObjectItem("trace_buffer_bbox", b_boxes_prop);
     }
-    CreateTraceBBoxes();
+    CreateTraceBufferBBox();
   }
 
   void TraceBroker::Use()
@@ -447,12 +447,12 @@ namespace RayGene3D
     //DestroyTraceTBoxes();
     //DestroyTraceBBoxes();
 
-    prop_t_boxes.reset();
-    prop_b_boxes.reset();
+    prop_buffer_tbox.reset();
+    prop_buffer_bbox.reset();
 
-    prop_vertices.reset();
-    prop_triangles.reset();
-    prop_instances.reset();
+    prop_buffer_inst.reset();
+    prop_buffer_trng.reset();
+    prop_buffer_vert.reset();
 
     prop_scene.reset();
   }
@@ -460,13 +460,13 @@ namespace RayGene3D
   TraceBroker::TraceBroker(Wrap& wrap)
     : Broker("trace_broker", wrap)
   {
-    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& tree = wrap.GetUtil()->GetStorage()->GetTree();
 
     prop_scene = tree->GetObjectItem("scene");
     {
-      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
+      prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
+      prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
     }
   }
 

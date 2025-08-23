@@ -244,17 +244,17 @@ namespace RayGene3D
 
       for (size_t i = 0; i < texture_0_names.size(); ++i)
       {
-        scope.am_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level).GetItems<glm::u8vec4>());
+        scope.aaam_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_0_names[i], scope.texture_level).GetItems<glm::u8vec4>());
       }
 
       for (size_t i = 0; i < texture_1_names.size(); ++i)
       {
-        scope.snao_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level).GetItems<glm::u8vec4>());
+        scope.snno_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_1_names[i], scope.texture_level).GetItems<glm::u8vec4>());
       }
 
       for (size_t i = 0; i < texture_2_names.size(); ++i)
       {
-        scope.et_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level).GetItems<glm::u8vec4>());
+        scope.eeet_array.Set(i, 0, texture_load_resize_fn(scope.path_name, texture_2_names[i], scope.texture_level).GetItems<glm::u8vec4>());
       }
 
       //for (size_t i = 0; i < texture_3_names.size(); ++i)

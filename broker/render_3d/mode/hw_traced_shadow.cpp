@@ -73,18 +73,18 @@ namespace RayGene3D
 
     void HWTracedShadow::CreateHWTracedBatch()
     {
-      const auto [items, count] = scope.prop_instances->GetRawItems<Instance>(0);
+      const auto [items, count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       auto entities = std::vector<Batch::Entity>(count);
       for (auto i = 0u; i < count; ++i)
       {
-        auto hw_traced_trace_vertices = scope.trace_vertices->CreateView("spark_hw_traced_trace_vertices_" + std::to_string(i),
+        const auto& hw_traced_trace_vertices = scope.trace_buffer_vert->CreateView("spark_hw_traced_trace_vertices_" + std::to_string(i),
           Usage(USAGE_SHADER_RESOURCE)
         );
         const std::shared_ptr<View> va_views[] = {
           hw_traced_trace_vertices,
         };
 
-        auto hw_traced_trace_triangles = scope.trace_triangles->CreateView("spark_hw_traced_trace_triangles_" + std::to_string(i),
+        const auto& hw_traced_trace_triangles = scope.trace_buffer_trng->CreateView("spark_hw_traced_trace_triangles_" + std::to_string(i),
           Usage(USAGE_SHADER_RESOURCE)
         );
         const std::shared_ptr<View> ia_views[] = {

@@ -40,15 +40,14 @@ namespace RayGene3D
   {
     //if (prop_maps->GetBool() == false) return;
 
-    const auto [ins_array, ins_count] = prop_instances->GetRawItems<Instance>(0);
-    const auto [trg_array, trg_count] = prop_triangles->GetRawItems<Triangle>(0);
-    const auto [vrt_array, vrt_count] = prop_vertices->GetRawItems<Vertex>(0);
+    const auto [ins_array, ins_count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto [trg_array, trg_count] = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+    const auto [vrt_array, vrt_count] = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
 
     const auto atlas = xatlas::Create();
 
     for (uint32_t i = 0; i < ins_count; ++i)
     {
-
       const auto vrt_offset = ins_array[i].vert_offset;
       const auto vrt_items = vrt_array + vrt_offset;
       const auto vrt_count = ins_array[i].vert_count;
@@ -68,7 +67,8 @@ namespace RayGene3D
       mesh_decl.indexCount = trg_count * 3u;
       mesh_decl.indexData = trg_items;
       mesh_decl.indexFormat = xatlas::IndexFormat::UInt32;
-      BLAST_ASSERT(xatlas::AddMeshError::Success == xatlas::AddMesh(atlas, mesh_decl));
+      const auto res = xatlas::AddMesh(atlas, mesh_decl);
+      BLAST_ASSERT(xatlas::AddMeshError::Success == res);
 
       //xatlas::UvMeshDecl uv_mesh_decl;
       //uv_mesh_decl.vertexCount = vertex_count;
@@ -184,18 +184,18 @@ namespace RayGene3D
       updated_trg_offset += mesh.indexCount / 3;
     }
 
-    prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->SetArrayItem(0, updated_prop_ins);
-    prop_scene->GetObjectItem("instances")->GetObjectItem("count")->SetUint(updated_ins_count);
+    prop_scene->GetObjectItem("buffer_inst")->SetObjectItem("binary", updated_prop_ins);
+    prop_scene->GetObjectItem("buffer_inst")->SetObjectItem("length", SPtrProperty(new Property(updated_ins_count)));
 
-    prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->SetArrayItem(0, updated_prop_trg);
-    prop_scene->GetObjectItem("triangles")->GetObjectItem("count")->SetUint(updated_trg_count);
+    prop_scene->GetObjectItem("buffer_trng")->SetObjectItem("binary", updated_prop_trg);
+    prop_scene->GetObjectItem("buffer_trng")->SetObjectItem("length", SPtrProperty(new Property(updated_trg_count)));
 
-    prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->SetArrayItem(0, updated_prop_vrt);
-    prop_scene->GetObjectItem("vertices")->GetObjectItem("count")->SetUint(updated_vrt_count);
+    prop_scene->GetObjectItem("buffer_vert")->SetObjectItem("binary", updated_prop_vrt);
+    prop_scene->GetObjectItem("buffer_vert")->SetObjectItem("length", SPtrProperty(new Property(updated_vrt_count)));
 
-    prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-    prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-    prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+    prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
+    prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
+    prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
 
     prop_atlas_size_x->SetUint(atlas->width);
     prop_atlas_size_y->SetUint(atlas->height);
@@ -219,9 +219,9 @@ namespace RayGene3D
 
     prop_scene = prop_tree->GetObjectItem("scene");
     {
-      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
+      prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
+      prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
     }
 
     prop_illumination = prop_tree->GetObjectItem("illumination");
@@ -238,9 +238,9 @@ namespace RayGene3D
 
   XAtlasBroker::~XAtlasBroker()
   {
-    prop_vertices.reset();
-    prop_triangles.reset();
-    prop_instances.reset();
+    prop_buffer_vert.reset();
+    prop_buffer_trng.reset();
+    prop_buffer_inst.reset();
 
     prop_scene.reset();
 

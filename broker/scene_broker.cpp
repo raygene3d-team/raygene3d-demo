@@ -30,29 +30,29 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  void SceneBroker::CreateSceneInstances()
-  {
-    const auto [data, count] = prop_instances->GetRawItems<Instance>(0);
-    const auto stride = sizeof(Instance);
+  //void SceneBroker::CreateSceneInstances()
+  //{
+  //  const auto [data, count] = prop_instances->GetRawItems<Instance>(0);
+  //  const auto stride = sizeof(Instance);
 
-    scene_instances = wrap.GetCore()->GetDevice()->CreateResource("scene_instances",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_CONSTANT_DATA),
-        stride,
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { reinterpret_cast<const uint8_t*>(data), stride * count }
-      );
-  }
+  //  scene_instances = wrap.GetCore()->GetDevice()->CreateResource("scene_instances",
+  //    Resource::BufferDesc
+  //    {
+  //      Usage(USAGE_CONSTANT_DATA),
+  //      stride,
+  //      count,
+  //    },
+  //    Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+  //    { reinterpret_cast<const uint8_t*>(data), stride * count }
+  //    );
+  //}
 
-  void SceneBroker::CreateSceneBuffer0()
+  void SceneBroker::CreateSceneBufferVert()
   {
-    const auto [data, count] = prop_buffer_0->GetRawItems<Vertex>(0);
+    const auto [data, count] = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
     const auto stride = sizeof(Vertex);
 
-    scene_buffer_0 = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_0",
+    scene_buffer_vert = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_vert",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
@@ -64,12 +64,12 @@ namespace RayGene3D
       );
   }
 
-  void SceneBroker::CreateSceneBuffer1()
+  void SceneBroker::CreateSceneBufferTrng()
   {
-    const auto [data, count] = prop_buffer_1->GetRawItems<Triangle>(0);
+    const auto [data, count] = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
     const auto stride = sizeof(Triangle);
 
-    scene_buffer_1 = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_1",
+    scene_buffer_trng = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_trng",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
@@ -81,16 +81,33 @@ namespace RayGene3D
       );
   }
 
-  void SceneBroker::CreateSceneArray0()
+  void SceneBroker::CreateSceneBufferInst()
   {
-    const auto format = Format(prop_array_0->GetObjectItem("format")->GetUint());
-    const auto layers = prop_array_0->GetObjectItem("layers")->GetUint();
-    const auto levels = prop_array_0->GetObjectItem("levels")->GetUint();
-    const auto size_x = prop_array_0->GetObjectItem("size_x")->GetUint();
-    const auto size_y = prop_array_0->GetObjectItem("size_y")->GetUint();
-    const auto bytes = prop_array_0->GetObjectItem("raw")->GetRawBytes();
+    const auto [data, count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto stride = sizeof(Triangle);
 
-    scene_array_0 = wrap.GetCore()->GetDevice()->CreateResource("scene_array_0",
+    scene_buffer_inst = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_inst",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_CONSTANT_DATA),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(data), stride * count }
+      );
+  }
+
+  void SceneBroker::CreateSceneArrayAAAM()
+  {
+    const auto format = Format(prop_array_aaam->GetObjectItem("format")->GetUint());
+    const auto layers = prop_array_aaam->GetObjectItem("layers")->GetUint();
+    const auto levels = prop_array_aaam->GetObjectItem("levels")->GetUint();
+    const auto size_x = prop_array_aaam->GetObjectItem("size_x")->GetUint();
+    const auto size_y = prop_array_aaam->GetObjectItem("size_y")->GetUint();
+    const auto bytes = prop_array_aaam->GetObjectItem("binary")->GetRawBytes();
+
+    scene_array_aaam = wrap.GetCore()->GetDevice()->CreateResource("scene_array_aaam",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -104,16 +121,16 @@ namespace RayGene3D
       bytes);
   }
 
-  void SceneBroker::CreateSceneArray1()
+  void SceneBroker::CreateSceneArraySNNO()
   {
-    const auto format = Format(prop_array_1->GetObjectItem("format")->GetUint());
-    const auto layers = prop_array_1->GetObjectItem("layers")->GetUint();
-    const auto levels = prop_array_1->GetObjectItem("levels")->GetUint();
-    const auto size_x = prop_array_1->GetObjectItem("size_x")->GetUint();
-    const auto size_y = prop_array_1->GetObjectItem("size_y")->GetUint();
-    const auto bytes = prop_array_1->GetObjectItem("raw")->GetRawBytes();
+    const auto format = Format(prop_array_snno->GetObjectItem("format")->GetUint());
+    const auto layers = prop_array_snno->GetObjectItem("layers")->GetUint();
+    const auto levels = prop_array_snno->GetObjectItem("levels")->GetUint();
+    const auto size_x = prop_array_snno->GetObjectItem("size_x")->GetUint();
+    const auto size_y = prop_array_snno->GetObjectItem("size_y")->GetUint();
+    const auto bytes = prop_array_snno->GetObjectItem("binary")->GetRawBytes();
 
-    scene_array_2 = wrap.GetCore()->GetDevice()->CreateResource("scene_array_2",
+    scene_array_snno = wrap.GetCore()->GetDevice()->CreateResource("scene_array_snno",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -127,16 +144,16 @@ namespace RayGene3D
       bytes);
   }
 
-  void SceneBroker::CreateSceneArray2()
+  void SceneBroker::CreateSceneArrayEEET()
   {
-    const auto format = Format(prop_array_2->GetObjectItem("format")->GetUint());
-    const auto layers = prop_array_2->GetObjectItem("layers")->GetUint();
-    const auto levels = prop_array_2->GetObjectItem("levels")->GetUint();
-    const auto size_x = prop_array_2->GetObjectItem("size_x")->GetUint();
-    const auto size_y = prop_array_2->GetObjectItem("size_y")->GetUint();
-    const auto bytes = prop_array_2->GetObjectItem("raw")->GetRawBytes();
+    const auto format = Format(prop_array_eeet->GetObjectItem("format")->GetUint());
+    const auto layers = prop_array_eeet->GetObjectItem("layers")->GetUint();
+    const auto levels = prop_array_eeet->GetObjectItem("levels")->GetUint();
+    const auto size_x = prop_array_eeet->GetObjectItem("size_x")->GetUint();
+    const auto size_y = prop_array_eeet->GetObjectItem("size_y")->GetUint();
+    const auto bytes = prop_array_eeet->GetObjectItem("binary")->GetRawBytes();
 
-    scene_array_2 = wrap.GetCore()->GetDevice()->CreateResource("scene_array_2",
+    scene_array_eeet = wrap.GetCore()->GetDevice()->CreateResource("scene_array_eeet",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -150,82 +167,82 @@ namespace RayGene3D
       bytes);
   }
 
-  void SceneBroker::CreateSceneArray3()
-  {
-    const auto format = Format(prop_array_3->GetObjectItem("format")->GetUint());
-    const auto layers = prop_array_3->GetObjectItem("layers")->GetUint();
-    const auto levels = prop_array_3->GetObjectItem("levels")->GetUint();
-    const auto size_x = prop_array_3->GetObjectItem("size_x")->GetUint();
-    const auto size_y = prop_array_3->GetObjectItem("size_y")->GetUint();
-    const auto bytes = prop_array_3->GetObjectItem("raw")->GetRawBytes();
+  //void SceneBroker::CreateSceneArray3()
+  //{
+  //  const auto format = Format(prop_array_3->GetObjectItem("format")->GetUint());
+  //  const auto layers = prop_array_3->GetObjectItem("layers")->GetUint();
+  //  const auto levels = prop_array_3->GetObjectItem("levels")->GetUint();
+  //  const auto size_x = prop_array_3->GetObjectItem("size_x")->GetUint();
+  //  const auto size_y = prop_array_3->GetObjectItem("size_y")->GetUint();
+  //  const auto bytes = prop_array_3->GetObjectItem("raw")->GetRawBytes();
 
-    scene_array_3 = wrap.GetCore()->GetDevice()->CreateResource("scene_array_3",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        levels,
-        layers,
-        format,
-        size_x,
-        size_y,
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      bytes);
-  } 
+  //  scene_array_3 = wrap.GetCore()->GetDevice()->CreateResource("scene_array_3",
+  //    Resource::Tex2DDesc
+  //    {
+  //      Usage(USAGE_SHADER_RESOURCE),
+  //      levels,
+  //      layers,
+  //      format,
+  //      size_x,
+  //      size_y,
+  //    },
+  //    Resource::Hint(Resource::HINT_LAYERED_IMAGE),
+  //    bytes);
+  //} 
 
-  void SceneBroker::DestroySceneInstances()
+  //void SceneBroker::DestroySceneInstances()
+  //{
+  //  wrap.GetCore()->GetDevice()->DestroyResource(scene_instances);
+  //  scene_instances.reset();
+  //}
+
+  void SceneBroker::DestroySceneBufferVert()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_instances);
-    scene_instances.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_vert);
+    scene_buffer_vert.reset();
   }
 
-  void SceneBroker::DestroySceneBuffer0()
+  void SceneBroker::DestroySceneBufferTrng()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_0);
-    scene_buffer_0.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_trng);
+    scene_buffer_trng.reset();
   }
 
-  void SceneBroker::DestroySceneBuffer1()
+  void SceneBroker::DestroySceneBufferInst()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_1);
-    scene_buffer_1.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_inst);
+    scene_buffer_inst.reset();
   }
 
-  void SceneBroker::DestroySceneBuffer2()
+  //void SceneBroker::DestroySceneBuffer3()
+  //{
+  //  wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_3);
+  //  scene_buffer_3.reset();
+  //}
+
+  void SceneBroker::DestroySceneArrayAAAM()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_2);
-    scene_buffer_2.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_aaam);
+    scene_array_aaam.reset();
   }
 
-  void SceneBroker::DestroySceneBuffer3()
+  void SceneBroker::DestroySceneArraySNNO()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_3);
-    scene_buffer_3.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_snno);
+    scene_array_snno.reset();
   }
 
-  void SceneBroker::DestroySceneArray0()
+  void SceneBroker::DestroySceneArrayEEET()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_0);
-    scene_array_0.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_eeet);
+    scene_array_eeet.reset();
   }
 
-  void SceneBroker::DestroySceneArray1()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_1);
-    scene_array_1.reset();
-  }
-
-  void SceneBroker::DestroySceneArray2()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_2);
-    scene_array_2.reset();
-  }
-
-  void SceneBroker::DestroySceneArray3()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_3);
-    scene_array_3.reset();
-  }
+  //void SceneBroker::DestroySceneArray3()
+  //{
+  //  wrap.GetCore()->GetDevice()->DestroyResource(scene_array_3);
+  //  scene_array_3.reset();
+  //}
 
   void SceneBroker::Initialize()
   {}
@@ -243,46 +260,42 @@ namespace RayGene3D
 
     prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
     {
-      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
+      //prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
 
-      prop_buffer_0 = prop_scene->GetObjectItem("buffer_0");
-      prop_buffer_1 = prop_scene->GetObjectItem("buffer_1");
-      prop_buffer_2 = prop_scene->GetObjectItem("buffer_2");
-      prop_buffer_3 = prop_scene->GetObjectItem("buffer_3");
+      prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
+      prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
+      prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
+      //prop_buffer_3 = prop_scene->GetObjectItem("buffer_3");
 
-      prop_array_0 = prop_scene->GetObjectItem("array_0");
-      prop_array_1 = prop_scene->GetObjectItem("array_1");
-      prop_array_2 = prop_scene->GetObjectItem("array_2");
-      prop_array_3 = prop_scene->GetObjectItem("array_3");
+      prop_array_aaam = prop_scene->GetObjectItem("array_aaam");
+      prop_array_snno = prop_scene->GetObjectItem("array_snno");
+      prop_array_eeet = prop_scene->GetObjectItem("array_eeet");
+      //prop_array_3 = prop_scene->GetObjectItem("array_3");
     }
 
-    CreateSceneInstances();
+    //CreateSceneInstances();
 
-    CreateSceneBuffer0();
-    CreateSceneBuffer1();
-    //CreateSceneBuffers2();
+    CreateSceneBufferVert();
+    CreateSceneBufferTrng();
+    CreateSceneBufferInst();
     //CreateSceneBuffers3();
 
-    CreateSceneArray0();
-    CreateSceneArray1();
-    CreateSceneArray2();
-    CreateSceneArray3();
+    CreateSceneArrayAAAM();
+    CreateSceneArraySNNO();
+    CreateSceneArrayEEET();
+    //CreateSceneArray3();
   }
 
   SceneBroker::~SceneBroker()
   {
     prop_scene.reset();
 
-    prop_instances.reset();
+    prop_buffer_vert.reset();
+    prop_buffer_trng.reset();
+    prop_buffer_inst.reset();
 
-    prop_buffer_0.reset();
-    prop_buffer_1.reset();
-    prop_buffer_2.reset();
-    prop_buffer_3.reset();
-
-    prop_array_0.reset();
-    prop_array_1.reset();
-    prop_array_2.reset();
-    prop_array_3.reset();
+    prop_array_aaam.reset();
+    prop_array_snno.reset();
+    prop_array_eeet.reset();
   }
 }

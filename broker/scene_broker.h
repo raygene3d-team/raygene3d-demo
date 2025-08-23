@@ -35,67 +35,69 @@ namespace RayGene3D
   class SceneBroker : public Broker
   {
   protected:
-    std::shared_ptr<Property> prop_scene;
+    SPtrProperty prop_scene;
 
   protected:
-    std::shared_ptr<Property> prop_instances;
+    //std::shared_ptr<Property> prop_instances;
+    SPtrProperty prop_buffer_inst;
+    SPtrProperty prop_buffer_trng;
+    SPtrProperty prop_buffer_vert;
+    
+    
+    //SPtrProperty prop_buffer_3;
 
-    std::shared_ptr<Property> prop_buffer_0;
-    std::shared_ptr<Property> prop_buffer_1;
-    std::shared_ptr<Property> prop_buffer_2;
-    std::shared_ptr<Property> prop_buffer_3;
-
-    std::shared_ptr<Property> prop_array_0;
-    std::shared_ptr<Property> prop_array_1;
-    std::shared_ptr<Property> prop_array_2;
-    std::shared_ptr<Property> prop_array_3;
+    SPtrProperty prop_array_aaam;
+    SPtrProperty prop_array_snno;
+    SPtrProperty prop_array_eeet;
+    //SPtrProperty prop_array_3;
 
   protected:
-    SPtrResource scene_instances;
+    //SPtrResource scene_instances;
+    SPtrResource scene_buffer_inst;
+    SPtrResource scene_buffer_trng;
+    SPtrResource scene_buffer_vert;
+    
+    
+    //SPtrResource scene_buffer_3;
 
-    SPtrResource scene_buffer_0;
-    SPtrResource scene_buffer_1;
-    SPtrResource scene_buffer_2;
-    SPtrResource scene_buffer_3;
-
-    SPtrResource scene_array_0;
-    SPtrResource scene_array_1;
-    SPtrResource scene_array_2;
-    SPtrResource scene_array_3;
+    SPtrResource scene_array_aaam;
+    SPtrResource scene_array_snno;
+    SPtrResource scene_array_eeet;
+    //SPtrResource scene_array_3;
     //SPtrResource scene_textures4;
     //SPtrResource scene_textures5;
     //SPtrResource scene_textures6;
     //SPtrResource scene_textures7;
 
   protected:
-    void CreateSceneInstances();
+    //void CreateSceneInstances();
 
-    void CreateSceneBuffer0();
-    void CreateSceneBuffer1();
-    //void CreateSceneBuffers2();
+    void CreateSceneBufferVert();
+    void CreateSceneBufferTrng();
+    void CreateSceneBufferInst();
     //void CreateSceneBuffers3();
 
-    void CreateSceneArray0();
-    void CreateSceneArray1();
-    void CreateSceneArray2();
-    void CreateSceneArray3();
+    void CreateSceneArrayAAAM();
+    void CreateSceneArraySNNO();
+    void CreateSceneArrayEEET();
+    //void CreateSceneArray3();
     //void CreateSceneTextures4();
     //void CreateSceneTextures5();
     //void CreateSceneTextures6();
     //void CreateSceneTextures7();
 
   protected:
-    void DestroySceneInstances();
+    //void DestroySceneInstances();
 
-    void DestroySceneBuffer0();
-    void DestroySceneBuffer1();
-    void DestroySceneBuffer2();
-    void DestroySceneBuffer3();
+    void DestroySceneBufferVert();
+    void DestroySceneBufferTrng();
+    void DestroySceneBufferInst();
+    //void DestroySceneBuffer3();
 
-    void DestroySceneArray0();
-    void DestroySceneArray1();
-    void DestroySceneArray2();
-    void DestroySceneArray3();
+    void DestroySceneArrayAAAM();
+    void DestroySceneArraySNNO();
+    void DestroySceneArrayEEET();
+    //void DestroySceneArray3();
     //void DestroySceneTextures4();
     //void DestroySceneTextures5();
     //void DestroySceneTextures6();
