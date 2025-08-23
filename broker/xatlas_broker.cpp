@@ -40,9 +40,9 @@ namespace RayGene3D
   {
     //if (prop_maps->GetBool() == false) return;
 
-    const auto [ins_array, ins_count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
-    const auto [trg_array, trg_count] = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
-    const auto [vrt_array, vrt_count] = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
+    const auto [ins_array, ins_count] = prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto [trg_array, trg_count] = prop_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+    const auto [vrt_array, vrt_count] = prop_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
 
     const auto atlas = xatlas::Create();
 
@@ -193,9 +193,9 @@ namespace RayGene3D
     prop_scene->GetObjectItem("buffer_vert")->SetObjectItem("binary", updated_prop_vrt);
     prop_scene->GetObjectItem("buffer_vert")->SetObjectItem("length", SPtrProperty(new Property(updated_vrt_count)));
 
-    prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
-    prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
-    prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
+    prop_inst = prop_scene->GetObjectItem("buffer_inst");
+    prop_trng = prop_scene->GetObjectItem("buffer_trng");
+    prop_vert = prop_scene->GetObjectItem("buffer_vert");
 
     prop_atlas_size_x->SetUint(atlas->width);
     prop_atlas_size_y->SetUint(atlas->height);
@@ -219,9 +219,9 @@ namespace RayGene3D
 
     prop_scene = prop_tree->GetObjectItem("scene");
     {
-      prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
-      prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
-      prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
+      prop_inst = prop_scene->GetObjectItem("buffer_inst");
+      prop_trng = prop_scene->GetObjectItem("buffer_trng");
+      prop_vert = prop_scene->GetObjectItem("buffer_vert");
     }
 
     prop_illumination = prop_tree->GetObjectItem("illumination");
@@ -238,9 +238,9 @@ namespace RayGene3D
 
   XAtlasBroker::~XAtlasBroker()
   {
-    prop_buffer_vert.reset();
-    prop_buffer_trng.reset();
-    prop_buffer_inst.reset();
+    prop_vert.reset();
+    prop_trng.reset();
+    prop_inst.reset();
 
     prop_scene.reset();
 

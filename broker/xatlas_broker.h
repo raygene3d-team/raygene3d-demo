@@ -44,9 +44,9 @@ namespace RayGene3D
     std::shared_ptr<Property> prop_density;
 
   protected:
-    std::shared_ptr<Property> prop_buffer_inst;
-    std::shared_ptr<Property> prop_buffer_trng;
-    std::shared_ptr<Property> prop_buffer_vert;
+    std::shared_ptr<Property> prop_inst;
+    std::shared_ptr<Property> prop_trng;
+    std::shared_ptr<Property> prop_vert;
 
   protected:
     std::shared_ptr<Property> prop_atlas_size_x;

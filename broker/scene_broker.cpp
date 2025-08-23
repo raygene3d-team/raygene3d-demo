@@ -84,7 +84,7 @@ namespace RayGene3D
   void SceneBroker::CreateSceneBufferInst()
   {
     const auto [data, count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
-    const auto stride = sizeof(Triangle);
+    const auto stride = sizeof(Instance);
 
     scene_buffer_inst = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_inst",
       Resource::BufferDesc

@@ -244,16 +244,16 @@ namespace RayGene3D
 
     const auto format = Format(prop_skybox->GetObjectItem("format")->GetUint());
     const auto layers = prop_skybox->GetObjectItem("layers")->GetUint();
-    const auto mipmap = prop_skybox->GetObjectItem("mipmap")->GetUint();
+    const auto levels = prop_skybox->GetObjectItem("levels")->GetUint();
     const auto size_x = prop_skybox->GetObjectItem("size_x")->GetUint();
     const auto size_y = prop_skybox->GetObjectItem("size_y")->GetUint();
-    const auto bytes = prop_skybox->GetObjectItem("raw")->GetRawBytes();
+    const auto bytes = prop_skybox->GetObjectItem("binary")->GetRawBytes();
 
     skybox_cubemap = core->GetDevice()->CreateResource("environment_skybox_cubemap",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap,
+        levels,
         layers,
         format,
         size_x,

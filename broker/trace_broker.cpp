@@ -419,16 +419,16 @@ namespace RayGene3D
     MainBuild(inst_items, trng_items, vert_items, tbox_items, bbox_items);
 
     {
-      const auto t_boxes_buffer = StructureBuffer<Box>({ tbox_items.data(), tbox_items.size() });
-      const auto t_boxes_prop = t_boxes_buffer.Export();
-      prop_scene->SetObjectItem("trace_buffer_tbox", t_boxes_prop);
+      const auto buffer_tbox = StructureBuffer<Box>({ tbox_items.data(), tbox_items.size() });
+      prop_buffer_tbox = buffer_tbox.Export();
+      prop_scene->SetObjectItem("buffer_tbox", prop_buffer_tbox);
     }
     CreateTraceBufferTBox();
 
     {
-      const auto b_boxes_buffer = StructureBuffer<Box>({ bbox_items.data(), bbox_items.size() });
-      const auto b_boxes_prop = b_boxes_buffer.Export();
-      prop_scene->SetObjectItem("trace_buffer_bbox", b_boxes_prop);
+      const auto buffer_bbox = StructureBuffer<Box>({ bbox_items.data(), bbox_items.size() });
+      prop_buffer_bbox = buffer_bbox.Export();
+      prop_scene->SetObjectItem("buffer_bbox", prop_buffer_bbox);
     }
     CreateTraceBufferBBox();
   }
