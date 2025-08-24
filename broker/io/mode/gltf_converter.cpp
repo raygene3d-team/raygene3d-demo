@@ -309,7 +309,7 @@ namespace RayGene3D
           const auto [vert_count, trng_count, mlet_count, bone_count, aabb_min, aabb_max] =
             geometry_convert_fn(gltf_primitive, transform, scope.position_scale, scope.conversion_rhs, false);
 
-          const auto [am_layer, snao_layer, et_layer, mask_layer] =
+          const auto [aaam_layer, snno_layer, eeet_layer, mask_layer] =
             material_convert_fn(gltf_primitive, scope.texture_level);
 
           if (vert_count == 0 || trng_count == 0) continue;
@@ -331,9 +331,9 @@ namespace RayGene3D
           instance.aabb_max = aabb_max;
           instance.flags = 0;
 
-          instance.am_layer = am_layer;
-          instance.snao_layer = snao_layer;
-          instance.et_layer = et_layer;
+          instance.aaam_layer = aaam_layer;
+          instance.snno_layer = snno_layer;
+          instance.eeet_layer = eeet_layer;
           instance.mask_layer = mask_layer;
 
           scope.inst_buffer.Resize(scope.inst_buffer.Length() + 1, instance);

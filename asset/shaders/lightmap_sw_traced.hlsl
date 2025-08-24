@@ -25,23 +25,18 @@ VK_BINDING(1) cbuffer constant0 : register(b0)
   uint rnd_seed       : packoffset(c0.w);
 }
 
-VK_BINDING(2) StructuredBuffer<Box> 		inst_boxes : register(t0);
-VK_BINDING(3) StructuredBuffer<Box> 		prim_boxes : register(t1);
-VK_BINDING(4) StructuredBuffer<Instance> 	inst_items : register(t2);
-VK_BINDING(5) StructuredBuffer<Primitive> 	prim_items : register(t3);
-VK_BINDING(6) StructuredBuffer<Vertex> 		vert_items : register(t4);
+VK_BINDING(2) StructuredBuffer<Box> 		    buffer_tbox : register(t0);
+VK_BINDING(3) StructuredBuffer<Box> 		    buffer_bbox : register(t1);
+VK_BINDING(4) StructuredBuffer<Instance> 	  buffer_inst : register(t2);
+VK_BINDING(5) StructuredBuffer<Primitive> 	buffer_trng : register(t3);
+VK_BINDING(6) StructuredBuffer<Vertex> 		  buffer_vert : register(t4);
 
-VK_BINDING(7) Texture2DArray<float4> texture0_items : register(t5);
-VK_BINDING(8) Texture2DArray<float4> texture1_items : register(t6);
-VK_BINDING(9) Texture2DArray<float4> texture2_items : register(t7);
-VK_BINDING(10) Texture2DArray<float4> texture3_items : register(t8);
-VK_BINDING(11) Texture2DArray<float4> texture4_items : register(t9);
-VK_BINDING(12) Texture2DArray<float4> texture5_items : register(t10);
-VK_BINDING(13) Texture2DArray<float4> texture6_items : register(t11);
-VK_BINDING(14) Texture2DArray<float4> texture7_items : register(t12);
+VK_BINDING(7) Texture2DArray<float4> array_aaam : register(t5);
+VK_BINDING(8) Texture2DArray<float4> array_snno : register(t6);
+VK_BINDING(9) Texture2DArray<float4> array_eeet : register(t7);
 
-VK_BINDING(15) Texture2DArray<uint4> lightmap_input : register(t13);
-VK_BINDING(16) RWTexture2DArray<float4> lightmap_accum : register(u0);
+VK_BINDING(10) Texture2DArray<uint4> lightmap_input : register(t8);
+VK_BINDING(11) RWTexture2DArray<float4> lightmap_accum : register(u0);
 
 
 float nrand(float2 uv)
@@ -92,11 +87,11 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   const float s0 = RandomSampler_sample(state);
   const float s1 = RandomSampler_sample(state);
    
-  const Instance instance = inst_items[inst_idx];
-  const Primitive primitive = prim_items[instance.prim_offset + prim_idx];
-  const Vertex vertex0 = vert_items[instance.vert_offset + primitive.idx0];
-  const Vertex vertex1 = vert_items[instance.vert_offset + primitive.idx1];
-  const Vertex vertex2 = vert_items[instance.vert_offset + primitive.idx2];
+  const Instance instance = buffer_inst[inst_idx];
+  const Primitive primitive = buffer_trng[instance.prim_offset + prim_idx];
+  const Vertex vertex0 = buffer_vert[instance.vert_offset + primitive.idx0];
+  const Vertex vertex1 = buffer_vert[instance.vert_offset + primitive.idx1];
+  const Vertex vertex2 = buffer_vert[instance.vert_offset + primitive.idx2];
   
   const float u = asfloat(pixel_value.z);
   const float v = asfloat(pixel_value.w);
@@ -124,7 +119,7 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   rayhit.dir = mul(transpose(tbn), normalize(wi));
   rayhit.tmax = 0.25;
   
-  OccludeScene(rayhit, inst_boxes, prim_boxes, inst_items, prim_items, vert_items);
+  OccludeScene(rayhit, buffer_tbox, buffer_bbox, buffer_inst, buffer_trng, buffer_vert);
   const float3 tput = rayhit.dist == rayhit.tmax ? float3(1.0, 1.0, 1.0) : float3(0.0, 0.0, 0.0);
   
   //const float2 duvdx = float2(0.0, 0.0);

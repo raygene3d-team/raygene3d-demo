@@ -46,45 +46,43 @@ VK_BINDING(4) cbuffer constant2 : register(b2)
 VK_BINDING(5) cbuffer constant3 : register(b3)
 {
   float4x3 transform  : packoffset(c0.x);
-
-  uint prim_offset    : packoffset(c3.x);
-  uint prim_count     : packoffset(c3.y);
-  uint vert_offset    : packoffset(c3.z);
-  uint vert_count     : packoffset(c3.w);
-
-  float4 brdf_param0  : packoffset(c4.x);
-  float4 brdf_param1  : packoffset(c5.x);
-  float4 brdf_param2  : packoffset(c6.x);
-  float4 brdf_param3  : packoffset(c7.x);
-
-  int tex0_idx : packoffset(c8.x);
-  int tex1_idx : packoffset(c8.y);
-  int tex2_idx : packoffset(c8.z);
-  int tex3_idx : packoffset(c8.w);
-  int tex4_idx : packoffset(c9.x);
-  int tex5_idx : packoffset(c9.y);
-  int tex6_idx : packoffset(c9.z);
-  int tex7_idx : packoffset(c9.w);
   
-  float3 bb_min : packoffset(c10.x);
-  uint geom_idx : packoffset(c10.w);
-  float3 bb_max : packoffset(c11.x);
-  uint brdf_idx : packoffset(c11.w);
+  uint aaam_layer : packoffset(c3.x);
+  uint snno_layer : packoffset(c3.y);
+  uint eeet_layer : packoffset(c3.z);
+  uint mask_layer : packoffset(c3.w);
 
-  uint4 padding[4]    : packoffset(c12.x);
+  uint vert_offset  : packoffset(c4.x);
+  uint vert_count   : packoffset(c4.y); 
+  uint trng_offset  : packoffset(c4.z);
+  uint trng_count   : packoffset(c4.w); 
+  uint mlet_offset  : packoffset(c5.x);
+  uint mlet_count   : packoffset(c5.y); 
+  uint bone_offset  : packoffset(c5.z);
+  uint bone_count   : packoffset(c5.w);
+  
+  float3 bb_min : packoffset(c6.x);
+  uint index    : packoffset(c6.w);
+  float3 bb_max : packoffset(c7.x);
+  uint flags    : packoffset(c7.w);
+
+  float4 fparam_0 : packoffset(c8.x);
+  float4 fparam_1 : packoffset(c9.x);
+  float4 fparam_2 : packoffset(c10.x);
+  float4 fparam_3 : packoffset(c11.x);
+
+  uint4 uparam_0 : packoffset(c12.x);
+  uint4 uparam_1 : packoffset(c13.x);
+  uint4 uparam_2 : packoffset(c14.x);
+  uint4 uparam_3 : packoffset(c15.x);
 };
 
-VK_BINDING(6) Texture2DArray<float4> texture0_items : register(t0);
-VK_BINDING(7) Texture2DArray<float4> texture1_items : register(t1);
-VK_BINDING(8) Texture2DArray<float4> texture2_items : register(t2);
-VK_BINDING(9) Texture2DArray<float4> texture3_items : register(t3);
-VK_BINDING(10) Texture2DArray<float4> texture4_items : register(t4);
-VK_BINDING(11) Texture2DArray<float4> texture5_items : register(t5);
-VK_BINDING(12) Texture2DArray<float4> texture6_items : register(t6);
-VK_BINDING(13) Texture2DArray<float4> texture7_items : register(t7);
+VK_BINDING(6) Texture2DArray<float4> array_aaam : register(t0);
+VK_BINDING(7) Texture2DArray<float4> array_snno : register(t1);
+VK_BINDING(8) Texture2DArray<float4> array_eeet : register(t2);
 
-VK_BINDING(14) Texture2DArray<float4> lightmap_items : register(t8);
-VK_BINDING(15) TextureCube<float4> reflection_map : register(t9);
+VK_BINDING(9) Texture2DArray<float4> lightmap_items : register(t3);
+VK_BINDING(10) TextureCube<float4> reflection_map : register(t4);
 
 
 
@@ -230,27 +228,23 @@ PSOutput ps_main(PSInput input)
   const float3 v = -camera_dir;
 
   // temp mapping - only PBR materials!
-  const float4 tex0_value = tex0_idx == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
-    : texture0_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex0_idx));
-  const float4 tex1_value = tex1_idx == -1 ? float4(0.0, 0.0, 0.0, 0.0) 
-    : texture1_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex1_idx));
-  const float4 tex2_value = tex2_idx == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
-    : texture2_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex2_idx));
-  const float4 tex3_value = tex3_idx == -1 ? float4(0.5, 0.5, 1.0, 0.0) 
-    : texture3_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex3_idx));
-  //const float4 tex3_value = float4(0.5, 0.5, 1.0, 0.0);
-  const float4 tex4_value = tex4_idx == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
-    : texture4_items.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, tex4_idx));
+  const float4 aaam_value = aaam_layer == -1 ? float4(1.0, 1.0, 1.0, 1.0)
+    : array_aaam.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, aaam_layer));
+  const float4 snno_value = snno_layer == -1 ? float4(0.0, 0.0, 0.0, 0.0) 
+    : array_snno.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, snno_layer));
+  const float4 eeet_value = eeet_layer == -1 ? float4(1.0, 1.0, 1.0, 1.0) 
+    : array_eeet.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, eeet_layer));
     
-  const float3 albedo = tex0_value.xyz;
-  const float3 emission = tex1_value.xyz;
-  const float metallic = tex2_value.z;
-  const float roughness = tex2_value.y;
+  const float3 albedo = aaam_value.xyz;
+  const float metallic = aaam_value.w;  
+  const float roughness = snno_value.x;
   const float3 normal = normalize(
-    (2.0 * tex3_value.x - 1.0) * t +
-    (2.0 * tex3_value.y - 1.0) * b +
-    (2.0 * tex3_value.z - 1.0) * n);
-  const float occlusion = tex4_value.x;
+    snno_value.y * t +
+    snno_value.z * b +
+    sqrt(1.0 - (snno_value.y * snno_value.y + snno_value.z * snno_value.z)) * n);
+  const float occlusion = snno_value.w;
+  const float3 emission = eeet_value.xyz;
+  const float transparency = eeet_value.w;
   
   
        

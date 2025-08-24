@@ -28,37 +28,35 @@ struct Primitive
 struct Instance
 {
   float4x3 transform;
+  
+  uint aaam_layer;
+  uint snno_layer;
+  uint eeet_layer;
+  uint mask_layer;
 
-  uint prim_offset;
-  uint prim_count;
   uint vert_offset;
-  uint vert_count;
-
-  float3 emission;
-  float intensity;
-  float3 diffuse;
-  float shininess;
-  float3 specular;
-  float alpha;
-
-  int tex0_idx;
-  int tex1_idx;
-  int tex2_idx;
-  int tex3_idx;
-  int tex4_idx;
-  int tex5_idx;
-  int tex6_idx;
-  int tex7_idx;
-
-  float3 debug_color;
-  uint geometry_idx;
+  uint vert_count; 
+  uint prim_offset;
+  uint prim_count; 
+  uint mlet_offset;
+  uint mlet_count; 
+  uint bone_offset;
+  uint bone_count;
   
   float3 bb_min;
-  uint bb_min_padding;
+  uint index;
   float3 bb_max;
-  uint bb_max_padding;
+  uint flags;
 
-  uint4 padding[4];
+  float4 fparam_0;
+  float4 fparam_1;
+  float4 fparam_2;
+  float4 fparam_3;
+
+  uint4 uparam_0;
+  uint4 uparam_1;
+  uint4 uparam_2;
+  uint4 uparam_3;
 };
 
 struct Ray

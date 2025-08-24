@@ -223,11 +223,11 @@ namespace RayGene3D
             };
 
             const auto& texture_0_name = obj_material.diffuse_texname;
-            instance.am_layer = texture_0_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_0_names, texture_0_name);
+            instance.aaam_layer = texture_0_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_0_names, texture_0_name);
             const auto& texture_1_name = obj_material.bump_texname;
-            instance.snao_layer = texture_1_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_1_names, texture_1_name);
+            instance.snno_layer = texture_1_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_1_names, texture_1_name);
             const auto& texture_2_name = obj_material.specular_texname;
-            instance.et_layer = texture_2_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_2_names, texture_2_name);
+            instance.eeet_layer = texture_2_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_2_names, texture_2_name);
             //const auto& texture_3_name = obj_material.alpha_texname;
             //instance.layer_3 = texture_3_name.empty() ? uint32_t(-1) : tex_reindex_fn(texture_3_names, texture_3_name);
 
