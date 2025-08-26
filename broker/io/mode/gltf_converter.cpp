@@ -353,11 +353,10 @@ namespace RayGene3D
       std::swap(scope.mlet_buffer, mlet_buffer);
       std::swap(scope.bone_buffer, bone_buffer);
 
-
       const auto extent_x = 1u << scope.texture_level - 1;
       const auto extent_y = 1u << scope.texture_level - 1;
 
-      auto aaam_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_0_indices.size());
+      auto aaam_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_0_indices.size(), scope.texture_level);
       for (const auto& [key, index] : texture_0_indices)
       {
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
@@ -369,10 +368,27 @@ namespace RayGene3D
             key[3] == -1 ? 000u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).b);
           aaam_array.Set(index, 0, { &value, 1 }, i);
         }
-        //aaam_array.Save(std::string("aaam_" + std::to_string(index) + ".jpg").c_str(), index);
       }
 
-      auto snno_array = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, texture_1_indices.size());
+      for (auto i = 0ull; i < aaam_array.Layers(); ++i)
+      {
+        for (auto j = 0ull; j < aaam_array.Levels() - 1; ++j)
+        {
+          auto src_offset = aaam_array.Offset(i, j);
+          auto src_texels = aaam_array.Items(src_offset).first;
+          auto src_size_x = Mip(extent_x, j);
+          auto src_size_y = Mip(extent_y, j);
+
+          auto dst_offset = aaam_array.Offset(i, j + 1);
+          auto dst_texels = aaam_array.Items(dst_offset).first;
+          auto dst_size_x = Mip(extent_x, j + 1);
+          auto dst_size_y = Mip(extent_y, j + 1);
+
+          ResizeLDR(src_texels, src_size_x,  src_size_y, dst_texels,  dst_size_x,  dst_size_y, true);
+        }
+      }
+
+      auto snno_array = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, texture_1_indices.size(), scope.texture_level);
       for (const auto& [key, index] : texture_1_indices)
       {
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
@@ -384,9 +400,25 @@ namespace RayGene3D
             key[3] == -1 ? 255u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).b);
           snno_array.Set(index, 0, { &value, 1 }, i);
         }
-      }     
+      }
 
-      auto eeet_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_2_indices.size());
+      for (auto i = 0ull; i < snno_array.Layers(); ++i)
+      {
+        for (auto j = 0ull; j < snno_array.Levels() - 1; ++j)
+        {
+          auto src_texels = snno_array.Items(snno_array.Offset(i, j)).first;
+          auto src_size_x = Mip(extent_x, j);
+          auto src_size_y = Mip(extent_y, j);
+
+          auto dst_texels = snno_array.Items(snno_array.Offset(i, j + 1)).first;
+          auto dst_size_x = Mip(extent_x, j + 1);
+          auto dst_size_y = Mip(extent_y, j + 1);
+
+          ResizeLDR(src_texels, src_size_x, src_size_y, dst_texels, dst_size_x, dst_size_y, false);
+        }
+      }
+
+      auto eeet_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_2_indices.size(), scope.texture_level);
       for (const auto& [key, index] : texture_2_indices)
       {
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
@@ -397,6 +429,22 @@ namespace RayGene3D
             key[2] == -1 ? 0u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).b,
             key[3] == -1 ? 0u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).a);
           eeet_array.Set(index, 0, { &value, 1 }, i);
+        }
+      }
+
+      for (auto i = 0ull; i < eeet_array.Layers(); ++i)
+      {
+        for (auto j = 0ull; j < eeet_array.Levels() - 1; ++j)
+        {
+          auto src_texels = eeet_array.Items(eeet_array.Offset(i, j)).first;
+          auto src_size_x = Mip(extent_x, j);
+          auto src_size_y = Mip(extent_y, j);
+
+          auto dst_texels = eeet_array.Items(eeet_array.Offset(i, j + 1)).first;
+          auto dst_size_x = Mip(extent_x, j + 1);
+          auto dst_size_y = Mip(extent_y, j + 1);
+
+          ResizeLDR(src_texels, src_size_x, src_size_y, dst_texels, dst_size_x, dst_size_y, true);
         }
       }
 
