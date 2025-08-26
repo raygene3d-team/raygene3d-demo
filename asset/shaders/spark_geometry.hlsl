@@ -236,12 +236,12 @@ PSOutput ps_main(PSInput input)
     : array_eeet.Sample(sampler0, float3(input.w_nrm_u.w, input.w_tng_v.w, eeet_layer));
     
   const float3 albedo = aaam_value.xyz;
-  const float metallic = aaam_value.w;  
+  const float metallic = aaam_value.w;
   const float roughness = snno_value.x;
   const float3 normal = normalize(
-    snno_value.y * t +
-    snno_value.z * b +
-    sqrt(1.0 - (snno_value.y * snno_value.y + snno_value.z * snno_value.z)) * n);
+    (2.0 * snno_value.y - 1.0) * t +
+    (2.0 * snno_value.z - 1.0) * b +
+    sqrt(1.0 - (2.0 * snno_value.y - 1.0) * (2.0 * snno_value.y - 1.0) - (2.0 * snno_value.z - 1.0) * (2.0 * snno_value.z - 1.0)) * n);
   const float occlusion = snno_value.w;
   const float3 emission = eeet_value.xyz;
   const float transparency = eeet_value.w;

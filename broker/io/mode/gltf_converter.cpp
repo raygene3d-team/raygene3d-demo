@@ -230,12 +230,14 @@ namespace RayGene3D
         const auto cache_texture_fn = [gltf_model, &texture_all_cache, extent_x, extent_y]
           (int index, bool srgb)
           {
-            if (index == -1) return;
+            if (index == -1) return -1;
 
-            const auto iterator = texture_all_cache.find(index);
-            if (iterator != texture_all_cache.cend()) return;
+            const auto source = gltf_model.textures[index].source;
+
+            const auto iterator = texture_all_cache.find(source);
+            if (iterator != texture_all_cache.cend()) return source;            
             
-            const auto& image = gltf_model.images[index];
+            const auto& image = gltf_model.images[source];
             const auto src_extent_x = image.width;
             const auto src_extent_y = image.height;
             const auto src_data = image.image.data();
@@ -248,40 +250,41 @@ namespace RayGene3D
             if (srgb) { stbir_resize_uint8_srgb(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4, 3, 0); }
             else { stbir_resize_uint8(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4); }
 
-            texture_all_cache[index] = std::move(raw);
+            texture_all_cache[source] = std::move(raw);
+            return source;
           };
 
         const auto& material = gltf_model.materials[gltf_primitive.material];
 
-        cache_texture_fn(material.pbrMetallicRoughness.baseColorTexture.index, true);
-        cache_texture_fn(material.pbrMetallicRoughness.metallicRoughnessTexture.index, false);
-        cache_texture_fn(material.normalTexture.index, false);
-        cache_texture_fn(material.occlusionTexture.index, false);
-        cache_texture_fn(material.emissiveTexture.index, true);
+        const auto baseColorSource = cache_texture_fn(material.pbrMetallicRoughness.baseColorTexture.index, true);
+        const auto metallicRoughnessSource = cache_texture_fn(material.pbrMetallicRoughness.metallicRoughnessTexture.index, false);
+        const auto normalSource = cache_texture_fn(material.normalTexture.index, false);
+        const auto occlusionSource = cache_texture_fn(material.occlusionTexture.index, false);
+        const auto emissionSource = cache_texture_fn(material.emissiveTexture.index, true);
 
         const auto key_0 = glm::u32vec4(
-          material.pbrMetallicRoughness.baseColorTexture.index,
-          material.pbrMetallicRoughness.baseColorTexture.index,
-          material.pbrMetallicRoughness.baseColorTexture.index,
-          material.pbrMetallicRoughness.metallicRoughnessTexture.index
+          baseColorSource,
+          baseColorSource,
+          baseColorSource,
+          metallicRoughnessSource
         );
         const auto res_0 = texture_0_indices.find(key_0);
         const auto idx_0 = res_0 != texture_0_indices.cend() ? res_0->second : texture_0_indices[key_0] = texture_0_indices.size();
 
         const auto key_1 = glm::u32vec4(
-          material.pbrMetallicRoughness.metallicRoughnessTexture.index,
-          material.normalTexture.index,
-          material.normalTexture.index,
-          material.occlusionTexture.index
+          metallicRoughnessSource,
+          normalSource,
+          normalSource,
+          occlusionSource
         );
         const auto res_1 = texture_1_indices.find(key_1);
         const auto idx_1 = res_1 != texture_1_indices.cend() ? res_1->second : texture_1_indices[key_1] = texture_1_indices.size();
 
         const auto key_2 = glm::u32vec4(
-          material.emissiveTexture.index,
-          material.emissiveTexture.index,
-          material.emissiveTexture.index,
-          material.pbrMetallicRoughness.baseColorTexture.index
+          emissionSource,
+          emissionSource,
+          emissionSource,
+          baseColorSource
         );
         const auto res_2 = texture_2_indices.find(key_2);
         const auto idx_2 = res_2 != texture_2_indices.cend() ? res_2->second : texture_2_indices[key_2] = texture_2_indices.size();
@@ -357,29 +360,28 @@ namespace RayGene3D
       auto aaam_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_0_indices.size());
       for (const auto& [key, index] : texture_0_indices)
       {
-        //am_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
           const auto value = glm::u8vec4(
             key[0] == -1 ? 255u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).r,
             key[1] == -1 ? 255u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).g,
             key[2] == -1 ? 255u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).b,
-            key[3] == -1 ? 000u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).r);
+            key[3] == -1 ? 000u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).b);
           aaam_array.Set(index, 0, { &value, 1 }, i);
         }
+        //aaam_array.Save(std::string("aaam_" + std::to_string(index) + ".jpg").c_str(), index);
       }
 
       auto snno_array = TextureArrayLDR(FORMAT_R8G8B8A8_UNORM, extent_x, extent_y, texture_1_indices.size());
       for (const auto& [key, index] : texture_1_indices)
       {
-        //snao_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
           const auto value = glm::u8vec4(
-            key[0] == -1 ? 0u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).g,
-            key[1] == -1 ? 0u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).r,
-            key[2] == -1 ? 0u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).g,
-            key[3] == -1 ? 0u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).r);
+            key[0] == -1 ? 000u : texture_all_cache[key[0]].GetItem<glm::u8vec4>(i).g,
+            key[1] == -1 ? 000u : texture_all_cache[key[1]].GetItem<glm::u8vec4>(i).r,
+            key[2] == -1 ? 000u : texture_all_cache[key[2]].GetItem<glm::u8vec4>(i).g,
+            key[3] == -1 ? 255u : texture_all_cache[key[3]].GetItem<glm::u8vec4>(i).b);
           snno_array.Set(index, 0, { &value, 1 }, i);
         }
       }     
@@ -387,7 +389,6 @@ namespace RayGene3D
       auto eeet_array = TextureArrayLDR(FORMAT_R8G8B8A8_SRGB, extent_x, extent_y, texture_2_indices.size());
       for (const auto& [key, index] : texture_2_indices)
       {
-        //et_array.Create(index);
         for (auto i = 0u; i < size_t(extent_x * extent_y); ++i)
         {
           const auto value = glm::u8vec4(
