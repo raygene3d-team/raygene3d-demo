@@ -36,22 +36,12 @@ THE SOFTWARE.
 //#include <stb/stb_image_write.h>
 //#include <stb/stb_image_resize.h>
 
-#include <mikktspace/mikktspace.h>
-#include <meshoptimizer/src/meshoptimizer.h>
+
 
 namespace RayGene3D
 {
   namespace IO
   {
-    Mode::Mode(Scope& scope)
-      : scope(scope)
-    {
-    }
-
-    Mode::~Mode()
-    {
-    }
-
     Geometry::Geometry(size_t idx_count, uint32_t idx_align, const glm::uvec3& idx_order,
       CByteData pos_data, uint32_t pos_stride, CByteData pos_idx_data, uint32_t pos_idx_stride, const glm::fmat4x4& pos_transform,
       CByteData nrm_data, uint32_t nrm_stride, CByteData nrm_idx_data, uint32_t nrm_idx_stride, const glm::fmat3x3& nrm_transform,
@@ -99,7 +89,7 @@ namespace RayGene3D
           return vertex;
         };
 
-      const auto hash_vertex_fn = 
+      const auto hash_vertex_fn =
         [](const Vertex& vertex)
         {
           const auto uref = reinterpret_cast<const glm::u32vec4*>(&vertex);
@@ -116,7 +106,7 @@ namespace RayGene3D
       const auto compare_vertex_fn = [](const Vertex& l, const Vertex& r) { return (memcmp(&l, &r, sizeof(Vertex)) == 0); };
       std::unordered_map<Vertex, uint32_t, decltype(hash_vertex_fn), decltype(compare_vertex_fn)> vertex_map(8, hash_vertex_fn, compare_vertex_fn);
 
-      const auto remap_vertex_fn = 
+      const auto remap_vertex_fn =
         [&vertex_map](std::vector<Vertex>& vertices, const Vertex& vertex)
         {
           const auto result = vertex_map.emplace(vertex, uint32_t(vertices.size()));
@@ -127,7 +117,7 @@ namespace RayGene3D
           return result.first->second;
         };
 
-      
+
 
       for (size_t i = 0; i < idx_count / 3; ++i)
       {
@@ -175,38 +165,35 @@ namespace RayGene3D
       }
     }
 
-    void Geometry::CalculateTangents()
+
+    Mode::Mode(Scope& scope)
+      : scope(scope)
     {
-      //auto result = std::vector<Vertex>(vertices.size());
+      atlas = xatlas::Create();
+    }
 
-      //struct SMikkTSpaceUserData
-      //{
-      //  std::pair<const Triangle*, uint32_t> prims;
-      //  std::pair<const Vertex*, uint32_t> verts;
-      //  std::pair<Vertex*, uint32_t> tangent_verts;
-      //} data{ triangles, vertices, { result.data(), uint32_t(result.size())} };
+    Mode::~Mode()
+    {
+      xatlas::Destroy(atlas);
+    }
 
+
+
+    void Mode::CalculateTangents(Geometry& geometry)
+    {
       SMikkTSpaceInterface input = { 0 };
-      input.m_getNumFaces = 
-        [](const SMikkTSpaceContext* ctx)
+
+      input.m_getNumFaces = [](const SMikkTSpaceContext* ctx)
         {
           const auto geometry = reinterpret_cast<const Geometry*>(ctx->m_pUserData);
           return int32_t(geometry->triangles.size());
         };
 
-      input.m_getNumVerticesOfFace = 
-        [](const SMikkTSpaceContext* ctx, const int iFace)
+      input.m_getNumVerticesOfFace = [](const SMikkTSpaceContext* ctx, const int iFace)
         {
           const auto geometry = reinterpret_cast<const Geometry*>(ctx->m_pUserData);
           return 3;
         };
-
-      //input.m_getPosition = &GetPositionCb;
-      //input.m_getNormal = &GetNormalCb;
-      //input.m_getTexCoord = &GetTexCoordCb;
-      //input.m_setTSpaceBasic = &SetTspaceBasicCb;
-      //input.m_setTSpace = NULL;
-
 
       input.m_getPosition = [](const SMikkTSpaceContext* ctx, float fvPosOut[], int iFace, int iVert)
         {
@@ -251,19 +238,19 @@ namespace RayGene3D
 
       SMikkTSpaceContext context;
       context.m_pInterface = &input;
-      context.m_pUserData = this;
+      context.m_pUserData = &geometry;
 
       BLAST_ASSERT(1 == genTangSpaceDefault(&context));
     }
 
-    void Geometry::CalculateMeshlets()
+    void Mode::CalculateMeshlets(Geometry& geometry)
     {
 
-      meshopt_optimizeVertexCache((uint32_t*)triangles.data(), (const uint32_t*)triangles.data(), triangles.size() * 3, vertices.size());
+      meshopt_optimizeVertexCache((uint32_t*)geometry.triangles.data(), (const uint32_t*)geometry.triangles.data(), geometry.triangles.size() * 3, geometry.vertices.size());
 
-      meshopt_optimizeOverdraw((uint32_t*)triangles.data(), (const uint32_t*)triangles.data(), triangles.size() * 3, (const float*)vertices.data(), vertices.size(), sizeof(Vertex), 1.0f);
+      meshopt_optimizeOverdraw((uint32_t*)geometry.triangles.data(), (const uint32_t*)geometry.triangles.data(), geometry.triangles.size() * 3, (const float*)geometry.vertices.data(), geometry.vertices.size(), sizeof(Vertex), 1.0f);
 
-      meshopt_optimizeVertexFetch((float*)vertices.data(), (uint32_t*)triangles.data(), triangles.size() * 3, (const float*)vertices.data(), vertices.size(), sizeof(Vertex));
+      meshopt_optimizeVertexFetch((float*)geometry.vertices.data(), (uint32_t*)geometry.triangles.data(), geometry.triangles.size() * 3, (const float*)geometry.vertices.data(), geometry.vertices.size(), sizeof(Vertex));
 
 
       const size_t vrt_limit = 64;
@@ -275,7 +262,7 @@ namespace RayGene3D
 
       //// note: input mesh is assumed to be optimized for vertex cache and vertex fetch
       //double start = timestamp();
-      auto meshlet_count = meshopt_buildMeshletsBound(triangles.size() * 3, vrt_limit, trg_limit);
+      auto meshlet_count = meshopt_buildMeshletsBound(geometry.triangles.size() * 3, vrt_limit, trg_limit);
       std::vector<meshopt_Meshlet> meshlets_opt(meshlet_count);
       std::vector<uint32_t> meshlet_vrt(meshlet_count * vrt_limit);
       std::vector<uint8_t> meshlet_trg(meshlet_count * trg_limit * 3);
@@ -286,7 +273,7 @@ namespace RayGene3D
       //  meshlets.resize(meshopt_buildMeshletsFlex(&meshlets[0], &meshlet_vertices[0], &meshlet_triangles[0], &mesh.indices[0], mesh.indices.size(), &mesh.vertices[0].px, mesh.vertices.size(), sizeof(Vertex), max_vertices, min_triangles, max_triangles, cone_weight, split_factor));
       //else // note: equivalent to the call of buildMeshletsFlex() with non-negative cone_weight and split_factor = 0
       meshlets_opt.resize(meshopt_buildMeshlets(&meshlets_opt[0], &meshlet_vrt[0], &meshlet_trg[0],
-        (const uint32_t*)triangles.data(), triangles.size() * 3, (const float*)vertices.data(), vertices.size(), sizeof(Vertex), vrt_limit, trg_limit, 0.0f));
+        (const uint32_t*)geometry.triangles.data(), geometry.triangles.size() * 3, (const float*)geometry.vertices.data(), geometry.vertices.size(), sizeof(Vertex), vrt_limit, trg_limit, 0.0f));
 
       for (size_t i = 0; i < meshlets_opt.size(); ++i)
       {
@@ -310,20 +297,29 @@ namespace RayGene3D
         //meshopt_optimizeMeshlet(&meshlet_vrt[meshlets_opt[i].vertex_offset], &meshlet_trg[meshlets_opt[i].triangle_offset], meshlets_opt[i].triangle_count, meshlets_opt[i].vertex_count);
       }
 
+      geometry.meshlets.resize(meshlets_opt.size());
+      for (auto i = 0ull; i < geometry.meshlets.size(); ++i)
+      {
+        geometry.meshlets[i].vrt_offset = meshlets_opt[i].vertex_offset;
+        geometry.meshlets[i].vrt_count = meshlets_opt[i].vertex_count;
+        geometry.meshlets[i].trg_offset = meshlets_opt[i].triangle_offset;
+        geometry.meshlets[i].trg_count = meshlets_opt[i].triangle_count;
+      }
 
 
-      std::vector<int> boundary(vertices.size());
+
+      std::vector<int> boundary(geometry.vertices.size());
 
       for (const auto& meshlet : meshlets_opt)
       {
-        meshopt_avg_vertices += meshlet.vertex_count;
-        meshopt_avg_triangles += meshlet.triangle_count;
-        meshopt_not_full += meshlet.triangle_count < trg_limit;
+        geometry.meshopt_avg_vertices += meshlet.vertex_count;
+        geometry.meshopt_avg_triangles += meshlet.triangle_count;
+        geometry.meshopt_not_full += meshlet.triangle_count < trg_limit;
 
         for (uint32_t j = 0; j < meshlet.vertex_count; ++j)
         {
           const auto counter = boundary[meshlet_vrt[meshlet.vertex_offset + j]]++;
-          meshopt_avg_boundary += counter == 2 ? 1 : 0;
+          geometry.meshopt_avg_boundary += counter == 2 ? 1 : 0;
         }
 
         std::array<int, vrt_limit> parents;
@@ -359,8 +355,25 @@ namespace RayGene3D
         }
 
         assert(roots != 0);
-        meshopt_avg_connected += roots;
+        geometry.meshopt_avg_connected += roots;
       }
+    }
+
+    void Mode::CalculateAtlas(Geometry& geometry)
+    {
+      xatlas::MeshDecl mesh_decl;
+      mesh_decl.vertexCount = geometry.vertices.size();
+      mesh_decl.vertexPositionData = reinterpret_cast<const uint8_t*>(geometry.vertices.data()) + 0u;
+      mesh_decl.vertexPositionStride = uint32_t(sizeof(Vertex));
+      mesh_decl.vertexNormalData = reinterpret_cast<const uint8_t*>(geometry.vertices.data()) + 16u;
+      mesh_decl.vertexNormalStride = uint32_t(sizeof(Vertex));
+      mesh_decl.vertexUvData = reinterpret_cast<const uint8_t*>(geometry.vertices.data()) + 48u;
+      mesh_decl.vertexUvStride = uint32_t(sizeof(Vertex));
+      mesh_decl.indexCount = geometry.triangles.size() * 3u;
+      mesh_decl.indexData = geometry.triangles.data();
+      mesh_decl.indexFormat = xatlas::IndexFormat::UInt32;
+      const auto res = xatlas::AddMesh(atlas, mesh_decl);
+      BLAST_ASSERT(xatlas::AddMeshError::Success == res);
     }
   }
 }

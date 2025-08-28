@@ -35,9 +35,9 @@ THE SOFTWARE.
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
 //#define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include <stb/stb_image.h>
-#include <stb/stb_image_write.h>
-#include <stb/stb_image_resize.h>
+//#include <stb/stb_image.h>
+//#include <stb/stb_image_write.h>
+//#include <stb/stb_image_resize.h>
 
 #include "gltf_converter.h"
 
@@ -114,13 +114,13 @@ namespace RayGene3D
         parse_node_hierarchy(parse_node_hierarchy, node, glm::identity<glm::fmat4x4>());
       }
 
-      auto vert_buffer = StructureBuffer<Vertex>();
-      auto trng_buffer = StructureBuffer<Triangle>();
-      auto mlet_buffer = StructureBuffer<Meshlet>();
-      auto bone_buffer = StructureBuffer<uint8_t>();
+      //auto vert_buffer = StructureBuffer<Vertex>();
+      //auto trng_buffer = StructureBuffer<Triangle>();
+      //auto mlet_buffer = StructureBuffer<Meshlet>();
+      //auto bone_buffer = StructureBuffer<uint8_t>();
 
-      const auto geometry_convert_fn = [&gltf_model, &vert_buffer, &trng_buffer, &mlet_buffer, &bone_buffer]
-        (const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool to_lhs, bool flip_v)
+      const auto geometry_convert_fn = [this, &gltf_model]
+      (const tinygltf::Primitive& gltf_primitive, const glm::fmat4x4 transform, float scale, bool to_lhs, bool flip_v)
         {
           BLAST_ASSERT(gltf_primitive.mode == TINYGLTF_MODE_TRIANGLES);
 
@@ -161,7 +161,7 @@ namespace RayGene3D
           const auto idx_count = gltf_indices.count;
 
           const auto lhs_transform = glm::fmat3x3(
-           -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
             0.0f, 0.0f, 1.0f
           );
@@ -177,44 +177,50 @@ namespace RayGene3D
           const auto tc0_transform = flip_v ? flip_v_tranform : glm::identity<glm::fmat2x2>();
           const auto idx_order = to_lhs ? glm::uvec3{ 0u, 2u, 1u } : glm::uvec3{ 0u, 1u, 2u };
 
-          auto geometry = Geometry(idx_count, idx_stride, idx_order,
+          geometries.emplace_back(idx_count, idx_stride, idx_order,
             pos_data, pos_stride, idx_data, idx_stride, pos_transform,
             nrm_data, nrm_stride, idx_data, idx_stride, nrm_transform,
             tc0_data, tc0_stride, idx_data, idx_stride, tc0_transform);
+        };
 
-          geometry.CalculateTangents();
-          //geometry.CalculateMeshlets();
+          //CalculateTangents(geometry);
+          //CalculateMeshlets(geometry);
 
           //MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
 
           
           
-          const auto vert_offset = vert_buffer.Length();
-          const auto vert_length = geometry.vertices.size();
-          const auto vert_items = geometry.vertices.data();
-          vert_buffer.Resize(vert_offset + vert_length);
-          const auto* v = vert_buffer.Items().first;
-          vert_buffer.Set({ vert_items, vert_length }, vert_offset);
+          //const auto vert_offset = vert_buffer.Length();
+          //const auto vert_length = geometry.vertices.size();
+          //const auto vert_items = geometry.vertices.data();
+          //vert_buffer.Resize(vert_offset + vert_length + vert_length % 4);
+          //vert_buffer.Set({ vert_items, vert_length }, vert_offset);
 
-          
-          const auto trng_offset = trng_buffer.Length();
-          const auto trng_length = geometry.triangles.size();
-          const auto trng_items = geometry.triangles.data();
-          trng_buffer.Resize(trng_offset + trng_length);
-          const auto* t = trng_buffer.Items().first;
-          trng_buffer.Set({ trng_items, trng_length }, trng_offset);
+          //
+          //const auto trng_offset = trng_buffer.Length();
+          //const auto trng_length = geometry.triangles.size();
+          //const auto trng_items = geometry.triangles.data();
+          //trng_buffer.Resize(trng_offset + trng_length + trng_length % 4);
+          //trng_buffer.Set({ trng_items, trng_length }, trng_offset);
 
 
 
-          const auto mlet_length = 0u;
+          //const auto mlet_length = 0u;
+          //const auto mlet_offset = 0u;
 
-          const auto bone_length = 0u;
+          //const auto bone_length = 0u;
+          //const auto bone_offset = 0u;
 
-          const auto aabb_min = geometry.aabb_min;
-          const auto aabb_max = geometry.aabb_max;
+          //const auto aabb_min = geometry.aabb_min;
+          //const auto aabb_max = geometry.aabb_max;
 
-          return std::make_tuple(vert_length, trng_length, mlet_length, bone_length, aabb_min, aabb_max);
-        };
+          //return std::make_tuple(
+          //  vert_length, vert_offset, 
+          //  trng_length, trng_offset,
+          //  mlet_length, mlet_offset,
+          //  bone_length, bone_offset,
+          //  aabb_min, aabb_max);
+       // };
 
       std::unordered_map<int, Raw> texture_all_cache;
       std::unordered_map<glm::u32vec4, uint32_t> texture_0_indices;
@@ -247,8 +253,8 @@ namespace RayGene3D
             auto raw = Raw(dst_extent_x * dst_extent_y, glm::zero<glm::u8vec4>());
             auto dst_data = raw.AccessBytes().first;
 
-            if (srgb) { stbir_resize_uint8_srgb(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4, 3, 0); }
-            else { stbir_resize_uint8(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4); }
+            //if (srgb) { stbir_resize_uint8_srgb(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4, 3, 0); }
+            //else { stbir_resize_uint8(src_data, src_extent_x, src_extent_y, 0, dst_data, dst_extent_x, dst_extent_y, 0, 4); }
 
             texture_all_cache[source] = std::move(raw);
             return source;
@@ -294,14 +300,6 @@ namespace RayGene3D
         return std::make_tuple(idx_0, idx_1, idx_2, idx_3);
       };
 
-      
-
-
-      auto vert_offset{ 0ull };
-      auto trng_offset{ 0ull };
-      auto mlet_offset{ 0ull };
-      auto bone_offset{ 0ull };
-
       for (const auto& [mesh_id, transform] : mesh_relations)
       {
         const auto& gltf_mesh = gltf_model.meshes[mesh_id];
@@ -309,49 +307,42 @@ namespace RayGene3D
         {
           const auto& gltf_primitive = gltf_mesh.primitives[k];
 
-          const auto [vert_count, trng_count, mlet_count, bone_count, aabb_min, aabb_max] =
-            geometry_convert_fn(gltf_primitive, transform, scope.position_scale, scope.conversion_rhs, false);
+          geometry_convert_fn(gltf_primitive, transform, scope.position_scale, scope.conversion_rhs, false);
 
-          const auto [aaam_layer, snno_layer, eeet_layer, mask_layer] =
-            material_convert_fn(gltf_primitive, scope.texture_level);
+          material_convert_fn(gltf_primitive, scope.texture_level);
 
-          if (vert_count == 0 || trng_count == 0) continue;
+          //if (vert_count == 0 || trng_count == 0) continue;
 
-          Instance instance;
-          instance.vert_offset = vert_offset;
-          instance.vert_count = vert_count;
-          instance.trng_offset = trng_offset;
-          instance.trng_count = trng_count;
-          instance.mlet_offset = mlet_offset;
-          instance.mlet_count = mlet_count;
-          instance.bone_offset = bone_offset;
-          instance.bone_count = bone_count;
+          //Instance instance;
+          //instance.vert_offset = vert_offset;
+          //instance.vert_count = vert_count;
+          //instance.trng_offset = trng_offset;
+          //instance.trng_count = trng_count;
+          //instance.mlet_offset = mlet_offset;
+          //instance.mlet_count = mlet_count;
+          //instance.bone_offset = bone_offset;
+          //instance.bone_count = bone_count;
 
-          instance.transform = glm::identity<glm::fmat3x4>();
+          //instance.transform = glm::identity<glm::fmat3x4>();
 
-          instance.aabb_min = aabb_min;
-          instance.index = scope.inst_buffer.Length();
-          instance.aabb_max = aabb_max;
-          instance.flags = 0;
+          //instance.aabb_min = aabb_min;
+          //instance.index = scope.inst_buffer.Length();
+          //instance.aabb_max = aabb_max;
+          //instance.flags = 0;
 
-          instance.aaam_layer = aaam_layer;
-          instance.snno_layer = snno_layer;
-          instance.eeet_layer = eeet_layer;
-          instance.mask_layer = mask_layer;
+          //instance.aaam_layer = aaam_layer;
+          //instance.snno_layer = snno_layer;
+          //instance.eeet_layer = eeet_layer;
+          //instance.mask_layer = mask_layer;
 
-          scope.inst_buffer.Resize(scope.inst_buffer.Length() + 1, instance);
-
-          vert_offset += vert_count;
-          trng_offset += trng_count;
-          mlet_offset += mlet_count;
-          bone_offset += bone_count;
+          //scope.inst_buffer.Resize(scope.inst_buffer.Length() + 1, instance);
         }
       }
 
-      std::swap(scope.vert_buffer, vert_buffer);
-      std::swap(scope.trng_buffer, trng_buffer);
-      std::swap(scope.mlet_buffer, mlet_buffer);
-      std::swap(scope.bone_buffer, bone_buffer);
+      //std::swap(scope.vert_buffer, vert_buffer);
+      //std::swap(scope.trng_buffer, trng_buffer);
+      //std::swap(scope.mlet_buffer, mlet_buffer);
+      //std::swap(scope.bone_buffer, bone_buffer);
 
       const auto extent_x = 1u << scope.texture_level - 1;
       const auto extent_y = 1u << scope.texture_level - 1;

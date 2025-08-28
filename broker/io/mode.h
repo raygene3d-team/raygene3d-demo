@@ -29,30 +29,20 @@ THE SOFTWARE.
 
 #include "scope.h"
 
+#include <mikktspace/mikktspace.h>
+#include <meshoptimizer/src/meshoptimizer.h>
+#include <xatlas/xatlas.h>
+
 namespace RayGene3D
 {
   namespace IO
   {
-    class Mode
-    {
-    protected:
-      Scope& scope;
-
-    public:
-      virtual void Import() = 0;
-      virtual void Export() = 0;
-
-    public:
-      Mode(Scope& scope);
-      virtual ~Mode();
-    };
-
     struct Geometry
     {
       std::vector<Vertex> vertices;
       std::vector<Triangle> triangles;
-      //std::vector<Meshlet> meshlets;
-      std::vector<Box> b_boxes;
+      std::vector<Meshlet> meshlets;
+      std::vector<Box> boxes;
 
       glm::f32vec3 aabb_min = glm::f32vec3{ FLT_MAX, FLT_MAX, FLT_MAX };
       glm::f32vec3 aabb_max = glm::f32vec3{-FLT_MAX,-FLT_MAX,-FLT_MAX };
@@ -67,11 +57,6 @@ namespace RayGene3D
       size_t meshopt_not_full{ 0u };
 
     public:
-      void CalculateTangents();
-      void CalculateMeshlets();
-      void CalculateBBoxes();
-
-    public:
       Geometry(size_t idx_count, uint32_t idx_align, const glm::uvec3& idx_order,
         CByteData pos_data, uint32_t pos_stride, CByteData pos_idx_data, uint32_t pos_idx_stride, const glm::fmat4x4& pos_transform,
         CByteData nrm_data, uint32_t nrm_stride, CByteData nrm_idx_data, uint32_t nrm_idx_stride, const glm::fmat3x3& nrm_transform,
@@ -79,8 +64,47 @@ namespace RayGene3D
       ~Geometry() {}
     };
 
+
+
     struct Material
     {
+      uint32_t texture_index_0;
+      uint32_t texture_index_1;
+      uint32_t texture_index_2;
+      uint32_t texture_index_3;
+
+    public:
+      Material(const std::string& name_0, const std::string& name_1, const std::string& name_2, const std::string& name_3);
     };
+
+
+    class Mode
+    {
+    protected:
+      Scope& scope;
+
+    protected:
+      xatlas::Atlas* atlas;
+
+    public:
+      virtual void Import() = 0;
+      virtual void Export() = 0;
+
+    protected:
+      std::vector<Geometry> geometries;
+      std::vector<Material> materials;
+
+    public:
+      void CalculateTangents(Geometry& geometry);
+      void CalculateAtlas(Geometry& geometry);
+      void CalculateMeshlets(Geometry& geometry);
+      void CalculateBoxes(Geometry& geometry);
+
+    public:
+      Mode(Scope& scope);
+      virtual ~Mode();
+    };
+
+
   }
 }

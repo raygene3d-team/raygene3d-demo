@@ -153,8 +153,8 @@ namespace RayGene3D
 
           if (geometry.vertices.empty() || geometry.triangles.empty()) continue;
 
-          geometry.CalculateTangents();
-          geometry.CalculateMeshlets();
+          CalculateTangents(geometry);
+          CalculateMeshlets(geometry);
 
           Instance instance;
           instance.transform = glm::identity<glm::fmat3x4>();
