@@ -37,8 +37,11 @@ namespace RayGene3D
 {
   namespace IO
   {
-    struct Geometry
+    class Mode;
+
+    struct Mesh
     {
+    public:
       std::vector<Vertex> vertices;
       std::vector<Triangle> triangles;
       std::vector<Meshlet> meshlets;
@@ -56,25 +59,24 @@ namespace RayGene3D
       double meshopt_avg_connected{ 0.0 };
       size_t meshopt_not_full{ 0u };
 
+      glm::f32vec4 material_param_0{ 0.0f, 0.0f, 0.0f, 0.0f };
+      glm::f32vec4 material_param_1{ 0.0f, 0.0f, 0.0f, 0.0f };
+      glm::f32vec4 material_param_2{ 0.0f, 0.0f, 0.0f, 0.0f };
+      glm::f32vec4 material_param_3{ 0.0f, 0.0f, 0.0f, 0.0f };
+
+      uint32_t aaam_texture_index{ uint32_t(-1) };
+      uint32_t snno_texture_index{ uint32_t(-1) };
+      uint32_t eeet_texture_index{ uint32_t(-1) };
+      uint32_t mask_texture_index{ uint32_t(-1) };
+
     public:
-      Geometry(size_t idx_count, uint32_t idx_align, const glm::uvec3& idx_order,
+      Mesh(size_t idx_count, uint32_t idx_align, const glm::uvec3& idx_order,
         CByteData pos_data, uint32_t pos_stride, CByteData pos_idx_data, uint32_t pos_idx_stride, const glm::fmat4x4& pos_transform,
         CByteData nrm_data, uint32_t nrm_stride, CByteData nrm_idx_data, uint32_t nrm_idx_stride, const glm::fmat3x3& nrm_transform,
-        CByteData tc0_data, uint32_t tc0_stride, CByteData tc0_idx_data, uint32_t tc0_idx_stride, const glm::fmat2x2& tc0_transform);
-      ~Geometry() {}
-    };
-
-
-
-    struct Material
-    {
-      uint32_t texture_index_0;
-      uint32_t texture_index_1;
-      uint32_t texture_index_2;
-      uint32_t texture_index_3;
-
-    public:
-      Material(const std::string& name_0, const std::string& name_1, const std::string& name_2, const std::string& name_3);
+        CByteData tc0_data, uint32_t tc0_stride, CByteData tc0_idx_data, uint32_t tc0_idx_stride, const glm::fmat2x2& tc0_transform,
+        uint32_t aaam_index, uint32_t snno_index, uint32_t eeet_index, uint32_t mask_index,
+        const glm::f32vec4& param_0, const glm::f32vec4& param_1, const glm::f32vec4& param_2, const glm::f32vec4& param_3);
+      ~Mesh() {}
     };
 
 
@@ -83,22 +85,23 @@ namespace RayGene3D
     protected:
       Scope& scope;
 
-    protected:
-      xatlas::Atlas* atlas;
+    public:
+      std::vector<Mesh> mesh_items;
+      std::vector<Raw> aaam_items;
+      std::vector<Raw> snno_items;
+      std::vector<Raw> eeet_items;
+      std::vector<Raw> mask_items;
+      std::vector<Box> boxes;
+
+    public:
+      void CalculateTangents();
+      void CalculateAtlas();
+      void CalculateMeshlets();
+      void CalculateBoxes();
 
     public:
       virtual void Import() = 0;
       virtual void Export() = 0;
-
-    protected:
-      std::vector<Geometry> geometries;
-      std::vector<Material> materials;
-
-    public:
-      void CalculateTangents(Geometry& geometry);
-      void CalculateAtlas(Geometry& geometry);
-      void CalculateMeshlets(Geometry& geometry);
-      void CalculateBoxes(Geometry& geometry);
 
     public:
       Mode(Scope& scope);

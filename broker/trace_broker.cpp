@@ -401,35 +401,11 @@ namespace RayGene3D
 
   void TraceBroker::Initialize()
   {
-    if (prop_scene->HasObjectItem("trace_buffer_bbox")) return;
-    if (prop_scene->HasObjectItem("trace_buffer_tbox")) return;
-
-    std::vector<Box> tbox_items;
-    std::vector<Box> bbox_items;
-
-    const auto inst_items = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
-    const auto trng_items = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
-    const auto vert_items = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
-
     CreateTraceBufferInst();
     CreateTraceBufferTrng();
     CreateTraceBufferVert();
 
-
-    MainBuild(inst_items, trng_items, vert_items, tbox_items, bbox_items);
-
-    {
-      const auto buffer_tbox = StructureBuffer<Box>({ tbox_items.data(), tbox_items.size() });
-      prop_buffer_tbox = buffer_tbox.Export();
-      prop_scene->SetObjectItem("buffer_tbox", prop_buffer_tbox);
-    }
     CreateTraceBufferTBox();
-
-    {
-      const auto buffer_bbox = StructureBuffer<Box>({ bbox_items.data(), bbox_items.size() });
-      prop_buffer_bbox = buffer_bbox.Export();
-      prop_scene->SetObjectItem("buffer_bbox", prop_buffer_bbox);
-    }
     CreateTraceBufferBBox();
   }
 
@@ -467,6 +443,9 @@ namespace RayGene3D
       prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
       prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
       prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
+
+      prop_buffer_tbox = prop_scene->GetObjectItem("buffer_tbox");
+      prop_buffer_bbox = prop_scene->GetObjectItem("buffer_bbox");
     }
   }
 

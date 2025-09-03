@@ -146,31 +146,33 @@ namespace RayGene3D
           const auto tc0_transform = true ? flip_v_tranform : glm::identity<glm::fmat2x2>();
           const auto idx_order = scope.conversion_rhs ? glm::uvec3{ 0u, 2u, 1u } : glm::uvec3{ 0u, 1u, 2u };
 
-          auto geometry = Geometry(idx_count, idx_align, idx_order,
+          auto mesh = Mesh(idx_count, idx_align, idx_order,
             pos_data, pos_stride, pos_idx_data, pos_idx_stride, pos_transform,
             nrm_data, nrm_stride, nrm_idx_data, nrm_idx_stride, nrm_transform,
-            tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride, tc0_transform);
+            tc0_data, tc0_stride, tc0_idx_data, tc0_idx_stride, tc0_transform,
+            -1, -1, -1, -1,
+            glm::zero<glm::f32vec4>(), glm::zero<glm::f32vec4>(), glm::zero<glm::f32vec4>(), glm::zero<glm::f32vec4>());
 
-          if (geometry.vertices.empty() || geometry.triangles.empty()) continue;
+          if (mesh.vertices.empty() || mesh.triangles.empty()) continue;
 
-          CalculateTangents(geometry);
-          CalculateMeshlets(geometry);
+          //CalculateTangents(geometry);
+          //CalculateMeshlets(geometry);
 
           Instance instance;
           instance.transform = glm::identity<glm::fmat3x4>();
 
-          instance.aabb_min = geometry.aabb_min;
+          instance.aabb_min = mesh.aabb_min;
           instance.index = scope.inst_buffer.Length();
-          instance.aabb_max = geometry.aabb_max;
+          instance.aabb_max = mesh.aabb_max;
           instance.flags = 0;
 
-          const auto vert_count = geometry.vertices.size();
-          const auto vert_items = geometry.vertices.data();
+          const auto vert_count = mesh.vertices.size();
+          const auto vert_items = mesh.vertices.data();
           scope.vert_buffer.Resize(scope.vert_buffer.Length() + vert_count);
           scope.vert_buffer.Set({ vert_items, vert_count });
 
-          const auto trng_count = geometry.triangles.size();
-          const auto trng_items = geometry.triangles.data();
+          const auto trng_count = mesh.triangles.size();
+          const auto trng_items = mesh.triangles.data();
           scope.trng_buffer.Resize(scope.trng_buffer.Length() + trng_count);
           scope.trng_buffer.Set({ trng_items, trng_count });
 

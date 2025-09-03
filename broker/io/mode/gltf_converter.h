@@ -30,6 +30,8 @@ THE SOFTWARE.
 #pragma once
 #include "../mode.h"
 
+
+
 namespace RayGene3D
 {
   namespace IO
@@ -39,6 +41,23 @@ namespace RayGene3D
     public:
       virtual void Import() override;
       virtual void Export() override;
+
+    protected:
+
+
+    protected:
+      std::unordered_map<int, glm::fmat4x4> mesh_transforms;
+      std::unordered_map<glm::i32vec4, uint32_t> aaam_indices;
+      std::unordered_map<glm::i32vec4, uint32_t> snno_indices;
+      std::unordered_map<glm::i32vec4, uint32_t> eeet_indices;
+      std::unordered_map<glm::i32vec4, uint32_t> mask_indices;
+      std::unordered_map<int, Raw> texture_sources;
+
+    protected:
+      //void ParseNode(const tinygltf::Node& node, glm::fmat4x4 parent_transform);
+      //CByteData AccessBuffer(const tinygltf::Accessor& accessor);
+      //int CacheTexture(int index, bool srgb);
+
 
     public:
       GLTFConverter(Scope& scope);
