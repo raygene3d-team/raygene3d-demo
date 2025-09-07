@@ -98,6 +98,93 @@ namespace RayGene3D
       );
   }
 
+  void SceneBroker::CreateTraceBufferTBox()
+  {
+    const auto [items, count] = prop_buffer_tbox->GetObjectItem("binary")->GetRawItems<Box>(0);
+    const auto stride = sizeof(Box);
+
+    trace_buffer_tbox = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_tbox",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferBBox()
+  {
+    const auto [items, count] = prop_buffer_bbox->GetObjectItem("binary")->GetRawItems<Box>(0);
+    const auto stride = sizeof(Box);
+
+    trace_buffer_bbox = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_bbox",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferInst()
+  {
+    const auto [items, count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto stride = sizeof(Instance);
+
+    trace_buffer_inst = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_inst",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferTrng()
+  {
+    const auto [items, count] = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+    const auto stride = sizeof(Triangle);
+
+    trace_buffer_trng = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_trng",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferVert()
+  {
+    const auto [data, count] = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
+    const auto stride = sizeof(Vertex);
+
+    trace_buffer_vert = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_vert",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
+      { reinterpret_cast<const uint8_t*>(data), count * stride }
+      );
+  }
+
+
+
   void SceneBroker::CreateSceneArrayAAAM()
   {
     const auto format = Format(prop_array_aaam->GetObjectItem("format")->GetUint());
@@ -214,12 +301,35 @@ namespace RayGene3D
     scene_buffer_inst.reset();
   }
 
-  //void SceneBroker::DestroySceneBuffer3()
-  //{
-  //  wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_3);
-  //  scene_buffer_3.reset();
-  //}
+  void SceneBroker::DestroyTraceBufferTBox()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_tbox);
+    trace_buffer_tbox.reset();
+  }
 
+  void SceneBroker::DestroyTraceBufferBBox()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_bbox);
+    trace_buffer_bbox.reset();
+  }
+
+  void SceneBroker::DestroyTraceBufferInst()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_inst);
+    trace_buffer_inst.reset();
+  }
+
+  void SceneBroker::DestroyTraceBufferTrng()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_trng);
+    trace_buffer_trng.reset();
+  }
+
+  void SceneBroker::DestroyTraceBufferVert()
+  {
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_vert);
+    trace_buffer_vert.reset();
+  }
   void SceneBroker::DestroySceneArrayAAAM()
   {
     wrap.GetCore()->GetDevice()->DestroyResource(scene_array_aaam);
@@ -260,30 +370,32 @@ namespace RayGene3D
 
     prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
     {
-      //prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-
       prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
       prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
       prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
-      //prop_buffer_3 = prop_scene->GetObjectItem("buffer_3");
+
+      prop_buffer_tbox = prop_scene->GetObjectItem("buffer_tbox");
+      prop_buffer_bbox = prop_scene->GetObjectItem("buffer_bbox");
 
       prop_array_aaam = prop_scene->GetObjectItem("array_aaam");
       prop_array_snno = prop_scene->GetObjectItem("array_snno");
       prop_array_eeet = prop_scene->GetObjectItem("array_eeet");
-      //prop_array_3 = prop_scene->GetObjectItem("array_3");
     }
-
-    //CreateSceneInstances();
 
     CreateSceneBufferVert();
     CreateSceneBufferTrng();
     CreateSceneBufferInst();
-    //CreateSceneBuffers3();
+    
+    CreateTraceBufferInst();
+    CreateTraceBufferTrng();
+    CreateTraceBufferVert();
+
+    CreateTraceBufferTBox();
+    CreateTraceBufferBBox();
 
     CreateSceneArrayAAAM();
     CreateSceneArraySNNO();
     CreateSceneArrayEEET();
-    //CreateSceneArray3();
   }
 
   SceneBroker::~SceneBroker()
@@ -293,6 +405,13 @@ namespace RayGene3D
     prop_buffer_vert.reset();
     prop_buffer_trng.reset();
     prop_buffer_inst.reset();
+
+    prop_buffer_vert.reset();
+    prop_buffer_trng.reset();
+    prop_buffer_inst.reset();
+
+    prop_buffer_bbox.reset();
+    prop_buffer_tbox.reset();
 
     prop_array_aaam.reset();
     prop_array_snno.reset();

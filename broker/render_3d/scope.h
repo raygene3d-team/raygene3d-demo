@@ -135,9 +135,9 @@ namespace RayGene3D
       SPtrResource trace_buffer_trng;
       SPtrResource trace_buffer_vert;
 
-      SPtrResource lightmaps_input;
-      SPtrResource lightmaps_accum;
-      SPtrResource lightmaps_final;
+      //SPtrResource lightmaps_input;
+      //SPtrResource lightmaps_accum;
+      //SPtrResource lightmaps_final;
 
       SPtrResource reflection_probe;
 

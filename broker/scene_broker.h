@@ -38,70 +38,64 @@ namespace RayGene3D
     SPtrProperty prop_scene;
 
   protected:
-    //std::shared_ptr<Property> prop_instances;
     SPtrProperty prop_buffer_inst;
     SPtrProperty prop_buffer_trng;
     SPtrProperty prop_buffer_vert;
-    
-    
-    //SPtrProperty prop_buffer_3;
+
+    SPtrProperty prop_buffer_tbox;
+    SPtrProperty prop_buffer_bbox;
 
     SPtrProperty prop_array_aaam;
     SPtrProperty prop_array_snno;
     SPtrProperty prop_array_eeet;
-    //SPtrProperty prop_array_3;
 
   protected:
-    //SPtrResource scene_instances;
     SPtrResource scene_buffer_inst;
     SPtrResource scene_buffer_trng;
-    SPtrResource scene_buffer_vert;
+    SPtrResource scene_buffer_vert;    
     
-    
-    //SPtrResource scene_buffer_3;
+    SPtrResource trace_buffer_inst;
+    SPtrResource trace_buffer_trng;
+    SPtrResource trace_buffer_vert;
+
+    SPtrResource trace_buffer_tbox;
+    SPtrResource trace_buffer_bbox;
 
     SPtrResource scene_array_aaam;
     SPtrResource scene_array_snno;
     SPtrResource scene_array_eeet;
-    //SPtrResource scene_array_3;
-    //SPtrResource scene_textures4;
-    //SPtrResource scene_textures5;
-    //SPtrResource scene_textures6;
-    //SPtrResource scene_textures7;
 
   protected:
-    //void CreateSceneInstances();
-
     void CreateSceneBufferVert();
     void CreateSceneBufferTrng();
     void CreateSceneBufferInst();
-    //void CreateSceneBuffers3();
+
+    void CreateTraceBufferInst();
+    void CreateTraceBufferTrng();
+    void CreateTraceBufferVert();
+
+    void CreateTraceBufferTBox();
+    void CreateTraceBufferBBox();
 
     void CreateSceneArrayAAAM();
     void CreateSceneArraySNNO();
     void CreateSceneArrayEEET();
-    //void CreateSceneArray3();
-    //void CreateSceneTextures4();
-    //void CreateSceneTextures5();
-    //void CreateSceneTextures6();
-    //void CreateSceneTextures7();
 
   protected:
-    //void DestroySceneInstances();
-
-    void DestroySceneBufferVert();
-    void DestroySceneBufferTrng();
     void DestroySceneBufferInst();
-    //void DestroySceneBuffer3();
+    void DestroySceneBufferTrng();
+    void DestroySceneBufferVert();    
+
+    void DestroyTraceBufferInst();
+    void DestroyTraceBufferTrng();
+    void DestroyTraceBufferVert();
+
+    void DestroyTraceBufferTBox();
+    void DestroyTraceBufferBBox();
 
     void DestroySceneArrayAAAM();
     void DestroySceneArraySNNO();
     void DestroySceneArrayEEET();
-    //void DestroySceneArray3();
-    //void DestroySceneTextures4();
-    //void DestroySceneTextures5();
-    //void DestroySceneTextures6();
-    //void DestroySceneTextures7();
 
   public:
     void Initialize() override;

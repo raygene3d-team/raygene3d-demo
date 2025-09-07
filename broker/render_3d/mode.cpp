@@ -245,9 +245,9 @@ namespace RayGene3D
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
 
-      auto geometry_scene_lightmaps = scope.lightmaps_final->CreateView("render_3d_geometry_scene_lightmaps",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
+      //auto geometry_scene_lightmaps = scope.lightmaps_final->CreateView("render_3d_geometry_scene_lightmaps",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
 
       auto geometry_reflection_map = scope.reflection_map->CreateView("render_3d_geometry_reflection_map",
         Usage(USAGE_SHADER_RESOURCE),
@@ -261,7 +261,7 @@ namespace RayGene3D
         geometry_scene_array_snno,
         geometry_scene_array_eeet,
         //geometry_scene_array_eeet,
-        geometry_scene_lightmaps,
+        //geometry_scene_lightmaps,
         geometry_reflection_map,
       };
 

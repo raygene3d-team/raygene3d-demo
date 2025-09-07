@@ -151,14 +151,9 @@ namespace RayGene3D
     std::string shadow_name{"No Shadow"};
 
   protected:
-    std::shared_ptr<RayGene3D::LightmapBroker> lightmap_broker;
+    //std::shared_ptr<RayGene3D::LightmapBroker> lightmap_broker;
     std::shared_ptr<RayGene3D::Render3DBroker> render_3d_broker;
     std::shared_ptr<RayGene3D::RenderUIBroker> render_ui_broker;
-
-  protected:
-    //std::shared_ptr<RayGene3D::IOBroker> io_broker;
-    //std::shared_ptr<RayGene3D::ImportBroker> lightmap_broker;
-    //std::shared_ptr<RayGene3D::ImportBroker> environment_broker;
 
   protected:
     std::string config_path;
@@ -497,25 +492,25 @@ namespace RayGene3D
 
       tree_property->SetObjectItem("illumination", config_property->GetObjectItem("illumination"));
 
-      {
-        auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
+      //{
+      //  auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
 
-        xatlas_broker->Initialize();
-        xatlas_broker->Use();
-        xatlas_broker->Discard();
+      //  xatlas_broker->Initialize();
+      //  xatlas_broker->Use();
+      //  xatlas_broker->Discard();
 
-        xatlas_broker.reset();
-      }
+      //  xatlas_broker.reset();
+      //}
 
-      {
-        auto trace_broker = std::shared_ptr<RayGene3D::TraceBroker>(new RayGene3D::TraceBroker(*wrap));
+      //{
+      //  auto trace_broker = std::shared_ptr<RayGene3D::TraceBroker>(new RayGene3D::TraceBroker(*wrap));
 
-        trace_broker->Initialize();
-        trace_broker->Use();
-        trace_broker->Discard();
+      //  trace_broker->Initialize();
+      //  trace_broker->Use();
+      //  trace_broker->Discard();
 
-        trace_broker.reset();
-      }
+      //  trace_broker.reset();
+      //}
 
       {
         auto scene_broker = std::shared_ptr<RayGene3D::SceneBroker>(new RayGene3D::SceneBroker(*wrap));
@@ -547,8 +542,8 @@ namespace RayGene3D
       //  lightmap_broker.reset();
       //}
 
-      lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
-      lightmap_broker->SetBakingMode(LightmapBroker::SW_TRACED_BAKING);
+      //lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
+      //lightmap_broker->SetBakingMode(LightmapBroker::SW_TRACED_BAKING);
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
       render_3d_broker->SetShadowMode(Render3DBroker::NO_SHADOW);
@@ -670,7 +665,7 @@ namespace RayGene3D
           change_spark = true;
         }
 
-        lightmap_broker->Use();
+        //lightmap_broker->Use();
         render_3d_broker->Use();
         render_ui_broker->Use();
 
@@ -696,7 +691,7 @@ namespace RayGene3D
 
     void Discard()
     {
-      lightmap_broker.reset();
+      //lightmap_broker.reset();
       render_3d_broker.reset();
       render_ui_broker.reset();
 
