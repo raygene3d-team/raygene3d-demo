@@ -45,6 +45,7 @@ namespace RayGene3D
       std::vector<Vertex> vertices;
       std::vector<Triangle> triangles;
       std::vector<Meshlet> meshlets;
+      std::vector<Knot> knots;
       std::vector<Box> boxes;
 
       glm::f32vec3 aabb_min = glm::f32vec3{ FLT_MAX, FLT_MAX, FLT_MAX };
@@ -92,6 +93,8 @@ namespace RayGene3D
       std::vector<Raw> eeet_items;
       std::vector<Raw> mask_items;
       std::vector<Box> boxes;
+
+      size_t meshlet_opt_count {0u};
 
     public:
       void CalculateTangents();

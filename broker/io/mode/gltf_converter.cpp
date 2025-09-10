@@ -309,7 +309,7 @@ namespace RayGene3D
 
       CalculateTangents();
       //CalculateAtlas();
-      //CalculateMeshlets();
+      CalculateMeshlets();
       CalculateBoxes();
 
 
@@ -320,17 +320,17 @@ namespace RayGene3D
 
         instance.vert_offset = scope.vert_buffer.Length();
         instance.vert_count = mesh.vertices.size();
-        scope.vert_buffer.Resize(size_t(instance.vert_offset + instance.vert_count + instance.vert_count));
+        scope.vert_buffer.Resize(size_t(instance.vert_offset + instance.vert_count + instance.vert_count * 0));
         scope.vert_buffer.Set({ mesh.vertices.data(), mesh.vertices.size() }, instance.vert_offset);
 
         instance.trng_offset = scope.trng_buffer.Length();
         instance.trng_count = mesh.triangles.size();
-        scope.trng_buffer.Resize(size_t(instance.trng_offset + instance.trng_count + instance.trng_count));
+        scope.trng_buffer.Resize(size_t(instance.trng_offset + instance.trng_count + instance.trng_count * 0));
         scope.trng_buffer.Set({ mesh.triangles.data(), mesh.triangles.size() }, instance.trng_offset);
 
         instance.mlet_offset = scope.mlet_buffer.Length();
         instance.mlet_count = mesh.meshlets.size();
-        scope.mlet_buffer.Resize(size_t(instance.mlet_offset + instance.mlet_count + instance.mlet_count));
+        scope.mlet_buffer.Resize(size_t(instance.mlet_offset + instance.mlet_count + instance.mlet_count * 0));
         scope.mlet_buffer.Set({ mesh.meshlets.data(), mesh.meshlets.size() }, instance.mlet_offset);
 
         instance.bone_offset = 0;
@@ -354,6 +354,11 @@ namespace RayGene3D
         const auto bbox_count = mesh.boxes.size();
         scope.bbox_buffer.Resize(bbox_offset + bbox_count);
         scope.bbox_buffer.Set({ mesh.boxes.data(), mesh.boxes.size() }, bbox_offset);
+
+        const auto knot_offset = scope.knot_buffer.Length();
+        const auto knot_count = mesh.knots.size();
+        scope.knot_buffer.Resize(knot_offset + knot_count);
+        scope.knot_buffer.Set({ mesh.knots.data(), mesh.knots.size() }, knot_offset);
       }
 
       scope.tbox_buffer.Resize(boxes.size());

@@ -71,6 +71,9 @@ namespace RayGene3D
       const auto prop_bbox_buffer = bbox_buffer.Export();
       prop_scene->SetObjectItem("buffer_bbox", prop_bbox_buffer);
 
+      const auto prop_knot_buffer = knot_buffer.Export();
+      prop_scene->SetObjectItem("buffer_knot", prop_knot_buffer);
+
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }
 

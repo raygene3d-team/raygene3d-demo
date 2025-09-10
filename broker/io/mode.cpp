@@ -284,7 +284,8 @@ namespace RayGene3D
         //else if (flex)
         //  meshlets.resize(meshopt_buildMeshletsFlex(&meshlets[0], &meshlet_vertices[0], &meshlet_triangles[0], &mesh.indices[0], mesh.indices.size(), &mesh.vertices[0].px, mesh.vertices.size(), sizeof(Vertex), max_vertices, min_triangles, max_triangles, cone_weight, split_factor));
         //else // note: equivalent to the call of buildMeshletsFlex() with non-negative cone_weight and split_factor = 0
-        meshlets_opt.resize(meshopt_buildMeshlets(&meshlets_opt[0], &meshlet_vrt[0], &meshlet_trg[0],
+        meshlets_opt.resize(meshopt_buildMeshlets(meshlets_opt.data(), 
+          meshlet_vrt.data(), meshlet_trg.data(),
           (const uint32_t*)mesh.triangles.data(), mesh.triangles.size() * 3,
           (const float*)mesh.vertices.data(), mesh.vertices.size(), sizeof(Vertex), vrt_limit, trg_limit, 0.0f));
 
@@ -302,22 +303,66 @@ namespace RayGene3D
           meshlet_trg.resize(last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3));
         }
 
-        uint32_t max_vrt = 0;
-        uint32_t max_trg = 0;
+        meshlet_opt_count += meshlets_opt.size();
 
+        auto vertices = std::vector<Vertex>(std::accumulate(meshlets_opt.cbegin(), meshlets_opt.cend(), size_t(0), 
+          [](size_t count, const auto& meshlet_opt) { return count + meshlet_opt.vertex_count; }));
+        auto triangles = std::vector<Triangle>(std::accumulate(meshlets_opt.cbegin(), meshlets_opt.cend(), size_t(0),
+          [](size_t count, const auto& meshlet_opt) { return count + meshlet_opt.triangle_count; }));
+        auto meshlets = std::vector<Meshlet>(meshlets_opt.size());
+        auto knots = std::vector<Knot>(meshlet_trg.size());
+        
+        
+        uint32_t upd_triangle_offset = 0;
         for (size_t i = 0; i < meshlets_opt.size(); ++i)
-        {
-          //meshopt_optimizeMeshlet(&meshlet_vrt[meshlets_opt[i].vertex_offset], &meshlet_trg[meshlets_opt[i].triangle_offset], meshlets_opt[i].triangle_count, meshlets_opt[i].vertex_count);
+        {      
+          const auto color = glm::u8vec4
+          {
+            rand() % 64 + 63,
+            rand() % 64 + 63,
+            rand() % 64 + 63,
+            255
+          };
+
+          for (size_t j = 0; j < meshlets_opt[i].vertex_count; ++j)
+          {
+            vertices[j + meshlets_opt[i].vertex_offset] = mesh.vertices[meshlet_vrt[j + meshlets_opt[i].vertex_offset]];
+          }
+
+          
+          for (size_t j = 0; j < meshlets_opt[i].triangle_count; ++j)
+          {
+            const auto knt0 = meshlet_trg[3 * j + 0 + meshlets_opt[i].triangle_offset];
+            const auto knt1 = meshlet_trg[3 * j + 1 + meshlets_opt[i].triangle_offset];
+            const auto knt2 = meshlet_trg[3 * j + 2 + meshlets_opt[i].triangle_offset];
+
+            knots[3 * j + 0 + meshlets_opt[i].triangle_offset].idx = knt0;
+            knots[3 * j + 1 + meshlets_opt[i].triangle_offset].idx = knt1;
+            knots[3 * j + 2 + meshlets_opt[i].triangle_offset].idx = knt2;
+
+            const auto idx0 = knt0 + meshlets_opt[i].vertex_offset;
+            const auto idx1 = knt1 + meshlets_opt[i].vertex_offset;
+            const auto idx2 = knt2 + meshlets_opt[i].vertex_offset;
+
+            triangles[j + 0 + upd_triangle_offset].idx = { idx0, idx1, idx2 };
+
+            vertices[idx0].col = color;
+            vertices[idx1].col = color;
+            vertices[idx2].col = color;            
+          }
+
+          meshlets[i].vrt_offset = meshlets_opt[i].vertex_offset;
+          meshlets[i].vrt_count = meshlets_opt[i].vertex_count;
+          meshlets[i].knt_offset = meshlets_opt[i].triangle_offset;
+          meshlets[i].knt_count = meshlets_opt[i].triangle_count * 3;
+
+          upd_triangle_offset += meshlets_opt[i].triangle_count;
         }
 
-        mesh.meshlets.resize(meshlets_opt.size());
-        for (auto i = 0ull; i < mesh.meshlets.size(); ++i)
-        {
-          mesh.meshlets[i].vrt_offset = meshlets_opt[i].vertex_offset;
-          mesh.meshlets[i].vrt_count = meshlets_opt[i].vertex_count;
-          mesh.meshlets[i].trg_offset = meshlets_opt[i].triangle_offset;
-          mesh.meshlets[i].trg_count = meshlets_opt[i].triangle_count;
-        }
+        std::swap(mesh.vertices, vertices);
+        std::swap(mesh.triangles, triangles);
+        std::swap(mesh.meshlets, meshlets);
+        std::swap(mesh.knots, knots);
 
         std::vector<int> boundary(mesh.vertices.size());
 

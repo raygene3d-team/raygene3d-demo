@@ -147,9 +147,9 @@ namespace RayGene3D
         );
     }
 
-    void Scope::CreateSceneBufferInst()
+    void Scope::CreateSceneBufferVert()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_inst", scene_buffer_inst));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_vert", scene_buffer_vert));
     }
 
     void Scope::CreateSceneBufferTrng()
@@ -157,9 +157,14 @@ namespace RayGene3D
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_trng", scene_buffer_trng));
     }
 
-    void Scope::CreateSceneBufferVert()
+    void Scope::CreateSceneBufferInst()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_vert", scene_buffer_vert));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_inst", scene_buffer_inst));
+    }
+
+    void Scope::CreateTraceBufferInst()
+    {
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_inst", trace_buffer_inst));
     }
 
     void Scope::CreateTraceBufferTBox()
@@ -172,9 +177,14 @@ namespace RayGene3D
       BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_bbox", trace_buffer_bbox));
     }
 
-    void Scope::CreateTraceBufferInst()
+    void Scope::CreateTraceBufferKnot()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_inst", trace_buffer_inst));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_knot", trace_buffer_knot));
+    }
+
+    void Scope::CreateTraceBufferVert()
+    {
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_vert", trace_buffer_vert));
     }
 
     void Scope::CreateTraceBufferTrng()
@@ -182,9 +192,9 @@ namespace RayGene3D
       BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_trng", trace_buffer_trng));
     }
 
-    void Scope::CreateTraceBufferVert()
+    void Scope::CreateTraceBufferMlet()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_vert", trace_buffer_vert));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_mlet", trace_buffer_mlet));
     }
 
     void Scope::CreateSceneArrayAAAM()
@@ -201,31 +211,6 @@ namespace RayGene3D
     {
       BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_array_eeet", scene_array_eeet));
     }
-
-    //void Scope::CreateSceneTextures3()
-    //{
-    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures3", scene_textures3));
-    //}
-
-    //void Scope::CreateSceneTextures4()
-    //{
-    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures4", scene_textures4));
-    //}
-
-    //void Scope::CreateSceneTextures5()
-    //{
-    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures5", scene_textures5));
-    //}
-
-    //void Scope::CreateSceneTextures6()
-    //{
-    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures6", scene_textures6));
-    //}
-
-    //void Scope::CreateSceneTextures7()
-    //{
-    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures7", scene_textures7));
-    //}
 
     //void Scope::CreateLightmapsInput()
     //{
@@ -368,10 +353,10 @@ namespace RayGene3D
       shadow_data.reset();
     }
 
-    void Scope::DestroySceneBufferInst()
+    void Scope::DestroySceneBufferVert()
     {
-      core->GetDevice()->DestroyResource(scene_buffer_inst);
-      scene_buffer_inst.reset();
+      core->GetDevice()->DestroyResource(scene_buffer_vert);
+      scene_buffer_vert.reset();
     }
 
     void Scope::DestroySceneBufferTrng()
@@ -380,10 +365,16 @@ namespace RayGene3D
       scene_buffer_trng.reset();
     }
 
-    void Scope::DestroySceneBufferVert()
+    void Scope::DestroySceneBufferInst()
     {
-      core->GetDevice()->DestroyResource(scene_buffer_vert);
-      scene_buffer_vert.reset();
+      core->GetDevice()->DestroyResource(scene_buffer_inst);
+      scene_buffer_inst.reset();
+    }
+
+    void Scope::DestroyTraceBufferInst()
+    {
+      core->GetDevice()->DestroyResource(trace_buffer_inst);
+      trace_buffer_inst.reset();
     }
 
     void Scope::DestroyTraceBufferTBox()
@@ -398,10 +389,16 @@ namespace RayGene3D
       trace_buffer_bbox.reset();
     }
 
-    void Scope::DestroyTraceBufferInst()
+    void Scope::DestroyTraceBufferKnot()
     {
-      core->GetDevice()->DestroyResource(trace_buffer_inst);
-      trace_buffer_inst.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_knot);
+      trace_buffer_knot.reset();
+    }
+
+    void Scope::DestroyTraceBufferVert()
+    {
+      core->GetDevice()->DestroyResource(trace_buffer_vert);
+      trace_buffer_vert.reset();
     }
 
     void Scope::DestroyTraceBufferTrng()
@@ -410,10 +407,10 @@ namespace RayGene3D
       trace_buffer_trng.reset();
     }
 
-    void Scope::DestroyTraceBufferVert()
+    void Scope::DestroyTraceBufferMlet()
     {
-      core->GetDevice()->DestroyResource(trace_buffer_vert);
-      trace_buffer_vert.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_mlet);
+      trace_buffer_mlet.reset();
     }
 
     void Scope::DestroySceneArrayAAAM()
@@ -433,36 +430,6 @@ namespace RayGene3D
       core->GetDevice()->DestroyResource(scene_array_eeet);
       scene_array_eeet.reset();
     }
-
-    //void Scope::DestroySceneTextures3()
-    //{
-    //  core->GetDevice()->DestroyResource(scene_textures3);
-    //  scene_textures3.reset();
-    //}
-
-    //void Scope::DestroySceneTextures4()
-    //{
-    //  core->GetDevice()->DestroyResource(scene_textures4);
-    //  scene_textures4.reset();
-    //}
-
-    //void Scope::DestroySceneTextures5()
-    //{
-    //  core->GetDevice()->DestroyResource(scene_textures5);
-    //  scene_textures5.reset();
-    //}
-
-    //void Scope::DestroySceneTextures6()
-    //{
-    //  core->GetDevice()->DestroyResource(scene_textures6);
-    //  scene_textures6.reset();
-    //}
-
-    //void Scope::DestroySceneTextures7()
-    //{
-    //  core->GetDevice()->DestroyResource(scene_textures7);
-    //  scene_textures7.reset();
-    //}
 
     void Scope::DestroyScreenQuadVertices()
     {
@@ -581,25 +548,22 @@ namespace RayGene3D
       CreateCameraData();
       CreateShadowData();
 
-      CreateSceneBufferInst();
-      CreateSceneBufferTrng();
       CreateSceneBufferVert();
-
-      CreateTraceBufferTBox();
-      CreateTraceBufferBBox();
+      CreateSceneBufferTrng();
+      CreateSceneBufferInst();
 
       CreateTraceBufferInst();
-      CreateTraceBufferTrng();
+      CreateTraceBufferTBox();
+      CreateTraceBufferBBox();
+      CreateTraceBufferKnot();
+
       CreateTraceBufferVert();
+      CreateTraceBufferTrng();
+      CreateTraceBufferMlet();
 
       CreateSceneArrayAAAM();
       CreateSceneArraySNNO();
       CreateSceneArrayEEET();
-      //CreateSceneTextures3();
-      //CreateSceneTextures4();
-      //CreateSceneTextures5();
-      //CreateSceneTextures6();
-      //CreateSceneTextures7();
 
       CreateScreenQuadVertices();
       CreateScreenQuadTriangles();
@@ -633,22 +597,19 @@ namespace RayGene3D
       DestroySceneArrayAAAM();
       DestroySceneArraySNNO();
       DestroySceneArrayEEET();
-      //DestroySceneTextures3();
-      //DestroySceneTextures4();
-      //DestroySceneTextures5();
-      //DestroySceneTextures6();
-      //DestroySceneTextures7();
+
+      DestroyTraceBufferVert();
+      DestroyTraceBufferTrng();
+      DestroyTraceBufferMlet();
 
       DestroyTraceBufferInst();
-      DestroyTraceBufferTrng();
-      DestroyTraceBufferVert();
-
       DestroyTraceBufferTBox();
       DestroyTraceBufferBBox();
+      DestroyTraceBufferKnot();
 
-      DestroySceneBufferInst();
-      DestroySceneBufferTrng();
       DestroySceneBufferVert();    
+      DestroySceneBufferTrng();
+      DestroySceneBufferInst();
 
       DestroyScreenData();
       DestroyCameraData();

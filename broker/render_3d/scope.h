@@ -108,9 +108,9 @@ namespace RayGene3D
       SPtrResource shadow_data;
       SPtrResource reflection_probe_data;
 
-      SPtrResource scene_buffer_inst;
-      SPtrResource scene_buffer_trng;
       SPtrResource scene_buffer_vert;
+      SPtrResource scene_buffer_trng;
+      SPtrResource scene_buffer_inst;
       //SPtrResource scene_vertices0;
       //SPtrResource scene_vertices1;
       //SPtrResource scene_vertices2;
@@ -127,13 +127,16 @@ namespace RayGene3D
       //SPtrResource scene_textures6;
       //SPtrResource scene_textures7;
 
+      SPtrResource trace_buffer_inst;
       SPtrResource trace_buffer_tbox;
       SPtrResource trace_buffer_bbox;
+      SPtrResource trace_buffer_knot;
 
       //Copies of original resources bacause of DX11 limitations
-      SPtrResource trace_buffer_inst;
-      SPtrResource trace_buffer_trng;
       SPtrResource trace_buffer_vert;
+      SPtrResource trace_buffer_trng;
+      SPtrResource trace_buffer_mlet;
+      
 
       //SPtrResource lightmaps_input;
       //SPtrResource lightmaps_accum;
@@ -167,25 +170,22 @@ namespace RayGene3D
       void CreateCameraData();
       void CreateShadowData();
 
-      void CreateSceneBufferInst();
-      void CreateSceneBufferTrng();
       void CreateSceneBufferVert();
+      void CreateSceneBufferTrng();
+      void CreateSceneBufferInst();
 
       void CreateSceneArrayAAAM();
       void CreateSceneArraySNNO();
       void CreateSceneArrayEEET();
-      //void CreateSceneArrayAAAM();
-      //void CreateSceneTextures4();
-      //void CreateSceneTextures5();
-      //void CreateSceneTextures6();
-      //void CreateSceneTextures7();
-
-      void CreateTraceBufferTBox();
-      void CreateTraceBufferBBox();
 
       void CreateTraceBufferInst();
+      void CreateTraceBufferTBox();
+      void CreateTraceBufferBBox();
+      void CreateTraceBufferKnot();
+      
       void CreateTraceBufferTrng();
       void CreateTraceBufferVert();
+      void CreateTraceBufferMlet();
 
       void CreateLightmapsInput();
       void CreateLightmapsAccum();
@@ -212,25 +212,22 @@ namespace RayGene3D
       void DestroyCameraData();
       void DestroyShadowData();
 
-      void DestroySceneBufferInst();
-      void DestroySceneBufferTrng();
       void DestroySceneBufferVert();
+      void DestroySceneBufferTrng();
+      void DestroySceneBufferInst();
 
       void DestroySceneArrayAAAM();
       void DestroySceneArraySNNO();
       void DestroySceneArrayEEET();
-      //void DestroySceneTextures3();
-      //void DestroySceneTextures4();
-      //void DestroySceneTextures5();
-      //void DestroySceneTextures6();
-      //void DestroySceneTextures7();
-
-      void DestroyTraceBufferTBox();
-      void DestroyTraceBufferBBox();
 
       void DestroyTraceBufferInst();
-      void DestroyTraceBufferTrng();
+      void DestroyTraceBufferTBox();
+      void DestroyTraceBufferBBox();
+      void DestroyTraceBufferKnot();
+
       void DestroyTraceBufferVert();
+      void DestroyTraceBufferTrng();
+      void DestroyTraceBufferMlet();
 
       void DestroyLightmapsInput();
       void DestroyLightmapsAccum();
