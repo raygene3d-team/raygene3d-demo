@@ -45,7 +45,7 @@ namespace RayGene3D
       std::vector<Vertex> vertices;
       std::vector<Triangle> triangles;
       std::vector<Meshlet> meshlets;
-      std::vector<Knot> knots;
+      std::vector<Point> points;
       std::vector<Box> boxes;
 
       glm::f32vec3 aabb_min = glm::f32vec3{ FLT_MAX, FLT_MAX, FLT_MAX };

@@ -183,12 +183,12 @@ namespace RayGene3D
       );
   }
 
-  void SceneBroker::CreateTraceBufferKnot()
+  void SceneBroker::CreateTraceBufferCPnt()
   {
-    const auto [items, count] = prop_buffer_knot->GetObjectItem("binary")->GetRawItems<Knot>(0);
-    const auto stride = sizeof(Knot);
+    const auto [items, count] = prop_buffer_cpnt->GetObjectItem("binary")->GetRawItems<Point>(0);
+    const auto stride = sizeof(Point);
 
-    trace_buffer_knot = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_knot",
+    trace_buffer_cpnt = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_cpnt",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
@@ -323,17 +323,11 @@ namespace RayGene3D
     trace_buffer_bbox.reset();
   }
 
-  void SceneBroker::DestroyTraceBufferKnot()
+  void SceneBroker::DestroyTraceBufferCPnt()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_knot);
-    trace_buffer_knot.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_cpnt);
+    trace_buffer_cpnt.reset();
   }
-
-  
-
-
-
-  
 
   void SceneBroker::DestroySceneArrayAAAM()
   {
@@ -382,7 +376,7 @@ namespace RayGene3D
       prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
       prop_buffer_tbox = prop_scene->GetObjectItem("buffer_tbox");
       prop_buffer_bbox = prop_scene->GetObjectItem("buffer_bbox");
-      prop_buffer_knot = prop_scene->GetObjectItem("buffer_knot");
+      prop_buffer_cpnt = prop_scene->GetObjectItem("buffer_cpnt");
 
       prop_array_aaam = prop_scene->GetObjectItem("array_aaam");
       prop_array_snno = prop_scene->GetObjectItem("array_snno");
@@ -400,7 +394,7 @@ namespace RayGene3D
     CreateTraceBufferInst();
     CreateTraceBufferTBox();
     CreateTraceBufferBBox();
-    CreateTraceBufferKnot();
+    CreateTraceBufferCPnt();
 
     CreateSceneArrayAAAM();
     CreateSceneArraySNNO();
@@ -418,7 +412,7 @@ namespace RayGene3D
     prop_buffer_inst.reset();
     prop_buffer_bbox.reset();
     prop_buffer_tbox.reset();
-    prop_buffer_knot.reset();
+    prop_buffer_cpnt.reset();
 
     prop_array_aaam.reset();
     prop_array_snno.reset();

@@ -45,7 +45,7 @@ namespace RayGene3D
     SPtrProperty prop_buffer_inst;
     SPtrProperty prop_buffer_tbox;
     SPtrProperty prop_buffer_bbox;
-    SPtrProperty prop_buffer_knot;
+    SPtrProperty prop_buffer_cpnt;
 
     SPtrProperty prop_array_aaam;
     SPtrProperty prop_array_snno;
@@ -63,7 +63,7 @@ namespace RayGene3D
     SPtrResource trace_buffer_inst;
     SPtrResource trace_buffer_tbox;
     SPtrResource trace_buffer_bbox;
-    SPtrResource trace_buffer_knot;
+    SPtrResource trace_buffer_cpnt;
 
     SPtrResource scene_array_aaam;
     SPtrResource scene_array_snno;
@@ -81,7 +81,7 @@ namespace RayGene3D
     void CreateTraceBufferInst();
     void CreateTraceBufferTBox();
     void CreateTraceBufferBBox();
-    void CreateTraceBufferKnot();
+    void CreateTraceBufferCPnt();
 
     void CreateSceneArrayAAAM();
     void CreateSceneArraySNNO();
@@ -99,7 +99,7 @@ namespace RayGene3D
     void DestroyTraceBufferInst();
     void DestroyTraceBufferTBox();
     void DestroyTraceBufferBBox();
-    void DestroyTraceBufferKnot();
+    void DestroyTraceBufferCPnt();
 
     void DestroySceneArrayAAAM();
     void DestroySceneArraySNNO();

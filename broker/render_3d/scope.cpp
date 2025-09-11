@@ -177,9 +177,9 @@ namespace RayGene3D
       BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_bbox", trace_buffer_bbox));
     }
 
-    void Scope::CreateTraceBufferKnot()
+    void Scope::CreateTraceBufferCPnt()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_knot", trace_buffer_knot));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_cpnt", trace_buffer_cpnt));
     }
 
     void Scope::CreateTraceBufferVert()
@@ -389,10 +389,10 @@ namespace RayGene3D
       trace_buffer_bbox.reset();
     }
 
-    void Scope::DestroyTraceBufferKnot()
+    void Scope::DestroyTraceBufferCPnt()
     {
-      core->GetDevice()->DestroyResource(trace_buffer_knot);
-      trace_buffer_knot.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_cpnt);
+      trace_buffer_cpnt.reset();
     }
 
     void Scope::DestroyTraceBufferVert()
@@ -555,7 +555,7 @@ namespace RayGene3D
       CreateTraceBufferInst();
       CreateTraceBufferTBox();
       CreateTraceBufferBBox();
-      CreateTraceBufferKnot();
+      CreateTraceBufferCPnt();
 
       CreateTraceBufferVert();
       CreateTraceBufferTrng();
@@ -605,7 +605,7 @@ namespace RayGene3D
       DestroyTraceBufferInst();
       DestroyTraceBufferTBox();
       DestroyTraceBufferBBox();
-      DestroyTraceBufferKnot();
+      DestroyTraceBufferCPnt();
 
       DestroySceneBufferVert();    
       DestroySceneBufferTrng();

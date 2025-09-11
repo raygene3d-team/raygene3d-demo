@@ -130,7 +130,7 @@ namespace RayGene3D
       SPtrResource trace_buffer_inst;
       SPtrResource trace_buffer_tbox;
       SPtrResource trace_buffer_bbox;
-      SPtrResource trace_buffer_knot;
+      SPtrResource trace_buffer_cpnt;
 
       //Copies of original resources bacause of DX11 limitations
       SPtrResource trace_buffer_vert;
@@ -181,7 +181,7 @@ namespace RayGene3D
       void CreateTraceBufferInst();
       void CreateTraceBufferTBox();
       void CreateTraceBufferBBox();
-      void CreateTraceBufferKnot();
+      void CreateTraceBufferCPnt();
       
       void CreateTraceBufferTrng();
       void CreateTraceBufferVert();
@@ -223,7 +223,7 @@ namespace RayGene3D
       void DestroyTraceBufferInst();
       void DestroyTraceBufferTBox();
       void DestroyTraceBufferBBox();
-      void DestroyTraceBufferKnot();
+      void DestroyTraceBufferCPnt();
 
       void DestroyTraceBufferVert();
       void DestroyTraceBufferTrng();

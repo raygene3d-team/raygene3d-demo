@@ -61,7 +61,7 @@ namespace RayGene3D
       StructureBuffer<Instance> inst_buffer;
       StructureBuffer<Box> tbox_buffer; //t_boxes
       StructureBuffer<Box> bbox_buffer; //b_boxes
-      StructureBuffer<Knot> knot_buffer; //knots
+      StructureBuffer<Point> cpnt_buffer; //c_points
 
       TextureArrayLDR aaam_array; //albedo_metallic
       TextureArrayLDR snno_array; //roughness_normal_occlusion

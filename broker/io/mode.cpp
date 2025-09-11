@@ -310,7 +310,7 @@ namespace RayGene3D
         auto triangles = std::vector<Triangle>(std::accumulate(meshlets_opt.cbegin(), meshlets_opt.cend(), size_t(0),
           [](size_t count, const auto& meshlet_opt) { return count + meshlet_opt.triangle_count; }));
         auto meshlets = std::vector<Meshlet>(meshlets_opt.size());
-        auto knots = std::vector<Knot>(meshlet_trg.size());
+        auto points = std::vector<Point>(meshlet_trg.size());
         
         
         uint32_t upd_triangle_offset = 0;
@@ -336,9 +336,9 @@ namespace RayGene3D
             const auto knt1 = meshlet_trg[3 * j + 1 + meshlets_opt[i].triangle_offset];
             const auto knt2 = meshlet_trg[3 * j + 2 + meshlets_opt[i].triangle_offset];
 
-            knots[3 * j + 0 + meshlets_opt[i].triangle_offset].idx = knt0;
-            knots[3 * j + 1 + meshlets_opt[i].triangle_offset].idx = knt1;
-            knots[3 * j + 2 + meshlets_opt[i].triangle_offset].idx = knt2;
+            points[3 * j + 0 + meshlets_opt[i].triangle_offset].idx = knt0;
+            points[3 * j + 1 + meshlets_opt[i].triangle_offset].idx = knt1;
+            points[3 * j + 2 + meshlets_opt[i].triangle_offset].idx = knt2;
 
             const auto idx0 = knt0 + meshlets_opt[i].vertex_offset;
             const auto idx1 = knt1 + meshlets_opt[i].vertex_offset;
@@ -353,8 +353,8 @@ namespace RayGene3D
 
           meshlets[i].vrt_offset = meshlets_opt[i].vertex_offset;
           meshlets[i].vrt_count = meshlets_opt[i].vertex_count;
-          meshlets[i].knt_offset = meshlets_opt[i].triangle_offset;
-          meshlets[i].knt_count = meshlets_opt[i].triangle_count * 3;
+          meshlets[i].pnt_offset = meshlets_opt[i].triangle_offset;
+          meshlets[i].pnt_count = meshlets_opt[i].triangle_count * 3;
 
           upd_triangle_offset += meshlets_opt[i].triangle_count;
         }
@@ -362,7 +362,7 @@ namespace RayGene3D
         std::swap(mesh.vertices, vertices);
         std::swap(mesh.triangles, triangles);
         std::swap(mesh.meshlets, meshlets);
-        std::swap(mesh.knots, knots);
+        std::swap(mesh.points, points);
 
         std::vector<int> boundary(mesh.vertices.size());
 
