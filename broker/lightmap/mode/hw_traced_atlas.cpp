@@ -56,6 +56,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/lightmap_hw_traced.glsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });

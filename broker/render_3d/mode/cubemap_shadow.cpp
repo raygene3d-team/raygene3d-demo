@@ -62,6 +62,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -113,23 +114,23 @@ namespace RayGene3D
 
     void CubemapShadow::CreateShadowedBatch()
     {
-      auto shadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_shadowed_screen_quad_vertices",
+      const auto& shadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_shadowed_screen_quad_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
-      auto shadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_shadowed_screen_quad_triangles",
+      const auto& shadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_shadowed_screen_quad_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       const Batch::Entity entities[] = {
         {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u } }
       };
 
-      auto shadowed_screen_data = scope.screen_data->CreateView("spark_shadowed_screen_data",
+      const auto& shadowed_screen_data = scope.screen_data->CreateView("spark_shadowed_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto shadowed_camera_data = scope.camera_data->CreateView("spark_shadowed_camera_data",
+      const auto& shadowed_camera_data = scope.camera_data->CreateView("spark_shadowed_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto shadowed_shadow_data = scope.shadow_data->CreateView("spark_shadowed_shadow_data",
+      const auto& shadowed_shadow_data = scope.shadow_data->CreateView("spark_shadowed_shadow_data",
         Usage(USAGE_CONSTANT_DATA)
       );
       const std::shared_ptr<View> ub_views[] = {
@@ -138,16 +139,16 @@ namespace RayGene3D
         shadowed_shadow_data
       };
 
-      auto shadowed_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_shadowed_gbuffer_0_texture",
+      const auto& shadowed_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_shadowed_gbuffer_0_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto shadowed_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_shadowed_gbuffer_1_texture",
+      const auto& shadowed_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_shadowed_gbuffer_1_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto shadowed_depth_texture = scope.depth_target->CreateView("spark_shadowed_depth_texture",
+      const auto& shadowed_depth_texture = scope.depth_target->CreateView("spark_shadowed_depth_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto shadowed_shadow_map = scope.shadow_map->CreateView("spark_shadowed_shadow_map",
+      const auto& shadowed_shadow_map = scope.shadow_map->CreateView("spark_shadowed_shadow_map",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
@@ -176,7 +177,7 @@ namespace RayGene3D
       const auto size_y = scope.shadow_resolution;
       const auto layers = 1u;
 
-      auto shadowmap_shadow_map = scope.shadow_map->CreateView("spark_shadowmap_shadow_map",
+      const auto& shadowmap_shadow_map = scope.shadow_map->CreateView("spark_shadowmap_shadow_map",
         Usage(USAGE_DEPTH_STENCIL),
         { 0u, uint32_t(-1) }
       );
@@ -202,6 +203,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       const Config::IAState ia_Config =
       {
@@ -284,7 +286,7 @@ namespace RayGene3D
         };
       }
 
-      auto shadowmap_shadow_data = scope.shadow_data->CreateView("spark_shadowmap_shadow_data",
+      const auto& shadowmap_shadow_data = scope.shadow_data->CreateView("spark_shadowmap_shadow_data",
         USAGE_CONSTANT_DATA,
         { 0u, sizeof(Frustum) }
       );

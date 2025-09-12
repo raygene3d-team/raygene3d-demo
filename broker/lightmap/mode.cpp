@@ -55,6 +55,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/lightmap_average.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       average_config = average_pass->CreateConfig("lightmap_average_config",
         shader_ss.str(),

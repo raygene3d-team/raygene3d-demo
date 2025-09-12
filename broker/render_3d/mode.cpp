@@ -39,13 +39,13 @@ namespace RayGene3D
       const auto size_y = scope.prop_extent_y->GetUint();
       const auto layers = 1u;
 
-      auto geometry_color_target = scope.color_target->CreateView("render_3d_geometry_color_target",
+      const auto& geometry_color_target = scope.color_target->CreateView("render_3d_geometry_color_target",
         Usage(USAGE_RENDER_TARGET)
       );
-      auto geometry_gbuffer_0_target = scope.gbuffer_0_target->CreateView("render_3d_geometry_gbuffer_0_target",
+      const auto& geometry_gbuffer_0_target = scope.gbuffer_0_target->CreateView("render_3d_geometry_gbuffer_0_target",
         Usage(USAGE_RENDER_TARGET)
       );
-      auto geometry_gbuffer_1_target = scope.gbuffer_1_target->CreateView("render_3d_geometry_gbuffer_1_target",
+      const auto& geometry_gbuffer_1_target = scope.gbuffer_1_target->CreateView("render_3d_geometry_gbuffer_1_target",
         Usage(USAGE_RENDER_TARGET)
       );
 
@@ -55,7 +55,7 @@ namespace RayGene3D
         { geometry_gbuffer_1_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
       };
 
-      auto geometry_depth_target = scope.depth_target->CreateView("render_3d_geometry_depth_target",
+      const auto& geometry_depth_target = scope.depth_target->CreateView("render_3d_geometry_depth_target",
         Usage(USAGE_DEPTH_STENCIL)
       );
       const Pass::DSAttachment ds_attachments[] = {
@@ -75,9 +75,11 @@ namespace RayGene3D
     void Mode::CreateGeometryConfig()
     {
       std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
+      shader_fs.open("./asset/shaders/spark_geom_raster.hlsl", std::fstream::in);
+      //shader_fs.open("./asset/shaders/spark_geom_meshlet.glsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -183,15 +185,15 @@ namespace RayGene3D
         { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
         { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_MIRROR, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
 
-      auto geometry_screen_data = scope.screen_data->CreateView("render_3d_geometry_screen_data",
+      const auto& geometry_screen_data = scope.screen_data->CreateView("render_3d_geometry_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
 
-      auto geometry_camera_data = scope.camera_data->CreateView("render_3d_geometry_camera_data",
+      const auto& geometry_camera_data = scope.camera_data->CreateView("render_3d_geometry_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
 
-      auto geometry_shadow_data = scope.shadow_data->CreateView("render_3d_geometry_shadow_data",
+      const auto& geometry_shadow_data = scope.shadow_data->CreateView("render_3d_geometry_shadow_data",
         Usage(USAGE_CONSTANT_DATA),
         { 0, sizeof(Frustum) }
       );
@@ -203,7 +205,7 @@ namespace RayGene3D
       };
 
 
-      auto geometry_scene_instances = scope.scene_buffer_inst->CreateView("render_3d_geometry_scene_instances",
+      const auto& geometry_scene_instances = scope.scene_buffer_inst->CreateView("render_3d_geometry_scene_instances",
         Usage(USAGE_CONSTANT_DATA),
         { 0, sizeof(Instance) }
       );
@@ -225,31 +227,31 @@ namespace RayGene3D
         Usage(USAGE_SHADER_RESOURCE)
       );
 
-      //auto geometry_scene_textures3 = scope.scene_textures3->CreateView("render_3d_geometry_scene_textures3",
+      //const auto& geometry_scene_textures3 = scope.scene_textures3->CreateView("render_3d_geometry_scene_textures3",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
 
-      //auto geometry_scene_textures4 = scope.scene_textures4->CreateView("render_3d_geometry_scene_textures4",
+      //const auto& geometry_scene_textures4 = scope.scene_textures4->CreateView("render_3d_geometry_scene_textures4",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
 
-      //auto geometry_scene_textures5 = scope.scene_textures5->CreateView("render_3d_geometry_scene_textures5",
+      //const auto& geometry_scene_textures5 = scope.scene_textures5->CreateView("render_3d_geometry_scene_textures5",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
 
-      //auto geometry_scene_textures6 = scope.scene_textures6->CreateView("render_3d_geometry_scene_textures6",
+      //const auto& geometry_scene_textures6 = scope.scene_textures6->CreateView("render_3d_geometry_scene_textures6",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
 
-      //auto geometry_scene_textures7 = scope.scene_textures7->CreateView("render_3d_geometry_scene_textures7",
+      //const auto& geometry_scene_textures7 = scope.scene_textures7->CreateView("render_3d_geometry_scene_textures7",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
 
-      //auto geometry_scene_lightmaps = scope.lightmaps_final->CreateView("render_3d_geometry_scene_lightmaps",
+      //const auto& geometry_scene_lightmaps = scope.lightmaps_final->CreateView("render_3d_geometry_scene_lightmaps",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
 
-      auto geometry_reflection_map = scope.reflection_map->CreateView("render_3d_geometry_reflection_map",
+      const auto& geometry_reflection_map = scope.reflection_map->CreateView("render_3d_geometry_reflection_map",
         Usage(USAGE_SHADER_RESOURCE),
         { 0u, size_t(-1) },
         { 0u, size_t(-1) },
@@ -284,6 +286,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::pair<std::string, std::string> defines[] =
       {
@@ -339,20 +342,20 @@ namespace RayGene3D
 
     void Mode::CreateSkyboxBatch()
     {
-      auto skybox_screen_quad_vertices = scope.screen_quad_vertices->CreateView("render_3d_skybox_screen_quad_vertices",
+      const auto& skybox_screen_quad_vertices = scope.screen_quad_vertices->CreateView("render_3d_skybox_screen_quad_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
-      auto skybox_screen_quad_triangles = scope.screen_quad_triangles->CreateView("render_3d_skybox_screen_quad_triangles",
+      const auto& skybox_screen_quad_triangles = scope.screen_quad_triangles->CreateView("render_3d_skybox_screen_quad_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       const Batch::Entity entities[] = {
         {{skybox_screen_quad_vertices}, {skybox_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u }}
       };
 
-      auto skybox_screen_data = scope.screen_data->CreateView("render_3d_skybox_screen_data",
+      const auto& skybox_screen_data = scope.screen_data->CreateView("render_3d_skybox_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto skybox_camera_data = scope.camera_data->CreateView("render_3d_skybox_camera_data",
+      const auto& skybox_camera_data = scope.camera_data->CreateView("render_3d_skybox_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
       const std::shared_ptr<View> ub_views[] = {
@@ -360,7 +363,7 @@ namespace RayGene3D
         skybox_camera_data,
       };
 
-      auto skybox_skybox_cubemap = scope.skybox_cubemap->CreateView("render_3d_skybox_skybox_cubemap",
+      const auto& skybox_skybox_cubemap = scope.skybox_cubemap->CreateView("render_3d_skybox_skybox_cubemap",
         Usage(USAGE_SHADER_RESOURCE),
         { 0u, 1u },
         { 0u, 6u },
@@ -409,6 +412,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       present_config = present_pass->CreateConfig("render_3d_present_config",
         shader_ss.str(),
@@ -423,21 +427,21 @@ namespace RayGene3D
 
     void Mode::CreatePresentBatch()
     {
-      auto present_compute_arguments = scope.compute_arguments->CreateView("render_3d_present_compute_arguments",
+      const auto& present_compute_arguments = scope.compute_arguments->CreateView("render_3d_present_compute_arguments",
         Usage(USAGE_ARGUMENT_LIST)
       );
       const Batch::Entity entities[] = {
         {{}, {}, present_compute_arguments}
       };
 
-      auto present_camera_data = scope.camera_data->CreateView("render_3d_present_camera_data",
+      const auto& present_camera_data = scope.camera_data->CreateView("render_3d_present_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
       const std::shared_ptr<View> ub_views[] = {
         present_camera_data,
       };
 
-      auto present_color_target = scope.color_target->CreateView("render_3d_present_color_target",
+      const auto& present_color_target = scope.color_target->CreateView("render_3d_present_color_target",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {

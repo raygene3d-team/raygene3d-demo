@@ -56,6 +56,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -113,13 +114,13 @@ namespace RayGene3D
         { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
       };
 
-      auto hw_traced_screen_data = scope.screen_data->CreateView("spark_hw_traced_screen_data",
+      const auto& hw_traced_screen_data = scope.screen_data->CreateView("spark_hw_traced_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto hw_traced_camera_data = scope.camera_data->CreateView("spark_hw_traced_camera_data",
+      const auto& hw_traced_camera_data = scope.camera_data->CreateView("spark_hw_traced_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto hw_traced_shadow_data = scope.shadow_data->CreateView("spark_hw_traced_shadow_data",
+      const auto& hw_traced_shadow_data = scope.shadow_data->CreateView("spark_hw_traced_shadow_data",
         Usage(USAGE_CONSTANT_DATA),
         { 0, sizeof(Frustum) }
       );
@@ -129,13 +130,13 @@ namespace RayGene3D
         hw_traced_shadow_data,
       };
 
-      auto hw_traced_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_hw_traced_gbuffer_0_texture",
+      const auto& hw_traced_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_hw_traced_gbuffer_0_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto hw_traced_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_hw_traced_gbuffer_1_texture",
+      const auto& hw_traced_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_hw_traced_gbuffer_1_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto hw_traced_depth_texture = scope.depth_target->CreateView("spark_hw_traced_depth_texture",
+      const auto& hw_traced_depth_texture = scope.depth_target->CreateView("spark_hw_traced_depth_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
@@ -144,7 +145,7 @@ namespace RayGene3D
         hw_traced_depth_texture,
       };
 
-      auto hw_traced_color_texture = scope.color_target->CreateView("spark_hw_traced_color_texture",
+      const auto& hw_traced_color_texture = scope.color_target->CreateView("spark_hw_traced_color_texture",
         Usage(USAGE_UNORDERED_ACCESS)
       );
       const std::shared_ptr<View> wi_views[] = {
