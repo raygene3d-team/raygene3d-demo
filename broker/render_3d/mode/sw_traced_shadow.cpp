@@ -155,7 +155,6 @@ namespace RayGene3D
       const auto& sw_traced_trace_vertices = scope.trace_buffer_vert->CreateView("spark_sw_traced_trace_vertices",
         Usage(USAGE_SHADER_RESOURCE)
       );
-
       const std::shared_ptr<View> rb_views[] = {
         sw_traced_trace_t_boxes,
         sw_traced_trace_b_boxes,

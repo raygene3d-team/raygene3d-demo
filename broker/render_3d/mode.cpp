@@ -75,8 +75,8 @@ namespace RayGene3D
     void Mode::CreateGeometryConfig()
     {
       std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_geom_raster.hlsl", std::fstream::in);
-      //shader_fs.open("./asset/shaders/spark_geom_meshlet.glsl", std::fstream::in);
+      //shader_fs.open("./asset/shaders/spark_geom_raster.hlsl", std::fstream::in);
+      shader_fs.open("./asset/shaders/spark_geom_meshlet.glsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
       shader_fs.close();
@@ -86,18 +86,18 @@ namespace RayGene3D
 
       const Config::IAState ia_config =
       {
-        Config::TOPOLOGY_TRIANGLELIST,
-        Config::INDEXER_32_BIT,
-        {
-          { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-          { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
-          { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-          { 0, 28, 64, FORMAT_R32_UINT, false },
-          { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-          { 0, 44, 64, FORMAT_R32_FLOAT, false },
-          { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-          { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
-        }
+        //Config::TOPOLOGY_TRIANGLELIST,
+        //Config::INDEXER_32_BIT,
+        //{
+        //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+        //  { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
+        //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+        //  { 0, 28, 64, FORMAT_R32_UINT, false },
+        //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+        //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
+        //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+        //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+        //}
       };
 
       const Config::RCState rc_config =
@@ -144,34 +144,37 @@ namespace RayGene3D
       auto entities = std::vector<Batch::Entity>(count);
       for (auto i = 0u; i < count; ++i)
       {
-        const auto& geometry_vertices = scope.scene_buffer_vert->CreateView("render_3d_geometry_vertices_" + std::to_string(i),
-          Usage(USAGE_VERTEX_ARRAY)
-        );
-        const std::shared_ptr<View> va_views[] = {
-          geometry_vertices,
-        };
+        //const auto& geometry_vertices = scope.scene_buffer_vert->CreateView("render_3d_geometry_vertices_" + std::to_string(i),
+        //  Usage(USAGE_VERTEX_ARRAY)
+        //);
+        //const std::shared_ptr<View> va_views[] = {
+        //  geometry_vertices,
+        //};
 
-        const auto& geometry_triangles = scope.scene_buffer_trng->CreateView("render_3d_geometry_triangles_" + std::to_string(i),
-          Usage(USAGE_INDEX_ARRAY)
-        );
-        const std::shared_ptr<View> ia_views[] = {
-          geometry_triangles,
-        };
+        //const auto& geometry_triangles = scope.scene_buffer_trng->CreateView("render_3d_geometry_triangles_" + std::to_string(i),
+        //  Usage(USAGE_INDEX_ARRAY)
+        //);
+        //const std::shared_ptr<View> ia_views[] = {
+        //  geometry_triangles,
+        //};
 
         const auto& geometry_graphic_arguments = scope.graphic_arguments->CreateView("render_3d_geometry_graphic_argument_" + std::to_string(i),
           Usage(USAGE_ARGUMENT_LIST),
           { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
         );
 
-        const auto& ins_range = Range{ 0u,  1u };
-        const auto& vtx_range = Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-        const auto& idx_range = Range{ data[i].trng_offset * 3, data[i].trng_count * 3 };
+        //const auto& ins_range = Range{ 0u,  1u };
+        //const auto& vtx_range = Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
+        //const auto& idx_range = Range{ data[i].trng_offset * 3, data[i].trng_count * 3 };
+        const auto& ins_range = Range{ 0u, data[i].mlet_count };
+        const auto& vtx_range = Range{ 0u, 1u };
+        const auto& idx_range = Range{ 0u, 1u };
         const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
         const auto& push_data = std::nullopt;
 
         entities[i] = {
-          { va_views, va_views + std::size(va_views) },
-          { ia_views, ia_views + std::size(ia_views) },
+          {}, //{ va_views, va_views + std::size(va_views) },
+          {}, //{ ia_views, ia_views + std::size(ia_views) },
           nullptr, // geometry_graphic_arguments,
           ins_range,
           vtx_range,
@@ -188,76 +191,60 @@ namespace RayGene3D
       const auto& geometry_screen_data = scope.screen_data->CreateView("render_3d_geometry_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-
       const auto& geometry_camera_data = scope.camera_data->CreateView("render_3d_geometry_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-
       const auto& geometry_shadow_data = scope.shadow_data->CreateView("render_3d_geometry_shadow_data",
         Usage(USAGE_CONSTANT_DATA),
         { 0, sizeof(Frustum) }
       );
-
       const std::shared_ptr<View> ub_views[] = {
         geometry_screen_data,
         geometry_camera_data,
         geometry_shadow_data,
       };
 
-
       const auto& geometry_scene_instances = scope.scene_buffer_inst->CreateView("render_3d_geometry_scene_instances",
         Usage(USAGE_CONSTANT_DATA),
         { 0, sizeof(Instance) }
       );
-
       const std::shared_ptr<View> sb_views[] = {
         geometry_scene_instances
       };
 
-
       const auto& geometry_scene_array_aaam = scope.scene_array_aaam->CreateView("render_3d_geometry_scene_array_aaam",
         Usage(USAGE_SHADER_RESOURCE)
       );
-
       const auto& geometry_scene_array_snno = scope.scene_array_snno->CreateView("render_3d_geometry_scene_array_snno",
         Usage(USAGE_SHADER_RESOURCE)
       );
-
       const auto& geometry_scene_array_eeet = scope.scene_array_eeet->CreateView("render_3d_geometry_scene_array_eeet",
         Usage(USAGE_SHADER_RESOURCE)
       );
-
       //const auto& geometry_scene_textures3 = scope.scene_textures3->CreateView("render_3d_geometry_scene_textures3",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
-
       //const auto& geometry_scene_textures4 = scope.scene_textures4->CreateView("render_3d_geometry_scene_textures4",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
-
       //const auto& geometry_scene_textures5 = scope.scene_textures5->CreateView("render_3d_geometry_scene_textures5",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
-
       //const auto& geometry_scene_textures6 = scope.scene_textures6->CreateView("render_3d_geometry_scene_textures6",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
-
       //const auto& geometry_scene_textures7 = scope.scene_textures7->CreateView("render_3d_geometry_scene_textures7",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
-
       //const auto& geometry_scene_lightmaps = scope.lightmaps_final->CreateView("render_3d_geometry_scene_lightmaps",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
-
       const auto& geometry_reflection_map = scope.reflection_map->CreateView("render_3d_geometry_reflection_map",
         Usage(USAGE_SHADER_RESOURCE),
         { 0u, size_t(-1) },
         { 0u, size_t(-1) },
         View::BIND_CUBEMAP_LAYER
       );
-
       const std::shared_ptr<View> ri_views[] = {
         geometry_scene_array_aaam,
         geometry_scene_array_snno,
@@ -265,6 +252,25 @@ namespace RayGene3D
         //geometry_scene_array_eeet,
         //geometry_scene_lightmaps,
         geometry_reflection_map,
+      };
+
+      const auto& geometry_trace_meshlets = scope.trace_buffer_mlet->CreateView("render_3d_geometry_trace_meshlets",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      const auto& geometry_trace_v_indices = scope.trace_buffer_vidx->CreateView("render_3d_geometry_trace_v_indices",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      const auto& geometry_trace_vertices = scope.trace_buffer_vert->CreateView("render_3d_geometry_trace_vertices",
+        Usage(USAGE_SHADER_RESOURCE)
+      );      
+      const auto& geometry_trace_t_indices = scope.trace_buffer_tidx->CreateView("render_3d_geometry_trace_t_indices",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
+      const std::shared_ptr<View> rb_views[] = {
+        geometry_trace_meshlets,
+        geometry_trace_v_indices,
+        geometry_trace_vertices,
+        geometry_trace_t_indices,
       };
 
       geometry_batch = geometry_config->CreateBatch("render_3d_geometry_batch",

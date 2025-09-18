@@ -55,13 +55,14 @@ namespace RayGene3D
     public:
       StructureBuffer<Vertex> vert_buffer; //vertices
       StructureBuffer<Triangle> trng_buffer; //triangles
-      StructureBuffer<Meshlet> mlet_buffer; //meshlets
-      
+      StructureBuffer<Meshlet> mlet_buffer; //meshlets      
       
       StructureBuffer<Instance> inst_buffer;
       StructureBuffer<Box> tbox_buffer; //t_boxes
       StructureBuffer<Box> bbox_buffer; //b_boxes
-      StructureBuffer<Point> cpnt_buffer; //c_points
+
+      StructureBuffer<uint32_t> vidx_buffer;
+      StructureBuffer<uint8_t> tidx_buffer;
 
       TextureArrayLDR aaam_array; //albedo_metallic
       TextureArrayLDR snno_array; //roughness_normal_occlusion

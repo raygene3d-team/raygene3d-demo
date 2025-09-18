@@ -71,8 +71,11 @@ namespace RayGene3D
       const auto prop_bbox_buffer = bbox_buffer.Export();
       prop_scene->SetObjectItem("buffer_bbox", prop_bbox_buffer);
 
-      const auto prop_cpnt_buffer = cpnt_buffer.Export();
-      prop_scene->SetObjectItem("buffer_cpnt", prop_cpnt_buffer);
+      const auto prop_vidx_buffer = vidx_buffer.Export();
+      prop_scene->SetObjectItem("buffer_vidx", prop_vidx_buffer);
+
+      const auto prop_tidx_buffer = tidx_buffer.Export();
+      prop_scene->SetObjectItem("buffer_tidx", prop_tidx_buffer);
 
       util->GetStorage()->GetTree()->SetObjectItem("scene", prop_scene);
     }

@@ -44,8 +44,11 @@ namespace RayGene3D
     public:
       std::vector<Vertex> vertices;
       std::vector<Triangle> triangles;
+
       std::vector<Meshlet> meshlets;
-      std::vector<Point> points;
+      std::vector<uint32_t> v_indices;
+      std::vector<uint8_t> t_indices;
+
       std::vector<Box> boxes;
 
       glm::f32vec3 aabb_min = glm::f32vec3{ FLT_MAX, FLT_MAX, FLT_MAX };

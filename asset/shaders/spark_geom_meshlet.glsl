@@ -1,10 +1,6 @@
 #version 460
-#extension GL_EXT_ray_tracing : require
-#extension GL_EXT_samplerless_texture_functions : require
-
-//#extension GL_EXT_nonuniform_qualifier : enable
-//#extension GL_XT_scalar_block_layout : enable
-//#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_mesh_shader : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int8  : require
 
 struct Box
 {
@@ -50,12 +46,20 @@ struct Vertex
   float sign;
 };
 
-struct Primitive
+struct Triangle
 {
   uint idx0;
   uint idx1;
   uint idx2;
 };
+
+struct Meshlet
+{
+  uint vrt_offset;
+  uint vrt_count;
+  uint pnt_offset;
+  uint pnt_count;
+}
 
 struct Instance
 {
@@ -117,78 +121,19 @@ layout(std140, set = 0, binding = 2) uniform Camera
   mat4 camera_proj_inv;
 } camera;
 
-layout(std140, set = 0, binding = 3) uniform Shadow
-{
-  mat4 shadow_view;
-  mat4 shadow_proj;
-  mat4 shadow_view_inv;
-  mat4 shadow_proj_inv;
-} shadow;
+layout(std430, set = 0, binding = 3) buffer readonly VertexItems vertices[];
+layout(std430, set = 0, binding = 4) buffer readonly Triangle triangles[];
+layout(std430, set = 0, binding = 5) buffer readonly Instance instances[];
+layout(std430, set = 0, binding = 6) buffer readonly Meshlet meshlets[];
 
-layout(set = 0, binding = 4) uniform texture2D gbuffer_0_texture;
-layout(set = 0, binding = 5) uniform texture2D gbuffer_1_texture;
-layout(set = 0, binding = 6) uniform texture2D depth_texture;
-layout(set = 0, binding = 7, rgba32f) uniform image2D color_texture;
-layout(set = 0, binding = 8) uniform accelerationStructureEXT tlas;
+layout(set = 0, binding = 7) uniform texture2DArray aaam_array;
+layout(set = 0, binding = 8) uniform texture2DArray snno_array;
+layout(set = 0, binding = 9) uniform texture2DArray eeet_array;
+
+layout(triangles, max_vertices = 64, max_primitives = 128) out;
 
 
-#ifdef RGEN
-
-layout(location = 0) rayPayloadEXT bool occluded;
-
-
-bool OccludeScene(in Ray ray)
-{
-	occluded = true;
-    traceRayEXT(tlas, gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsSkipClosestHitShaderEXT, 0xff, 0, 0, 0, 
-        ray.org, ray.tmin, ray.dir, ray.tmax, 0);
-    return occluded;
-}
-
-struct BRDF_CookTorrance
-{
-  vec3 color;
-  float roughness;
-  float metallic;
-};
-
-#define kDielectricSpec vec4(0.04, 0.04, 0.04, 1.0 - 0.04)
-
-float OneMinusReflectivityMetallic(float metallic)
-{
-    float oneMinusDielectricSpec = kDielectricSpec.a;
-    return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
-}
-
-vec3 Evaluate_CookTorrance(BRDF_CookTorrance brdf, vec3 lo, vec3 wo)
-{
-  const float roughness2 = brdf.roughness * brdf.roughness; // , 6.103515625e-5);
-  const float normalizationTerm = brdf.roughness * 4.0 + 2.0;
-  const float roughness2MinusOne = roughness2 - 1.0;
-
-  const vec3 H = normalize(wo + lo);
-
-  const float NoH = H.z;
-  const float LoH = max(0.0, dot(lo, H));
-
-  // GGX Distribution multiplied by combined approximation of Visibility and Fresnel
-  // BRDFspec = (D * V * F) / 4.0
-  // D = roughness^2 / ( NoH^2 * (roughness^2 - 1) + 1 )^2
-  // V * F = 1.0 / ( LoH^2 * (roughness + 0.5) )
-  // See "Optimizing PBR for Mobile" from Siggraph 2015 moving mobile graphics course
-  // https://community.arm.com/events/1155
-
-  // Final BRDFspec = roughness^2 / ( NoH^2 * (roughness^2 - 1) + 1 )^2 * (LoH^2 * (roughness + 0.5) * 4.0)
-  // We further optimize a few light invariant terms
-  // brdfData.normalizationTerm = (roughness + 0.5) * 4.0 rewritten as roughness * 4.0 + 2.0 to a fit a MAD.
-  const float d = NoH * NoH * roughness2MinusOne + 1.0; // 0001f;
-
-  const float LoH2 = LoH * LoH;
-  const float res = roughness2 / ((d * d) * max(0.0, LoH2) * normalizationTerm);
-
-  return vec3(res, res, res); // *brdf.color;
-}
-
+#ifdef MESH
 
 void main()
 {

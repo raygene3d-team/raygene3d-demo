@@ -355,10 +355,15 @@ namespace RayGene3D
         scope.bbox_buffer.Resize(bbox_offset + bbox_count);
         scope.bbox_buffer.Set({ mesh.boxes.data(), mesh.boxes.size() }, bbox_offset);
 
-        const auto cpnt_offset = scope.cpnt_buffer.Length();
-        const auto cpnt_count = mesh.points.size();
-        scope.cpnt_buffer.Resize(cpnt_offset + cpnt_count);
-        scope.cpnt_buffer.Set({ mesh.points.data(), mesh.points.size() }, cpnt_offset);
+        const auto vidx_offset = scope.vidx_buffer.Length();
+        const auto vidx_count = mesh.v_indices.size();
+        scope.vidx_buffer.Resize(vidx_offset + vidx_count);
+        scope.vidx_buffer.Set({ mesh.v_indices.data(), mesh.v_indices.size() }, vidx_offset);
+
+        const auto tidx_offset = scope.tidx_buffer.Length();
+        const auto tidx_count = mesh.t_indices.size();
+        scope.tidx_buffer.Resize(tidx_offset + tidx_count);
+        scope.tidx_buffer.Set({ mesh.t_indices.data(), mesh.t_indices.size() }, tidx_offset);
       }
 
       scope.tbox_buffer.Resize(boxes.size());

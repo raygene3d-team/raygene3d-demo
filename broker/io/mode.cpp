@@ -276,8 +276,8 @@ namespace RayGene3D
         //double start = timestamp();
         auto meshlet_count = meshopt_buildMeshletsBound(mesh.triangles.size() * 3, vrt_limit, trg_limit);
         std::vector<meshopt_Meshlet> meshlets_opt(meshlet_count);
-        std::vector<uint32_t> meshlet_vrt(meshlet_count * vrt_limit);
-        std::vector<uint8_t> meshlet_trg(meshlet_count * trg_limit * 3);
+        std::vector<uint32_t> meshlets_vrt(meshlet_count * vrt_limit);
+        std::vector<uint8_t> meshlets_trg(meshlet_count * trg_limit * 3);
 
         //if (scan)
         //  meshlets.resize(meshopt_buildMeshletsScan(&meshlets[0], &meshlet_vertices[0], &meshlet_triangles[0], &mesh.indices[0], mesh.indices.size(), mesh.vertices.size(), max_vertices, max_triangles));
@@ -285,13 +285,15 @@ namespace RayGene3D
         //  meshlets.resize(meshopt_buildMeshletsFlex(&meshlets[0], &meshlet_vertices[0], &meshlet_triangles[0], &mesh.indices[0], mesh.indices.size(), &mesh.vertices[0].px, mesh.vertices.size(), sizeof(Vertex), max_vertices, min_triangles, max_triangles, cone_weight, split_factor));
         //else // note: equivalent to the call of buildMeshletsFlex() with non-negative cone_weight and split_factor = 0
         meshlets_opt.resize(meshopt_buildMeshlets(meshlets_opt.data(), 
-          meshlet_vrt.data(), meshlet_trg.data(),
+          meshlets_vrt.data(), meshlets_trg.data(),
           (const uint32_t*)mesh.triangles.data(), mesh.triangles.size() * 3,
-          (const float*)mesh.vertices.data(), mesh.vertices.size(), sizeof(Vertex), vrt_limit, trg_limit, 0.0f));
+          (const float*)mesh.vertices.data(), mesh.vertices.size(), 
+          sizeof(Vertex), vrt_limit, trg_limit, 0.0f));
 
         for (size_t i = 0; i < meshlets_opt.size(); ++i)
         {
-          meshopt_optimizeMeshlet(&meshlet_vrt[meshlets_opt[i].vertex_offset], &meshlet_trg[meshlets_opt[i].triangle_offset], meshlets_opt[i].triangle_count, meshlets_opt[i].vertex_count);
+          meshopt_optimizeMeshlet(&meshlets_vrt[meshlets_opt[i].vertex_offset], &meshlets_trg[meshlets_opt[i].triangle_offset], 
+            meshlets_opt[i].triangle_count, meshlets_opt[i].vertex_count);
         }
 
         if (meshlets_opt.size())
@@ -299,120 +301,129 @@ namespace RayGene3D
           const meshopt_Meshlet& last = meshlets_opt.back();
 
           // this is an example of how to trim the vertex/triangle arrays when copying data out to GPU storage
-          meshlet_vrt.resize(last.vertex_offset + last.vertex_count);
-          meshlet_trg.resize(last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3));
+          meshlets_vrt.resize(last.vertex_offset + last.vertex_count);
+          meshlets_trg.resize(last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3));
         }
 
-        meshlet_opt_count += meshlets_opt.size();
+        //meshlet_opt_count += meshlets_opt.size();
 
-        auto vertices = std::vector<Vertex>(std::accumulate(meshlets_opt.cbegin(), meshlets_opt.cend(), size_t(0), 
-          [](size_t count, const auto& meshlet_opt) { return count + meshlet_opt.vertex_count; }));
-        auto triangles = std::vector<Triangle>(std::accumulate(meshlets_opt.cbegin(), meshlets_opt.cend(), size_t(0),
-          [](size_t count, const auto& meshlet_opt) { return count + meshlet_opt.triangle_count; }));
-        auto meshlets = std::vector<Meshlet>(meshlets_opt.size());
-        auto points = std::vector<Point>(meshlet_trg.size());
-        
-        
-        uint32_t upd_triangle_offset = 0;
+        //auto vertices = std::vector<Vertex>(std::accumulate(meshlets_opt.cbegin(), meshlets_opt.cend(), size_t(0), 
+        //  [](size_t count, const auto& meshlet_opt) { return count + meshlet_opt.vertex_count; }));
+        //auto triangles = std::vector<Triangle>(std::accumulate(meshlets_opt.cbegin(), meshlets_opt.cend(), size_t(0),
+        //  [](size_t count, const auto& meshlet_opt) { return count + meshlet_opt.triangle_count; }));
+        //auto meshlets = std::vector<Meshlet>(meshlets_opt.size());
+        //auto points = std::vector<Point>(meshlet_trg.size());
+        //
+        //
+        //uint32_t upd_triangle_offset = 0;
+        //for (size_t i = 0; i < meshlets_opt.size(); ++i)
+        //{      
+        //  const auto color = glm::u8vec4
+        //  {
+        //    rand() % 64 + 63,
+        //    rand() % 64 + 63,
+        //    rand() % 64 + 63,
+        //    255
+        //  };
+
+        //  for (size_t j = 0; j < meshlets_opt[i].vertex_count; ++j)
+        //  {
+        //    vertices[j + meshlets_opt[i].vertex_offset] = mesh.vertices[meshlet_vrt[j + meshlets_opt[i].vertex_offset]];
+        //  }
+
+        //  
+        //  for (size_t j = 0; j < meshlets_opt[i].triangle_count; ++j)
+        //  {
+        //    const auto knt0 = meshlet_trg[3 * j + 0 + meshlets_opt[i].triangle_offset];
+        //    const auto knt1 = meshlet_trg[3 * j + 1 + meshlets_opt[i].triangle_offset];
+        //    const auto knt2 = meshlet_trg[3 * j + 2 + meshlets_opt[i].triangle_offset];
+
+        //    points[3 * j + 0 + meshlets_opt[i].triangle_offset].idx = knt0;
+        //    points[3 * j + 1 + meshlets_opt[i].triangle_offset].idx = knt1;
+        //    points[3 * j + 2 + meshlets_opt[i].triangle_offset].idx = knt2;
+
+        //    const auto idx0 = knt0 + meshlets_opt[i].vertex_offset;
+        //    const auto idx1 = knt1 + meshlets_opt[i].vertex_offset;
+        //    const auto idx2 = knt2 + meshlets_opt[i].vertex_offset;
+
+        //    triangles[j + 0 + upd_triangle_offset].idx = { idx0, idx1, idx2 };
+
+        //    vertices[idx0].col = color;
+        //    vertices[idx1].col = color;
+        //    vertices[idx2].col = color;            
+        //  }
+
+        //  meshlets[i].vrt_offset = meshlets_opt[i].vertex_offset;
+        //  meshlets[i].vrt_count = meshlets_opt[i].vertex_count;
+        //  meshlets[i].pnt_offset = meshlets_opt[i].triangle_offset;
+        //  meshlets[i].pnt_count = meshlets_opt[i].triangle_count * 3;
+
+        //  upd_triangle_offset += meshlets_opt[i].triangle_count;
+        //}
+
+        mesh.meshlets.resize(meshlets_opt.size());
         for (size_t i = 0; i < meshlets_opt.size(); ++i)
-        {      
-          const auto color = glm::u8vec4
-          {
-            rand() % 64 + 63,
-            rand() % 64 + 63,
-            rand() % 64 + 63,
-            255
-          };
-
-          for (size_t j = 0; j < meshlets_opt[i].vertex_count; ++j)
-          {
-            vertices[j + meshlets_opt[i].vertex_offset] = mesh.vertices[meshlet_vrt[j + meshlets_opt[i].vertex_offset]];
-          }
-
-          
-          for (size_t j = 0; j < meshlets_opt[i].triangle_count; ++j)
-          {
-            const auto knt0 = meshlet_trg[3 * j + 0 + meshlets_opt[i].triangle_offset];
-            const auto knt1 = meshlet_trg[3 * j + 1 + meshlets_opt[i].triangle_offset];
-            const auto knt2 = meshlet_trg[3 * j + 2 + meshlets_opt[i].triangle_offset];
-
-            points[3 * j + 0 + meshlets_opt[i].triangle_offset].idx = knt0;
-            points[3 * j + 1 + meshlets_opt[i].triangle_offset].idx = knt1;
-            points[3 * j + 2 + meshlets_opt[i].triangle_offset].idx = knt2;
-
-            const auto idx0 = knt0 + meshlets_opt[i].vertex_offset;
-            const auto idx1 = knt1 + meshlets_opt[i].vertex_offset;
-            const auto idx2 = knt2 + meshlets_opt[i].vertex_offset;
-
-            triangles[j + 0 + upd_triangle_offset].idx = { idx0, idx1, idx2 };
-
-            vertices[idx0].col = color;
-            vertices[idx1].col = color;
-            vertices[idx2].col = color;            
-          }
-
-          meshlets[i].vrt_offset = meshlets_opt[i].vertex_offset;
-          meshlets[i].vrt_count = meshlets_opt[i].vertex_count;
-          meshlets[i].pnt_offset = meshlets_opt[i].triangle_offset;
-          meshlets[i].pnt_count = meshlets_opt[i].triangle_count * 3;
-
-          upd_triangle_offset += meshlets_opt[i].triangle_count;
+        { 
+          mesh.meshlets[i].vidx_offset = meshlets_opt[i].vertex_offset;
+          mesh.meshlets[i].vidx_count = meshlets_opt[i].vertex_count;
+          mesh.meshlets[i].tidx_offset = meshlets_opt[i].triangle_offset;
+          mesh.meshlets[i].tidx_count = meshlets_opt[i].triangle_count;
         }
 
-        std::swap(mesh.vertices, vertices);
-        std::swap(mesh.triangles, triangles);
-        std::swap(mesh.meshlets, meshlets);
-        std::swap(mesh.points, points);
+        std::swap(mesh.v_indices, meshlets_vrt);
+        std::swap(mesh.t_indices, meshlets_trg);
+        //std::swap(mesh.meshlets, meshlets);
+        //std::swap(mesh.points, points);
 
-        std::vector<int> boundary(mesh.vertices.size());
+        //std::vector<int> boundary(mesh.vertices.size());
 
-        for (const auto& meshlet : meshlets_opt)
-        {
-          mesh.meshopt_avg_vertices += meshlet.vertex_count;
-          mesh.meshopt_avg_triangles += meshlet.triangle_count;
-          mesh.meshopt_not_full += meshlet.triangle_count < trg_limit;
+        //for (const auto& meshlet : meshlets_opt)
+        //{
+        //  mesh.meshopt_avg_vertices += meshlet.vertex_count;
+        //  mesh.meshopt_avg_triangles += meshlet.triangle_count;
+        //  mesh.meshopt_not_full += meshlet.triangle_count < trg_limit;
 
-          for (uint32_t j = 0; j < meshlet.vertex_count; ++j)
-          {
-            const auto counter = boundary[meshlet_vrt[meshlet.vertex_offset + j]]++;
-            mesh.meshopt_avg_boundary += counter == 2 ? 1 : 0;
-          }
+        //  for (uint32_t j = 0; j < meshlet.vertex_count; ++j)
+        //  {
+        //    const auto counter = boundary[meshlets_vrt[meshlet.vertex_offset + j]]++;
+        //    mesh.meshopt_avg_boundary += counter == 2 ? 1 : 0;
+        //  }
 
-          std::array<int, vrt_limit> parents;
-          for (auto j = 0u; j < meshlet.vertex_count; ++j)
-          {
-            parents[j] = int(j);
-          }
+        //  std::array<int, vrt_limit> parents;
+        //  for (auto j = 0u; j < meshlet.vertex_count; ++j)
+        //  {
+        //    parents[j] = int(j);
+        //  }
 
-          const auto follow = [&parents](int index)
-            {
-              while (index != parents[index])
-              {
-                const auto parent = parents[index];
-                parents[index] = parents[parent];
-                index = parent;
-              }
+        //  const auto follow = [&parents](int index)
+        //    {
+        //      while (index != parents[index])
+        //      {
+        //        const auto parent = parents[index];
+        //        parents[index] = parents[parent];
+        //        index = parent;
+        //      }
 
-              return index;
-            };
+        //      return index;
+        //    };
 
-          for (auto j = 0u; j < meshlet.triangle_count * 3; ++j)
-          {
-            const auto v0 = follow(meshlet_trg[meshlet.triangle_offset + j]);
-            const auto v1 = follow(meshlet_trg[meshlet.triangle_offset + j + (j % 3 == 2 ? -2 : 1)]);
+        //  for (auto j = 0u; j < meshlet.triangle_count * 3; ++j)
+        //  {
+        //    const auto v0 = follow(meshlets_trg[meshlet.triangle_offset + j]);
+        //    const auto v1 = follow(meshlets_trg[meshlet.triangle_offset + j + (j % 3 == 2 ? -2 : 1)]);
 
-            parents[v0] = v1;
-          }
+        //    parents[v0] = v1;
+        //  }
 
-          int roots = 0;
-          for (auto j = 0u; j < meshlet.vertex_count; ++j)
-          {
-            roots += follow(j) == int(j);
-          }
+        //  int roots = 0;
+        //  for (auto j = 0u; j < meshlet.vertex_count; ++j)
+        //  {
+        //    roots += follow(j) == int(j);
+        //  }
 
-          assert(roots != 0);
-          mesh.meshopt_avg_connected += roots;
-        }
+        //  assert(roots != 0);
+        //  mesh.meshopt_avg_connected += roots;
+        //}
       }
     }
 
