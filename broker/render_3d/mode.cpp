@@ -128,7 +128,8 @@ namespace RayGene3D
 
       geometry_config = geometry_pass->CreateConfig("render_3d_geometry_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+        //Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+        Config::Compilation(Config::COMPILATION_MESH), // | Config::COMPILATION_PS),
         { defines.data(), defines.size() },
         ia_config,
         rc_config,
@@ -158,10 +159,10 @@ namespace RayGene3D
         //  geometry_triangles,
         //};
 
-        const auto& geometry_graphic_arguments = scope.graphic_arguments->CreateView("render_3d_geometry_graphic_argument_" + std::to_string(i),
-          Usage(USAGE_ARGUMENT_LIST),
-          { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
-        );
+        //const auto& geometry_graphic_arguments = scope.graphic_arguments->CreateView("render_3d_geometry_graphic_argument_" + std::to_string(i),
+        //  Usage(USAGE_ARGUMENT_LIST),
+        //  { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
+        //);
 
         //const auto& ins_range = Range{ 0u,  1u };
         //const auto& vtx_range = Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
@@ -169,7 +170,7 @@ namespace RayGene3D
         const auto& ins_range = Range{ 0u, data[i].mlet_count };
         const auto& vtx_range = Range{ 0u, 1u };
         const auto& idx_range = Range{ 0u, 1u };
-        const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
+        const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Instance)) * i, 0u, 0u, 0u };
         const auto& push_data = std::nullopt;
 
         entities[i] = {
@@ -251,7 +252,7 @@ namespace RayGene3D
         geometry_scene_array_eeet,
         //geometry_scene_array_eeet,
         //geometry_scene_lightmaps,
-        geometry_reflection_map,
+        //geometry_reflection_map,
       };
 
       const auto& geometry_trace_meshlets = scope.trace_buffer_mlet->CreateView("render_3d_geometry_trace_meshlets",
@@ -280,7 +281,7 @@ namespace RayGene3D
         { sb_views, std::size(sb_views) },
         { ri_views, std::size(ri_views) },
         {},
-        {},
+        { rb_views, std::size(rb_views) },
         {}
       );
     }

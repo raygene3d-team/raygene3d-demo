@@ -55,41 +55,60 @@ struct Triangle
 
 struct Meshlet
 {
-  uint vrt_offset;
-  uint vrt_count;
-  uint pnt_offset;
-  uint pnt_count;
-}
+  uint vidx_offset;
+  uint vidx_count;
+  uint tidx_offset;
+  uint tidx_count;
+};
+
+struct Frustum
+{
+  mat4x4 view;
+  mat4x4 proj;
+  mat4x4 view_inv;
+  mat4x4 proj_inv;
+};
+
+struct Screen
+{
+  uint extent_x;
+  uint extent_y;
+  uint rnd_base;
+  uint rnd_seed;
+};
 
 struct Instance
 {
-  mat3x4 transform;
+    mat3x4 transform;
 
-  uint prim_offset;
-  uint prim_count;
-  uint vert_offset;
-  uint vert_count;
+    uint aaam_layer; // AM
+    uint snno_layer; // SNAO
+    uint eeet_layer; // ET
+    uint mask_layer;
 
-  vec4 brdf_param0;
-  vec4 brdf_param1;
-  vec4 brdf_param2;
-  vec4 brdf_param3;
+    uint vert_offset; // vert_offset
+    uint vert_count;  // vert_count
+    uint trng_offset; // prim_offset
+    uint trng_count;  // prim_count
+    uint mlet_offset; // mlet_offset
+    uint mlet_count;  // mlet_count
+    uint bone_offset;
+    uint bone_count;
 
-  int tex0_idx;
-  int tex1_idx;
-  int tex2_idx;
-  int tex3_idx;
-  int tex4_idx;
-  int tex5_idx;
-  int tex6_idx;
-  int tex7_idx;
+    vec3 aabb_min;
+    uint index;
+    vec3 aabb_max;
+    uint flags;
 
-  vec3 bb_min;
-  uint geom_idx;
-  vec3 bb_max;
-  uint brdf_idx;
+    vec4 fparam_0;
+    vec4 fparam_1;
+    vec4 fparam_2;
+    vec4 fparam_3;
 
-  uvec4 padding[4];
+    uvec4 uparam_0;
+    uvec4 uparam_1;
+    uvec4 uparam_2;
+    uvec4 uparam_3;
 };
 
 
@@ -104,124 +123,102 @@ struct Attribute
 
 
 layout(set = 0, binding = 0) uniform sampler sampler0;
+layout(set = 0, binding = 1) uniform sampler sampler1;
 
-layout(std140, set = 0, binding = 1) uniform Screen
-{
-  uint extent_x;
-  uint extent_y;
-  uint rnd_base;
-  uint rnd_seed;
-} screen;
+layout(std140, set = 0, binding = 2) uniform screen_data {Screen screen;};
+layout(std140, set = 0, binding = 3) uniform camera_data {Frustum camera;};
+layout(std140, set = 0, binding = 4) uniform shadow_data {Frustum shadow;};
+layout(std140, set = 0, binding = 5) uniform instance_data {Instance instance;};
 
-layout(std140, set = 0, binding = 2) uniform Camera
-{
-  mat4 camera_view;
-  mat4 camera_proj;
-  mat4 camera_view_inv;
-  mat4 camera_proj_inv;
-} camera;
+layout(std430, set = 0, binding = 6) buffer readonly meshlet_buffer {Meshlet meshlets[];};
+layout(std430, set = 0, binding = 7) buffer readonly v_index_buffer {uint v_indices[];};
+layout(std430, set = 0, binding = 8) buffer readonly vertex_buffer {Vertex vertices[];};
+layout(std430, set = 0, binding = 9) buffer readonly t_index_buffer {uint8_t t_indices[];};
 
-layout(std430, set = 0, binding = 3) buffer readonly VertexItems vertices[];
-layout(std430, set = 0, binding = 4) buffer readonly Triangle triangles[];
-layout(std430, set = 0, binding = 5) buffer readonly Instance instances[];
-layout(std430, set = 0, binding = 6) buffer readonly Meshlet meshlets[];
+layout(set = 0, binding = 10) uniform texture2DArray aaam_array;
+layout(set = 0, binding = 11) uniform texture2DArray snno_array;
+layout(set = 0, binding = 12) uniform texture2DArray eeet_array;
 
-layout(set = 0, binding = 7) uniform texture2DArray aaam_array;
-layout(set = 0, binding = 8) uniform texture2DArray snno_array;
-layout(set = 0, binding = 9) uniform texture2DArray eeet_array;
 
-layout(triangles, max_vertices = 64, max_primitives = 128) out;
 
 
 #ifdef MESH
 
+layout(location=0) out Payload
+{
+  flat uint vidx;
+  vec3 wpos;
+} payload[];
+
+#define VERT_LIMIT 64
+#define TRNG_LIMIT 128
+#define GROUP_SIZE 32
+
+
+const uint VERT_ITERATIONS = (VERT_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
+const uint TRNG_ITERATIONS = (TRNG_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
+
+layout(local_size_x = GROUP_SIZE, local_size_y = 1, local_size_z = 1) in;
+layout(triangles, max_vertices = VERT_LIMIT, max_primitives = TRNG_LIMIT) out;
+
 void main()
 {
-  const uint ix = gl_LaunchIDEXT.x;
-  const uint iy = gl_LaunchIDEXT.y;
+  uint groupID = gl_WorkGroupID.x;
+  uint localID = gl_LocalInvocationID.x;
 
-  //sampler2DArray(texture_items, sampler0)
+  Meshlet meshlet = meshlets[instance.mlet_offset + groupID];
+  SetMeshOutputsEXT(meshlet.vidx_count, meshlet.tidx_count);
 
-  const float depth = texelFetch(depth_texture, ivec2(ix, iy), 0).x;
-
-  if (depth == 1.0)
+  for (uint i = 0; i < VERT_ITERATIONS; ++i)
   {
-    return;
+    uint vidx = localID + i * GROUP_SIZE;
+    if(vidx < meshlet.vidx_count)
+    { 
+      vec3 opos = vertices[v_indices[vidx + meshlet.vidx_offset] + instance.vert_offset].pos;
+      vec3 wpos = opos; //(instance.transform  * vec4(opos, 1.0)).xyz;
+
+      payload[vidx].vidx = vidx;
+      payload[vidx].wpos = wpos;
+
+      vec4 hpos = (camera.view * vec4(wpos, 1.0));
+      gl_MeshVerticesEXT[vidx].gl_Position = hpos;
+    }
   }
 
-  const vec4 albedo_metallic = texelFetch(gbuffer_0_texture, ivec2(ix, iy), 0); //gbuffer_0_texture.Load(int3(input.pos.xy, 0));
-  const vec4 normal_smoothness = texelFetch(gbuffer_1_texture, ivec2(ix, iy), 0); //gbuffer_1_texture.Load(int3(input.pos.xy, 0));
 
-  const float metallic = albedo_metallic.a;
-  const float smoothness = normal_smoothness.a;
-
-//#ifdef USE_NORMAL_OCT_QUAD_ENCODING
-//  const vec3 normal = UnpackNormal(uint3(normal_smoothness.rgb * 255.0));
-//#else
-  const vec3 normal = 2.0 * normal_smoothness.rgb - 1.0;
-//#endif
-
-  const float rx = 2.0 * (ix + 0.5) / screen.extent_x - 1.0;
-  const float ry = 2.0 * (iy + 0.5) / screen.extent_y - 1.0;
-
-  const vec4 ndc_coord = vec4(rx, -ry, depth, 1.0);
-  const vec4 view_pos = camera.camera_proj_inv * ndc_coord;
-  const vec3 surface_pos = (camera.camera_view_inv * view_pos / view_pos.w).xyz;
-
-  const vec3 camera_pos = vec3(camera.camera_view_inv[3][0], camera.camera_view_inv[3][1], camera.camera_view_inv[3][2]);
-  const float camera_dst = length(camera_pos - surface_pos);
-  const vec3 camera_dir = (camera_pos - surface_pos) / camera_dst;
-
-  const vec3 shadow_pos = vec3(shadow.shadow_view_inv[3][0], shadow.shadow_view_inv[3][1], shadow.shadow_view_inv[3][2]);
-  const float shadow_dst = length(shadow_pos - surface_pos);
-  const vec3 shadow_dir =-vec3(shadow.shadow_view_inv[2][0], shadow.shadow_view_inv[2][1], shadow.shadow_view_inv[2][2]);
-
-  Ray ray;
-  ray.org = surface_pos;
-  ray.tmin = RAY_TMIN;
-  ray.dir = shadow_dir;
-  ray.tmax = shadow_dst;
-
-  const vec3 diffuse = max(0.0, dot(shadow_dir, normal)) * vec3(1, 1, 1) * albedo_metallic.xyz;
-  const float specular = pow(max(0.0, dot(normalize(camera_dir + shadow_dir), normal)), smoothness);
-  const float attenuation = OccludeScene(ray) ? 0.0 : 1.0;
-
-  BRDF_CookTorrance brdf; // = Initialize_CookTorrance();
-  brdf.color = albedo_metallic.xyz;
-  brdf.roughness = clamp(normal_smoothness.w, 0.001, 0.999);
-  brdf.metallic = albedo_metallic.w;
-
-  const vec3 n = normalize(normal.xyz);
-  const vec3 t = normalize(n.y * n.y > n.x * n.x ? vec3(0.0, -n.z, n.y) : vec3(-n.z, 0.0, n.x));
-  const vec3 b = normalize(cross(n, t));
-  const mat3x3 tbn = mat3x3(t, b, n);
-
-  const vec3 wo = shadow_dir * tbn;
-  const vec3 lo = camera_dir * tbn;
-
-  const vec3 m = Evaluate_CookTorrance(brdf, lo, wo) * brdf.color;
-
-  const float oneMinusReflectivity = OneMinusReflectivityMetallic(brdf.metallic);
-  const float reflectivity = 1.0 - oneMinusReflectivity;
-
-  const vec3 diff = brdf.color * oneMinusReflectivity;
-  const vec3 spec = mix(kDielectricSpec.rgb, m, metallic);
-
-  const vec3 color = (diff + spec) * max(0.0, wo.z) * attenuation;
-
-  const vec4 result = vec4(color, 0.0);
-  imageStore(color_texture, ivec2(ix, iy), imageLoad(color_texture, ivec2(ix, iy)) + result); 
+  for (uint i = 0; i < TRNG_ITERATIONS; ++i)
+  {
+    uint tidx = localID + i * GROUP_SIZE;
+    if(tidx < meshlet.tidx_count)
+    {
+      uint idx0 = t_indices[tidx * 3 + 0 + meshlet.tidx_offset];
+      uint idx1 = t_indices[tidx * 3 + 1 + meshlet.tidx_offset];
+      uint idx2 = t_indices[tidx * 3 + 2 + meshlet.tidx_offset];
+      
+      gl_PrimitiveTriangleIndicesEXT[tidx] = uvec3(idx0, idx1, idx2);
+    }
+  }
 }
 
 #endif
 
+#ifdef FRAG
 
+layout(location=0) in Payload
+{
+  flat uint vidx;
+  vec3 wpos;
+} payload;
 
-#ifdef MISS
-layout(location = 0) rayPayloadInEXT bool occluded;
+layout(location = 0) out vec4 target_0;
+layout(location = 1) out vec4 target_1;
+layout(location = 2) out vec4 target_2;
 
 void main()
 {
-  occluded = false;
+  target_0 = payload.wpos;
+  target_1 =  vec4(0.0, 0.0, 0.0, 0.0);
+  target_2 =  vec4(0.0, 0.0, 0.0, 0.0);
 }
+
 #endif
