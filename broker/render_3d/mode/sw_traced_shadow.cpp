@@ -103,7 +103,7 @@ namespace RayGene3D
 
       sw_traced_config = sw_traced_pass->CreateConfig("spark_sw_traced_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+        Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
         { defines.data(), defines.size() },
         ia_Config,
         rc_Config,

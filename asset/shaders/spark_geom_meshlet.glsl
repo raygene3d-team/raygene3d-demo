@@ -180,7 +180,7 @@ void main()
       payload[vidx].vidx = vidx;
       payload[vidx].wpos = wpos;
 
-      vec4 hpos = (camera.view * vec4(wpos, 1.0));
+      vec4 hpos = vec4(0.0, 0.0, 0.0, 1.0); //camera.view * vec4(wpos, 1.0);
       gl_MeshVerticesEXT[vidx].gl_Position = hpos;
     }
   }
@@ -191,9 +191,9 @@ void main()
     uint tidx = localID + i * GROUP_SIZE;
     if(tidx < meshlet.tidx_count)
     {
-      uint idx0 = t_indices[tidx * 3 + 0 + meshlet.tidx_offset];
-      uint idx1 = t_indices[tidx * 3 + 1 + meshlet.tidx_offset];
-      uint idx2 = t_indices[tidx * 3 + 2 + meshlet.tidx_offset];
+      uint idx0 = t_indices[tidx * 3 + 0 + meshlet.tidx_offset*0];
+      uint idx1 = t_indices[tidx * 3 + 1 + meshlet.tidx_offset*0];
+      uint idx2 = t_indices[tidx * 3 + 2 + meshlet.tidx_offset*0];
       
       gl_PrimitiveTriangleIndicesEXT[tidx] = uvec3(idx0, idx1, idx2);
     }

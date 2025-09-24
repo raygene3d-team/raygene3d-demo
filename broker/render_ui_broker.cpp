@@ -339,7 +339,7 @@ namespace RayGene3D
 
       config = pass->CreateConfig("imgui_config",
         source,
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+        Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
         {},
         ia_state,
         rc_state,

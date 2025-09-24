@@ -59,7 +59,7 @@ namespace RayGene3D
 
       average_config = average_pass->CreateConfig("lightmap_average_config",
         shader_ss.str(),
-        Config::COMPILATION_CS,
+        Config::COMPILATION_COMP,
         {},
         {},
         {},

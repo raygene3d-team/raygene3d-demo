@@ -384,7 +384,7 @@ namespace RayGene3D
 
     configs[level] = passes[level]->CreateConfig("environment_reflection_config_" + std::to_string(level),
       shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_GS | Config::COMPILATION_PS),
+      Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_GEOM | Config::COMPILATION_FRAG),
       { defines.data(), defines.size() },
       ia_config,
       rc_config,

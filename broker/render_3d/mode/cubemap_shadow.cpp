@@ -102,7 +102,7 @@ namespace RayGene3D
 
       shadowed_config = shadowed_pass->CreateConfig("spark_shadowed_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+        Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
         { defines.data(), defines.size() },
         ia_Config,
         rc_Config,
@@ -240,7 +240,7 @@ namespace RayGene3D
 
       shadowmap_config = shadowmap_pass->CreateConfig("spark_shadowmap_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_VS),
+        Config::Compilation(Config::COMPILATION_VERT),
         {},
         ia_Config,
         rc_Config,

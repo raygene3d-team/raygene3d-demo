@@ -75,8 +75,8 @@ namespace RayGene3D
     void Mode::CreateGeometryConfig()
     {
       std::fstream shader_fs;
-      //shader_fs.open("./asset/shaders/spark_geom_raster.hlsl", std::fstream::in);
-      shader_fs.open("./asset/shaders/spark_geom_meshlet.glsl", std::fstream::in);
+      shader_fs.open("./asset/shaders/spark_geom_raster.hlsl", std::fstream::in);
+      //shader_fs.open("./asset/shaders/spark_geom_meshlet.glsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
       shader_fs.close();
@@ -86,18 +86,18 @@ namespace RayGene3D
 
       const Config::IAState ia_config =
       {
-        //Config::TOPOLOGY_TRIANGLELIST,
-        //Config::INDEXER_32_BIT,
-        //{
-        //  { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
-        //  { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
-        //  { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
-        //  { 0, 28, 64, FORMAT_R32_UINT, false },
-        //  { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
-        //  { 0, 44, 64, FORMAT_R32_FLOAT, false },
-        //  { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
-        //  { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
-        //}
+        Config::TOPOLOGY_TRIANGLELIST,
+        Config::INDEXER_32_BIT,
+        {
+          { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
+          { 0, 12, 64, FORMAT_R8G8B8A8_UNORM, false },
+          { 0, 16, 64, FORMAT_R32G32B32_FLOAT, false },
+          { 0, 28, 64, FORMAT_R32_UINT, false },
+          { 0, 32, 64, FORMAT_R32G32B32_FLOAT, false },
+          { 0, 44, 64, FORMAT_R32_FLOAT, false },
+          { 0, 48, 64, FORMAT_R32G32_FLOAT, false },
+          { 0, 56, 64, FORMAT_R32G32_FLOAT, false },
+        }
       };
 
       const Config::RCState rc_config =
@@ -128,8 +128,8 @@ namespace RayGene3D
 
       geometry_config = geometry_pass->CreateConfig("render_3d_geometry_config",
         shader_ss.str(),
-        //Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        Config::Compilation(Config::COMPILATION_MESH), // | Config::COMPILATION_PS),
+        Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
+        //Config::Compilation(Config::COMPILATION_MESH), // | Config::COMPILATION_PS),
         { defines.data(), defines.size() },
         ia_config,
         rc_config,
@@ -145,37 +145,37 @@ namespace RayGene3D
       auto entities = std::vector<Batch::Entity>(count);
       for (auto i = 0u; i < count; ++i)
       {
-        //const auto& geometry_vertices = scope.scene_buffer_vert->CreateView("render_3d_geometry_vertices_" + std::to_string(i),
-        //  Usage(USAGE_VERTEX_ARRAY)
-        //);
-        //const std::shared_ptr<View> va_views[] = {
-        //  geometry_vertices,
-        //};
+        const auto& geometry_vertices = scope.scene_buffer_vert->CreateView("render_3d_geometry_vertices_" + std::to_string(i),
+          Usage(USAGE_VERTEX_ARRAY)
+        );
+        const std::shared_ptr<View> va_views[] = {
+          geometry_vertices,
+        };
 
-        //const auto& geometry_triangles = scope.scene_buffer_trng->CreateView("render_3d_geometry_triangles_" + std::to_string(i),
-        //  Usage(USAGE_INDEX_ARRAY)
-        //);
-        //const std::shared_ptr<View> ia_views[] = {
-        //  geometry_triangles,
-        //};
+        const auto& geometry_triangles = scope.scene_buffer_trng->CreateView("render_3d_geometry_triangles_" + std::to_string(i),
+          Usage(USAGE_INDEX_ARRAY)
+        );
+        const std::shared_ptr<View> ia_views[] = {
+          geometry_triangles,
+        };
 
-        //const auto& geometry_graphic_arguments = scope.graphic_arguments->CreateView("render_3d_geometry_graphic_argument_" + std::to_string(i),
-        //  Usage(USAGE_ARGUMENT_LIST),
-        //  { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
-        //);
+        const auto& geometry_graphic_arguments = scope.graphic_arguments->CreateView("render_3d_geometry_graphic_argument_" + std::to_string(i),
+          Usage(USAGE_ARGUMENT_LIST),
+          { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
+        );
 
-        //const auto& ins_range = Range{ 0u,  1u };
-        //const auto& vtx_range = Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-        //const auto& idx_range = Range{ data[i].trng_offset * 3, data[i].trng_count * 3 };
-        const auto& ins_range = Range{ 0u, data[i].mlet_count };
-        const auto& vtx_range = Range{ 0u, 1u };
-        const auto& idx_range = Range{ 0u, 1u };
+        const auto& ins_range = Range{ 0u,  1u };
+        const auto& vtx_range = Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
+        const auto& idx_range = Range{ data[i].trng_offset * 3, data[i].trng_count * 3 };
+        //const auto& ins_range = Range{ 0u, data[i].mlet_count };
+        //const auto& vtx_range = Range{ 0u, 1u };
+        //const auto& idx_range = Range{ 0u, 1u };
         const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Instance)) * i, 0u, 0u, 0u };
         const auto& push_data = std::nullopt;
 
         entities[i] = {
-          {}, //{ va_views, va_views + std::size(va_views) },
-          {}, //{ ia_views, ia_views + std::size(ia_views) },
+          { va_views, va_views + std::size(va_views) },
+          { ia_views, ia_views + std::size(ia_views) },
           nullptr, // geometry_graphic_arguments,
           ins_range,
           vtx_range,
@@ -252,7 +252,7 @@ namespace RayGene3D
         geometry_scene_array_eeet,
         //geometry_scene_array_eeet,
         //geometry_scene_lightmaps,
-        //geometry_reflection_map,
+        geometry_reflection_map,
       };
 
       const auto& geometry_trace_meshlets = scope.trace_buffer_mlet->CreateView("render_3d_geometry_trace_meshlets",
@@ -281,7 +281,7 @@ namespace RayGene3D
         { sb_views, std::size(sb_views) },
         { ri_views, std::size(ri_views) },
         {},
-        { rb_views, std::size(rb_views) },
+        {/* rb_views, std::size(rb_views)*/},
         {}
       );
     }
@@ -337,7 +337,7 @@ namespace RayGene3D
 
       skybox_config = geometry_pass->CreateConfig("render_3d_skybox_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
+        Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
         { defines, std::size(defines) },
         ia_config,
         rc_config,
@@ -423,7 +423,7 @@ namespace RayGene3D
 
       present_config = present_pass->CreateConfig("render_3d_present_config",
         shader_ss.str(),
-        Config::COMPILATION_CS,
+        Config::COMPILATION_COMP,
         {},
         {},
         {},
