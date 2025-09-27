@@ -305,6 +305,9 @@ namespace RayGene3D
           meshlets_trg.resize(last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3));
         }
 
+        uint32_t max_v_index = 0;
+        for (const auto& vrt : meshlets_vrt) max_v_index = std::max(max_v_index, vrt);
+
         //meshlet_opt_count += meshlets_opt.size();
 
         //auto vertices = std::vector<Vertex>(std::accumulate(meshlets_opt.cbegin(), meshlets_opt.cend(), size_t(0), 
@@ -368,10 +371,14 @@ namespace RayGene3D
           mesh.meshlets[i].vidx_count = meshlets_opt[i].vertex_count;
           mesh.meshlets[i].tidx_offset = meshlets_opt[i].triangle_offset;
           mesh.meshlets[i].tidx_count = meshlets_opt[i].triangle_count;
+
+
         }
 
         std::swap(mesh.v_indices, meshlets_vrt);
         std::swap(mesh.t_indices, meshlets_trg);
+
+
         //std::swap(mesh.meshlets, meshlets);
         //std::swap(mesh.points, points);
 

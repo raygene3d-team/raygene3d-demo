@@ -23,8 +23,7 @@ struct Vertex
   float3 tgn;
   float sgn;
   float2 tc0;
-  float2 tc1;
-  
+  float2 tc1;  
 };
 
 struct Primitive
@@ -38,34 +37,37 @@ struct Instance
 {
   float4x3 transform;
 
-  float3 emission;
-  float intensity;
-  float3 diffuse;
-  float metallic;
-  float3 specular;
-  float roughness;
+  uint aaam_layer;
+  uint snno_layer;
+  uint eeet_layer;
+  uint mask_layer;
 
-  int tex0_idx;
-  int tex1_idx;
-  int tex2_idx;
-  int tex3_idx;
-  int tex4_idx;
-  int tex5_idx;
-  int tex6_idx;
-  int tex7_idx;
-
-  float3 debug_color;
-  uint geometry_idx;
-
-  uint prim_offset;
-  uint prim_count;
   uint vert_offset;
   uint vert_count;
-  
-  float3 bb_min;
-  uint bb_min_padding;
-  float3 bb_max;
-  uint bb_max_padding;
+  uint trng_offset;
+  uint trng_count;
+  uint mlet_offset;
+  uint mlet_count;
+  uint bbox_offset;
+  uint bbox_count;
+  uint vidx_offset;
+  uint vidx_count;
+  uint tidx_offset;
+  uint tidx_count;
 
-  uint4 padding[4];
+  float3 aabb_min;
+  uint index;
+  float3 aabb_max;
+  uint flags;
+
+  float3 bs_center;
+  float bs_raduis;
+
+  float4 fparam_0;
+  float4 fparam_1;
+  float4 fparam_2;
+  float4 fparam_3;
+
+  uint4 uparam_0;
+  uint4 uparam_1;
 };

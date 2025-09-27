@@ -318,52 +318,49 @@ namespace RayGene3D
       {
         Instance instance;
 
-        instance.vert_offset = scope.vert_buffer.Length();
-        instance.vert_count = mesh.vertices.size();
-        scope.vert_buffer.Resize(size_t(instance.vert_offset + instance.vert_count + instance.vert_count * 0));
-        scope.vert_buffer.Set({ mesh.vertices.data(), mesh.vertices.size() }, instance.vert_offset);
-
-        instance.trng_offset = scope.trng_buffer.Length();
-        instance.trng_count = mesh.triangles.size();
-        scope.trng_buffer.Resize(size_t(instance.trng_offset + instance.trng_count + instance.trng_count * 0));
-        scope.trng_buffer.Set({ mesh.triangles.data(), mesh.triangles.size() }, instance.trng_offset);
-
-        instance.mlet_offset = scope.mlet_buffer.Length();
-        instance.mlet_count = mesh.meshlets.size();
-        scope.mlet_buffer.Resize(size_t(instance.mlet_offset + instance.mlet_count + instance.mlet_count * 0));
-        scope.mlet_buffer.Set({ mesh.meshlets.data(), mesh.meshlets.size() }, instance.mlet_offset);
-
-        instance.bone_offset = 0;
-        instance.bone_count = 0;
-
         instance.transform = glm::identity<glm::fmat3x4>();
-
-        instance.aabb_min = mesh.aabb_min;
-        instance.index = scope.inst_buffer.Length();
-        instance.aabb_max = mesh.aabb_max;
-        instance.flags = 0;
 
         instance.aaam_layer = mesh.aaam_texture_index;
         instance.snno_layer = mesh.snno_texture_index;
         instance.eeet_layer = mesh.eeet_texture_index;
         instance.mask_layer = mesh.mask_texture_index;
 
+        instance.vert_offset = scope.vert_buffer.Length();
+        instance.vert_count = mesh.vertices.size();
+        scope.vert_buffer.Resize(size_t(instance.vert_offset + instance.vert_count));
+        scope.vert_buffer.Set({ mesh.vertices.data(), mesh.vertices.size() }, instance.vert_offset);
+
+        instance.trng_offset = scope.trng_buffer.Length();
+        instance.trng_count = mesh.triangles.size();
+        scope.trng_buffer.Resize(size_t(instance.trng_offset + instance.trng_count));
+        scope.trng_buffer.Set({ mesh.triangles.data(), mesh.triangles.size() }, instance.trng_offset);
+
+        instance.mlet_offset = scope.mlet_buffer.Length();
+        instance.mlet_count = mesh.meshlets.size();
+        scope.mlet_buffer.Resize(size_t(instance.mlet_offset + instance.mlet_count));
+        scope.mlet_buffer.Set({ mesh.meshlets.data(), mesh.meshlets.size() }, instance.mlet_offset);
+
+        instance.bbox_offset = scope.bbox_buffer.Length();
+        instance.bbox_count = mesh.boxes.size();
+        scope.bbox_buffer.Resize(size_t(instance.bbox_offset + instance.bbox_count));
+        scope.bbox_buffer.Set({ mesh.boxes.data(), mesh.boxes.size() }, instance.bbox_offset);
+
+        instance.vidx_offset = scope.vidx_buffer.Length();
+        instance.vidx_count = mesh.v_indices.size();
+        scope.vidx_buffer.Resize(size_t(instance.vidx_offset + instance.vidx_count));
+        scope.vidx_buffer.Set({ mesh.v_indices.data(), mesh.v_indices.size() }, instance.vidx_offset);
+
+        instance.tidx_offset = scope.tidx_buffer.Length();
+        instance.tidx_count = mesh.t_indices.size();
+        scope.tidx_buffer.Resize(size_t(instance.tidx_offset + instance.tidx_count));
+        scope.tidx_buffer.Set({ mesh.t_indices.data(), mesh.t_indices.size() }, instance.tidx_offset);
+
+        instance.aabb_min = mesh.aabb_min;
+        instance.index = scope.inst_buffer.Length();
+        instance.aabb_max = mesh.aabb_max;
+        instance.flags = 0;
+
         scope.inst_buffer.Resize(scope.inst_buffer.Length() + 1, instance);
-
-        const auto bbox_offset = scope.bbox_buffer.Length();
-        const auto bbox_count = mesh.boxes.size();
-        scope.bbox_buffer.Resize(bbox_offset + bbox_count);
-        scope.bbox_buffer.Set({ mesh.boxes.data(), mesh.boxes.size() }, bbox_offset);
-
-        const auto vidx_offset = scope.vidx_buffer.Length();
-        const auto vidx_count = mesh.v_indices.size();
-        scope.vidx_buffer.Resize(vidx_offset + vidx_count);
-        scope.vidx_buffer.Set({ mesh.v_indices.data(), mesh.v_indices.size() }, vidx_offset);
-
-        const auto tidx_offset = scope.tidx_buffer.Length();
-        const auto tidx_count = mesh.t_indices.size();
-        scope.tidx_buffer.Resize(tidx_offset + tidx_count);
-        scope.tidx_buffer.Set({ mesh.t_indices.data(), mesh.t_indices.size() }, tidx_offset);
       }
 
       scope.tbox_buffer.Resize(boxes.size());

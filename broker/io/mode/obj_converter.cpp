@@ -186,8 +186,8 @@ namespace RayGene3D
           instance.trng_count = trng_count;
           instance.mlet_offset = mlet_offset;
           instance.mlet_count = mlet_count;
-          instance.bone_offset = bone_offset;
-          instance.bone_count = bone_count;
+          instance.bbox_offset = 0;
+          instance.bbox_count = 0;
           
 
           const auto& obj_material = obj_materials[material_id.first];

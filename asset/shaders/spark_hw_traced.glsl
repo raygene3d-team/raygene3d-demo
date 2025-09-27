@@ -43,11 +43,13 @@ struct Surface
 struct Vertex
 {
   vec3 pos;
-  float u;
+  uint col;
   vec3 nrm;
-  float v;
+  uint msk;
   vec3 tgn;
   float sign;
+  vec2 tc0;
+  vec2 tc1;
 };
 
 struct Primitive
@@ -59,33 +61,41 @@ struct Primitive
 
 struct Instance
 {
-  mat3x4 transform;
+    mat3x4 transform;
 
-  uint prim_offset;
-  uint prim_count;
-  uint vert_offset;
-  uint vert_count;
+    uint aaam_layer;
+    uint snno_layer;
+    uint eeet_layer;
+    uint mask_layer;
 
-  vec4 brdf_param0;
-  vec4 brdf_param1;
-  vec4 brdf_param2;
-  vec4 brdf_param3;
+    uint vert_offset;
+    uint vert_count;
+    uint trng_offset;
+    uint trng_count;
+    uint mlet_offset;
+    uint mlet_count;
+    uint bbox_offset;
+    uint bbox_count;
+    uint vidx_offset;
+    uint vidx_count;
+    uint tidx_offset;
+    uint tidx_count;
 
-  int tex0_idx;
-  int tex1_idx;
-  int tex2_idx;
-  int tex3_idx;
-  int tex4_idx;
-  int tex5_idx;
-  int tex6_idx;
-  int tex7_idx;
+    vec3 aabb_min;
+    uint index;
+    vec3 aabb_max;
+    uint flags;
 
-  vec3 bb_min;
-  uint geom_idx;
-  vec3 bb_max;
-  uint brdf_idx;
+    vec3 bs_center;
+    float bs_raduis;
 
-  uvec4 padding[4];
+    vec4 fparam_0;
+    vec4 fparam_1;
+    vec4 fparam_2;
+    vec4 fparam_3;
+
+    uvec4 uparam_0;
+    uvec4 uparam_1;
 };
 
 
