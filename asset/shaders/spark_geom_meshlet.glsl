@@ -44,7 +44,7 @@ struct Vertex
   vec3 nrm;
   uint msk;
   vec3 tgn;
-  float sign;
+  float sgn;
   vec2 tc0;
   vec2 tc1;
 };
@@ -120,14 +120,6 @@ struct Instance
 };
 
 
-const float RAY_TMIN = 0.001;
-const float RAY_TMAX = 100.0;
-
-
-struct Attribute
-{
-  vec2 bary;
-};
 
 
 layout(set = 0, binding = 0) uniform sampler sampler0;
@@ -146,6 +138,8 @@ layout(std430, set = 0, binding = 9) buffer readonly t_index_buffer {uint8_t t_i
 layout(set = 0, binding = 10) uniform texture2DArray aaam_array;
 layout(set = 0, binding = 11) uniform texture2DArray snno_array;
 layout(set = 0, binding = 12) uniform texture2DArray eeet_array;
+
+layout(set = 0, binding = 13) uniform textureCube reflection_map;
 
 
 
@@ -181,10 +175,12 @@ const uint TRNG_ITERATIONS = (TRNG_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
 layout(local_size_x = GROUP_SIZE, local_size_y = 1, local_size_z = 1) in;
 layout(triangles, max_vertices = VERT_LIMIT, max_primitives = TRNG_LIMIT) out;
 
-//layout(location = 0) out Payload
-//{
-//  vec4 color;
-//} payload[];
+layout(location = 0) out Payload
+{
+  vec4 w_pos_d;
+  vec4 w_nrm_u;
+  vec4 w_tng_v;
+} payload[];
 
 //layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 //layout(triangles, max_vertices = 3, max_primitives = 1) out;
@@ -230,11 +226,18 @@ void main()
       vec3 opos = vertices[idx + instance.vert_offset].pos;
       vec3 wpos = opos; //(instance.transform  * vec4(opos, 1.0)).xyz;
 
-      //payload[vidx].vidx = vidx;
-      //payload[vidx].wpos = wpos;
+      float d = vertices[idx + instance.vert_offset].sgn;
+      vec3 nrm = vertices[idx + instance.vert_offset].nrm;
+      float u = vertices[idx + instance.vert_offset].tc0.x;
+      vec3 tgn = vertices[idx + instance.vert_offset].tgn;
+      float v = vertices[idx + instance.vert_offset].tc0.y;
+
+      payload[vidx].w_pos_d = vec4(wpos, d);
+      payload[vidx].w_nrm_u = vec4(nrm, u);
+      payload[vidx].w_tng_v = vec4(tgn, v);
 
       vec4 hpos = mvp * vec4(wpos, 1.0);
-      gl_MeshVerticesEXT[vidx].gl_Position = hpos;
+      gl_MeshVerticesEXT[vidx].gl_Position = vec4(hpos.x,-hpos.y, hpos.z, hpos.w);
     }
   }
 
@@ -250,7 +253,7 @@ void main()
       uint idx1 = t_indices[tidx * 3 + 1 + meshlet.tidx_offset + instance.tidx_offset];
       uint idx2 = t_indices[tidx * 3 + 2 + meshlet.tidx_offset + instance.tidx_offset];
       
-      gl_PrimitiveTriangleIndicesEXT[tidx] = uvec3(idx2, idx1, idx0);
+      gl_PrimitiveTriangleIndicesEXT[tidx] = uvec3(idx0, idx1, idx2);
     }
   }
 }
@@ -259,11 +262,12 @@ void main()
 
 #ifdef FRAG
 
-//layout(location=0) in Payload
-//{
-//  flat uint vidx;
-//  vec3 wpos;
-//} payload;
+layout(location = 0) in Payload
+{
+  vec4 w_pos_d;
+  vec4 w_nrm_u;
+  vec4 w_tng_v;
+} payload;
 
 //layout(location = 0) in Payload
 //{
@@ -274,11 +278,110 @@ layout(location = 0) out vec4 target_0;
 layout(location = 1) out vec4 target_1;
 layout(location = 2) out vec4 target_2;
 
+#define kDielectricSpec vec4(0.04, 0.04, 0.04, 1.0 - 0.04)
+
+float OneMinusReflectivityMetallic(float metallic)
+{
+    float oneMinusDielectricSpec = kDielectricSpec.a;
+    return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
+}
+
+float PerceptualRoughnessToMipmapLevel(float perceptual_roughness, uint mipmap_levels_counter)
+{
+    perceptual_roughness = perceptual_roughness * (1.7 - 0.7 * perceptual_roughness);
+
+    return perceptual_roughness * mipmap_levels_counter;
+}
+
+float PerceptualRoughnessToRoughness(float perceptual_roughness)
+{
+    return perceptual_roughness * perceptual_roughness;
+}
+
+float RoughnessToPerceptualRoughness(float roughness)
+{
+    return sqrt(roughness);
+}
+
+float RoughnessToPerceptualSmoothness(float roughness)
+{
+    return 1.0 - sqrt(roughness);
+}
+
+float PerceptualSmoothnessToRoughness(float perceptualSmoothness)
+{
+    return (1.0 - perceptualSmoothness) * (1.0 - perceptualSmoothness);
+}
+
+float PerceptualSmoothnessToPerceptualRoughness(float perceptualSmoothness)
+{
+    return (1.0 - perceptualSmoothness);
+}
+
 void main()
 {
-  target_0 = vec4(0.0, 0.5, 0.0, 0.0); //payload.wpos;
-  target_1 = vec4(0.0, 0.0, 0.0, 0.0);
-  target_2 = vec4(0.0, 0.0, 0.0, 0.0);
+  vec3 n = normalize(payload.w_nrm_u.xyz);
+  vec3 t = normalize(payload.w_tng_v.xyz);
+  vec3 b = payload.w_pos_d.w * cross(t, n);
+
+  const vec3 surface_pos = payload.w_pos_d.xyz;
+
+  const vec3 camera_pos = vec3(camera.view_inv[0][3], camera.view_inv[1][3], camera.view_inv[2][3]);
+  const float camera_dst = length(camera_pos - surface_pos);
+  const vec3 camera_dir = (camera_pos - surface_pos) / camera_dst;
+    
+  const vec3 v = -camera_dir;
+
+  // temp mapping - only PBR materials!
+  const vec4 aaam_value = instance.aaam_layer == -1 ? vec4(1.0, 1.0, 1.0, 1.0)
+    : texture(sampler2DArray(aaam_array, sampler0), vec3(payload.w_nrm_u.w, payload.w_tng_v.w, instance.aaam_layer));
+  const vec4 snno_value = instance.snno_layer == -1 ? vec4(0.0, 0.0, 0.0, 0.0)
+    : texture(sampler2DArray(snno_array, sampler0), vec3(payload.w_nrm_u.w, payload.w_tng_v.w, instance.snno_layer));
+  const vec4 eeet_value = instance.eeet_layer == -1 ? vec4(1.0, 1.0, 1.0, 1.0)
+    : texture(sampler2DArray(eeet_array, sampler0), vec3(payload.w_nrm_u.w, payload.w_tng_v.w, instance.eeet_layer));
+    
+  const vec3 albedo = aaam_value.xyz;
+  const float metallic = aaam_value.w;
+  const float roughness = snno_value.x;
+  const vec3 normal = normalize(
+    (2.0 * snno_value.y - 1.0) * t +
+    (2.0 * snno_value.z - 1.0) * b +
+    sqrt(1.0 - (2.0 * snno_value.y - 1.0) * (2.0 * snno_value.y - 1.0) - (2.0 * snno_value.z - 1.0) * (2.0 * snno_value.z - 1.0)) * n);
+  const float occlusion = snno_value.w;
+  const vec3 emission = eeet_value.xyz;
+  const float transparency = eeet_value.w;
+  
+  
+       
+  const float one_minus_reflectivity = OneMinusReflectivityMetallic(metallic);
+  const float reflectivity = 1.0 - one_minus_reflectivity;
+  const vec3 diffuse = albedo * one_minus_reflectivity;
+  const vec3 specular = mix(kDielectricSpec.rgb, albedo, vec3(metallic));
+    
+  const float perceptual_roughness = RoughnessToPerceptualRoughness(roughness);
+  const float perceptual_smoothness = 1.0 - perceptual_roughness;
+  const float grazing_term = clamp(perceptual_smoothness + reflectivity, 0.0, 1.0);
+  const float fresnel_term = pow(1.0 - max(dot(n,-v), 0.0), 4.0);
+  float surface_reduction = 0; //1.0 / (roughness * roughness + 1.0);
+  vec3 factor = surface_reduction * mix(specular, vec3(grazing_term), vec3(fresnel_term));
+    
+  const vec3 r = reflect(v, normal);
+  const float mip = PerceptualRoughnessToMipmapLevel(perceptual_roughness, 6);
+  const vec3 gi_specular = textureLod(samplerCube(reflection_map, sampler1), r, mip).xyz;
+    
+  const vec3 gi_diffuse = vec3(0.0, 0.0, 0.0); // * lightmap_items.Sample(sampler1, vec3(input.tc1, input.mask)).xyz;
+    
+
+
+  
+
+
+  const vec3 global_illumination = (gi_diffuse + gi_specular * factor) * occlusion;
+
+
+  target_0 = vec4(emission + global_illumination, 1.0);
+  target_1 = vec4(albedo, metallic);
+  target_2 = vec4(0.5 * normal + 0.5, roughness);
 }
 
 #endif

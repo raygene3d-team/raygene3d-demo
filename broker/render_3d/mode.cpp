@@ -102,7 +102,7 @@ namespace RayGene3D
 
       const Config::RCState rc_config =
       {
-        Config::FILL_LINE,
+        Config::FILL_SOLID,
         Config::CULL_BACK,
         {
           { 0.0f, 0.0f, float(scope.prop_extent_x->GetUint()), float(scope.prop_extent_y->GetUint()), 0.0f, 1.0f }
@@ -251,7 +251,7 @@ namespace RayGene3D
         geometry_scene_array_eeet,
         //geometry_scene_array_eeet,
         //geometry_scene_lightmaps,
-        //geometry_reflection_map,
+        geometry_reflection_map,
       };
 
       const auto& geometry_trace_meshlets = scope.trace_buffer_mlet->CreateView("render_3d_geometry_trace_meshlets",
