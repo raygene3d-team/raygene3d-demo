@@ -146,28 +146,9 @@ layout(set = 0, binding = 13) uniform textureCube reflection_map;
 
 #ifdef MESH
 
-//layout(location=0) out Payload
-//{
-//  flat uint vidx;
-//  vec3 wpos;
-//} payload[];
-
 #define VERT_LIMIT 64
 #define TRNG_LIMIT 128
 #define GROUP_SIZE 32
-
-const vec4[3] positions = {
-  vec4( 00.0, -10.0, 10.0, 1.0),
-  vec4(-10.0,  10.0, 10.0, 1.0),
-  vec4( 10.0,  10.0, 10.0, 1.0)
-};
-//
-//const vec4[3] colors = {
-//  vec4(0.0, 1.0, 0.0, 1.0),
-//  vec4(0.0, 0.0, 1.0, 1.0),
-//  vec4(1.0, 0.0, 0.0, 1.0)
-//};
-
 
 const uint VERT_ITERATIONS = (VERT_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
 const uint TRNG_ITERATIONS = (TRNG_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
@@ -182,26 +163,6 @@ layout(location = 0) out Payload
   vec4 w_tng_v;
 } payload[];
 
-//layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-//layout(triangles, max_vertices = 3, max_primitives = 1) out;
-//
-//void main()
-//{
-//  uint iid = gl_LocalInvocationID.x;
-//
-//  vec4 offset = vec4(0.0, 0.0, gl_GlobalInvocationID.x, 0.0);
-//
-//  SetMeshOutputsEXT(3, 1);
-//  //mat4 mvp = ubo.projection * ubo.view * ubo.model;
-//  gl_MeshVerticesEXT[0].gl_Position = (positions[0] + offset);
-//  gl_MeshVerticesEXT[1].gl_Position = (positions[1] + offset);
-//  gl_MeshVerticesEXT[2].gl_Position = (positions[2] + offset);
-//  //payload[0].color = colors[0];
-//  //payload[1].color = colors[1];
-//  //payload[2].color = colors[2];
-//  gl_PrimitiveTriangleIndicesEXT[gl_LocalInvocationIndex] =  uvec3(0, 1, 2);
-//}
-
 void main()
 {
   uint groupID = gl_WorkGroupID.x;
@@ -211,10 +172,6 @@ void main()
   SetMeshOutputsEXT(meshlet.vidx_count, meshlet.tidx_count);
 
   mat4 mvp = camera.proj * camera.view;
-  
-  //gl_MeshVerticesEXT[0].gl_Position = (mvp * positions[0]);
-  //gl_MeshVerticesEXT[1].gl_Position = (mvp * positions[1]);
-  //gl_MeshVerticesEXT[2].gl_Position = (mvp * positions[2]);
 
   for (uint i = 0; i < VERT_ITERATIONS; ++i)
   {
@@ -241,8 +198,6 @@ void main()
     }
   }
 
-  //gl_PrimitiveTriangleIndicesEXT[gl_LocalInvocationIndex] =  uvec3(0, 1, 2);
-
 
   for (uint i = 0; i < TRNG_ITERATIONS; ++i)
   {
@@ -268,11 +223,6 @@ layout(location = 0) in Payload
   vec4 w_nrm_u;
   vec4 w_tng_v;
 } payload;
-
-//layout(location = 0) in Payload
-//{
-//  vec4 color;
-//} payload;
 
 layout(location = 0) out vec4 target_0;
 layout(location = 1) out vec4 target_1;

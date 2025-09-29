@@ -210,20 +210,6 @@ namespace RayGene3D
       sw_traced_pass.reset();
     }
 
-    //void SWTracedShadow::Enable()
-    //{
-    //  geometry_pass->SetEnabled(true);
-    //  sw_traced_pass->SetEnabled(true);
-    //  present_pass->SetEnabled(true);
-    //}
-
-    //void SWTracedShadow::Disable()
-    //{
-    //  geometry_pass->SetEnabled(false);
-    //  sw_traced_pass->SetEnabled(false);
-    //  present_pass->SetEnabled(false);
-    //}
-
     SWTracedShadow::SWTracedShadow(Scope& scope, bool use_mesh_pipe)
       : Mode(scope, use_mesh_pipe)
     {

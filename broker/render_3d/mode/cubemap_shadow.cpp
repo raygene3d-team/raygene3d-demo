@@ -348,23 +348,6 @@ namespace RayGene3D
       shadowed_pass.reset();
     }
 
-    //void CubemapShadow::Enable()
-    //{
-    //  shadowmap_pass->SetEnabled(true);
-    //  geometry_pass->SetEnabled(true);
-    //  shadowed_pass->SetEnabled(true);
-    //  present_pass->SetEnabled(true);
-    //}
-
-    //void CubemapShadow::Disable()
-    //{
-
-    //  shadowmap_pass->SetEnabled(false);
-    //  geometry_pass->SetEnabled(false);
-    //  shadowed_pass->SetEnabled(false);
-    //  present_pass->SetEnabled(false);
-    //}
-
     CubemapShadow::CubemapShadow(Scope& scope, bool use_mesh_pipe)
       : Mode(scope, use_mesh_pipe)
     {

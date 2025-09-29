@@ -184,20 +184,6 @@ namespace RayGene3D
       hw_traced_pass.reset();
     }
 
-    //void HWTracedShadow::Enable()
-    //{
-    //  geometry_pass->SetEnabled(true);
-    //  hw_traced_pass->SetEnabled(true);
-    //  present_pass->SetEnabled(true);
-    //}
-
-    //void HWTracedShadow::Disable()
-    //{
-    //  geometry_pass->SetEnabled(false);
-    //  hw_traced_pass->SetEnabled(false);
-    //  present_pass->SetEnabled(false);
-    //}
-
     HWTracedShadow::HWTracedShadow(Scope& scope, bool use_mesh_pipe)
       : Mode(scope, use_mesh_pipe)
     {
