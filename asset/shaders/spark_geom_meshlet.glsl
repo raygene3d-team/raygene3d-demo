@@ -326,7 +326,7 @@ void main()
 
   const vec3 surface_pos = payload.w_pos_d.xyz;
 
-  const vec3 camera_pos = vec3(camera.view_inv[0][3], camera.view_inv[1][3], camera.view_inv[2][3]);
+  const vec3 camera_pos = vec3(camera.view_inv[3][0], camera.view_inv[3][1], camera.view_inv[3][2]);
   const float camera_dst = length(camera_pos - surface_pos);
   const vec3 camera_dir = (camera_pos - surface_pos) / camera_dst;
     
@@ -362,7 +362,7 @@ void main()
   const float perceptual_smoothness = 1.0 - perceptual_roughness;
   const float grazing_term = clamp(perceptual_smoothness + reflectivity, 0.0, 1.0);
   const float fresnel_term = pow(1.0 - max(dot(n,-v), 0.0), 4.0);
-  float surface_reduction = 0; //1.0 / (roughness * roughness + 1.0);
+  float surface_reduction = 1.0 / (roughness * roughness + 1.0);
   vec3 factor = surface_reduction * mix(specular, vec3(grazing_term), vec3(fresnel_term));
     
   const vec3 r = reflect(v, normal);
