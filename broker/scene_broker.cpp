@@ -202,8 +202,8 @@ namespace RayGene3D
 
   void SceneBroker::CreateTraceBufferTIdx()
   {
-    const auto [items, count] = prop_buffer_tidx->GetObjectItem("binary")->GetRawItems<uint8_t>(0);
-    const auto stride = sizeof(uint8_t);
+    const auto [items, count] = prop_buffer_tidx->GetObjectItem("binary")->GetRawItems<uint32_t>(0); //Actually uint8_t
+    const auto stride = sizeof(uint32_t);
 
     trace_buffer_tidx = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_tidx",
       Resource::BufferDesc

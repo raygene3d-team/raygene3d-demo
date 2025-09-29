@@ -58,23 +58,28 @@ VK_BINDING(5) cbuffer constant3 : register(b3)
   uint trng_count   : packoffset(c4.w); 
   uint mlet_offset  : packoffset(c5.x);
   uint mlet_count   : packoffset(c5.y); 
-  uint bone_offset  : packoffset(c5.z);
-  uint bone_count   : packoffset(c5.w);
+  uint bbox_offset  : packoffset(c5.z);
+  uint bbox_count   : packoffset(c5.w);
+  uint vidx_offset  : packoffset(c6.x);
+  uint vidx_count   : packoffset(c6.y);
+  uint tidx_offset  : packoffset(c6.z);
+  uint tidx_count   : packoffset(c6.w);
   
-  float3 bb_min : packoffset(c6.x);
-  uint index    : packoffset(c6.w);
-  float3 bb_max : packoffset(c7.x);
-  uint flags    : packoffset(c7.w);
+  float3 bb_min     : packoffset(c7.x);
+  uint index        : packoffset(c7.w);
+  float3 bb_max     : packoffset(c8.x);
+  uint flags        : packoffset(c8.w);
+  
+  float3 bs_center  : packoffset(c9.x);
+  float bs_raduis   : packoffset(c9.w);
 
-  float4 fparam_0 : packoffset(c8.x);
-  float4 fparam_1 : packoffset(c9.x);
-  float4 fparam_2 : packoffset(c10.x);
-  float4 fparam_3 : packoffset(c11.x);
+  float4 fparam_0   : packoffset(c10.x);
+  float4 fparam_1   : packoffset(c11.x);
+  float4 fparam_2   : packoffset(c12.x);
+  float4 fparam_3   : packoffset(c13.x);
 
-  uint4 uparam_0 : packoffset(c12.x);
-  uint4 uparam_1 : packoffset(c13.x);
-  uint4 uparam_2 : packoffset(c14.x);
-  uint4 uparam_3 : packoffset(c15.x);
+  uint4 uparam_0    : packoffset(c14.x);
+  uint4 uparam_1    : packoffset(c15.x);
 };
 
 VK_BINDING(6) Texture2DArray<float4> array_aaam : register(t0);
@@ -175,8 +180,8 @@ struct PSInput
   VK_LOCATION(0) float4 w_pos_d : register0;
   VK_LOCATION(1) float4 w_nrm_u : register1;
   VK_LOCATION(2) float4 w_tng_v : register2;
-  VK_LOCATION(3) float2 tc1		: register3;
-  VK_LOCATION(4) uint mask 		: register4;
+  VK_LOCATION(3) float2 tc1		  : register3;
+  VK_LOCATION(4) uint mask 		  : register4;
   VK_LOCATION(5) float4 color   : register5;
 };
 
@@ -268,8 +273,6 @@ PSOutput ps_main(PSInput input)
   const float3 gi_diffuse = float3(0.0, 0.0, 0.0); // * lightmap_items.Sample(sampler1, float3(input.tc1, input.mask)).xyz;
     
 
-
-  
 
 
   const float3 global_illumination = (gi_diffuse + gi_specular * factor) * occlusion;

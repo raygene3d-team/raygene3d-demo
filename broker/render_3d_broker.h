@@ -28,10 +28,8 @@ THE SOFTWARE.
 
 
 #pragma once
-#include "render_3d/mode/no_shadow.h"
-#include "render_3d/mode/cubemap_shadow.h"
-#include "render_3d/mode/sw_traced_shadow.h"
-#include "render_3d/mode/hw_traced_shadow.h"
+#include "render_3d/mode.h"
+
 
 namespace RayGene3D
 {
@@ -41,13 +39,10 @@ namespace RayGene3D
     Render3D::Scope scope;
 
   protected:
-    std::unique_ptr<Render3D::Mode> no_shadow;
-    std::unique_ptr<Render3D::Mode> cubemap_shadow;
-    std::unique_ptr<Render3D::Mode> sw_traced_shadow;
-    std::unique_ptr<Render3D::Mode> hw_traced_shadow;
+    std::unique_ptr<Render3D::Mode> mode;
 
   public:
-    enum ShadowMode
+    enum ShadowType
     {
       NO_SHADOW = 0,
       CUBEMAP_SHADOW = 1,
@@ -55,15 +50,24 @@ namespace RayGene3D
       HW_TRACED_SHADOW = 3,
     };
 
+    enum PipelineType
+    {
+      IA_PIPELINE = 0,
+      MESH_PIPELINE = 1,
+    };
+
   protected:
-    ShadowMode mode{ NO_SHADOW };
+    ShadowType shadow{ NO_SHADOW };
+    PipelineType pipeline{ IA_PIPELINE };
 
   public:
-    void SetShadowMode(ShadowMode mode) { this->mode = mode; }
-    ShadowMode GetShadowMode() const { return mode; }
+    void SetShadowType(ShadowType shadow) { this->shadow = shadow; }
+    ShadowType GetShadowType() const { return shadow; }
+    void SetPipelineType(PipelineType pipeline) { this->pipeline = pipeline; }
+    PipelineType GetPipelineType() const { return pipeline; }
 
-  protected:
-    bool use_normal_oct_quad_encoding{ false };
+  public:
+    void Update();
 
   public:
     void Initialize() override;

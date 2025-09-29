@@ -148,7 +148,8 @@ namespace RayGene3D
     std::unique_ptr<RayGene3D::Wrap> wrap;
 
   protected:
-    std::string shadow_name{"No Shadow"};
+    std::string shadow_name{ "No Shadow"};
+    std::string pipeline_name{ "IA Pipeline" };
 
   protected:
     //std::shared_ptr<RayGene3D::LightmapBroker> lightmap_broker;
@@ -546,10 +547,10 @@ namespace RayGene3D
       //lightmap_broker->SetBakingMode(LightmapBroker::SW_TRACED_BAKING);
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
-      render_3d_broker->SetShadowMode(Render3DBroker::NO_SHADOW);
+      //render_3d_broker->SetShadowMode(Render3DBroker::NO_SHADOW);
 
       render_ui_broker = std::shared_ptr<RayGene3D::RenderUIBroker>(new RayGene3D::RenderUIBroker(*wrap));
-      render_ui_broker->SetShowTestWindow(false);
+      //render_ui_broker->SetShowTestWindow(false);
     }
 
     void Use()
@@ -558,7 +559,8 @@ namespace RayGene3D
       auto frame_period{ 0.0 };
      
       auto change_imgui{ false };
-      auto change_spark{ false };;
+      auto change_shadow{ false };
+      auto change_pipeline{ false };
 
       auto curr_time = glfwGetTime();
       auto curr_xpos{ 0.0 };
@@ -633,36 +635,60 @@ namespace RayGene3D
           UpdateCamera();
         }
 
-        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
+        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_shadow)
         {
-          auto shadow_mode = render_3d_broker->GetShadowMode();
-          if (shadow_mode == Render3DBroker::NO_SHADOW)
+          auto shadow_type = render_3d_broker->GetShadowType();
+          if (shadow_type == Render3DBroker::NO_SHADOW)
           {
-            shadow_mode = Render3DBroker::CUBEMAP_SHADOW;
+            shadow_type = Render3DBroker::CUBEMAP_SHADOW;
             shadow_name = "Cubemap Shadow";
           }
-          else if (shadow_mode == Render3DBroker::CUBEMAP_SHADOW)
+          else if (shadow_type == Render3DBroker::CUBEMAP_SHADOW)
           {
-            shadow_mode = Render3DBroker::SW_TRACED_SHADOW;
+            shadow_type = Render3DBroker::SW_TRACED_SHADOW;
             shadow_name = "SW Traced Shadow";
           }
-          else if (shadow_mode == Render3DBroker::SW_TRACED_SHADOW)
+          else if (shadow_type == Render3DBroker::SW_TRACED_SHADOW)
           {
-            shadow_mode = Render3DBroker::HW_TRACED_SHADOW;
+            shadow_type = Render3DBroker::HW_TRACED_SHADOW;
             shadow_name = "HW Traced Shadow";
           }
-          else if (shadow_mode == Render3DBroker::HW_TRACED_SHADOW)
+          else if (shadow_type == Render3DBroker::HW_TRACED_SHADOW)
           {
-            shadow_mode = Render3DBroker::NO_SHADOW;
+            shadow_type = Render3DBroker::NO_SHADOW;
             shadow_name = "No Shadow";
           }
-          render_3d_broker->SetShadowMode(shadow_mode);
-          change_spark = false;
+          render_3d_broker->SetShadowType(shadow_type);
+          render_3d_broker->Update();
+          change_shadow = false;
         }
 
-        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_PRESS && !change_spark)
+        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_PRESS && !change_shadow)
         {
-          change_spark = true;
+          change_shadow = true;
+        }
+
+        if (glfwGetKey(glfw, GLFW_KEY_F3) == GLFW_RELEASE && change_pipeline)
+        {
+          auto pipeline_type = render_3d_broker->GetPipelineType();
+          if (pipeline_type == Render3DBroker::IA_PIPELINE)
+          {
+            pipeline_type = Render3DBroker::MESH_PIPELINE;
+            pipeline_name = "Mesh Pipeline";
+          }
+          else if (pipeline_type == Render3DBroker::MESH_PIPELINE)
+          {
+            pipeline_type = Render3DBroker::IA_PIPELINE;
+            pipeline_name = "IA Pipeline";
+          }
+          render_3d_broker->SetPipelineType(pipeline_type);
+          render_3d_broker->Update();
+          change_pipeline = false;
+        }
+
+        if (glfwGetKey(glfw, GLFW_KEY_F3) == GLFW_PRESS && !change_pipeline)
+        {
+          change_pipeline = true;
         }
 
         //lightmap_broker->Use();
@@ -680,7 +706,7 @@ namespace RayGene3D
           const auto& adapter_name = wrap->GetCore()->GetDevice()->GetName();
 
           std::stringstream ss;
-          ss << app_name << " [" << shadow_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
+          ss << app_name << " [" << shadow_name << "] [" << pipeline_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
           glfwSetWindowTitle(glfw, ss.str().c_str());
 
           frame_counter = 0;

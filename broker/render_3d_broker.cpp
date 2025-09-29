@@ -29,33 +29,37 @@ THE SOFTWARE.
 
 #include "render_3d_broker.h"
 
+#include "render_3d/mode/no_shadow.h"
+#include "render_3d/mode/cubemap_shadow.h"
+#include "render_3d/mode/sw_traced_shadow.h"
+#include "render_3d/mode/hw_traced_shadow.h"
+
 namespace RayGene3D
 {
+  void Render3DBroker::Update()
+  {
+    switch (shadow)
+    {
+    case NO_SHADOW:
+      mode = std::unique_ptr<Render3D::Mode>(new Render3D::NoShadow(scope, pipeline == MESH_PIPELINE)); break;
+    case CUBEMAP_SHADOW:
+      mode = std::unique_ptr<Render3D::Mode>(new Render3D::CubemapShadow(scope, pipeline == MESH_PIPELINE)); break;
+    case SW_TRACED_SHADOW:
+      mode = std::unique_ptr<Render3D::Mode>(new Render3D::SWTracedShadow(scope, pipeline == MESH_PIPELINE)); break;
+    case HW_TRACED_SHADOW:
+      mode = std::unique_ptr<Render3D::Mode>(new Render3D::HWTracedShadow(scope, pipeline == MESH_PIPELINE)); break;
+    default:
+      break;
+    }   
+  }
+
+
   void Render3DBroker::Initialize()
   {
   }
 
   void Render3DBroker::Use()
   {
-    no_shadow->Disable();
-    cubemap_shadow->Disable();
-    sw_traced_shadow->Disable();
-    hw_traced_shadow->Disable();
-
-    switch (mode)
-    {
-    case NO_SHADOW: 
-      no_shadow->Enable(); break;
-    case CUBEMAP_SHADOW:
-      cubemap_shadow->Enable(); break;
-    case SW_TRACED_SHADOW:
-      sw_traced_shadow->Enable(); break;
-    case HW_TRACED_SHADOW:
-      hw_traced_shadow->Enable(); break;
-    default:
-      break;
-    }
-
     {
       auto graphic_arg = reinterpret_cast<Batch::Graphic*>(scope.graphic_arguments->Map());
 
@@ -185,17 +189,11 @@ namespace RayGene3D
     : Broker("spark_broker", wrap)
     , scope(wrap.GetCore(), wrap.GetUtil())
   {
-    no_shadow = std::unique_ptr<Render3D::Mode>(new Render3D::NoShadow(scope));
-    cubemap_shadow = std::unique_ptr<Render3D::Mode>(new Render3D::CubemapShadow(scope));
-    sw_traced_shadow = std::unique_ptr<Render3D::Mode>(new Render3D::SWTracedShadow(scope));
-    hw_traced_shadow = std::unique_ptr<Render3D::Mode>(new Render3D::HWTracedShadow(scope));
+    Update();
   }
 
   Render3DBroker::~Render3DBroker()
   {
-    no_shadow.reset();
-    cubemap_shadow.reset();
-    sw_traced_shadow.reset();
-    hw_traced_shadow.reset();
+    mode.reset();
   }
 }

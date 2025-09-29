@@ -52,11 +52,7 @@ namespace RayGene3D
       void DestroySWTracedPass();
 
     public:
-      void Enable() override;
-      void Disable() override;
-
-    public:
-      SWTracedShadow(Scope& scope);
+      SWTracedShadow(Scope& scope, bool use_mesh_pipe);
       virtual ~SWTracedShadow();
     };
   }

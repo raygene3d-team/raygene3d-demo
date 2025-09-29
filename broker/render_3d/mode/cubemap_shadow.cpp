@@ -54,6 +54,8 @@ namespace RayGene3D
         { rt_attachments, std::size(rt_attachments) },
         {}
       );
+
+      shadowed_pass->SetEnabled(true);
     }
 
     void CubemapShadow::CreateShadowedConfig()
@@ -194,6 +196,8 @@ namespace RayGene3D
         {},
         { ds_attachments, std::size(ds_attachments) }
       );
+
+      shadowmap_pass->SetEnabled(true);
     }
 
 
@@ -344,25 +348,25 @@ namespace RayGene3D
       shadowed_pass.reset();
     }
 
-    void CubemapShadow::Enable()
-    {
-      shadowmap_pass->SetEnabled(true);
-      geometry_pass->SetEnabled(true);
-      shadowed_pass->SetEnabled(true);
-      present_pass->SetEnabled(true);
-    }
+    //void CubemapShadow::Enable()
+    //{
+    //  shadowmap_pass->SetEnabled(true);
+    //  geometry_pass->SetEnabled(true);
+    //  shadowed_pass->SetEnabled(true);
+    //  present_pass->SetEnabled(true);
+    //}
 
-    void CubemapShadow::Disable()
-    {
+    //void CubemapShadow::Disable()
+    //{
 
-      shadowmap_pass->SetEnabled(false);
-      geometry_pass->SetEnabled(false);
-      shadowed_pass->SetEnabled(false);
-      present_pass->SetEnabled(false);
-    }
+    //  shadowmap_pass->SetEnabled(false);
+    //  geometry_pass->SetEnabled(false);
+    //  shadowed_pass->SetEnabled(false);
+    //  present_pass->SetEnabled(false);
+    //}
 
-    CubemapShadow::CubemapShadow(Scope& scope)
-      : Mode(scope)
+    CubemapShadow::CubemapShadow(Scope& scope, bool use_mesh_pipe)
+      : Mode(scope, use_mesh_pipe)
     {
 
       CreateShadowmapPass();

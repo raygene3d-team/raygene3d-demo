@@ -54,6 +54,8 @@ namespace RayGene3D
         { rt_attachments, std::size(rt_attachments) },
         {}
       );
+
+      unshadowed_pass->SetEnabled(true);
     }
 
     void NoShadow::CreateUnshadowedConfig()
@@ -183,22 +185,22 @@ namespace RayGene3D
       unshadowed_pass.reset();
     }
 
-    void NoShadow::Enable()
-    {
-      geometry_pass->SetEnabled(true);
-      unshadowed_pass->SetEnabled(true);
-      present_pass->SetEnabled(true);
-    }
+    //void NoShadow::Enable()
+    //{
+    //  geometry_pass->SetEnabled(true);
+    //  unshadowed_pass->SetEnabled(true);
+    //  present_pass->SetEnabled(true);
+    //}
 
-    void NoShadow::Disable()
-    {
-      geometry_pass->SetEnabled(false);
-      unshadowed_pass->SetEnabled(false);
-      present_pass->SetEnabled(false);
-    }
+    //void NoShadow::Disable()
+    //{
+    //  geometry_pass->SetEnabled(false);
+    //  unshadowed_pass->SetEnabled(false);
+    //  present_pass->SetEnabled(false);
+    //}
 
-    NoShadow::NoShadow(Scope& scope)
-      : Mode(scope)
+    NoShadow::NoShadow(Scope& scope, bool use_mesh_pipe)
+      : Mode(scope, use_mesh_pipe)
     {
       CreateGeometryPass();
       CreateGeometryConfig();

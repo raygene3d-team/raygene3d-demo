@@ -39,6 +39,9 @@ namespace RayGene3D
     protected:
       Scope& scope;
 
+    public:
+      bool use_mesh_pipe{ false };
+
     protected:
       SPtrPass geometry_pass;
       SPtrConfig geometry_config;
@@ -76,11 +79,7 @@ namespace RayGene3D
       void DestroyPresentPass();
 
     public:
-      virtual void Enable() = 0;
-      virtual void Disable() = 0;
-
-    public:
-      Mode(Scope& scope);
+      Mode(Scope& scope, bool use_mesh_pipe);
       virtual ~Mode();
     };
   }
