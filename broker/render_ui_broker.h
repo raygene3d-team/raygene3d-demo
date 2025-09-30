@@ -21,7 +21,7 @@ namespace RayGene3D
     std::shared_ptr<Property> font_property;
 
   protected:
-    bool show_test_window{ true };
+    bool show_test_window{ false };
 
     const uint32_t vtx_limit{ 10000 };
     const uint32_t idx_limit{ 10000 };

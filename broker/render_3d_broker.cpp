@@ -29,42 +29,46 @@ THE SOFTWARE.
 
 #include "render_3d_broker.h"
 
+#include "render_3d/mode/no_shadow.h"
+#include "render_3d/mode/cubemap_shadow.h"
+#include "render_3d/mode/sw_traced_shadow.h"
+#include "render_3d/mode/hw_traced_shadow.h"
+
 namespace RayGene3D
 {
+  void Render3DBroker::Update()
+  {
+    switch (shadow)
+    {
+    case NO_SHADOW:
+      mode = std::unique_ptr<Render3D::Mode>(new Render3D::NoShadow(scope, pipeline == MESH_PIPELINE)); break;
+    case CUBEMAP_SHADOW:
+      mode = std::unique_ptr<Render3D::Mode>(new Render3D::CubemapShadow(scope, pipeline == MESH_PIPELINE)); break;
+    case SW_TRACED_SHADOW:
+      mode = std::unique_ptr<Render3D::Mode>(new Render3D::SWTracedShadow(scope, pipeline == MESH_PIPELINE)); break;
+    case HW_TRACED_SHADOW:
+      mode = std::unique_ptr<Render3D::Mode>(new Render3D::HWTracedShadow(scope, pipeline == MESH_PIPELINE)); break;
+    default:
+      break;
+    }   
+  }
+
+
   void Render3DBroker::Initialize()
   {
   }
 
   void Render3DBroker::Use()
   {
-    no_shadow->Disable();
-    cubemap_shadow->Disable();
-    sw_traced_shadow->Disable();
-    hw_traced_shadow->Disable();
-
-    switch (mode)
-    {
-    case NO_SHADOW: 
-      no_shadow->Enable(); break;
-    case CUBEMAP_SHADOW:
-      cubemap_shadow->Enable(); break;
-    case SW_TRACED_SHADOW:
-      sw_traced_shadow->Enable(); break;
-    case HW_TRACED_SHADOW:
-      hw_traced_shadow->Enable(); break;
-    default:
-      break;
-    }
-
     {
       auto graphic_arg = reinterpret_cast<Batch::Graphic*>(scope.graphic_arguments->Map());
 
-      const auto [instance_data, instance_count] = scope.prop_instances->GetTypedBytes<Instance>(0);
+      const auto [instance_data, instance_count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
       {
-        graphic_arg[i].idx_count = instance_data[i].prim_count * 3u;
+        graphic_arg[i].idx_count = instance_data[i].trng_count * 3u;
         graphic_arg[i].ins_count = 1u;
-        graphic_arg[i].idx_offset = instance_data[i].prim_offset * 3u;
+        graphic_arg[i].idx_offset = instance_data[i].trng_offset * 3u;
         graphic_arg[i].vtx_offset = instance_data[i].vert_offset * 1u;
         graphic_arg[i].ins_offset = 0u;
       }
@@ -142,17 +146,17 @@ namespace RayGene3D
     }
 
     {
-      auto bb_min = glm::f32vec3( FLT_MAX, FLT_MAX, FLT_MAX);
-      auto bb_max = glm::f32vec3(-FLT_MAX,-FLT_MAX,-FLT_MAX);
-      const auto [instance_data, instance_count] = scope.prop_instances->GetTypedBytes<Instance>(0);
+      auto aabb_min = glm::f32vec3( FLT_MAX, FLT_MAX, FLT_MAX);
+      auto aabb_max = glm::f32vec3(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+      const auto [instance_items, instance_count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       for (uint32_t i = 0; i < instance_count; ++i)
       {
-        bb_min = glm::min(bb_min, instance_data[i].bb_min); 
-        bb_max = glm::max(bb_max, instance_data[i].bb_max);
+        aabb_min = glm::min(aabb_min, instance_items[i].aabb_min);
+        aabb_max = glm::max(aabb_max, instance_items[i].aabb_max);
       }
 
-      const auto bb_center = 0.5f * (bb_max + bb_min);
-      const auto bb_extent = 0.5f * (bb_max - bb_min);
+      const auto bb_center = 0.5f * (aabb_max + aabb_min);
+      const auto bb_extent = 0.5f * (aabb_max - aabb_min);
 
       const auto radius = glm::length(bb_extent);
       const auto proj = glm::ortho(-radius, radius,-radius, radius, 0.01f, 2.0f * radius);
@@ -185,17 +189,11 @@ namespace RayGene3D
     : Broker("spark_broker", wrap)
     , scope(wrap.GetCore(), wrap.GetUtil())
   {
-    no_shadow = std::unique_ptr<Render3D::Mode>(new Render3D::NoShadow(scope));
-    cubemap_shadow = std::unique_ptr<Render3D::Mode>(new Render3D::CubemapShadow(scope));
-    sw_traced_shadow = std::unique_ptr<Render3D::Mode>(new Render3D::SWTracedShadow(scope));
-    hw_traced_shadow = std::unique_ptr<Render3D::Mode>(new Render3D::HWTracedShadow(scope));
+    Update();
   }
 
   Render3DBroker::~Render3DBroker()
   {
-    no_shadow.reset();
-    cubemap_shadow.reset();
-    sw_traced_shadow.reset();
-    hw_traced_shadow.reset();
+    mode.reset();
   }
 }

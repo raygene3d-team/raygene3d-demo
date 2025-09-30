@@ -56,13 +56,14 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/lightmap_sw_traced.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
 
       sw_traced_config = sw_traced_pass->CreateConfig("lightmap_sw_traced_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_CS),
-        { defines.data(), uint32_t(defines.size()) },
+        Config::Compilation(Config::COMPILATION_COMP),
+        { defines.data(), defines.size() },
         {},
         {},
         {},
@@ -84,77 +85,57 @@ namespace RayGene3D
        { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
       };
 
-      auto sw_traced_screen_data = scope.screen_data->CreateView("lightmap_sw_traced_screen_data",
+      const auto& screen_data = scope.screen_data->CreateView("lightmap_sw_traced_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
       const std::shared_ptr<View> ub_views[] = {
-        sw_traced_screen_data,
+        screen_data,
       };
 
-      auto sw_traced_trace_t_boxes = scope.trace_t_boxes->CreateView("lightmap_sw_traced_trace_t_boxes",
+      const auto& trace_buffer_tbox = scope.trace_buffer_tbox->CreateView("lightmap_sw_trace_buffer_tbox",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_trace_b_boxes = scope.trace_b_boxes->CreateView("lightmap_sw_traced_trace_b_boxes",
+      const auto& trace_buffer_bbox = scope.trace_buffer_bbox->CreateView("lightmap_sw_trace_buffer_bbox",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_trace_instances = scope.trace_instances->CreateView("lightmap_sw_traced_trace_instances",
+      const auto& trace_buffer_inst = scope.trace_buffer_inst->CreateView("lightmap_sw_trace_buffer_inst",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_trace_triangles = scope.trace_triangles->CreateView("lightmap_sw_traced_trace_triangles",
+      const auto& trace_buffer_trng = scope.trace_buffer_trng->CreateView("lightmap_sw_trace_buffer_trng",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_trace_vertices = scope.trace_vertices->CreateView("lightmap_sw_traced_trace_vertices",
+      const auto& trace_buffer_vert = scope.trace_buffer_vert->CreateView("lightmap_sw_trace_buffer_vert",
         Usage(USAGE_SHADER_RESOURCE)
       );
 
       const std::shared_ptr<View> rb_views[] = {
-        sw_traced_trace_t_boxes,
-        sw_traced_trace_b_boxes,
-        sw_traced_trace_instances,
-        sw_traced_trace_triangles,
-        sw_traced_trace_vertices,
+        trace_buffer_tbox,
+        trace_buffer_bbox,
+        trace_buffer_inst,
+        trace_buffer_trng,
+        trace_buffer_vert,
       };
 
-      auto sw_traced_textures0 = scope.scene_textures0->CreateView("lightmap_sw_traced_textures0",
+      const auto& scene_array_aaam = scope.scene_array_aaam->CreateView("lightmap_sw_scene_array_aaam",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_textures1 = scope.scene_textures1->CreateView("lightmap_sw_traced_textures1",
+      const auto& scene_array_snno = scope.scene_array_snno->CreateView("lightmap_sw_scene_array_snno",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_textures2 = scope.scene_textures2->CreateView("lightmap_sw_traced_textures2",
+      const auto& scene_array_eeet = scope.scene_array_eeet->CreateView("lightmap_sw_scene_array_eeet",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto sw_traced_textures3 = scope.scene_textures3->CreateView("lightmap_sw_traced_textures3",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-      auto sw_traced_textures4 = scope.scene_textures4->CreateView("lightmap_sw_traced_textures4",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-      auto sw_traced_textures5 = scope.scene_textures5->CreateView("lightmap_sw_traced_textures5",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-      auto sw_traced_textures6 = scope.scene_textures6->CreateView("lightmap_sw_traced_textures6",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-      auto sw_traced_textures7 = scope.scene_textures7->CreateView("lightmap_sw_traced_textures7",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-      auto sw_traced_input = scope.lightmaps_input->CreateView("lightmap_sw_traced_input",
+      const auto& sw_traced_input = scope.lightmaps_input->CreateView("lightmap_sw_traced_input",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
-        sw_traced_textures0,
-        sw_traced_textures1,
-        sw_traced_textures2,
-        sw_traced_textures3,
-        sw_traced_textures4,
-        sw_traced_textures5,
-        sw_traced_textures6,
-        sw_traced_textures7,
+        scene_array_aaam,
+        scene_array_snno,
+        scene_array_eeet,
         sw_traced_input,
       };
 
-      auto sw_traced_accum = scope.lightmaps_accum->CreateView("lightmap_sw_traced_accum",
+      const auto& sw_traced_accum = scope.lightmaps_accum->CreateView("lightmap_sw_traced_accum",
         Usage(USAGE_UNORDERED_ACCESS)
       );
       const std::shared_ptr<View> wi_views[] = {
@@ -162,13 +143,13 @@ namespace RayGene3D
       };
 
       sw_traced_batch = sw_traced_config->CreateBatch("lightmap_sw_traced_batch",
-        { entities, uint32_t(std::size(entities)) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { entities, std::size(entities) },
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
-        { wi_views, uint32_t(std::size(wi_views)) },
-        { rb_views, uint32_t(std::size(rb_views)) },
+        { ri_views, std::size(ri_views) },
+        { wi_views, std::size(wi_views) },
+        { rb_views, std::size(rb_views) },
         {}
       );
     }

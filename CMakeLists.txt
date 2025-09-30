@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
-cmake_policy(VERSION 3.7)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
+cmake_policy(VERSION 3.24)
 
 set(NAME raygene3d)
 project(${NAME})
@@ -47,6 +47,26 @@ set(imgui_source
   ${3RDPARTY_DIR}/imgui/imstb_truetype.h
 )
 
+set(meshoptimizer_source
+  ${3RDPARTY_DIR}/meshoptimizer/src/meshoptimizer.h
+  ${3RDPARTY_DIR}/meshoptimizer/src/allocator.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/clusterizer.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/indexcodec.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/indexgenerator.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/overdrawanalyzer.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/overdrawoptimizer.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/quantization.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/simplifier.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/spatialorder.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/stripifier.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/vcacheanalyzer.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/vcacheoptimizer.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/vertexcodec.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/vertexfilter.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/vfetchanalyzer.cpp
+  ${3RDPARTY_DIR}/meshoptimizer/src/vfetchoptimizer.cpp
+)
+
 set(mikktspace_source
   ${3RDPARTY_DIR}/mikktspace/mikktspace.h
   ${3RDPARTY_DIR}/mikktspace/mikktspace.c
@@ -78,16 +98,24 @@ set(lightmap_source
   broker/lightmap/mode/hw_traced_atlas.cpp
 )
 
+set(io_source
+  broker/io/mode.h
+  broker/io/mode.cpp
+  broker/io/scope.h
+  broker/io/scope.cpp
+  broker/io/mode/gltf_converter.h
+  broker/io/mode/gltf_converter.cpp
+  broker/io/mode/obj_converter.h
+  broker/io/mode/obj_converter.cpp
+)
 
 set(SOURCE main.cpp
   broker/environment_broker.h
   broker/environment_broker.cpp
-  broker/import_broker.h
-  broker/import_broker.cpp
+  broker/io_broker.h
+  broker/io_broker.cpp
   broker/lightmap_broker.h
   broker/lightmap_broker.cpp
-  broker/mikktspace_broker.h
-  broker/mikktspace_broker.cpp
   broker/photonmap_broker.h
   broker/photonmap_broker.cpp
   broker/render_3d_broker.h
@@ -101,10 +129,12 @@ set(SOURCE main.cpp
   broker/xatlas_broker.h
   broker/xatlas_broker.cpp
   ${render_3d_source}
+  ${io_source}
   ${lightmap_source}
   ${imgui_source}
   ${xatlas_source}
   ${mikktspace_source}
+  ${meshoptimizer_source}
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE})

@@ -39,13 +39,13 @@ namespace RayGene3D
       const auto size_y = scope.prop_extent_y->GetUint();
       const auto layers = 1u;
 
-      auto geometry_color_target = scope.color_target->CreateView("spark_geometry_color_target",
+      const auto& geometry_color_target = scope.color_target->CreateView("render_3d_geometry_color_target",
         Usage(USAGE_RENDER_TARGET)
       );
-      auto geometry_gbuffer_0_target = scope.gbuffer_0_target->CreateView("spark_geometry_gbuffer_0_target",
+      const auto& geometry_gbuffer_0_target = scope.gbuffer_0_target->CreateView("render_3d_geometry_gbuffer_0_target",
         Usage(USAGE_RENDER_TARGET)
       );
-      auto geometry_gbuffer_1_target = scope.gbuffer_1_target->CreateView("spark_geometry_gbuffer_1_target",
+      const auto& geometry_gbuffer_1_target = scope.gbuffer_1_target->CreateView("render_3d_geometry_gbuffer_1_target",
         Usage(USAGE_RENDER_TARGET)
       );
 
@@ -55,36 +55,45 @@ namespace RayGene3D
         { geometry_gbuffer_1_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
       };
 
-      auto geometry_depth_target = scope.depth_target->CreateView("spark_geometry_depth_target",
+      const auto& geometry_depth_target = scope.depth_target->CreateView("render_3d_geometry_depth_target",
         Usage(USAGE_DEPTH_STENCIL)
       );
       const Pass::DSAttachment ds_attachments[] = {
         geometry_depth_target, { 1.0f, std::nullopt },
       };
 
-      geometry_pass = scope.core->GetDevice()->CreatePass("spark_geometry_pass",
+      geometry_pass = scope.core->GetDevice()->CreatePass("render_3d_geometry_pass",
         Pass::TYPE_GRAPHIC,
         size_x,
         size_y,
         layers,
-        { rt_attachments, uint32_t(std::size(rt_attachments)) },
-        { ds_attachments, uint32_t(std::size(ds_attachments)) }
+        { rt_attachments, std::size(rt_attachments) },
+        { ds_attachments, std::size(ds_attachments) }
       );
+
+      geometry_pass->SetEnabled(true);
     }
 
     void Mode::CreateGeometryConfig()
     {
+      const auto file = use_mesh_pipe
+        ? "./asset/shaders/spark_geom_meshlet.glsl"
+        : "./asset/shaders/spark_geom_raster.hlsl";
+      
       std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_geometry.hlsl", std::fstream::in);
+      //shader_fs.open();
+      shader_fs.open(file, std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
+      const auto topology = use_mesh_pipe ? Config::TOPOLOGY_UNKNOWN : Config::TOPOLOGY_TRIANGLELIST;
       const Config::IAState ia_config =
       {
-        Config::TOPOLOGY_TRIANGLELIST,
+        topology,
         Config::INDEXER_32_BIT,
         {
           { 0,  0, 64, FORMAT_R32G32B32_FLOAT, false },
@@ -124,10 +133,14 @@ namespace RayGene3D
         }
       };
 
-      geometry_config = geometry_pass->CreateConfig("spark_geometry_config",
+      const auto compilation = use_mesh_pipe
+        ? Config::Compilation(Config::COMPILATION_MESH | Config::COMPILATION_FRAG)
+        : Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG);
+
+      geometry_config = geometry_pass->CreateConfig("render_3d_geometry_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        { defines.data(), uint32_t(defines.size()) },
+        compilation,
+        { defines.data(), defines.size() },
         ia_config,
         rc_config,
         ds_config,
@@ -138,147 +151,160 @@ namespace RayGene3D
 
     void Mode::CreateGeometryBatch()
     {
-      const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
+      const auto [data, count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       auto entities = std::vector<Batch::Entity>(count);
-      for (auto i = 0u; i < count; ++i)
+
+      if (use_mesh_pipe)
       {
-        auto geometry_vertices = scope.scene_vertices->CreateView("spark_geometry_vertices_" + std::to_string(i),
-          Usage(USAGE_VERTEX_ARRAY)
-        );
-        const std::shared_ptr<View> va_views[] = {
-          geometry_vertices,
-        };
+        for (auto i = 0u; i < count; ++i)
+        {
+          //const auto& geometry_graphic_arguments = scope.graphic_arguments->CreateView("render_3d_geometry_graphic_argument_" + std::to_string(i),
+          //  Usage(USAGE_ARGUMENT_LIST),
+          //  { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
+          //);
 
-        auto geometry_triangles = scope.scene_triangles->CreateView("spark_geometry_triangles_" + std::to_string(i),
-          Usage(USAGE_INDEX_ARRAY)
-        );
-        const std::shared_ptr<View> ia_views[] = {
-          geometry_triangles,
-        };
+          entities[i] = {
+            {},
+            {},
+            nullptr, // geometry_graphic_arguments,
+            Range{ 0u, data[i].mlet_count },
+            Range{ 0u, 1u },
+            Range{ 0u, 1u },
+            std::array<uint32_t, 4>{ uint32_t(sizeof(Instance))* i, 0, 0, 0 },
+            std::nullopt
+          };
+        }
+      }
+      else
+      {
+        for (auto i = 0u; i < count; ++i)
+        {
+          const std::shared_ptr<View> va_views[] = {
+            scope.scene_buffer_vert->CreateView("render_3d_geometry_vertices_" + std::to_string(i), Usage(USAGE_VERTEX_ARRAY)),
+          };
+          const std::shared_ptr<View> ia_views[] = {
+            scope.scene_buffer_trng->CreateView("render_3d_geometry_triangles_" + std::to_string(i), Usage(USAGE_INDEX_ARRAY)),
+          };
+          //const auto& geometry_graphic_arguments = scope.graphic_arguments->CreateView("render_3d_geometry_graphic_argument_" + std::to_string(i),
+          //  Usage(USAGE_ARGUMENT_LIST),
+          //  { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
+          //);
 
-        const auto geometry_graphic_arguments = scope.graphic_arguments->CreateView("spark_geometry_graphic_argument_" + std::to_string(i),
-          Usage(USAGE_ARGUMENT_LIST),
-          { uint32_t(sizeof(Batch::Graphic)) * i, uint32_t(sizeof(Batch::Graphic)) }
-        );
-
-        const auto& ins_range = View::Range{ 0u,  1u };
-        const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-        const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
-        const auto& sb_offset = std::array<uint32_t, 4>{ uint32_t(sizeof(Frustum))* i, 0u, 0u, 0u };
-        const auto& push_data = std::nullopt;
-
-        entities[i] = {
-          { va_views, va_views + uint32_t(std::size(va_views)) },
-          { ia_views, ia_views + uint32_t(std::size(ia_views)) },
-          nullptr, // geometry_graphic_arguments,
-          ins_range,
-          vtx_range,
-          idx_range,
-          sb_offset,
-          push_data
-        };
+          entities[i] = {
+            { va_views, use_mesh_pipe ? 0 : va_views + std::size(va_views) },
+            { ia_views, use_mesh_pipe ? 0 : ia_views + std::size(ia_views) },
+            nullptr, // geometry_graphic_arguments,
+            Range{ 0u,  1u },
+            Range{ data[i].vert_offset * 1, data[i].vert_count * 1 },
+            Range{ data[i].trng_offset * 3, data[i].trng_count * 3 },
+            std::array<uint32_t, 4>{ uint32_t(sizeof(Instance))* i, 0, 0, 0 },
+            std::nullopt
+          };
+        }
       }
 
       const Batch::Sampler samplers[] = {
         { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
         { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_MIRROR, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
 
-      auto geometry_screen_data = scope.screen_data->CreateView("spark_geometry_screen_data",
+      const auto& geometry_screen_data = scope.screen_data->CreateView("render_3d_geometry_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-
-      auto geometry_camera_data = scope.camera_data->CreateView("spark_geometry_camera_data",
+      const auto& geometry_camera_data = scope.camera_data->CreateView("render_3d_geometry_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-
-      auto geometry_shadow_data = scope.shadow_data->CreateView("spark_geometry_shadow_data",
-        Usage(USAGE_CONSTANT_DATA),
-        { 0, uint32_t(sizeof(Frustum)) }
+      const auto& geometry_shadow_data = scope.shadow_data->CreateView("render_3d_geometry_shadow_data",
+        Usage(USAGE_CONSTANT_DATA)
       );
-
       const std::shared_ptr<View> ub_views[] = {
         geometry_screen_data,
         geometry_camera_data,
         geometry_shadow_data,
       };
 
-
-      auto geometry_scene_instances = scope.scene_instances->CreateView("spark_geometry_scene_instances",
+      const auto& geometry_scene_instances = scope.scene_buffer_inst->CreateView("render_3d_geometry_scene_instances",
         Usage(USAGE_CONSTANT_DATA),
-        { 0, uint32_t(sizeof(Instance)) }
+        { 0, sizeof(Instance) }
       );
-
       const std::shared_ptr<View> sb_views[] = {
         geometry_scene_instances
       };
 
-
-      auto geometry_scene_textures0 = scope.scene_textures0->CreateView("spark_geometry_scene_textures0",
+      const auto& geometry_scene_array_aaam = scope.scene_array_aaam->CreateView("render_3d_geometry_scene_array_aaam",
         Usage(USAGE_SHADER_RESOURCE)
       );
-
-      auto geometry_scene_textures1 = scope.scene_textures1->CreateView("spark_geometry_scene_textures1",
+      const auto& geometry_scene_array_snno = scope.scene_array_snno->CreateView("render_3d_geometry_scene_array_snno",
         Usage(USAGE_SHADER_RESOURCE)
       );
-
-      auto geometry_scene_textures2 = scope.scene_textures2->CreateView("spark_geometry_scene_textures2",
+      const auto& geometry_scene_array_eeet = scope.scene_array_eeet->CreateView("render_3d_geometry_scene_array_eeet",
         Usage(USAGE_SHADER_RESOURCE)
       );
-
-      auto geometry_scene_textures3 = scope.scene_textures3->CreateView("spark_geometry_scene_textures3",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-
-      auto geometry_scene_textures4 = scope.scene_textures4->CreateView("spark_geometry_scene_textures4",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-
-      auto geometry_scene_textures5 = scope.scene_textures5->CreateView("spark_geometry_scene_textures5",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-
-      auto geometry_scene_textures6 = scope.scene_textures6->CreateView("spark_geometry_scene_textures6",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-
-      auto geometry_scene_textures7 = scope.scene_textures7->CreateView("spark_geometry_scene_textures7",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-
-      auto geometry_scene_lightmaps = scope.lightmaps_final->CreateView("spark_geometry_scene_lightmaps",
-        Usage(USAGE_SHADER_RESOURCE)
-      );
-
-      auto geometry_reflection_map = scope.reflection_map->CreateView("spark_geometry_reflection_map",
+      //const auto& geometry_scene_textures3 = scope.scene_textures3->CreateView("render_3d_geometry_scene_textures3",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
+      //const auto& geometry_scene_textures4 = scope.scene_textures4->CreateView("render_3d_geometry_scene_textures4",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
+      //const auto& geometry_scene_textures5 = scope.scene_textures5->CreateView("render_3d_geometry_scene_textures5",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
+      //const auto& geometry_scene_textures6 = scope.scene_textures6->CreateView("render_3d_geometry_scene_textures6",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
+      //const auto& geometry_scene_textures7 = scope.scene_textures7->CreateView("render_3d_geometry_scene_textures7",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
+      //const auto& geometry_scene_lightmaps = scope.lightmaps_final->CreateView("render_3d_geometry_scene_lightmaps",
+      //  Usage(USAGE_SHADER_RESOURCE)
+      //);
+      const auto& geometry_reflection_map = scope.reflection_map->CreateView("render_3d_geometry_reflection_map",
         Usage(USAGE_SHADER_RESOURCE),
-        { 0u, uint32_t(-1) },
-        { 0u, uint32_t(-1) },
+        { 0u, size_t(-1) },
+        { 0u, size_t(-1) },
         View::BIND_CUBEMAP_LAYER
       );
-
       const std::shared_ptr<View> ri_views[] = {
-        geometry_scene_textures0,
-        geometry_scene_textures1,
-        geometry_scene_textures2,
-        geometry_scene_textures3,
-        geometry_scene_textures4,
-        geometry_scene_textures5,
-        geometry_scene_textures6,
-        geometry_scene_textures7,
-        geometry_scene_lightmaps,
+        geometry_scene_array_aaam,
+        geometry_scene_array_snno,
+        geometry_scene_array_eeet,
+        //geometry_scene_array_eeet,
+        //geometry_scene_lightmaps,
         geometry_reflection_map,
       };
 
-      geometry_batch = geometry_config->CreateBatch("spark_geometry_batch",
-        { entities.data(), uint32_t(entities.size()) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
-        { sb_views, uint32_t(std::size(sb_views)) },
-        { ri_views, uint32_t(std::size(ri_views)) },
-        {},
-        {},
-        {}
-      );
+      if (use_mesh_pipe)
+      {
+        const std::shared_ptr<View> rb_views[] = {
+          scope.trace_buffer_mlet->CreateView("render_3d_geometry_trace_meshlets", Usage(USAGE_SHADER_RESOURCE)),
+          scope.trace_buffer_vidx->CreateView("render_3d_geometry_trace_v_indices", Usage(USAGE_SHADER_RESOURCE)),
+          scope.trace_buffer_vert->CreateView("render_3d_geometry_trace_vertices", Usage(USAGE_SHADER_RESOURCE)),
+          scope.trace_buffer_tidx->CreateView("render_3d_geometry_trace_t_indices", Usage(USAGE_SHADER_RESOURCE)),
+        };
+
+        geometry_batch = geometry_config->CreateBatch("render_3d_geometry_batch",
+          { entities.data(), entities.size() },
+          { samplers, std::size(samplers) },
+          { ub_views, std::size(ub_views) },
+          { sb_views, std::size(sb_views) },
+          { ri_views, std::size(ri_views) },
+          {},
+          { rb_views, std::size(rb_views) },
+          {}
+        );
+      }
+      else
+      {
+        geometry_batch = geometry_config->CreateBatch("render_3d_geometry_batch",
+          { entities.data(), entities.size() },
+          { samplers, std::size(samplers) },
+          { ub_views, std::size(ub_views) },
+          { sb_views, std::size(sb_views) },
+          { ri_views, std::size(ri_views) },
+          {},
+          {},
+          {}
+        );
+      }
     }
 
 
@@ -288,6 +314,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::pair<std::string, std::string> defines[] =
       {
@@ -329,10 +356,10 @@ namespace RayGene3D
         }
       };
 
-      skybox_config = geometry_pass->CreateConfig("spark_skybox_config",
+      skybox_config = geometry_pass->CreateConfig("render_3d_skybox_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        { defines, uint32_t(std::size(defines)) },
+        Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
+        { defines, std::size(defines) },
         ia_config,
         rc_config,
         ds_config,
@@ -343,20 +370,20 @@ namespace RayGene3D
 
     void Mode::CreateSkyboxBatch()
     {
-      auto skybox_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_skybox_screen_quad_vertices",
+      const auto& skybox_screen_quad_vertices = scope.screen_quad_vertices->CreateView("render_3d_skybox_screen_quad_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
-      auto skybox_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_skybox_screen_quad_triangles",
+      const auto& skybox_screen_quad_triangles = scope.screen_quad_triangles->CreateView("render_3d_skybox_screen_quad_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       const Batch::Entity entities[] = {
         {{skybox_screen_quad_vertices}, {skybox_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u }}
       };
 
-      auto skybox_screen_data = scope.screen_data->CreateView("spark_skybox_screen_data",
+      const auto& skybox_screen_data = scope.screen_data->CreateView("render_3d_skybox_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto skybox_camera_data = scope.camera_data->CreateView("spark_skybox_camera_data",
+      const auto& skybox_camera_data = scope.camera_data->CreateView("render_3d_skybox_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
       const std::shared_ptr<View> ub_views[] = {
@@ -364,7 +391,7 @@ namespace RayGene3D
         skybox_camera_data,
       };
 
-      auto skybox_skybox_cubemap = scope.skybox_cubemap->CreateView("spark_skybox_skybox_cubemap",
+      const auto& skybox_skybox_cubemap = scope.skybox_cubemap->CreateView("render_3d_skybox_skybox_cubemap",
         Usage(USAGE_SHADER_RESOURCE),
         { 0u, 1u },
         { 0u, 6u },
@@ -378,12 +405,12 @@ namespace RayGene3D
         { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
       };
 
-      skybox_batch = skybox_config->CreateBatch("spark_skybox_batch",
-        { entities, uint32_t(std::size(entities)) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
+      skybox_batch = skybox_config->CreateBatch("render_3d_skybox_batch",
+        { entities, std::size(entities) },
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
+        { ri_views, std::size(ri_views) },
         {},
         {},
         {}
@@ -397,7 +424,7 @@ namespace RayGene3D
       const auto size_y = scope.prop_extent_y->GetUint() / 8u;
       const auto layers = 1u;
 
-      present_pass = scope.core->GetDevice()->CreatePass("spark_present_pass",
+      present_pass = scope.core->GetDevice()->CreatePass("render_3d_present_pass",
         Pass::TYPE_COMPUTE,
         size_x,
         size_y,
@@ -405,6 +432,8 @@ namespace RayGene3D
         {},
         {}
       );
+
+      present_pass->SetEnabled(true);
     }
 
     void Mode::CreatePresentConfig()
@@ -413,10 +442,11 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
-      present_config = present_pass->CreateConfig("spark_present_config",
+      present_config = present_pass->CreateConfig("render_3d_present_config",
         shader_ss.str(),
-        Config::COMPILATION_CS,
+        Config::COMPILATION_COMP,
         {},
         {},
         {},
@@ -427,21 +457,21 @@ namespace RayGene3D
 
     void Mode::CreatePresentBatch()
     {
-      auto present_compute_arguments = scope.compute_arguments->CreateView("spark_present_compute_arguments",
+      const auto& present_compute_arguments = scope.compute_arguments->CreateView("render_3d_present_compute_arguments",
         Usage(USAGE_ARGUMENT_LIST)
       );
       const Batch::Entity entities[] = {
         {{}, {}, present_compute_arguments}
       };
 
-      auto present_camera_data = scope.camera_data->CreateView("spark_present_camera_data",
+      const auto& present_camera_data = scope.camera_data->CreateView("render_3d_present_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
       const std::shared_ptr<View> ub_views[] = {
         present_camera_data,
       };
 
-      auto present_color_target = scope.color_target->CreateView("spark_present_color_target",
+      const auto& present_color_target = scope.color_target->CreateView("render_3d_present_color_target",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
@@ -452,13 +482,13 @@ namespace RayGene3D
         scope.backbuffer_uav,
       };
 
-      present_batch = present_config->CreateBatch("spark_present_batch",
-        { entities, uint32_t(std::size(entities)) },
+      present_batch = present_config->CreateBatch("render_3d_present_batch",
+        { entities, std::size(entities) },
         {},
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
-        { wi_views, uint32_t(std::size(wi_views)) },
+        { ri_views, std::size(ri_views) },
+        { wi_views, std::size(wi_views) },
         {},
         {}
       );
@@ -512,8 +542,9 @@ namespace RayGene3D
       present_pass.reset();
     }
 
-    Mode::Mode(const Scope& scope)
+    Mode::Mode(Scope& scope, bool use_mesh_pipe)
       : scope(scope)
+      , use_mesh_pipe(use_mesh_pipe)
     {
     }
 

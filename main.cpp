@@ -28,13 +28,15 @@ THE SOFTWARE.
 
 #include "raygene3d-wrap/wrap.h"
 
+#include "raygene3d-util/util/array.h"
+#include "raygene3d-util/util/buffer.h"
+
 #include "broker/render_3d_broker.h"
 #include "broker/render_ui_broker.h"
 
 #include "broker/trace_broker.h"
 #include "broker/xatlas_broker.h"
-#include "broker/mikktspace_broker.h"
-#include "broker/import_broker.h"
+#include "broker/io_broker.h"
 #include "broker/scene_broker.h"
 #include "broker/lightmap_broker.h"
 #include "broker/environment_broker.h"
@@ -146,17 +148,13 @@ namespace RayGene3D
     std::unique_ptr<RayGene3D::Wrap> wrap;
 
   protected:
-    std::string shadow_name{"No Shadow"};
+    std::string shadow_name{ "No Shadow"};
+    std::string pipeline_name{ "IA Pipeline" };
 
   protected:
-    std::shared_ptr<RayGene3D::LightmapBroker> lightmap_broker;
+    //std::shared_ptr<RayGene3D::LightmapBroker> lightmap_broker;
     std::shared_ptr<RayGene3D::Render3DBroker> render_3d_broker;
     std::shared_ptr<RayGene3D::RenderUIBroker> render_ui_broker;
-
-  protected:
-    //std::shared_ptr<RayGene3D::IOBroker> io_broker;
-    //std::shared_ptr<RayGene3D::ImportBroker> lightmap_broker;
-    //std::shared_ptr<RayGene3D::ImportBroker> environment_broker;
 
   protected:
     std::string config_path;
@@ -173,7 +171,7 @@ namespace RayGene3D
     double delta_ypos{ 0.0 };
     double delta_time{ 0.0 };
 
-    std::shared_ptr<Property> prop_screen;
+    //std::shared_ptr<Property> prop_screen;
 
     std::shared_ptr<Property> prop_eye;
     std::shared_ptr<Property> prop_lookat;
@@ -366,18 +364,7 @@ namespace RayGene3D
       wrap->GetCore()->Initialize();
 
       {
-        const auto stride = uint32_t(sizeof(glm::u8vec4));
-        const auto count = uint32_t(extent_x * extent_y);
-        auto raw = RayGene3D::Raw{ stride * count };
-        for (auto i = 0u; i < count; ++i)
-        {
-          raw.SetElement<glm::u8vec4>({ 0, 0, 0, 0 }, i);
-        }
-        prop_screen = CreateBufferProperty({ &raw, 1 }, stride, count);
-        std::pair<const void*, uint32_t> interops[] =
-        {
-          prop_screen->GetObjectItem("raws")->GetArrayItem(0)->GetRawBytes(0)
-        };
+        auto array = TextureArrayLDR(FORMAT_B8G8R8A8_UNORM, extent_x, extent_y, 1);
 
         const auto& backbuffer_resource = device->CreateResource("backbuffer_resource",
           Resource::Tex2DDesc
@@ -390,7 +377,7 @@ namespace RayGene3D
             uint32_t(extent_y),
           },
           Resource::HINT_UNKNOWN,
-          { interops, uint32_t(std::size(interops)) }
+          array.Bytes()
         );
         wrap->GetCore()->GetDevice()->SetScreen(backbuffer_resource);
 
@@ -418,34 +405,35 @@ namespace RayGene3D
       input.close();
       const auto config_property = RayGene3D::ParseJSON(json);
 
-      //scene_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
-        const auto scene_name = config_property->GetObjectItem("scene")->GetObjectItem("path")->GetString();
-        const auto scene_path = config_path;
+        const auto& scene_name = config_property->GetObjectItem("scene")->GetObjectItem("path")->GetString();
+        const auto& scene_path = config_path;
 
-        //std::shared_ptr<Property> scene_property;
         wrap->GetUtil()->GetStorage()->Load(ExtractName(scene_name), scene_property);
 
         if (!scene_property)
         {
-          auto import_broker = std::shared_ptr<RayGene3D::ImportBroker>(new RayGene3D::ImportBroker(*wrap));
-
-          import_broker->SetFileName(scene_name);
-          import_broker->SetPathName(scene_path);
+          auto io_broker = std::shared_ptr<RayGene3D::IOBroker>(new RayGene3D::IOBroker(*wrap));
 
           const auto scene_rhs = config_property->GetObjectItem("scene")->GetObjectItem("rhs")->GetBool();
           const auto scene_scale = config_property->GetObjectItem("scene")->GetObjectItem("scale")->GetReal();
           const auto scene_quality = config_property->GetObjectItem("scene")->GetObjectItem("quality")->GetUint();
 
-          import_broker->SetCoordinateConversion(scene_rhs);
-          import_broker->SetPositionScale(scene_scale);
-          import_broker->SetTextureLevel(scene_quality);
+          io_broker->SetConversionRHS(scene_rhs);
+          io_broker->SetPositionScale(scene_scale);
+          io_broker->SetTextureLevel(scene_quality);
 
-          import_broker->Initialize();
-          import_broker->Export(scene_property);
+          io_broker->SetFileName(scene_name);
+          io_broker->SetPathName(scene_path);
+          io_broker->SetDataOperation(IOBroker::LOAD_OPERATION);
 
-          import_broker.reset();
+          io_broker->Initialize();
+          io_broker->Use();
+          io_broker->Discard();
 
+          io_broker.reset();
+
+          scene_property = wrap->GetUtil()->GetStorage()->GetTree()->GetObjectItem("scene");
           wrap->GetUtil()->GetStorage()->Save(ExtractName(scene_name), scene_property);
         }
       }
@@ -476,66 +464,54 @@ namespace RayGene3D
       }
       tree_property->SetObjectItem("camera", camera_property);
 
-      //environment_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
-      //{
-      //  const auto environment_path = "./";
-      //  const auto environment_name = config_property->GetObjectItem("environment")->GetObjectItem("file")->GetString();
-      //  const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
+      environment_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+      {
+        const auto environment_path = "./";
+        const auto environment_name = config_property->GetObjectItem("environment")->GetObjectItem("path")->GetString();
+        const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
 
-      //  const auto extent_x = 1u << int32_t(environment_quality) - 1;
-      //  const auto extent_y = 1u << int32_t(environment_quality) - 2;
-      //  auto [raws, size_x, size_y] = 
-      //    MipmapTextureHDR(environment_quality, 
-      //      ResizeTextureHDR(extent_x, extent_y,
-      //        LoadTextureHDR(environment_path + environment_name)));
-      //  environment_property = CreateTextureProperty({raws.data(), uint32_t(raws.size())}, 
-      //    extent_x, extent_y, environment_quality, 1u);
-      //}
+        const auto extent_x = 1u << int32_t(environment_quality) - 1;
+        const auto extent_y = 1u << int32_t(environment_quality) - 2;
+        auto environment_array = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent_x, extent_y, 1);
+        environment_array.Load((environment_path + environment_name).c_str(), 0);
+
+        environment_property = environment_array.Export();
+      }
       tree_property->SetObjectItem("environment", config_property->GetObjectItem("environment"));
 
-      //lighting_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
-      //{
-      //  const auto lighting_theta = config_property->GetObjectItem("lighting")->GetObjectItem("theta");
-      //  const auto lighting_phi = config_property->GetObjectItem("lighting")->GetObjectItem("phi");
-      //  const auto lighting_intensity = config_property->GetObjectItem("lighting")->GetObjectItem("intensity");
+      lighting_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
+      {
+        const auto lighting_theta = config_property->GetObjectItem("lighting")->GetObjectItem("theta");
+        const auto lighting_phi = config_property->GetObjectItem("lighting")->GetObjectItem("phi");
+        const auto lighting_intensity = config_property->GetObjectItem("lighting")->GetObjectItem("intensity");
 
-      //  lighting_property->SetObjectItem("theta", lighting_theta);
-      //  lighting_property->SetObjectItem("phi", lighting_phi);
-      //  lighting_property->SetObjectItem("intensity", lighting_intensity);
-      //}
+        lighting_property->SetObjectItem("theta", lighting_theta);
+        lighting_property->SetObjectItem("phi", lighting_phi);
+        lighting_property->SetObjectItem("intensity", lighting_intensity);
+      }
       tree_property->SetObjectItem("lighting", config_property->GetObjectItem("lighting"));
 
       tree_property->SetObjectItem("illumination", config_property->GetObjectItem("illumination"));
 
-      {
-        auto mikktspace_broker = std::shared_ptr<RayGene3D::MikktspaceBroker>(new RayGene3D::MikktspaceBroker(*wrap));
+      //{
+      //  auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
 
-        mikktspace_broker->Initialize();
-        mikktspace_broker->Use();
-        mikktspace_broker->Discard();
+      //  xatlas_broker->Initialize();
+      //  xatlas_broker->Use();
+      //  xatlas_broker->Discard();
 
-        mikktspace_broker.reset();
-      }
+      //  xatlas_broker.reset();
+      //}
 
-      {
-        auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
+      //{
+      //  auto trace_broker = std::shared_ptr<RayGene3D::TraceBroker>(new RayGene3D::TraceBroker(*wrap));
 
-        xatlas_broker->Initialize();
-        xatlas_broker->Use();
-        xatlas_broker->Discard();
+      //  trace_broker->Initialize();
+      //  trace_broker->Use();
+      //  trace_broker->Discard();
 
-        xatlas_broker.reset();
-      }
-
-      {
-        auto trace_broker = std::shared_ptr<RayGene3D::TraceBroker>(new RayGene3D::TraceBroker(*wrap));
-
-        trace_broker->Initialize();
-        trace_broker->Use();
-        trace_broker->Discard();
-
-        trace_broker.reset();
-      }
+      //  trace_broker.reset();
+      //}
 
       {
         auto scene_broker = std::shared_ptr<RayGene3D::SceneBroker>(new RayGene3D::SceneBroker(*wrap));
@@ -567,14 +543,14 @@ namespace RayGene3D
       //  lightmap_broker.reset();
       //}
 
-      lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
-      lightmap_broker->SetBakingMode(LightmapBroker::SW_TRACED_BAKING);
+      //lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
+      //lightmap_broker->SetBakingMode(LightmapBroker::SW_TRACED_BAKING);
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
-      render_3d_broker->SetShadowMode(Render3DBroker::NO_SHADOW);
+      //render_3d_broker->SetShadowMode(Render3DBroker::NO_SHADOW);
 
       render_ui_broker = std::shared_ptr<RayGene3D::RenderUIBroker>(new RayGene3D::RenderUIBroker(*wrap));
-      render_ui_broker->SetShowTestWindow(false);
+      //render_ui_broker->SetShowTestWindow(false);
     }
 
     void Use()
@@ -583,7 +559,8 @@ namespace RayGene3D
       auto frame_period{ 0.0 };
      
       auto change_imgui{ false };
-      auto change_spark{ false };;
+      auto change_shadow{ false };
+      auto change_pipeline{ false };
 
       auto curr_time = glfwGetTime();
       auto curr_xpos{ 0.0 };
@@ -658,39 +635,63 @@ namespace RayGene3D
           UpdateCamera();
         }
 
-        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_spark)
+        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_shadow)
         {
-          auto shadow_mode = render_3d_broker->GetShadowMode();
-          if (shadow_mode == Render3DBroker::NO_SHADOW)
+          auto shadow_type = render_3d_broker->GetShadowType();
+          if (shadow_type == Render3DBroker::NO_SHADOW)
           {
-            shadow_mode = Render3DBroker::CUBEMAP_SHADOW;
+            shadow_type = Render3DBroker::CUBEMAP_SHADOW;
             shadow_name = "Cubemap Shadow";
           }
-          else if (shadow_mode == Render3DBroker::CUBEMAP_SHADOW)
+          else if (shadow_type == Render3DBroker::CUBEMAP_SHADOW)
           {
-            shadow_mode = Render3DBroker::SW_TRACED_SHADOW;
+            shadow_type = Render3DBroker::SW_TRACED_SHADOW;
             shadow_name = "SW Traced Shadow";
           }
-          else if (shadow_mode == Render3DBroker::SW_TRACED_SHADOW)
+          else if (shadow_type == Render3DBroker::SW_TRACED_SHADOW)
           {
-            shadow_mode = Render3DBroker::HW_TRACED_SHADOW;
+            shadow_type = Render3DBroker::HW_TRACED_SHADOW;
             shadow_name = "HW Traced Shadow";
           }
-          else if (shadow_mode == Render3DBroker::HW_TRACED_SHADOW)
+          else if (shadow_type == Render3DBroker::HW_TRACED_SHADOW)
           {
-            shadow_mode = Render3DBroker::NO_SHADOW;
+            shadow_type = Render3DBroker::NO_SHADOW;
             shadow_name = "No Shadow";
           }
-          render_3d_broker->SetShadowMode(shadow_mode);
-          change_spark = false;
+          render_3d_broker->SetShadowType(shadow_type);
+          render_3d_broker->Update();
+          change_shadow = false;
         }
 
-        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_PRESS && !change_spark)
+        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_PRESS && !change_shadow)
         {
-          change_spark = true;
+          change_shadow = true;
         }
 
-        lightmap_broker->Use();
+        if (glfwGetKey(glfw, GLFW_KEY_F3) == GLFW_RELEASE && change_pipeline)
+        {
+          auto pipeline_type = render_3d_broker->GetPipelineType();
+          if (pipeline_type == Render3DBroker::IA_PIPELINE)
+          {
+            pipeline_type = Render3DBroker::MESH_PIPELINE;
+            pipeline_name = "Mesh Pipeline";
+          }
+          else if (pipeline_type == Render3DBroker::MESH_PIPELINE)
+          {
+            pipeline_type = Render3DBroker::IA_PIPELINE;
+            pipeline_name = "IA Pipeline";
+          }
+          render_3d_broker->SetPipelineType(pipeline_type);
+          render_3d_broker->Update();
+          change_pipeline = false;
+        }
+
+        if (glfwGetKey(glfw, GLFW_KEY_F3) == GLFW_PRESS && !change_pipeline)
+        {
+          change_pipeline = true;
+        }
+
+        //lightmap_broker->Use();
         render_3d_broker->Use();
         render_ui_broker->Use();
 
@@ -705,7 +706,7 @@ namespace RayGene3D
           const auto& adapter_name = wrap->GetCore()->GetDevice()->GetName();
 
           std::stringstream ss;
-          ss << app_name << " [" << shadow_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
+          ss << app_name << " [" << shadow_name << "] [" << pipeline_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
           glfwSetWindowTitle(glfw, ss.str().c_str());
 
           frame_counter = 0;
@@ -716,7 +717,7 @@ namespace RayGene3D
 
     void Discard()
     {
-      lightmap_broker.reset();
+      //lightmap_broker.reset();
       render_3d_broker.reset();
       render_ui_broker.reset();
 

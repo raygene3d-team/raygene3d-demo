@@ -35,63 +35,83 @@ namespace RayGene3D
   class SceneBroker : public Broker
   {
   protected:
-    std::shared_ptr<Property> prop_scene;
+    SPtrProperty prop_scene;
 
   protected:
-    std::shared_ptr<Property> prop_instances;
-    std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
+    SPtrProperty prop_buffer_trng;
+    SPtrProperty prop_buffer_vert;
+    SPtrProperty prop_buffer_mlet;
 
-    std::shared_ptr<Property> prop_textures0;
-    std::shared_ptr<Property> prop_textures1;
-    std::shared_ptr<Property> prop_textures2;
-    std::shared_ptr<Property> prop_textures3;
-    std::shared_ptr<Property> prop_textures4;
-    std::shared_ptr<Property> prop_textures5;
-    std::shared_ptr<Property> prop_textures6;
-    std::shared_ptr<Property> prop_textures7;
+    SPtrProperty prop_buffer_inst;
+    SPtrProperty prop_buffer_tbox;
+    SPtrProperty prop_buffer_bbox;
 
-  protected:
-    SPtrResource scene_instances;
-    SPtrResource scene_triangles;
-    SPtrResource scene_vertices;
+    SPtrProperty prop_buffer_vidx;
+    SPtrProperty prop_buffer_tidx;
 
-    SPtrResource scene_textures0;
-    SPtrResource scene_textures1;
-    SPtrResource scene_textures2;
-    SPtrResource scene_textures3;
-    SPtrResource scene_textures4;
-    SPtrResource scene_textures5;
-    SPtrResource scene_textures6;
-    SPtrResource scene_textures7;
+    SPtrProperty prop_array_aaam;
+    SPtrProperty prop_array_snno;
+    SPtrProperty prop_array_eeet;
 
   protected:
-    void CreateSceneInstances();
-    void CreateSceneTriangles();
-    void CreateSceneVertices();
+    SPtrResource scene_buffer_vert;
+    SPtrResource scene_buffer_trng;   
+    SPtrResource scene_buffer_inst;
+    
+    SPtrResource trace_buffer_vert;
+    SPtrResource trace_buffer_trng;
+    SPtrResource trace_buffer_mlet;
 
-    void CreateSceneTextures0();
-    void CreateSceneTextures1();
-    void CreateSceneTextures2();
-    void CreateSceneTextures3();
-    void CreateSceneTextures4();
-    void CreateSceneTextures5();
-    void CreateSceneTextures6();
-    void CreateSceneTextures7();
+    SPtrResource trace_buffer_inst;
+    SPtrResource trace_buffer_tbox;
+    SPtrResource trace_buffer_bbox;
+
+    SPtrResource trace_buffer_vidx;
+    SPtrResource trace_buffer_tidx;
+
+    SPtrResource scene_array_aaam;
+    SPtrResource scene_array_snno;
+    SPtrResource scene_array_eeet;
 
   protected:
-    void DestroySceneInstances();
-    void DestroySceneTriangles();
-    void DestroySceneVertices();
+    void CreateSceneBufferVert();
+    void CreateSceneBufferTrng();
+    void CreateSceneBufferInst();
 
-    void DestroySceneTextures0();
-    void DestroySceneTextures1();
-    void DestroySceneTextures2();
-    void DestroySceneTextures3();
-    void DestroySceneTextures4();
-    void DestroySceneTextures5();
-    void DestroySceneTextures6();
-    void DestroySceneTextures7();
+    void CreateTraceBufferVert();
+    void CreateTraceBufferTrng();
+    void CreateTraceBufferMlet();    
+
+    void CreateTraceBufferInst();
+    void CreateTraceBufferTBox();
+    void CreateTraceBufferBBox();
+
+    void CreateTraceBufferVIdx();
+    void CreateTraceBufferTIdx();
+
+    void CreateSceneArrayAAAM();
+    void CreateSceneArraySNNO();
+    void CreateSceneArrayEEET();
+
+  protected:
+    void DestroySceneBufferVert();    
+    void DestroySceneBufferTrng();
+    void DestroySceneBufferInst();
+
+    void DestroyTraceBufferVert();
+    void DestroyTraceBufferTrng();
+    void DestroyTraceBufferMlet();
+
+    void DestroyTraceBufferInst();
+    void DestroyTraceBufferTBox();
+    void DestroyTraceBufferBBox();
+
+    void DestroyTraceBufferVIdx();
+    void DestroyTraceBufferTIdx();
+
+    void DestroySceneArrayAAAM();
+    void DestroySceneArraySNNO();
+    void DestroySceneArrayEEET();
 
   public:
     void Initialize() override;

@@ -39,7 +39,7 @@ namespace RayGene3D
       const auto size_y = scope.prop_extent_y->GetUint();
       const auto layers = 1u;
 
-      auto unshadowed_color_target = scope.color_target->CreateView("spark_unshadowed_color_target",
+      const auto& unshadowed_color_target = scope.color_target->CreateView("spark_unshadowed_color_target",
         Usage(USAGE_RENDER_TARGET)
       );
       const Pass::RTAttachment rt_attachments[] = {
@@ -51,9 +51,11 @@ namespace RayGene3D
         size_x,
         size_y,
         layers,
-        { rt_attachments, uint32_t(std::size(rt_attachments)) },
+        { rt_attachments, std::size(rt_attachments) },
         {}
       );
+
+      unshadowed_pass->SetEnabled(true);
     }
 
     void NoShadow::CreateUnshadowedConfig()
@@ -62,6 +64,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_unshadowed.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -101,8 +104,8 @@ namespace RayGene3D
 
       unshadowed_config = unshadowed_pass->CreateConfig("spark_unshadowed_config",
         shader_ss.str(),
-        Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_PS),
-        { defines.data(), uint32_t(defines.size()) },
+        Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
+        { defines.data(), defines.size() },
         ia_Config,
         rc_Config,
         ds_Config,
@@ -114,25 +117,25 @@ namespace RayGene3D
 
     void NoShadow::CreateUnshadowedBatch()
     {
-      auto unshadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_unshadowed_screen_quad_vertices",
+      const auto& unshadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_unshadowed_screen_quad_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
-      auto unshadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_unshadowed_screen_quad_triangles",
+      const auto& unshadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_unshadowed_screen_quad_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       const Batch::Entity entities[] = {
         {{unshadowed_screen_quad_vertices}, {unshadowed_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u } }
       };
 
-      auto unshadowed_screen_data = scope.screen_data->CreateView("spark_unshadowed_screen_data",
+      const auto& unshadowed_screen_data = scope.screen_data->CreateView("spark_unshadowed_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto unshadowed_camera_data = scope.camera_data->CreateView("spark_unshadowed_camera_data",
+      const auto& unshadowed_camera_data = scope.camera_data->CreateView("spark_unshadowed_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto unshadowed_shadow_data = scope.shadow_data->CreateView("spark_unshadowed_shadow_data",
+      const auto& unshadowed_shadow_data = scope.shadow_data->CreateView("spark_unshadowed_shadow_data",
         Usage(USAGE_CONSTANT_DATA),
-        { 0, uint32_t(sizeof(Frustum)) }
+        { 0, sizeof(Frustum) }
       );
       const std::shared_ptr<View> ub_views[] = {
         unshadowed_screen_data,
@@ -140,13 +143,13 @@ namespace RayGene3D
         unshadowed_shadow_data
       };
 
-      auto unshadowed_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_unshadowed_gbuffer_0_target",
+      const auto& unshadowed_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_unshadowed_gbuffer_0_target",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto unshadowed_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_unshadowed_gbuffer_1_target",
+      const auto& unshadowed_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_unshadowed_gbuffer_1_target",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto unshadowed_depth_texture = scope.depth_target->CreateView("spark_unshadowed_depth_target",
+      const auto& unshadowed_depth_texture = scope.depth_target->CreateView("spark_unshadowed_depth_target",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
@@ -156,11 +159,11 @@ namespace RayGene3D
       };
 
       unshadowed_batch = unshadowed_config->CreateBatch("spark_unshadowed_batch",
-        { entities, uint32_t(std::size(entities)) },
+        { entities, std::size(entities) },
         {},
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) }
+        { ri_views, std::size(ri_views) }
       );
     }
 
@@ -182,22 +185,8 @@ namespace RayGene3D
       unshadowed_pass.reset();
     }
 
-    void NoShadow::Enable()
-    {
-      geometry_pass->SetEnabled(true);
-      unshadowed_pass->SetEnabled(true);
-      present_pass->SetEnabled(true);
-    }
-
-    void NoShadow::Disable()
-    {
-      geometry_pass->SetEnabled(false);
-      unshadowed_pass->SetEnabled(false);
-      present_pass->SetEnabled(false);
-    }
-
-    NoShadow::NoShadow(const Scope& scope)
-      : Mode(scope)
+    NoShadow::NoShadow(Scope& scope, bool use_mesh_pipe)
+      : Mode(scope, use_mesh_pipe)
     {
       CreateGeometryPass();
       CreateGeometryConfig();

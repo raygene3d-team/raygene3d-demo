@@ -65,9 +65,9 @@ namespace RayGene3D
       std::shared_ptr<Property> prop_phi;
       std::shared_ptr<Property> prop_intensity;
 
-      std::shared_ptr<Property> prop_instances;
-      std::shared_ptr<Property> prop_triangles;
-      std::shared_ptr<Property> prop_vertices;
+      std::shared_ptr<Property> prop_inst;
+      std::shared_ptr<Property> prop_trng;
+      std::shared_ptr<Property> prop_vert;
 
       //std::shared_ptr<Property> prop_vertices0;
       //std::shared_ptr<Property> prop_vertices1;
@@ -108,9 +108,9 @@ namespace RayGene3D
       SPtrResource shadow_data;
       SPtrResource reflection_probe_data;
 
-      SPtrResource scene_instances;
-      SPtrResource scene_triangles;
-      SPtrResource scene_vertices;
+      SPtrResource scene_buffer_vert;
+      SPtrResource scene_buffer_trng;
+      SPtrResource scene_buffer_inst;
       //SPtrResource scene_vertices0;
       //SPtrResource scene_vertices1;
       //SPtrResource scene_vertices2;
@@ -118,26 +118,31 @@ namespace RayGene3D
 
 
 
-      SPtrResource scene_textures0;
-      SPtrResource scene_textures1;
-      SPtrResource scene_textures2;
-      SPtrResource scene_textures3;
-      SPtrResource scene_textures4;
-      SPtrResource scene_textures5;
-      SPtrResource scene_textures6;
-      SPtrResource scene_textures7;
+      SPtrResource scene_array_aaam;
+      SPtrResource scene_array_snno;
+      SPtrResource scene_array_eeet;
+      //SPtrResource scene_array_aaam;
+      //SPtrResource scene_textures4;
+      //SPtrResource scene_textures5;
+      //SPtrResource scene_textures6;
+      //SPtrResource scene_textures7;
 
-      SPtrResource trace_t_boxes;
-      SPtrResource trace_b_boxes;
+      SPtrResource trace_buffer_inst;
+      SPtrResource trace_buffer_tbox;
+      SPtrResource trace_buffer_bbox;
+
+      SPtrResource trace_buffer_vidx;
+      SPtrResource trace_buffer_tidx;
 
       //Copies of original resources bacause of DX11 limitations
-      SPtrResource trace_instances;
-      SPtrResource trace_triangles;
-      SPtrResource trace_vertices;
+      SPtrResource trace_buffer_vert;
+      SPtrResource trace_buffer_trng;
+      SPtrResource trace_buffer_mlet;
+      
 
-      SPtrResource lightmaps_input;
-      SPtrResource lightmaps_accum;
-      SPtrResource lightmaps_final;
+      //SPtrResource lightmaps_input;
+      //SPtrResource lightmaps_accum;
+      //SPtrResource lightmaps_final;
 
       SPtrResource reflection_probe;
 
@@ -167,25 +172,24 @@ namespace RayGene3D
       void CreateCameraData();
       void CreateShadowData();
 
-      void CreateSceneInstances();
-      void CreateSceneTriangles();
-      void CreateSceneVertices();
+      void CreateSceneBufferVert();
+      void CreateSceneBufferTrng();
+      void CreateSceneBufferInst();
 
-      void CreateSceneTextures0();
-      void CreateSceneTextures1();
-      void CreateSceneTextures2();
-      void CreateSceneTextures3();
-      void CreateSceneTextures4();
-      void CreateSceneTextures5();
-      void CreateSceneTextures6();
-      void CreateSceneTextures7();
+      void CreateSceneArrayAAAM();
+      void CreateSceneArraySNNO();
+      void CreateSceneArrayEEET();
 
-      void CreateTraceTBoxes();
-      void CreateTraceBBoxes();
+      void CreateTraceBufferInst();
+      void CreateTraceBufferTBox();
+      void CreateTraceBufferBBox();
 
-      void CreateTraceInstances();
-      void CreateTraceTriangles();
-      void CreateTraceVertices();
+      void CreateTraceBufferVIdx();
+      void CreateTraceBufferTIdx();
+      
+      void CreateTraceBufferTrng();
+      void CreateTraceBufferVert();
+      void CreateTraceBufferMlet();
 
       void CreateLightmapsInput();
       void CreateLightmapsAccum();
@@ -212,25 +216,24 @@ namespace RayGene3D
       void DestroyCameraData();
       void DestroyShadowData();
 
-      void DestroySceneInstances();
-      void DestroySceneTriangles();
-      void DestroySceneVertices();
+      void DestroySceneBufferVert();
+      void DestroySceneBufferTrng();
+      void DestroySceneBufferInst();
 
-      void DestroySceneTextures0();
-      void DestroySceneTextures1();
-      void DestroySceneTextures2();
-      void DestroySceneTextures3();
-      void DestroySceneTextures4();
-      void DestroySceneTextures5();
-      void DestroySceneTextures6();
-      void DestroySceneTextures7();
+      void DestroySceneArrayAAAM();
+      void DestroySceneArraySNNO();
+      void DestroySceneArrayEEET();
 
-      void DestroyTraceTBoxes();
-      void DestroyTraceBBoxes();
+      void DestroyTraceBufferInst();
+      void DestroyTraceBufferTBox();
+      void DestroyTraceBufferBBox();
 
-      void DestroyTraceInstances();
-      void DestroyTraceTriangles();
-      void DestroyTraceVertices();
+      void DestroyTraceBufferVIdx();
+      void DestroyTraceBufferTIdx();
+
+      void DestroyTraceBufferVert();
+      void DestroyTraceBufferTrng();
+      void DestroyTraceBufferMlet();
 
       void DestroyLightmapsInput();
       void DestroyLightmapsAccum();

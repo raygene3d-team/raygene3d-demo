@@ -40,13 +40,10 @@ namespace RayGene3D
     quality = prop_environment->GetObjectItem("quality")->GetUint();
 
     const auto mipmap = std::max(quality, levels);
-    const auto layers = 6u;
     const auto extent = 1u << int32_t(quality) - 1;
 
-    const auto [pano_raws, pano_size_x, pano_size_y] =
-      MipmapTextureHDR(1u,
-        ResizeTextureHDR(2u * extent, extent,
-          LoadTextureHDR(path)));
+    auto pano_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, 2 * extent, extent, 1);
+    pano_texture.Load(path.c_str(), 0);
 
     enum CUBEMAP_FACE
     {
@@ -90,34 +87,21 @@ namespace RayGene3D
       return glm::f32vec2(u, v);
     };
 
-    auto raws = std::vector<Raw>();
-
-    for (uint32_t k = 0; k < layers; ++k)
+    auto cube_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent, extent, 6);   
+    for (auto k = 0u; k < 6; ++k)
     {
-      auto raw = Raw(extent * extent * uint32_t(sizeof(glm::f32vec4)));
-
-      for (uint32_t j = 0; j < extent; ++j)
+      for (auto i = 0ull; i < size_t(extent * extent); ++i)
       {
-        for (uint32_t i = 0; i < extent; ++i)
-        {
-          const auto cube_uv = glm::f32vec2{ (i + 0.5f) / extent, (j + 0.5f) / extent };
-          const auto pano_uv = pano_from_xyz(xyz_from_cube(cube_uv, CUBEMAP_FACE(k)));
+        const auto cube_texel = glm::i32vec2(i % extent, i / extent);
+        const auto cube_uv = glm::f32vec2((cube_texel.x + 0.5f) / extent, (cube_texel.y + 0.5f) / extent);
+        const auto pano_uv = pano_from_xyz(xyz_from_cube(cube_uv, CUBEMAP_FACE(k)));
+        const auto pano_texel = glm::i32vec2(pano_uv * glm::f32vec2(2 * extent, extent));
 
-          const auto texel = glm::i32vec2(pano_uv * glm::f32vec2(pano_size_x, pano_size_y));
-          const auto& value = pano_raws[0].GetElement<glm::f32vec4>(texel.y * pano_size_x + texel.x);
-
-          raw.SetElement(value, j * extent + i);
-        }
+        cube_texture.Set(k, 0, { pano_texture.Get(0, 0, 2ull * extent * pano_texel.y + pano_texel.x).first, 1 }, i);
       }
-
-      auto [cube_mipmaps, cube_size_x, cube_size_y] =
-        MipmapTextureHDR(mipmap, { std::move(raw), extent, extent });
-
-      std::move(cube_mipmaps.begin(), cube_mipmaps.end(), std::back_inserter(raws));
     }
 
-    const auto prop_skybox = CreateTextureProperty({ raws.data(), uint32_t(raws.size()) }, extent, extent, mipmap, layers);
-    prop_tree->GetObjectItem("environment")->SetObjectItem("skybox_cubemap", prop_skybox);
+    prop_tree->GetObjectItem("environment")->SetObjectItem("skybox_cubemap", cube_texture.Export());
 
     CreateSkyboxCubemap();
     CreateReflectionMap();
@@ -199,19 +183,15 @@ namespace RayGene3D
       glm::f32vec4( 1.0f,-1.0f, 1.0f, 1.0f),
     };
 
-    std::pair<const void*, uint32_t> interops[] = {
-      { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec4)) },
-    };
-
     vtx_array = core->GetDevice()->CreateResource("environment_vtx_array",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(glm::f32vec4)),
-        uint32_t(quad_vtx.size()),
+        sizeof(glm::f32vec4),
+        quad_vtx.size(),
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { reinterpret_cast<const uint8_t*>(quad_vtx.data()), quad_vtx.size() * sizeof(glm::f32vec4) }
     );
   }
 
@@ -222,36 +202,35 @@ namespace RayGene3D
       glm::u32vec3(3u, 2u, 1u),
     };
 
-    std::pair<const void*, uint32_t> interops[] = {
-      { quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3)) },
-    };
-
     idx_array = core->GetDevice()->CreateResource("environment_idx_array",
       Resource::BufferDesc
       {
         Usage(USAGE_INDEX_ARRAY),
-        uint32_t(sizeof(glm::u32vec3)),
-        uint32_t(quad_idx.size()),
+        sizeof(glm::u32vec3),
+        quad_idx.size(),
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { reinterpret_cast<const uint8_t*>(quad_idx.data()), quad_idx.size() * sizeof(glm::u32vec3) }
     );
   }
 
   void EnvironmentBroker::CreateReflectionMap()
   {
+    const auto format = FORMAT_R16G16B16A16_FLOAT;
     const auto layers = 6u;
-    const auto extent = 1u << int32_t(levels) - 1;
+    const auto mipmap = levels;
+    const auto size_x = 1u << int32_t(levels) - 1;
+    const auto size_y = 1u << int32_t(levels) - 1;
 
     reflection_map = core->GetDevice()->CreateResource("environment_reflection_map",
       Resource::Tex2DDesc
       {
         Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
-        levels,
+        mipmap,
         layers,
-        FORMAT_R16G16B16A16_FLOAT,
-        extent,
-        extent,
+        format,
+        size_x,
+        size_y,
       },
       Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE)
     );
@@ -263,42 +242,39 @@ namespace RayGene3D
     const auto& prop_environment = prop_tree->GetObjectItem("environment");
     const auto& prop_skybox = prop_environment->GetObjectItem("skybox_cubemap");
 
-    const auto& layers = prop_skybox->GetObjectItem("layers");
-    const auto& mipmap = prop_skybox->GetObjectItem("mipmap");
-    const auto& extent_x = prop_skybox->GetObjectItem("extent_x");
-    const auto& extent_y = prop_skybox->GetObjectItem("extent_y");
-    const auto& raws = prop_skybox->GetObjectItem("raws");
-
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
+    const auto format = Format(prop_skybox->GetObjectItem("format")->GetUint());
+    const auto layers = prop_skybox->GetObjectItem("layers")->GetUint();
+    const auto levels = prop_skybox->GetObjectItem("levels")->GetUint();
+    const auto size_x = prop_skybox->GetObjectItem("size_x")->GetUint();
+    const auto size_y = prop_skybox->GetObjectItem("size_y")->GetUint();
+    const auto bytes = prop_skybox->GetObjectItem("binary")->GetRawBytes();
 
     skybox_cubemap = core->GetDevice()->CreateResource("environment_skybox_cubemap",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R32G32B32A32_FLOAT,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
+        levels,
+        layers,
+        format,
+        size_x,
+        size_y,
       },
       Resource::Hint(Resource::HINT_CUBEMAP_IMAGE | Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
+      bytes
     );
   }
 
   void EnvironmentBroker::CreateConstantData(uint32_t level)
   {
-    const auto data = glm::u32vec4{ level, 1u << int32_t(levels) - (1 + level), 0u, 0u };
+    const auto constant = glm::u32vec4{ level, 1u << int32_t(levels) - (1 + level), 0u, 0u };
+    
+    const auto data = reinterpret_cast<const uint8_t*>(&constant);
     const auto count = 1u;
-    const auto stride = uint32_t(sizeof(glm::u32vec4));
+    const auto stride = sizeof(glm::u32vec4);
+    const auto bytes = std::pair{ reinterpret_cast<const uint8_t*>(&constant), count * stride };
 
-    std::pair<const void*, uint32_t> interops[] = {
-      { &data, count * stride },
+    std::pair<const uint8_t*, size_t> interops[] = {
+      { data, count * stride },
     };
 
     constant_data[level] = core->GetDevice()->CreateResource("environment_constant_data_" + std::to_string(level),
@@ -309,8 +285,8 @@ namespace RayGene3D
         count,
       },
       Resource::Hint(Resource::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-      );
+      bytes
+    );
   }
 
 
@@ -320,7 +296,7 @@ namespace RayGene3D
       Resource::BufferDesc
       {
         Usage(USAGE_ARGUMENT_LIST),
-        uint32_t(sizeof(Batch::Graphic)),
+        sizeof(Batch::Graphic),
         1u,
       },
       Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
@@ -350,7 +326,7 @@ namespace RayGene3D
       size_x,
       size_y,
       layers,
-      { rt_attachments, uint32_t(std::size(rt_attachments)) },
+      { rt_attachments, std::size(rt_attachments) },
       {}
     );
   }
@@ -362,6 +338,7 @@ namespace RayGene3D
     shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
     std::stringstream shader_ss;
     shader_ss << shader_fs.rdbuf();
+    shader_fs.close();
 
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -407,8 +384,8 @@ namespace RayGene3D
 
     configs[level] = passes[level]->CreateConfig("environment_reflection_config_" + std::to_string(level),
       shader_ss.str(),
-      Config::Compilation(Config::COMPILATION_VS | Config::COMPILATION_GS | Config::COMPILATION_PS),
-      { defines.data(), uint32_t(defines.size()) },
+      Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_GEOM | Config::COMPILATION_FRAG),
+      { defines.data(), defines.size() },
       ia_config,
       rc_config,
       ds_config,
@@ -437,15 +414,15 @@ namespace RayGene3D
       Usage(USAGE_ARGUMENT_LIST)
     );
 
-    const auto& ins_range = View::Range{ 0u, 6u };
-    const auto& vtx_range = View::Range{ 0u, 4u };
-    const auto& idx_range = View::Range{ 0u, 6u };
+    const auto& ins_range = Range{ 0u, 6u };
+    const auto& vtx_range = Range{ 0u, 4u };
+    const auto& idx_range = Range{ 0u, 6u };
     const auto& sb_offset = std::nullopt; // std::array<uint32_t, 4>{ 0u, 0u, 0u, 0u };
     const auto& push_data = std::nullopt;
 
     const auto entity = Batch::Entity{
-      { va_views, va_views + uint32_t(std::size(va_views)) },
-      { ia_views, ia_views + uint32_t(std::size(ia_views)) },
+      { va_views, va_views + std::size(va_views) },
+      { ia_views, ia_views + std::size(ia_views) },
       nullptr, //argument_view,
       ins_range,
       vtx_range,
@@ -468,7 +445,7 @@ namespace RayGene3D
 
     const auto skybox_view = skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(level),
       Usage(USAGE_SHADER_RESOURCE),
-      { uint32_t(std::min(0, int32_t(quality) - int32_t(levels))), levels},
+      { uint32_t(std::min(0, int32_t(quality) - int32_t(1u))), 1u},
       { 0u, 6u },
       View::BIND_CUBEMAP_LAYER
     );
@@ -480,10 +457,10 @@ namespace RayGene3D
 
     batches[level] = configs[level]->CreateBatch("environment_reflection_batch_" + std::to_string(level),
       { &entity, 1u },
-      { samplers, uint32_t(std::size(samplers)) },
-      { ub_views, uint32_t(std::size(ub_views)) },
+      { samplers, std::size(samplers) },
+      { ub_views, std::size(ub_views) },
       {},
-      { ri_views, uint32_t(std::size(ri_views)) },
+      { ri_views, std::size(ri_views) },
       {},
       {},
       {}

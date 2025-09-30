@@ -29,7 +29,7 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  void RecursiveBuild2(std::vector<Box>& leaves, uint32_t begin, uint32_t end, std::vector<Box>& nodes, uint32_t depth)
+  void RecursiveBuild2(std::vector<Box>& leaves, size_t begin, size_t end, std::vector<Box>& nodes, uint32_t depth)
   {
     Box node;
 
@@ -152,9 +152,9 @@ namespace RayGene3D
     }
   }
 
-  void MainBuild(std::pair<const Instance*, uint32_t> instances,
-    std::pair<const Triangle*, uint32_t> triangles,
-    std::pair<const Vertex*, uint32_t> vertices,
+  void MainBuild(std::pair<const Instance*, size_t> instances,
+    std::pair<const Triangle*, size_t> triangles,
+    std::pair<const Vertex*, size_t> vertices,
     std::vector<Box>& instance_boxes, std::vector<Box>& triangle_boxes)
   {
     instance_boxes.clear();
@@ -168,10 +168,10 @@ namespace RayGene3D
     {
       const auto& instance = instance_items[i];
 
-      std::vector<Box> triangle_leaves(instance.prim_count);
+      std::vector<Box> triangle_leaves(instance.trng_count);
       for (uint32_t j = 0; j < triangle_leaves.size(); ++j)
       {
-        const auto& triangle = triangle_items[j + instance.prim_offset];
+        const auto& triangle = triangle_items[j + instance.trng_offset];
         const auto& vertex0 = vertex_items[triangle.idx[0] + instance.vert_offset];
         const auto& vertex1 = vertex_items[triangle.idx[1] + instance.vert_offset];
         const auto& vertex2 = vertex_items[triangle.idx[2] + instance.vert_offset];
@@ -184,7 +184,7 @@ namespace RayGene3D
       }
 
       std::vector<Box> nodes;
-      RecursiveBuild2(triangle_leaves, 0, uint32_t(triangle_leaves.size()), nodes, 0);
+      RecursiveBuild2(triangle_leaves, 0u, triangle_leaves.size(), nodes, 0);
 
       uint32_t counter = 0;
       for (uint32_t j = 0; j < nodes.size(); ++j)
@@ -201,7 +201,7 @@ namespace RayGene3D
       {
         if (node.count == 1)
         {
-          const auto& triangle = triangle_items[node.offset + instance.prim_offset];
+          const auto& triangle = triangle_items[node.offset + instance.trng_offset];
           const auto& vertex0 = vertex_items[triangle.idx[0] + instance.vert_offset];
           const auto& vertex1 = vertex_items[triangle.idx[1] + instance.vert_offset];
           const auto& vertex2 = vertex_items[triangle.idx[2] + instance.vert_offset];
@@ -234,19 +234,19 @@ namespace RayGene3D
 
 
     std::vector<Box> instance_leaves(instance_count);
-    for (uint32_t i = 0; i < instance_leaves.size(); ++i)
+    for (size_t i = 0; i < instance_leaves.size(); ++i)
     {
       const auto& instance = instance_items[i];
 
       auto& leaf = instance_leaves[i];
       leaf.offset = i;
       leaf.count = 1;
-      leaf.min = instance.prim_count == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[instance.prim_offset * 2 - i].min;
-      leaf.max = instance.prim_count == 0 ? glm::fvec3{ 0.0f, 0.0f, 0.0f } : triangle_boxes[instance.prim_offset * 2 - i].max;
+      leaf.min = instance.aabb_min;
+      leaf.max = instance.aabb_max;
     }
 
     std::vector<Box> nodes;
-    RecursiveBuild2(instance_leaves, 0, uint32_t(instance_leaves.size()), nodes, 0);
+    RecursiveBuild2(instance_leaves, 0, instance_leaves.size(), nodes, 0);
 
     uint32_t counter = 0;
     for (uint32_t i = 0; i < nodes.size(); ++i)
@@ -283,170 +283,153 @@ namespace RayGene3D
     instance_boxes.insert(instance_boxes.end(), nodes.begin(), nodes.end());;
   }
 
-  void TraceBroker::CreateTraceTBoxes()
+  void TraceBroker::CreateTraceBufferTBox()
   {
-    const auto [data, count] = prop_t_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetTypedBytes<Box>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Box)) * count },
-    };
+    const auto [items, count] = prop_buffer_tbox->GetObjectItem("binary")->GetRawItems<Box>(0);
+    const auto stride = sizeof(Box);
 
-    trace_t_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_t_boxes",
+    trace_buffer_tbox = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_tbox",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Box)),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
       );
   }
 
-  void TraceBroker::CreateTraceBBoxes()
+  void TraceBroker::CreateTraceBufferBBox()
   {
-    const auto [data, count] = prop_b_boxes->GetObjectItem("raws")->GetArrayItem(0)->GetTypedBytes<Box>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Box)) * count },
-    };
+    const auto [items, count] = prop_buffer_bbox->GetObjectItem("binary")->GetRawItems<Box>(0);
+    const auto stride = sizeof(Box);
 
-    trace_b_boxes = wrap.GetCore()->GetDevice()->CreateResource("trace_b_boxes",
+    trace_buffer_bbox = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_bbox",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Box)),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
       );
   }
 
-  void TraceBroker::CreateTraceInstances()
+  void TraceBroker::CreateTraceBufferInst()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Instance)) * count },
-    };
+    const auto [items, count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto stride = sizeof(Instance);
 
-    trace_instances = wrap.GetCore()->GetDevice()->CreateResource("trace_instances",
+    trace_buffer_inst = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_inst",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        uint32_t(sizeof(Instance)),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
       );
   }
 
-  void TraceBroker::CreateTraceTriangles()
+  void TraceBroker::CreateTraceBufferTrng()
   {
-    const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Triangle)) * count },
-    };
+    const auto [items, count] = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+    const auto stride = sizeof(Triangle);
 
-    trace_triangles = wrap.GetCore()->GetDevice()->CreateResource("trace_triangles",
+    trace_buffer_trng = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_trng",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-        uint32_t(sizeof(Triangle)),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { interops, uint32_t(std::size(interops)) }
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
       );
   }
 
-  void TraceBroker::CreateTraceVertices()
+  void TraceBroker::CreateTraceBufferVert()
   {
-    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Vertex)) * count },
-    };
+    const auto [data, count] = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
+    const auto stride = sizeof(Vertex);
 
-    trace_vertices = wrap.GetCore()->GetDevice()->CreateResource("trace_vertices",
+    trace_buffer_vert = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_vert",
       Resource::BufferDesc
       {
         Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
-        uint32_t(sizeof(Vertex)),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
-      { interops, uint32_t(std::size(interops)) }
+      { reinterpret_cast<const uint8_t*>(data), count * stride }
       );
   }
 
-  void TraceBroker::DestroyTraceTBoxes()
+  void TraceBroker::DestroyTraceBufferTBox()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_t_boxes);
-    trace_t_boxes.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_tbox);
+    trace_buffer_tbox.reset();
   }
 
-  void TraceBroker::DestroyTraceBBoxes()
+  void TraceBroker::DestroyTraceBufferBBox()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_b_boxes);
-    trace_b_boxes.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_bbox);
+    trace_buffer_bbox.reset();
   }
 
-  void TraceBroker::DestroyTraceInstances()
+  void TraceBroker::DestroyTraceBufferInst()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_instances);
-    trace_instances.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_inst);
+    trace_buffer_inst.reset();
   }
 
-  void TraceBroker::DestroyTraceTriangles()
+  void TraceBroker::DestroyTraceBufferTrng()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_triangles);
-    trace_triangles.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_trng);
+    trace_buffer_trng.reset();
   }
 
-  void TraceBroker::DestroyTraceVertices()
+  void TraceBroker::DestroyTraceBufferVert()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(trace_vertices);
-    trace_vertices.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_vert);
+    trace_buffer_vert.reset();
   }
 
 
   void TraceBroker::Initialize()
   {
-    if (prop_scene->HasObjectItem("t_boxes")) return;
-    if (prop_scene->HasObjectItem("b_boxes")) return;
+    std::vector<Box> tbox_items;
+    std::vector<Box> bbox_items;
 
-    std::vector<Box> t_boxes;
-    std::vector<Box> b_boxes;
+    const auto inst_items = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto trng_items = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+    const auto vert_items = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
 
-    const auto instance_items = prop_instances->GetTypedBytes<Instance>(0);
-    const auto triangle_items = prop_triangles->GetTypedBytes<Triangle>(0);
-    const auto vertex_items = prop_vertices->GetTypedBytes<Vertex>(0);
+    CreateTraceBufferInst();
+    CreateTraceBufferTrng();
+    CreateTraceBufferVert();
 
-    CreateTraceInstances();
-    CreateTraceTriangles();
-    CreateTraceVertices();
-
-
-    MainBuild(instance_items, triangle_items, vertex_items, t_boxes, b_boxes);
+    MainBuild(inst_items, trng_items, vert_items, tbox_items, bbox_items);
 
     {
-      const auto data = t_boxes.data();
-      const auto stride = uint32_t(sizeof(RayGene3D::Box));
-      const auto count = uint32_t(t_boxes.size());
-      auto raw = Raw({ data, stride * count });
-      prop_t_boxes = CreateBufferProperty({ &raw, 1u }, stride, count);
-      prop_scene->SetObjectItem("t_boxes", prop_t_boxes);
+      const auto buffer_tbox = StructureBuffer<Box>({ tbox_items.data(), tbox_items.size() });
+      prop_buffer_tbox = buffer_tbox.Export();
+      prop_scene->SetObjectItem("buffer_tbox", prop_buffer_tbox);
     }
-    CreateTraceTBoxes();
+    CreateTraceBufferTBox();
 
     {
-      const auto data = b_boxes.data();
-      const auto stride = uint32_t(sizeof(RayGene3D::Box));
-      const auto count = uint32_t(b_boxes.size());
-      auto raw = Raw({ data, stride * count });
-      prop_b_boxes = CreateBufferProperty({ &raw, 1u }, stride, count);
-      prop_scene->SetObjectItem("b_boxes", prop_b_boxes);
+      const auto buffer_bbox = StructureBuffer<Box>({ bbox_items.data(), bbox_items.size() });
+      prop_buffer_bbox = buffer_bbox.Export();
+      prop_scene->SetObjectItem("buffer_bbox", prop_buffer_bbox);
     }
-    CreateTraceBBoxes();
+    CreateTraceBufferBBox();
+
+    //CreateTraceBufferTBox();
+    //CreateTraceBufferBBox();
   }
 
   void TraceBroker::Use()
@@ -463,12 +446,12 @@ namespace RayGene3D
     //DestroyTraceTBoxes();
     //DestroyTraceBBoxes();
 
-    prop_t_boxes.reset();
-    prop_b_boxes.reset();
+    prop_buffer_tbox.reset();
+    prop_buffer_bbox.reset();
 
-    prop_vertices.reset();
-    prop_triangles.reset();
-    prop_instances.reset();
+    prop_buffer_inst.reset();
+    prop_buffer_trng.reset();
+    prop_buffer_vert.reset();
 
     prop_scene.reset();
   }
@@ -476,13 +459,16 @@ namespace RayGene3D
   TraceBroker::TraceBroker(Wrap& wrap)
     : Broker("trace_broker", wrap)
   {
-    const auto tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& tree = wrap.GetUtil()->GetStorage()->GetTree();
 
     prop_scene = tree->GetObjectItem("scene");
     {
-      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
+      prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
+      prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
+
+      prop_buffer_tbox = prop_scene->GetObjectItem("buffer_tbox");
+      prop_buffer_bbox = prop_scene->GetObjectItem("buffer_bbox");
     }
   }
 

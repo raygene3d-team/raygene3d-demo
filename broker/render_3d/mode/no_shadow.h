@@ -52,11 +52,7 @@ namespace RayGene3D
       void DestroyUnshadowedPass();
 
     public:
-      void Enable() override;
-      void Disable() override;
-
-    public:
-      NoShadow(const Scope& scope);
+      NoShadow(Scope& scope, bool use_mesh_pipe);
       virtual ~NoShadow();
     };
   }

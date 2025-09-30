@@ -34,7 +34,7 @@ namespace RayGene3D
   namespace Lightmap
   {
     void RasterizeTriangle(const glm::f32vec2& p0, const glm::f32vec2& p1, const glm::f32vec2& p2,
-      uint32_t inst_id, uint32_t prim_id, uint32_t size_x, uint32_t size_y, Raw& raw)
+      uint32_t inst_id, uint32_t prim_id, uint32_t size_x, uint32_t size_y, uint32_t layer, Raw& raw)
     {
       const auto eval_barycentric_fn = [](const glm::f32vec2& p,
         const glm::f32vec2& a, const glm::f32vec2& b, const glm::f32vec2& c)
@@ -88,7 +88,7 @@ namespace RayGene3D
           const auto value = glm::u32vec4{ inst_id, prim_id, u, v };
           const auto index = n * size_x + m;
 
-          raw.SetElement<glm::u32vec4>(value, index);
+          raw.SetItem<glm::u32vec4>(value, size_t(size_x * size_y) * layer + index);
         }
       }
     }
@@ -106,115 +106,82 @@ namespace RayGene3D
         );
     }
 
-    void Scope::CreateSceneInstances()
+    void Scope::CreateSceneBufferInst()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_instances", scene_instances));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_inst", scene_buffer_inst));
     }
 
-    void Scope::CreateSceneTriangles()
+    void Scope::CreateSceneBufferTrng()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_triangles", scene_triangles));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_trng", scene_buffer_trng));
     }
 
-    void Scope::CreateSceneVertices()
+    void Scope::CreateSceneBufferVert()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_vertices", scene_vertices));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_vert", scene_buffer_vert));
     }
 
-    void Scope::CreateTraceTBoxes()
+    void Scope::CreateTraceBufferTBox()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_t_boxes", trace_t_boxes));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_tbox", trace_buffer_tbox));
     }
 
-    void Scope::CreateTraceBBoxes()
+    void Scope::CreateTraceBufferBBox()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_b_boxes", trace_b_boxes));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_bbox", trace_buffer_bbox));
     }
 
-    void Scope::CreateTraceInstances()
+    void Scope::CreateTraceBufferInst()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_instances", trace_instances));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_inst", trace_buffer_inst));
     }
 
-    void Scope::CreateTraceTriangles()
+    void Scope::CreateTraceBufferTrng()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_triangles", trace_triangles));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_trng", trace_buffer_trng));
     }
 
-    void Scope::CreateTraceVertices()
+    void Scope::CreateTraceBufferVert()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_vertices", trace_vertices));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_vert", trace_buffer_vert));
     }
 
-    void Scope::CreateSceneTextures0()
+    void Scope::CreateSceneArrayAAAM()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures0", scene_textures0));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_array_aaam", scene_array_aaam));
     }
 
-    void Scope::CreateSceneTextures1()
+    void Scope::CreateSceneArraySNNO()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures1", scene_textures1));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_array_snno", scene_array_snno));
     }
 
-    void Scope::CreateSceneTextures2()
+    void Scope::CreateSceneArrayEEET()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures2", scene_textures2));
-    }
-
-    void Scope::CreateSceneTextures3()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures3", scene_textures3));
-    }
-
-    void Scope::CreateSceneTextures4()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures4", scene_textures4));
-    }
-
-    void Scope::CreateSceneTextures5()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures5", scene_textures5));
-    }
-
-    void Scope::CreateSceneTextures6()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures6", scene_textures6));
-    }
-
-    void Scope::CreateSceneTextures7()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures7", scene_textures7));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_array_eeet", scene_array_eeet));
     }
 
     void Scope::CreateLightmapsInput()
     {
-      const auto atlas_size_x = prop_atlas_size_x->GetUint();
-      const auto atlas_size_y = prop_atlas_size_y->GetUint();
-      const auto atlas_layers = prop_atlas_layers->GetUint();
+      const auto format = FORMAT_R32G32B32A32_UINT;
+      const auto size_x = prop_atlas_size_x->GetUint();
+      const auto size_y = prop_atlas_size_y->GetUint();
+      const auto layers = prop_atlas_layers->GetUint();
+      const auto mipmap = 1u;
 
-      auto raws = std::vector<Raw>(atlas_layers);
-      for (auto& raw : raws)
+      auto raw = Raw(size_x * size_y * layers, glm::u32vec4{ uint32_t(-1), uint32_t(-1), 0, 0 });
       {
-        raw.Allocate(atlas_size_x * atlas_size_y * uint32_t(sizeof(glm::u32vec4)));
-
-        for (auto i = 0u; i < atlas_size_x * atlas_size_y; ++i)
-        {
-          raw.SetElement(glm::u32vec4{ uint32_t(-1), uint32_t(-1), 0, 0 }, i);
-        }
-      }
-
-      {
-        const auto [ins_array, ins_count] = prop_instances->GetTypedBytes<Instance>(0);
-        const auto [trg_array, trg_count] = prop_triangles->GetTypedBytes<Triangle>(0);
-        const auto [vrt_array, vrt_count] = prop_vertices->GetTypedBytes<Vertex>(0);
+        const auto [ins_array, ins_count] = prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+        const auto [trg_array, trg_count] = prop_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+        const auto [vrt_array, vrt_count] = prop_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
 
         for (uint32_t i = 0; i < ins_count; ++i)
         {
           const auto& ins = ins_array[i];
 
-          for (uint32_t j = 0; j < ins.prim_count; ++j)
+          for (uint32_t j = 0; j < ins.trng_count; ++j)
           {
-            const auto& trg = trg_array[ins.prim_offset + j];
+            const auto& trg = trg_array[ins.trng_offset + j];
 
             const auto& vtx0 = vrt_array[ins.vert_offset + trg.idx[0]];
             const auto& vtx1 = vrt_array[ins.vert_offset + trg.idx[1]];
@@ -223,108 +190,75 @@ namespace RayGene3D
             const auto& layer = vtx0.msk;
             const auto& color = vtx0.col;
 
-            const auto p0 = vtx0.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
-            const auto p1 = vtx1.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
-            const auto p2 = vtx2.tc1 * glm::f32vec2(atlas_size_x, atlas_size_y);
+            const auto p0 = vtx0.tc1 * glm::f32vec2(size_x, size_y);
+            const auto p1 = vtx1.tc1 * glm::f32vec2(size_x, size_y);
+            const auto p2 = vtx2.tc1 * glm::f32vec2(size_x, size_y);
 
-            RasterizeTriangle(p0, p1, p2, i, j, atlas_size_x, atlas_size_y, raws[layer]);
+            //RasterizeTriangle(p0, p1, p2, i, j, size_x, size_y, layer, raw);
           }
         }
-      }
-
-      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
-      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      {
-        interops[i] = raws[i].AccessBytes();
       }
 
       lightmaps_input = core->GetDevice()->CreateResource("lightmaps_input",
         Resource::Tex2DDesc
         {
           Usage(USAGE_SHADER_RESOURCE),
-          1u,
-          prop_atlas_layers->GetUint(),
-          FORMAT_R32G32B32A32_UINT,
-          prop_atlas_size_x->GetUint(),
-          prop_atlas_size_y->GetUint(),
+          mipmap,
+          layers,
+          format,
+          size_x,
+          size_y,
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), uint32_t(interops.size()) }
-        );
+        raw.GetBytes());
     }
 
     void Scope::CreateLightmapsAccum()
     {
-      const auto stride = uint32_t(sizeof(glm::f32vec4));
-      const auto count = uint32_t(prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint());
-      
-      auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
-      for (auto i = 0u; i < uint32_t(raws.size()); ++i)
-      {
-        auto raw = RayGene3D::Raw{ stride * count };
-        for (auto j = 0u; j < count; ++j)
-        {
-          raw.SetElement<glm::f32vec4>({ 0.0f, 0.0f, 0.0f, 0.0f }, j);
-        }
-        raws[i] = std::move(raw);
-      }
+      const auto format = FORMAT_R32G32B32A32_FLOAT;
+      const auto size_x = prop_atlas_size_x->GetUint();
+      const auto size_y = prop_atlas_size_y->GetUint();
+      const auto layers = prop_atlas_layers->GetUint();
+      const auto mipmap = 1u;
 
-      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
-      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      {
-        interops[i] = raws[i].AccessBytes();
-      }
+      const auto raw = Raw(size_x * size_y * layers, glm::zero<glm::f32vec4>());
 
       lightmaps_accum = core->GetDevice()->CreateResource("lightmaps_accum",
         Resource::Tex2DDesc
         {
           Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
-          1u,
-          prop_atlas_layers->GetUint(),
-          FORMAT_R32G32B32A32_FLOAT,
-          prop_atlas_size_x->GetUint(),
-          prop_atlas_size_y->GetUint(),
+          mipmap,
+          layers,
+          format,
+          size_x,
+          size_y,
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), uint32_t(interops.size()) }
-        );
+        raw.GetBytes());
     }
 
     void Scope::CreateLightmapsFinal()
     {
-      const auto stride = uint32_t(sizeof(glm::f32vec4));
-      const auto count = uint32_t(prop_atlas_size_x->GetUint() * prop_atlas_size_y->GetUint());
+      const auto format = FORMAT_R32G32B32A32_FLOAT;
+      const auto size_x = prop_atlas_size_x->GetUint();
+      const auto size_y = prop_atlas_size_y->GetUint();
+      const auto layers = prop_atlas_layers->GetUint();
+      const auto mipmap = 1u;
 
-      auto raws = std::vector<Raw>(prop_atlas_layers->GetUint());
-      for (auto i = 0u; i < uint32_t(raws.size()); ++i)
-      {
-        auto raw = RayGene3D::Raw{ stride * count };
-        for (auto j = 0u; j < count; ++j)
-        {
-          raw.SetElement<glm::f32vec4>({ 0, 0, 0, 0 }, j);
-        }
-        raws[i] = std::move(raw);
-      }
-
-      auto interops = std::vector<std::pair<const void*, uint32_t>>(raws.size());
-      for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-      {
-        interops[i] = raws[i].AccessBytes();
-      }
+      const auto raw = Raw(size_x * size_y * layers, glm::zero<glm::f32vec4>());
 
       lightmaps_final = core->GetDevice()->CreateResource("lightmaps_final",
         Resource::Tex2DDesc
         {
           Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
-          1u,
-          prop_atlas_layers->GetUint(),
-          FORMAT_R32G32B32A32_FLOAT,
-          prop_atlas_size_x->GetUint(),
-          prop_atlas_size_y->GetUint(),
+          mipmap,
+          layers,
+          format,
+          size_x,
+          size_y,
         },
         Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-        { interops.data(), uint32_t(interops.size()) }
-        );
+        raw.GetBytes());
     }
 
     void Scope::DestroyScreenData()
@@ -333,100 +267,70 @@ namespace RayGene3D
       screen_data.reset();
     }
 
-    void Scope::DestroySceneInstances()
+    void Scope::DestroySceneBufferInst()
     {
-      core->GetDevice()->DestroyResource(scene_instances);
-      scene_instances.reset();
+      core->GetDevice()->DestroyResource(scene_buffer_inst);
+      scene_buffer_inst.reset();
     }
 
-    void Scope::DestroySceneTriangles()
+    void Scope::DestroySceneBufferTrng()
     {
-      core->GetDevice()->DestroyResource(scene_triangles);
-      scene_triangles.reset();
+      core->GetDevice()->DestroyResource(scene_buffer_trng);
+      scene_buffer_trng.reset();
     }
 
-    void Scope::DestroySceneVertices()
+    void Scope::DestroySceneBufferVert()
     {
-      core->GetDevice()->DestroyResource(scene_vertices);
-      scene_vertices.reset();
+      core->GetDevice()->DestroyResource(scene_buffer_vert);
+      scene_buffer_vert.reset();
     }
 
-    void Scope::DestroyTraceTBoxes()
+    void Scope::DestroyTraceBufferTBox()
     {
-      core->GetDevice()->DestroyResource(trace_t_boxes);
-      trace_t_boxes.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_tbox);
+      trace_buffer_tbox.reset();
     }
 
-    void Scope::DestroyTraceBBoxes()
+    void Scope::DestroyTraceBufferBBox()
     {
-      core->GetDevice()->DestroyResource(trace_b_boxes);
-      trace_b_boxes.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_bbox);
+      trace_buffer_bbox.reset();
     }
 
-    void Scope::DestroyTraceInstances()
+    void Scope::DestroyTraceBufferInst()
     {
-      core->GetDevice()->DestroyResource(trace_instances);
-      trace_instances.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_inst);
+      trace_buffer_inst.reset();
     }
 
-    void Scope::DestroyTraceTriangles()
+    void Scope::DestroyTraceBufferTrng()
     {
-      core->GetDevice()->DestroyResource(trace_triangles);
-      trace_triangles.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_trng);
+      trace_buffer_trng.reset();
     }
 
-    void Scope::DestroyTraceVertices()
+    void Scope::DestroyTraceBufferVert()
     {
-      core->GetDevice()->DestroyResource(trace_vertices);
-      trace_vertices.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_vert);
+      trace_buffer_vert.reset();
     }
 
-    void Scope::DestroySceneTextures0()
+    void Scope::DestroySceneArrayAAAM()
     {
-      core->GetDevice()->DestroyResource(scene_textures0);
-      scene_textures0.reset();
+      core->GetDevice()->DestroyResource(scene_array_aaam);
+      scene_array_aaam.reset();
     }
 
-    void Scope::DestroySceneTextures1()
+    void Scope::DestroySceneArraySNNO()
     {
-      core->GetDevice()->DestroyResource(scene_textures1);
-      scene_textures1.reset();
+      core->GetDevice()->DestroyResource(scene_array_snno);
+      scene_array_snno.reset();
     }
 
-    void Scope::DestroySceneTextures2()
+    void Scope::DestroySceneArrayEEET()
     {
-      core->GetDevice()->DestroyResource(scene_textures2);
-      scene_textures2.reset();
-    }
-
-    void Scope::DestroySceneTextures3()
-    {
-      core->GetDevice()->DestroyResource(scene_textures3);
-      scene_textures3.reset();
-    }
-
-    void Scope::DestroySceneTextures4()
-    {
-      core->GetDevice()->DestroyResource(scene_textures4);
-      scene_textures4.reset();
-    }
-
-    void Scope::DestroySceneTextures5()
-    {
-      core->GetDevice()->DestroyResource(scene_textures5);
-      scene_textures5.reset();
-    }
-
-    void Scope::DestroySceneTextures6()
-    {
-      core->GetDevice()->DestroyResource(scene_textures6);
-      scene_textures6.reset();
-    }
-
-    void Scope::DestroySceneTextures7()
-    {
-      core->GetDevice()->DestroyResource(scene_textures7);
-      scene_textures7.reset();
+      core->GetDevice()->DestroyResource(scene_array_eeet);
+      scene_array_eeet.reset();
     }
 
     void Scope::DestroyLightmapsInput()
@@ -453,9 +357,9 @@ namespace RayGene3D
     {
       prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
       {
-        prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-        prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-        prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+        prop_inst = prop_scene->GetObjectItem("buffer_inst");
+        prop_trng = prop_scene->GetObjectItem("buffer_trng");
+        prop_vert = prop_scene->GetObjectItem("buffer_vert");
       }
 
       prop_camera = util->GetStorage()->GetTree()->GetObjectItem("camera");
@@ -478,25 +382,20 @@ namespace RayGene3D
       CreateLightmapsAccum();
       CreateLightmapsFinal();
 
-      CreateSceneInstances();
-      CreateSceneTriangles();
-      CreateSceneVertices();
+      CreateSceneBufferInst();
+      CreateSceneBufferTrng();
+      CreateSceneBufferVert();
 
-      CreateTraceTBoxes();
-      CreateTraceBBoxes();
+      CreateTraceBufferTBox();
+      CreateTraceBufferBBox();
 
-      CreateTraceInstances();
-      CreateTraceTriangles();
-      CreateTraceVertices();
+      CreateTraceBufferInst();
+      CreateTraceBufferTrng();
+      CreateTraceBufferVert();
 
-      CreateSceneTextures0();
-      CreateSceneTextures1();
-      CreateSceneTextures2();
-      CreateSceneTextures3();
-      CreateSceneTextures4();
-      CreateSceneTextures5();
-      CreateSceneTextures6();
-      CreateSceneTextures7();
+      CreateSceneArrayAAAM();
+      CreateSceneArraySNNO();
+      CreateSceneArrayEEET();
     }
 
     Scope::~Scope()

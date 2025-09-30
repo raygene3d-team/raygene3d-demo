@@ -47,6 +47,8 @@ namespace RayGene3D
         {},
         {}
       );
+
+      hw_traced_pass->SetEnabled(true);
     }
 
 
@@ -56,6 +58,7 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/spark_hw_traced.glsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -63,7 +66,7 @@ namespace RayGene3D
       hw_traced_config = hw_traced_pass->CreateConfig("spark_hw_traced_config",
         shader_ss.str(),
         Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
-        { defines.data(), uint32_t(defines.size()) },
+        { defines.data(), defines.size() },
         {},
         {},
         {},
@@ -73,33 +76,33 @@ namespace RayGene3D
 
     void HWTracedShadow::CreateHWTracedBatch()
     {
-      const auto [data, count] = scope.prop_instances->GetTypedBytes<Instance>(0);
+      const auto [items, count] = scope.prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
       auto entities = std::vector<Batch::Entity>(count);
       for (auto i = 0u; i < count; ++i)
       {
-        auto hw_traced_trace_vertices = scope.trace_vertices->CreateView("spark_hw_traced_trace_vertices_" + std::to_string(i),
+        const auto& hw_traced_trace_vertices = scope.trace_buffer_vert->CreateView("spark_hw_traced_trace_vertices_" + std::to_string(i),
           Usage(USAGE_SHADER_RESOURCE)
         );
         const std::shared_ptr<View> va_views[] = {
           hw_traced_trace_vertices,
         };
 
-        auto hw_traced_trace_triangles = scope.trace_triangles->CreateView("spark_hw_traced_trace_triangles_" + std::to_string(i),
+        const auto& hw_traced_trace_triangles = scope.trace_buffer_trng->CreateView("spark_hw_traced_trace_triangles_" + std::to_string(i),
           Usage(USAGE_SHADER_RESOURCE)
         );
         const std::shared_ptr<View> ia_views[] = {
           hw_traced_trace_triangles,
         };
 
-        const auto& ins_range = View::Range{ 1u,  0u };
-        const auto& vtx_range = View::Range{ data[i].vert_offset * 1, data[i].vert_count * 1 };
-        const auto& idx_range = View::Range{ data[i].prim_offset * 3, data[i].prim_count * 3 };
+        const auto& ins_range = Range{ 1u,  0u };
+        const auto& vtx_range = Range{ items[i].vert_offset * 1, items[i].vert_count * 1 };
+        const auto& idx_range = Range{ items[i].trng_offset * 3, items[i].trng_count * 3 };
         const auto& sb_offset = std::nullopt;
         const auto& push_data = std::nullopt;
 
         entities[i] = {
-          { va_views, va_views + uint32_t(std::size(va_views)) },
-          { ia_views, ia_views + uint32_t(std::size(ia_views)) },
+          { va_views, va_views + std::size(va_views) },
+          { ia_views, ia_views + std::size(ia_views) },
           nullptr,
           ins_range,
           vtx_range,
@@ -113,13 +116,13 @@ namespace RayGene3D
         { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
       };
 
-      auto hw_traced_screen_data = scope.screen_data->CreateView("spark_hw_traced_screen_data",
+      const auto& hw_traced_screen_data = scope.screen_data->CreateView("spark_hw_traced_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto hw_traced_camera_data = scope.camera_data->CreateView("spark_hw_traced_camera_data",
+      const auto& hw_traced_camera_data = scope.camera_data->CreateView("spark_hw_traced_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      auto hw_traced_shadow_data = scope.shadow_data->CreateView("spark_hw_traced_shadow_data",
+      const auto& hw_traced_shadow_data = scope.shadow_data->CreateView("spark_hw_traced_shadow_data",
         Usage(USAGE_CONSTANT_DATA),
         { 0, sizeof(Frustum) }
       );
@@ -129,13 +132,13 @@ namespace RayGene3D
         hw_traced_shadow_data,
       };
 
-      auto hw_traced_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_hw_traced_gbuffer_0_texture",
+      const auto& hw_traced_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_hw_traced_gbuffer_0_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto hw_traced_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_hw_traced_gbuffer_1_texture",
+      const auto& hw_traced_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_hw_traced_gbuffer_1_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      auto hw_traced_depth_texture = scope.depth_target->CreateView("spark_hw_traced_depth_texture",
+      const auto& hw_traced_depth_texture = scope.depth_target->CreateView("spark_hw_traced_depth_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
@@ -144,7 +147,7 @@ namespace RayGene3D
         hw_traced_depth_texture,
       };
 
-      auto hw_traced_color_texture = scope.color_target->CreateView("spark_hw_traced_color_texture",
+      const auto& hw_traced_color_texture = scope.color_target->CreateView("spark_hw_traced_color_texture",
         Usage(USAGE_UNORDERED_ACCESS)
       );
       const std::shared_ptr<View> wi_views[] = {
@@ -152,12 +155,12 @@ namespace RayGene3D
       };
 
       hw_traced_batch = hw_traced_config->CreateBatch("spark_hw_traced_batch",
-        { entities.data(), uint32_t(entities.size()) },
-        { samplers, uint32_t(std::size(samplers)) },
-        { ub_views, uint32_t(std::size(ub_views)) },
+        { entities.data(), entities.size() },
+        { samplers, std::size(samplers) },
+        { ub_views, std::size(ub_views) },
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
-        { wi_views, uint32_t(std::size(wi_views)) },
+        { ri_views, std::size(ri_views) },
+        { wi_views, std::size(wi_views) },
         {},
         {}
       );
@@ -181,22 +184,8 @@ namespace RayGene3D
       hw_traced_pass.reset();
     }
 
-    void HWTracedShadow::Enable()
-    {
-      geometry_pass->SetEnabled(true);
-      hw_traced_pass->SetEnabled(true);
-      present_pass->SetEnabled(true);
-    }
-
-    void HWTracedShadow::Disable()
-    {
-      geometry_pass->SetEnabled(false);
-      hw_traced_pass->SetEnabled(false);
-      present_pass->SetEnabled(false);
-    }
-
-    HWTracedShadow::HWTracedShadow(const Scope& scope)
-      : Mode(scope)
+    HWTracedShadow::HWTracedShadow(Scope& scope, bool use_mesh_pipe)
+      : Mode(scope, use_mesh_pipe)
     {
       CreateGeometryPass();
       CreateGeometryConfig();

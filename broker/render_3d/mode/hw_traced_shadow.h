@@ -52,11 +52,7 @@ namespace RayGene3D
       void DestroyHWTracedPass();
 
     public:
-      void Enable() override;
-      void Disable() override;
-
-    public:
-      HWTracedShadow(const Scope& scope);
+      HWTracedShadow(Scope& scope, bool use_mesh_pipe);
       virtual ~HWTracedShadow();
     };
   }

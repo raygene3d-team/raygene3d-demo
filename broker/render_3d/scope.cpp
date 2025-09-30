@@ -114,7 +114,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
-          uint32_t(sizeof(Screen)),
+          sizeof(Screen),
           1,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -127,7 +127,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
-          uint32_t(sizeof(Frustum)),
+          sizeof(Frustum),
           1,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
@@ -140,107 +140,97 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
-          uint32_t(sizeof(Frustum)),
+          sizeof(Frustum),
           1,
         },
         Resource::Hint(Resource::HINT_DYNAMIC_BUFFER)
         );
     }
 
-    void Scope::CreateSceneInstances()
+    void Scope::CreateSceneBufferVert()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_instances", scene_instances));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_vert", scene_buffer_vert));
     }
 
-    void Scope::CreateSceneTriangles()
+    void Scope::CreateSceneBufferTrng()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_triangles", scene_triangles));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_trng", scene_buffer_trng));
     }
 
-    void Scope::CreateSceneVertices()
+    void Scope::CreateSceneBufferInst()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_vertices", scene_vertices));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_buffer_inst", scene_buffer_inst));
     }
 
-    void Scope::CreateTraceTBoxes()
+    void Scope::CreateTraceBufferInst()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_t_boxes", trace_t_boxes));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_inst", trace_buffer_inst));
     }
 
-    void Scope::CreateTraceBBoxes()
+    void Scope::CreateTraceBufferTBox()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_b_boxes", trace_b_boxes));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_tbox", trace_buffer_tbox));
     }
 
-    void Scope::CreateTraceInstances()
+    void Scope::CreateTraceBufferBBox()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_instances", trace_instances));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_bbox", trace_buffer_bbox));
     }
 
-    void Scope::CreateTraceTriangles()
+    void Scope::CreateTraceBufferVIdx()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_triangles", trace_triangles));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_vidx", trace_buffer_vidx));
     }
 
-    void Scope::CreateTraceVertices()
+    void Scope::CreateTraceBufferTIdx()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_vertices", trace_vertices));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_tidx", trace_buffer_tidx));
     }
 
-    void Scope::CreateSceneTextures0()
+    void Scope::CreateTraceBufferVert()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures0", scene_textures0));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_vert", trace_buffer_vert));
     }
 
-    void Scope::CreateSceneTextures1()
+    void Scope::CreateTraceBufferTrng()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures1", scene_textures1));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_trng", trace_buffer_trng));
     }
 
-    void Scope::CreateSceneTextures2()
+    void Scope::CreateTraceBufferMlet()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures2", scene_textures2));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("trace_buffer_mlet", trace_buffer_mlet));
     }
 
-    void Scope::CreateSceneTextures3()
+    void Scope::CreateSceneArrayAAAM()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures3", scene_textures3));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_array_aaam", scene_array_aaam));
     }
 
-    void Scope::CreateSceneTextures4()
+    void Scope::CreateSceneArraySNNO()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures4", scene_textures4));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_array_snno", scene_array_snno));
     }
 
-    void Scope::CreateSceneTextures5()
+    void Scope::CreateSceneArrayEEET()
     {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures5", scene_textures5));
+      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_array_eeet", scene_array_eeet));
     }
 
-    void Scope::CreateSceneTextures6()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures6", scene_textures6));
-    }
+    //void Scope::CreateLightmapsInput()
+    //{
+    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_input", lightmaps_input));
+    //}
 
-    void Scope::CreateSceneTextures7()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("scene_textures7", scene_textures7));
-    }
+    //void Scope::CreateLightmapsAccum()
+    //{
+    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_accum", lightmaps_accum));
+    //}
 
-    void Scope::CreateLightmapsInput()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_input", lightmaps_input));
-    }
-
-    void Scope::CreateLightmapsAccum()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_accum", lightmaps_accum));
-    }
-
-    void Scope::CreateLightmapsFinal()
-    {
-      BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_final", lightmaps_final));
-    }
+    //void Scope::CreateLightmapsFinal()
+    //{
+    //  BLAST_ASSERT(core->GetDevice()->ObtainResource("lightmaps_final", lightmaps_final));
+    //}
 
     void Scope::CreateScreenQuadVertices()
     {
@@ -251,19 +241,15 @@ namespace RayGene3D
         glm::f32vec2( 1.0f,-1.0f),
       };
 
-      std::pair<const void*, uint32_t> interops[] = {
-        { quad_vtx.data(), uint32_t(quad_vtx.size() * sizeof(glm::f32vec2)) },
-      };
-
       screen_quad_vertices = core->GetDevice()->CreateResource("spark_screen_quad_vertices",
         Resource::BufferDesc
         {
           Usage(USAGE_VERTEX_ARRAY),
-          uint32_t(sizeof(glm::f32vec2)),
-          uint32_t(quad_vtx.size()),
+          sizeof(glm::f32vec2),
+          quad_vtx.size(),
         },
         Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-        { interops, uint32_t(std::size(interops)) }
+        { reinterpret_cast<const uint8_t*>(quad_vtx.data()), quad_vtx.size() * sizeof(glm::f32vec2) }
       );
     }
 
@@ -274,19 +260,15 @@ namespace RayGene3D
         glm::u32vec3(3u, 2u, 1u),
       };
 
-      std::pair<const void*, uint32_t> interops[] = {
-        { quad_idx.data(), uint32_t(quad_idx.size() * sizeof(glm::u32vec3)) },
-      };
-
       screen_quad_triangles = core->GetDevice()->CreateResource("spark_screen_quad_triangles",
         Resource::BufferDesc
         {
           Usage(USAGE_INDEX_ARRAY),
-          uint32_t(sizeof(glm::u32vec3)),
-          uint32_t(quad_idx.size()),
+          sizeof(glm::u32vec3),
+          quad_idx.size(),
         },
         Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-        { interops, uint32_t(std::size(interops)) }
+        { reinterpret_cast<const uint8_t*>(quad_idx.data()), quad_idx.size() * sizeof(glm::u32vec3) }
       );
     }
 
@@ -302,14 +284,14 @@ namespace RayGene3D
 
     void Scope::CreateGraphicArguments()
     {
-      const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
+      const auto [data, count] = prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
 
       graphic_arguments = core->GetDevice()->CreateResource("spark_graphic_arguments",
         Resource::BufferDesc
         {
           Usage(USAGE_ARGUMENT_LIST),
-          uint32_t(sizeof(Batch::Graphic)),
-          uint32_t(count),
+          sizeof(Batch::Graphic),
+          count,
         },
         Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
         );
@@ -321,7 +303,7 @@ namespace RayGene3D
         Resource::BufferDesc
         {
           Usage(USAGE_ARGUMENT_LIST),
-          uint32_t(sizeof(Batch::Compute)),
+          sizeof(Batch::Compute),
           1u,
         },
         Resource::Hint(Resource::Hint::HINT_DYNAMIC_BUFFER)
@@ -376,100 +358,88 @@ namespace RayGene3D
       shadow_data.reset();
     }
 
-    void Scope::DestroySceneInstances()
+    void Scope::DestroySceneBufferVert()
     {
-      core->GetDevice()->DestroyResource(scene_instances);
-      scene_instances.reset();
+      core->GetDevice()->DestroyResource(scene_buffer_vert);
+      scene_buffer_vert.reset();
     }
 
-    void Scope::DestroySceneTriangles()
+    void Scope::DestroySceneBufferTrng()
     {
-      core->GetDevice()->DestroyResource(scene_triangles);
-      scene_triangles.reset();
+      core->GetDevice()->DestroyResource(scene_buffer_trng);
+      scene_buffer_trng.reset();
     }
 
-    void Scope::DestroySceneVertices()
+    void Scope::DestroySceneBufferInst()
     {
-      core->GetDevice()->DestroyResource(scene_vertices);
-      scene_vertices.reset();
+      core->GetDevice()->DestroyResource(scene_buffer_inst);
+      scene_buffer_inst.reset();
     }
 
-    void Scope::DestroyTraceTBoxes()
+    void Scope::DestroyTraceBufferInst()
     {
-      core->GetDevice()->DestroyResource(trace_t_boxes);
-      trace_t_boxes.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_inst);
+      trace_buffer_inst.reset();
     }
 
-    void Scope::DestroyTraceBBoxes()
+    void Scope::DestroyTraceBufferTBox()
     {
-      core->GetDevice()->DestroyResource(trace_b_boxes);
-      trace_b_boxes.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_tbox);
+      trace_buffer_tbox.reset();
     }
 
-    void Scope::DestroyTraceInstances()
+    void Scope::DestroyTraceBufferBBox()
     {
-      core->GetDevice()->DestroyResource(trace_instances);
-      trace_instances.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_bbox);
+      trace_buffer_bbox.reset();
     }
 
-    void Scope::DestroyTraceTriangles()
+    void Scope::DestroyTraceBufferVIdx()
     {
-      core->GetDevice()->DestroyResource(trace_triangles);
-      trace_triangles.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_vidx);
+      trace_buffer_vidx.reset();
     }
 
-    void Scope::DestroyTraceVertices()
+    void Scope::DestroyTraceBufferTIdx()
     {
-      core->GetDevice()->DestroyResource(trace_vertices);
-      trace_vertices.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_tidx);
+      trace_buffer_tidx.reset();
     }
 
-    void Scope::DestroySceneTextures0()
+    void Scope::DestroyTraceBufferVert()
     {
-      core->GetDevice()->DestroyResource(scene_textures0);
-      scene_textures0.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_vert);
+      trace_buffer_vert.reset();
     }
 
-    void Scope::DestroySceneTextures1()
+    void Scope::DestroyTraceBufferTrng()
     {
-      core->GetDevice()->DestroyResource(scene_textures1);
-      scene_textures1.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_trng);
+      trace_buffer_trng.reset();
     }
 
-    void Scope::DestroySceneTextures2()
+    void Scope::DestroyTraceBufferMlet()
     {
-      core->GetDevice()->DestroyResource(scene_textures2);
-      scene_textures2.reset();
+      core->GetDevice()->DestroyResource(trace_buffer_mlet);
+      trace_buffer_mlet.reset();
     }
 
-    void Scope::DestroySceneTextures3()
+    void Scope::DestroySceneArrayAAAM()
     {
-      core->GetDevice()->DestroyResource(scene_textures3);
-      scene_textures3.reset();
+      core->GetDevice()->DestroyResource(scene_array_aaam);
+      scene_array_aaam.reset();
     }
 
-    void Scope::DestroySceneTextures4()
+    void Scope::DestroySceneArraySNNO()
     {
-      core->GetDevice()->DestroyResource(scene_textures4);
-      scene_textures4.reset();
+      core->GetDevice()->DestroyResource(scene_array_snno);
+      scene_array_snno.reset();
     }
 
-    void Scope::DestroySceneTextures5()
+    void Scope::DestroySceneArrayEEET()
     {
-      core->GetDevice()->DestroyResource(scene_textures5);
-      scene_textures5.reset();
-    }
-
-    void Scope::DestroySceneTextures6()
-    {
-      core->GetDevice()->DestroyResource(scene_textures6);
-      scene_textures6.reset();
-    }
-
-    void Scope::DestroySceneTextures7()
-    {
-      core->GetDevice()->DestroyResource(scene_textures7);
-      scene_textures7.reset();
+      core->GetDevice()->DestroyResource(scene_array_eeet);
+      scene_array_eeet.reset();
     }
 
     void Scope::DestroyScreenQuadVertices()
@@ -508,23 +478,23 @@ namespace RayGene3D
       compute_arguments.reset();
     }
 
-    void Scope::DestroyLightmapsInput()
-    {
-      core->GetDevice()->DestroyResource(lightmaps_input);
-      lightmaps_input.reset();
-    }
+    //void Scope::DestroyLightmapsInput()
+    //{
+    //  core->GetDevice()->DestroyResource(lightmaps_input);
+    //  lightmaps_input.reset();
+    //}
 
-    void Scope::DestroyLightmapsAccum()
-    {
-      core->GetDevice()->DestroyResource(lightmaps_accum);
-      lightmaps_accum.reset();
-    }
+    //void Scope::DestroyLightmapsAccum()
+    //{
+    //  core->GetDevice()->DestroyResource(lightmaps_accum);
+    //  lightmaps_accum.reset();
+    //}
 
-    void Scope::DestroyLightmapsFinal()
-    {
-      core->GetDevice()->DestroyResource(lightmaps_final);
-      lightmaps_final.reset();
-    }
+    //void Scope::DestroyLightmapsFinal()
+    //{
+    //  core->GetDevice()->DestroyResource(lightmaps_final);
+    //  lightmaps_final.reset();
+    //}
 
     Scope::Scope(const std::unique_ptr<Core>& core, const std::unique_ptr<Util>& util)
       : core(core)
@@ -547,9 +517,9 @@ namespace RayGene3D
 
       prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
       {
-        prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-        prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-        prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+        prop_inst = prop_scene->GetObjectItem("buffer_inst");
+        prop_trng = prop_scene->GetObjectItem("buffer_trng");
+        prop_vert = prop_scene->GetObjectItem("buffer_vert");
       }
 
 
@@ -589,25 +559,24 @@ namespace RayGene3D
       CreateCameraData();
       CreateShadowData();
 
-      CreateSceneInstances();
-      CreateSceneTriangles();
-      CreateSceneVertices();
+      CreateSceneBufferVert();
+      CreateSceneBufferTrng();
+      CreateSceneBufferInst();
 
-      CreateTraceTBoxes();
-      CreateTraceBBoxes();
+      CreateTraceBufferInst();
+      CreateTraceBufferTBox();
+      CreateTraceBufferBBox();
 
-      CreateTraceInstances();
-      CreateTraceTriangles();
-      CreateTraceVertices();
+      CreateTraceBufferVIdx();
+      CreateTraceBufferTIdx();
 
-      CreateSceneTextures0();
-      CreateSceneTextures1();
-      CreateSceneTextures2();
-      CreateSceneTextures3();
-      CreateSceneTextures4();
-      CreateSceneTextures5();
-      CreateSceneTextures6();
-      CreateSceneTextures7();
+      CreateTraceBufferVert();
+      CreateTraceBufferTrng();
+      CreateTraceBufferMlet();
+
+      CreateSceneArrayAAAM();
+      CreateSceneArraySNNO();
+      CreateSceneArrayEEET();
 
       CreateScreenQuadVertices();
       CreateScreenQuadTriangles();
@@ -615,9 +584,9 @@ namespace RayGene3D
       CreateSkyboxCubemap();
       CreateReflectionMap();
 
-      CreateLightmapsInput();
-      CreateLightmapsAccum();
-      CreateLightmapsFinal();
+      //CreateLightmapsInput();
+      //CreateLightmapsAccum();
+      //CreateLightmapsFinal();
 
       CreateGraphicArguments();
       CreateComputeArguments();
@@ -634,29 +603,28 @@ namespace RayGene3D
       DestroyReflectionMap();
       DestroySkyboxCubemap();
 
-      DestroyLightmapsInput();
-      DestroyLightmapsAccum();
-      DestroyLightmapsFinal();
+      //DestroyLightmapsInput();
+      //DestroyLightmapsAccum();
+      //DestroyLightmapsFinal();
 
-      DestroySceneTextures0();
-      DestroySceneTextures1();
-      DestroySceneTextures2();
-      DestroySceneTextures3();
-      DestroySceneTextures4();
-      DestroySceneTextures5();
-      DestroySceneTextures6();
-      DestroySceneTextures7();
+      DestroySceneArrayAAAM();
+      DestroySceneArraySNNO();
+      DestroySceneArrayEEET();
 
-      DestroyTraceInstances();
-      DestroyTraceTriangles();
-      DestroyTraceVertices();
+      DestroyTraceBufferVert();
+      DestroyTraceBufferTrng();
+      DestroyTraceBufferMlet();
 
-      DestroyTraceTBoxes();
-      DestroyTraceBBoxes();
+      DestroyTraceBufferInst();
+      DestroyTraceBufferTBox();
+      DestroyTraceBufferBBox();
 
-      DestroySceneInstances();
-      DestroySceneTriangles();
-      DestroySceneVertices();    
+      DestroyTraceBufferVIdx();
+      DestroyTraceBufferTIdx();
+
+      DestroySceneBufferVert();    
+      DestroySceneBufferTrng();
+      DestroySceneBufferInst();
 
       DestroyScreenData();
       DestroyCameraData();

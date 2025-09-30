@@ -30,370 +30,351 @@ THE SOFTWARE.
 
 namespace RayGene3D
 {
-  void SceneBroker::CreateSceneInstances()
+  void SceneBroker::CreateSceneBufferVert()
   {
-    const auto [data, count] = prop_instances->GetTypedBytes<Instance>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Instance)) * count },
-    };
+    const auto [data, count] = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
+    const auto stride = sizeof(Vertex);
 
-    scene_instances = wrap.GetCore()->GetDevice()->CreateResource("scene_instances",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_CONSTANT_DATA),
-        uint32_t(sizeof(Instance)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-      );
-  }
-
-  void SceneBroker::CreateSceneTriangles()
-  {
-    const auto [data, count] = prop_triangles->GetTypedBytes<Triangle>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Triangle)) * count },
-    };
-
-    scene_triangles = wrap.GetCore()->GetDevice()->CreateResource("scene_triangles",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_INDEX_ARRAY),
-        uint32_t(sizeof(Triangle)),
-        count,
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
-      );
-  }
-
-  void SceneBroker::CreateSceneVertices()
-  {
-    const auto [data, count] = prop_vertices->GetTypedBytes<Vertex>(0);
-    std::pair<const void*, uint32_t> interops[] = {
-      { data, uint32_t(sizeof(Vertex)) * count },
-    };
-
-    scene_vertices = wrap.GetCore()->GetDevice()->CreateResource("scene_vertices",
+    scene_buffer_vert = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_vert",
       Resource::BufferDesc
       {
         Usage(USAGE_VERTEX_ARRAY),
-        uint32_t(sizeof(Vertex)),
+        stride,
         count,
       },
       Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { interops, uint32_t(std::size(interops)) }
+      { reinterpret_cast<const uint8_t*>(data), stride * count }
       );
   }
 
-  void SceneBroker::CreateSceneTextures0()
+  void SceneBroker::CreateSceneBufferTrng()
   {
-    const auto& layers = prop_textures0->GetObjectItem("layers");
-    const auto& mipmap = prop_textures0->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures0->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures0->GetObjectItem("extent_y");
-    const auto& raws = prop_textures0->GetObjectItem("raws");
+    const auto [data, count] = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+    const auto stride = sizeof(Triangle);
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
+    scene_buffer_trng = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_trng",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_INDEX_ARRAY),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(data), stride * count }
+      );
+  }
 
-    scene_textures0 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures0",
+  void SceneBroker::CreateSceneBufferInst()
+  {
+    const auto [data, count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto stride = sizeof(Instance);
+
+    scene_buffer_inst = wrap.GetCore()->GetDevice()->CreateResource("scene_buffer_inst",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_CONSTANT_DATA),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(data), stride * count }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferVert()
+  {
+    const auto [data, count] = prop_buffer_vert->GetObjectItem("binary")->GetRawItems<Vertex>(0);
+    const auto stride = sizeof(Vertex);
+
+    trace_buffer_vert = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_vert",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
+      { reinterpret_cast<const uint8_t*>(data), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferTrng()
+  {
+    const auto [items, count] = prop_buffer_trng->GetObjectItem("binary")->GetRawItems<Triangle>(0);
+    const auto stride = sizeof(Triangle);
+
+    trace_buffer_trng = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_trng",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE | USAGE_RAYTRACING_INPUT),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_ADDRESS_BUFFER),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferMlet()
+  {
+    const auto [items, count] = prop_buffer_mlet->GetObjectItem("binary")->GetRawItems<Meshlet>(0);
+    const auto stride = sizeof(Meshlet);
+
+    trace_buffer_mlet = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_mlet",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferInst()
+  {
+    const auto [items, count] = prop_buffer_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
+    const auto stride = sizeof(Instance);
+
+    trace_buffer_inst = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_inst",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferTBox()
+  {
+    const auto [items, count] = prop_buffer_tbox->GetObjectItem("binary")->GetRawItems<Box>(0);
+    const auto stride = sizeof(Box);
+
+    trace_buffer_tbox = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_tbox",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferBBox()
+  {
+    const auto [items, count] = prop_buffer_bbox->GetObjectItem("binary")->GetRawItems<Box>(0);
+    const auto stride = sizeof(Box);
+
+    trace_buffer_bbox = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_bbox",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferVIdx()
+  {
+    const auto [items, count] = prop_buffer_vidx->GetObjectItem("binary")->GetRawItems<uint32_t>(0);
+    const auto stride = sizeof(uint32_t);
+
+    trace_buffer_vidx = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_vidx",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateTraceBufferTIdx()
+  {
+    const auto [items, count] = prop_buffer_tidx->GetObjectItem("binary")->GetRawItems<uint32_t>(0); //Actually uint8_t
+    const auto stride = sizeof(uint32_t);
+
+    trace_buffer_tidx = wrap.GetCore()->GetDevice()->CreateResource("trace_buffer_tidx",
+      Resource::BufferDesc
+      {
+        Usage(USAGE_SHADER_RESOURCE),
+        stride,
+        count,
+      },
+      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
+      { reinterpret_cast<const uint8_t*>(items), count * stride }
+      );
+  }
+
+  void SceneBroker::CreateSceneArrayAAAM()
+  {
+    const auto format = Format(prop_array_aaam->GetObjectItem("format")->GetUint());
+    const auto layers = prop_array_aaam->GetObjectItem("layers")->GetUint();
+    const auto levels = prop_array_aaam->GetObjectItem("levels")->GetUint();
+    const auto size_x = prop_array_aaam->GetObjectItem("size_x")->GetUint();
+    const auto size_y = prop_array_aaam->GetObjectItem("size_y")->GetUint();
+    const auto bytes = prop_array_aaam->GetObjectItem("binary")->GetRawBytes();
+
+    scene_array_aaam = wrap.GetCore()->GetDevice()->CreateResource("scene_array_aaam",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_SRGB,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
+        levels,
+        layers,
+        format,
+        size_x,
+        size_y,
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-      );
+      bytes);
   }
 
-  void SceneBroker::CreateSceneTextures1()
+  void SceneBroker::CreateSceneArraySNNO()
   {
-    const auto& layers = prop_textures1->GetObjectItem("layers");
-    const auto& mipmap = prop_textures1->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures1->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures1->GetObjectItem("extent_y");
-    const auto& raws = prop_textures1->GetObjectItem("raws");
+    const auto format = Format(prop_array_snno->GetObjectItem("format")->GetUint());
+    const auto layers = prop_array_snno->GetObjectItem("layers")->GetUint();
+    const auto levels = prop_array_snno->GetObjectItem("levels")->GetUint();
+    const auto size_x = prop_array_snno->GetObjectItem("size_x")->GetUint();
+    const auto size_y = prop_array_snno->GetObjectItem("size_y")->GetUint();
+    const auto bytes = prop_array_snno->GetObjectItem("binary")->GetRawBytes();
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
-
-    scene_textures1 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures1",
+    scene_array_snno = wrap.GetCore()->GetDevice()->CreateResource("scene_array_snno",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_SRGB,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
+        levels,
+        layers,
+        format,
+        size_x,
+        size_y,
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-      );
+      bytes);
   }
 
-  void SceneBroker::CreateSceneTextures2()
+  void SceneBroker::CreateSceneArrayEEET()
   {
-    const auto& layers = prop_textures2->GetObjectItem("layers");
-    const auto& mipmap = prop_textures2->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures2->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures2->GetObjectItem("extent_y");
-    const auto& raws = prop_textures2->GetObjectItem("raws");
+    const auto format = Format(prop_array_eeet->GetObjectItem("format")->GetUint());
+    const auto layers = prop_array_eeet->GetObjectItem("layers")->GetUint();
+    const auto levels = prop_array_eeet->GetObjectItem("levels")->GetUint();
+    const auto size_x = prop_array_eeet->GetObjectItem("size_x")->GetUint();
+    const auto size_y = prop_array_eeet->GetObjectItem("size_y")->GetUint();
+    const auto bytes = prop_array_eeet->GetObjectItem("binary")->GetRawBytes();
 
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
-
-    scene_textures2 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures2",
+    scene_array_eeet = wrap.GetCore()->GetDevice()->CreateResource("scene_array_eeet",
       Resource::Tex2DDesc
       {
         Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_SRGB,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
+        levels,
+        layers,
+        format,
+        size_x,
+        size_y,
       },
       Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-      );
+      bytes);
   }
 
-  void SceneBroker::CreateSceneTextures3()
+  void SceneBroker::DestroySceneBufferVert()
   {
-    const auto& layers = prop_textures3->GetObjectItem("layers");
-    const auto& mipmap = prop_textures3->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures3->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures3->GetObjectItem("extent_y");
-    const auto& raws = prop_textures3->GetObjectItem("raws");
-
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
-
-    scene_textures3 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures3",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_UNORM,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-      );
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_vert);
+    scene_buffer_vert.reset();
   }
 
-  void SceneBroker::CreateSceneTextures4()
+  void SceneBroker::DestroySceneBufferTrng()
   {
-    const auto& layers = prop_textures4->GetObjectItem("layers");
-    const auto& mipmap = prop_textures4->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures4->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures4->GetObjectItem("extent_y");
-    const auto& raws = prop_textures4->GetObjectItem("raws");
-
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
-
-    scene_textures4 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures4",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_SRGB,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-      );
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_trng);
+    scene_buffer_trng.reset();
   }
 
-  void SceneBroker::CreateSceneTextures5()
+  void SceneBroker::DestroySceneBufferInst()
   {
-    const auto& layers = prop_textures5->GetObjectItem("layers");
-    const auto& mipmap = prop_textures5->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures5->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures5->GetObjectItem("extent_y");
-    const auto& raws = prop_textures5->GetObjectItem("raws");
-
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
-
-    scene_textures5 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures5",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_UNORM,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-      );
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_buffer_inst);
+    scene_buffer_inst.reset();
   }
 
-  void SceneBroker::CreateSceneTextures6()
+  void SceneBroker::DestroyTraceBufferVert()
   {
-    const auto& layers = prop_textures6->GetObjectItem("layers");
-    const auto& mipmap = prop_textures6->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures6->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures6->GetObjectItem("extent_y");
-    const auto& raws = prop_textures6->GetObjectItem("raws");
-
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
-
-    scene_textures6 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures6",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_UNORM,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-      );
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_vert);
+    trace_buffer_vert.reset();
   }
 
-  void SceneBroker::CreateSceneTextures7()
+  void SceneBroker::DestroyTraceBufferTrng()
   {
-    const auto& layers = prop_textures7->GetObjectItem("layers");
-    const auto& mipmap = prop_textures7->GetObjectItem("mipmap");
-    const auto& extent_x = prop_textures7->GetObjectItem("extent_x");
-    const auto& extent_y = prop_textures7->GetObjectItem("extent_y");
-    const auto& raws = prop_textures7->GetObjectItem("raws");
-
-    auto interops = std::vector<std::pair<const void*, uint32_t>>(raws->GetArraySize());
-    for (auto i = 0u; i < uint32_t(interops.size()); ++i)
-    {
-      const auto& raw = raws->GetArrayItem(i);
-      interops[i] = raw->GetRawBytes(0);
-    }
-
-    scene_textures7 = wrap.GetCore()->GetDevice()->CreateResource("scene_textures7",
-      Resource::Tex2DDesc
-      {
-        Usage(USAGE_SHADER_RESOURCE),
-        mipmap->GetUint(),
-        layers->GetUint(),
-        FORMAT_R8G8B8A8_UNORM,
-        extent_x->GetUint(),
-        extent_y->GetUint(),
-      },
-      Resource::Hint(Resource::HINT_LAYERED_IMAGE),
-      { interops.data(), uint32_t(interops.size()) }
-      );
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_trng);
+    trace_buffer_trng.reset();
   }
 
- 
-
-  void SceneBroker::DestroySceneInstances()
+  void SceneBroker::DestroyTraceBufferMlet()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_instances);
-    scene_instances.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_mlet);
+    trace_buffer_mlet.reset();
   }
 
-  void SceneBroker::DestroySceneTriangles()
+  void SceneBroker::DestroyTraceBufferInst()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_triangles);
-    scene_triangles.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_inst);
+    trace_buffer_inst.reset();
   }
 
-  void SceneBroker::DestroySceneVertices()
+  void SceneBroker::DestroyTraceBufferTBox()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_vertices);
-    scene_vertices.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_tbox);
+    trace_buffer_tbox.reset();
   }
 
-  void SceneBroker::DestroySceneTextures0()
+  void SceneBroker::DestroyTraceBufferBBox()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures0);
-    scene_textures0.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_bbox);
+    trace_buffer_bbox.reset();
   }
 
-  void SceneBroker::DestroySceneTextures1()
+  void SceneBroker::DestroyTraceBufferVIdx()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures1);
-    scene_textures1.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_vidx);
+    trace_buffer_vidx.reset();
   }
 
-  void SceneBroker::DestroySceneTextures2()
+  void SceneBroker::DestroyTraceBufferTIdx()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures2);
-    scene_textures2.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(trace_buffer_tidx);
+    trace_buffer_tidx.reset();
   }
 
-  void SceneBroker::DestroySceneTextures3()
+  void SceneBroker::DestroySceneArrayAAAM()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures3);
-    scene_textures3.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_aaam);
+    scene_array_aaam.reset();
   }
 
-  void SceneBroker::DestroySceneTextures4()
+  void SceneBroker::DestroySceneArraySNNO()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures4);
-    scene_textures4.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_snno);
+    scene_array_snno.reset();
   }
 
-  void SceneBroker::DestroySceneTextures5()
+  void SceneBroker::DestroySceneArrayEEET()
   {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures5);
-    scene_textures5.reset();
+    wrap.GetCore()->GetDevice()->DestroyResource(scene_array_eeet);
+    scene_array_eeet.reset();
   }
 
-  void SceneBroker::DestroySceneTextures6()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures6);
-    scene_textures6.reset();
-  }
-
-  void SceneBroker::DestroySceneTextures7()
-  {
-    wrap.GetCore()->GetDevice()->DestroyResource(scene_textures7);
-    scene_textures7.reset();
-  }
+  //void SceneBroker::DestroySceneArray3()
+  //{
+  //  wrap.GetCore()->GetDevice()->DestroyResource(scene_array_3);
+  //  scene_array_3.reset();
+  //}
 
   void SceneBroker::Initialize()
   {}
@@ -407,66 +388,63 @@ namespace RayGene3D
   SceneBroker::SceneBroker(Wrap& wrap)
     : Broker("scene_broker", wrap)
   {
-    const auto& tree = wrap.GetUtil()->GetStorage()->GetTree();
+    const auto& util = wrap.GetUtil();
 
-    prop_scene = tree->GetObjectItem("scene");
+    prop_scene = util->GetStorage()->GetTree()->GetObjectItem("scene");
     {
-      prop_instances = prop_scene->GetObjectItem("instances")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_triangles = prop_scene->GetObjectItem("triangles")->GetObjectItem("raws")->GetArrayItem(0);
-      prop_vertices = prop_scene->GetObjectItem("vertices")->GetObjectItem("raws")->GetArrayItem(0);
+      prop_buffer_vert = prop_scene->GetObjectItem("buffer_vert");
+      prop_buffer_trng = prop_scene->GetObjectItem("buffer_trng");
+      prop_buffer_mlet = prop_scene->GetObjectItem("buffer_mlet");
 
-      prop_textures0 = prop_scene->GetObjectItem("textures_0");
-      prop_textures1 = prop_scene->GetObjectItem("textures_1");
-      prop_textures2 = prop_scene->GetObjectItem("textures_2");
-      prop_textures3 = prop_scene->GetObjectItem("textures_3");
-      prop_textures4 = prop_scene->GetObjectItem("textures_4");
-      prop_textures5 = prop_scene->GetObjectItem("textures_5");
-      prop_textures6 = prop_scene->GetObjectItem("textures_6");
-      prop_textures7 = prop_scene->GetObjectItem("textures_7");
+      prop_buffer_inst = prop_scene->GetObjectItem("buffer_inst");
+      prop_buffer_tbox = prop_scene->GetObjectItem("buffer_tbox");
+      prop_buffer_bbox = prop_scene->GetObjectItem("buffer_bbox");
+
+      prop_buffer_vidx = prop_scene->GetObjectItem("buffer_vidx");
+      prop_buffer_tidx = prop_scene->GetObjectItem("buffer_tidx");
+
+      prop_array_aaam = prop_scene->GetObjectItem("array_aaam");
+      prop_array_snno = prop_scene->GetObjectItem("array_snno");
+      prop_array_eeet = prop_scene->GetObjectItem("array_eeet");
     }
 
-    CreateSceneInstances();
-    CreateSceneTriangles();
-    CreateSceneVertices();
+    CreateSceneBufferVert();
+    CreateSceneBufferTrng();
+    CreateSceneBufferInst();
+    
+    CreateTraceBufferVert();
+    CreateTraceBufferTrng();
+    CreateTraceBufferMlet();
 
-    CreateSceneTextures0();
-    CreateSceneTextures1();
-    CreateSceneTextures2();
-    CreateSceneTextures3();
-    CreateSceneTextures4();
-    CreateSceneTextures5();
-    CreateSceneTextures6();
-    CreateSceneTextures7();
+    CreateTraceBufferInst();
+    CreateTraceBufferTBox();
+    CreateTraceBufferBBox();
+
+    CreateTraceBufferVIdx();
+    CreateTraceBufferTIdx();
+
+    CreateSceneArrayAAAM();
+    CreateSceneArraySNNO();
+    CreateSceneArrayEEET();
   }
 
   SceneBroker::~SceneBroker()
   {
     prop_scene.reset();
 
-    prop_instances.reset();
-    prop_triangles.reset();
-    prop_vertices.reset();
+    prop_buffer_vert.reset();
+    prop_buffer_trng.reset();
+    prop_buffer_mlet.reset();
 
-    prop_textures0.reset();
-    prop_textures1.reset();
-    prop_textures2.reset();
-    prop_textures3.reset();
-    prop_textures4.reset();
-    prop_textures5.reset();
-    prop_textures6.reset();
-    prop_textures7.reset();
+    prop_buffer_inst.reset();
+    prop_buffer_bbox.reset();
+    prop_buffer_tbox.reset();
 
-    //DestroySceneTextures0();
-    //DestroySceneTextures1();
-    //DestroySceneTextures2();
-    //DestroySceneTextures3();
-    //DestroySceneTextures4();
-    //DestroySceneTextures5();
-    //DestroySceneTextures6();
-    //DestroySceneTextures7();
+    prop_buffer_vidx.reset();
+    prop_buffer_tidx.reset();
 
-    //DestroySceneInstances();
-    //DestroySceneTriangles();
-    //DestroySceneVertices();
+    prop_array_aaam.reset();
+    prop_array_snno.reset();
+    prop_array_eeet.reset();
   }
 }

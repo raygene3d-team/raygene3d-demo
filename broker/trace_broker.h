@@ -30,45 +30,48 @@ THE SOFTWARE.
 #pragma once
 #include "../raygene3d-wrap/wrap.h"
 
+#include "../raygene3d-util/util/array.h"
+#include "../raygene3d-util/util/buffer.h"
+
 namespace RayGene3D
 {
   class TraceBroker : public Broker
   {
   protected:
-    std::shared_ptr<Property> prop_scene;
+    SPtrProperty prop_scene;
 
   protected:
-    std::shared_ptr<Property> prop_instances;
-    std::shared_ptr<Property> prop_triangles;
-    std::shared_ptr<Property> prop_vertices;
+    SPtrProperty prop_buffer_tbox;
+    SPtrProperty prop_buffer_bbox;
 
-    std::shared_ptr<Property> prop_t_boxes;
-    std::shared_ptr<Property> prop_b_boxes;
+    SPtrProperty prop_buffer_inst;
+    SPtrProperty prop_buffer_trng;
+    SPtrProperty prop_buffer_vert;    
 
   protected:
+    SPtrResource trace_buffer_tbox;
+    SPtrResource trace_buffer_bbox;
+
     //Copies of original resources bacause of DX11 limitations
-    SPtrResource trace_instances;
-    SPtrResource trace_triangles;
-    SPtrResource trace_vertices;
-
-    SPtrResource trace_t_boxes;
-    SPtrResource trace_b_boxes;
+    SPtrResource trace_buffer_inst;
+    SPtrResource trace_buffer_trng;
+    SPtrResource trace_buffer_vert;    
 
   protected:
-    void CreateTraceInstances();
-    void CreateTraceTriangles();
-    void CreateTraceVertices();
+    void CreateTraceBufferInst();
+    void CreateTraceBufferTrng();
+    void CreateTraceBufferVert();
 
-    void CreateTraceTBoxes();
-    void CreateTraceBBoxes();
+    void CreateTraceBufferTBox();
+    void CreateTraceBufferBBox();
 
   protected:
-    void DestroyTraceInstances();
-    void DestroyTraceTriangles();
-    void DestroyTraceVertices();
+    void DestroyTraceBufferInst();
+    void DestroyTraceBufferTrng();
+    void DestroyTraceBufferVert();
 
-    void DestroyTraceTBoxes();
-    void DestroyTraceBBoxes();
+    void DestroyTraceBufferTBox();
+    void DestroyTraceBufferBBox();
 
   public:
     void Initialize() override;

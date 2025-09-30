@@ -55,10 +55,11 @@ namespace RayGene3D
       shader_fs.open("./asset/shaders/lightmap_average.hlsl", std::fstream::in);
       std::stringstream shader_ss;
       shader_ss << shader_fs.rdbuf();
+      shader_fs.close();
 
       average_config = average_pass->CreateConfig("lightmap_average_config",
         shader_ss.str(),
-        Config::COMPILATION_CS,
+        Config::COMPILATION_COMP,
         {},
         {},
         {},
@@ -92,12 +93,12 @@ namespace RayGene3D
       };
 
       average_batch = average_config->CreateBatch("spark_present_batch",
-        { entities, uint32_t(std::size(entities)) },
+        { entities, std::size(entities) },
         {},
         {},
         {},
-        { ri_views, uint32_t(std::size(ri_views)) },
-        { wi_views, uint32_t(std::size(wi_views)) },
+        { ri_views, std::size(ri_views) },
+        { wi_views, std::size(wi_views) },
         {},
         {}
       );
