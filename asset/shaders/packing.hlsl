@@ -14,7 +14,9 @@
   {
     n *= rcp(max(dot(abs(n), 1.0), 1e-6));
     float t = saturate(-n.z);
-    return n.xy + (n.xy >= 0.0 ? t : -t);
+    n.x += n.x >= 0.0 ? t : -t;
+    n.y += n.y >= 0.0 ? t : -t;
+    return n.xy;
   }
 
   float2 Unpack888UIntToFloat2(uint3 x)
@@ -30,7 +32,8 @@
   {
     float3 n = float3(f.x, f.y, 1.0 - abs(f.x) - abs(f.y));
     float t = max(-n.z, 0.0);
-    n.xy += n.xy >= 0.0 ? -t.xx : t.xx;
+    n.x += n.x >= 0.0 ? -t : t;
+    n.y += n.y >= 0.0 ? -t : t;
 
     return normalize(n);
   }

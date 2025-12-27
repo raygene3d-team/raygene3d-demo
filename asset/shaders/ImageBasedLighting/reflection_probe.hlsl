@@ -1,6 +1,6 @@
-#include "ImageBasedLighting/common.hlsl"
-#include "ImageBasedLighting/utils.hlsl"
-#include "ImageBasedLighting/image_based_lighting.hlsl"
+#include "common.hlsl"
+#include "utils.hlsl"
+#include "image_based_lighting.hlsl"
 
 //#define USE_KARIS_APPROXIMATION
 
