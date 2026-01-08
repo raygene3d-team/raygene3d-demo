@@ -76,16 +76,16 @@ namespace RayGene3D
 
     void Mode::CreateGeometryConfig()
     {
-      const auto file = use_mesh_pipe
-        ? "./asset/shaders/spark_geom_meshlet.glsl"
-        : "./asset/shaders/spark_geom_raster.hlsl";
+      //const auto file = use_mesh_pipe
+      //  ? "./asset/shaders/spark_geom_meshlet.glsl"
+      //  : "./asset/shaders/spark_geom_raster.hlsl";
       
-      std::fstream shader_fs;
-      //shader_fs.open();
-      shader_fs.open(file, std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      ////shader_fs.open();
+      //shader_fs.open(file, std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -138,7 +138,7 @@ namespace RayGene3D
         : Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG);
 
       geometry_config = geometry_pass->CreateConfig("render_3d_geometry_config",
-        shader_ss.str(),
+        "./asset/shaders/", use_mesh_pipe ? "render_3d_geom_meshlet.glsl" : "render_3d_geom_raster.hlsl",
         compilation,
         { defines.data(), defines.size() },
         ia_config,
@@ -310,11 +310,11 @@ namespace RayGene3D
 
     void Mode::CreateSkyboxConfig()
     {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      //shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       std::pair<std::string, std::string> defines[] =
       {
@@ -357,7 +357,7 @@ namespace RayGene3D
       };
 
       skybox_config = geometry_pass->CreateConfig("render_3d_skybox_config",
-        shader_ss.str(),
+        "./asset/shaders/", "render_3d_environment.hlsl",
         Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
         { defines, std::size(defines) },
         ia_config,
@@ -438,14 +438,14 @@ namespace RayGene3D
 
     void Mode::CreatePresentConfig()
     {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      //shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       present_config = present_pass->CreateConfig("render_3d_present_config",
-        shader_ss.str(),
+        "./asset/shaders/", "render_3d_present.hlsl",
         Config::COMPILATION_COMP,
         {},
         {},

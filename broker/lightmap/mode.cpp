@@ -92,7 +92,7 @@ namespace RayGene3D
         average_final,
       };
 
-      average_batch = average_config->CreateBatch("spark_present_batch",
+      average_batch = average_config->CreateBatch("render_3d_present_batch",
         { entities, std::size(entities) },
         {},
         {},

@@ -35,7 +35,7 @@ namespace RayGene3D
   {
     void Scope::CreateShadowMap()
     {
-      shadow_map = core->GetDevice()->CreateResource("spark_shadow_map",
+      shadow_map = core->GetDevice()->CreateResource("render_3d_shadow_map",
         Resource::Tex2DDesc
         {
           Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
@@ -50,7 +50,7 @@ namespace RayGene3D
 
     void Scope::CreateColorTarget()
     {
-      color_target = core->GetDevice()->CreateResource("spark_color_target",
+      color_target = core->GetDevice()->CreateResource("render_3d_color_target",
         Resource::Tex2DDesc
         {
           Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE | USAGE_UNORDERED_ACCESS),
@@ -65,7 +65,7 @@ namespace RayGene3D
 
     void Scope::CreateDepthTarget()
     {
-      depth_target = core->GetDevice()->CreateResource("spark_depth_target",
+      depth_target = core->GetDevice()->CreateResource("render_3d_depth_target",
         Resource::Tex2DDesc
         {
           Usage(USAGE_DEPTH_STENCIL | USAGE_SHADER_RESOURCE),
@@ -80,7 +80,7 @@ namespace RayGene3D
 
     void Scope::CreateGBufferTarget0()
     {
-      gbuffer_0_target = core->GetDevice()->CreateResource("spark_gbuffer_0_target",
+      gbuffer_0_target = core->GetDevice()->CreateResource("render_3d_gbuffer_0_target",
         Resource::Tex2DDesc
         {
           Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
@@ -95,7 +95,7 @@ namespace RayGene3D
 
     void Scope::CreateGBufferTarget1()
     {
-      gbuffer_1_target = core->GetDevice()->CreateResource("spark_gbuffer_1_target",
+      gbuffer_1_target = core->GetDevice()->CreateResource("render_3d_gbuffer_1_target",
         Resource::Tex2DDesc
         {
           Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
@@ -110,7 +110,7 @@ namespace RayGene3D
 
     void Scope::CreateScreenData()
     {
-      screen_data = core->GetDevice()->CreateResource("spark_screen_data",
+      screen_data = core->GetDevice()->CreateResource("render_3d_screen_data",
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
@@ -123,7 +123,7 @@ namespace RayGene3D
 
     void Scope::CreateCameraData()
     {
-      camera_data = core->GetDevice()->CreateResource("spark_camera_data",
+      camera_data = core->GetDevice()->CreateResource("render_3d_camera_data",
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
@@ -136,7 +136,7 @@ namespace RayGene3D
 
     void Scope::CreateShadowData()
     {
-      shadow_data = core->GetDevice()->CreateResource("spark_shadow_data",
+      shadow_data = core->GetDevice()->CreateResource("render_3d_shadow_data",
         Resource::BufferDesc
         {
           Usage(USAGE_CONSTANT_DATA),
@@ -241,7 +241,7 @@ namespace RayGene3D
         glm::f32vec2( 1.0f,-1.0f),
       };
 
-      screen_quad_vertices = core->GetDevice()->CreateResource("spark_screen_quad_vertices",
+      screen_quad_vertices = core->GetDevice()->CreateResource("render_3d_screen_quad_vertices",
         Resource::BufferDesc
         {
           Usage(USAGE_VERTEX_ARRAY),
@@ -260,7 +260,7 @@ namespace RayGene3D
         glm::u32vec3(3u, 2u, 1u),
       };
 
-      screen_quad_triangles = core->GetDevice()->CreateResource("spark_screen_quad_triangles",
+      screen_quad_triangles = core->GetDevice()->CreateResource("render_3d_screen_quad_triangles",
         Resource::BufferDesc
         {
           Usage(USAGE_INDEX_ARRAY),
@@ -286,7 +286,7 @@ namespace RayGene3D
     {
       const auto [data, count] = prop_inst->GetObjectItem("binary")->GetRawItems<Instance>(0);
 
-      graphic_arguments = core->GetDevice()->CreateResource("spark_graphic_arguments",
+      graphic_arguments = core->GetDevice()->CreateResource("render_3d_graphic_arguments",
         Resource::BufferDesc
         {
           Usage(USAGE_ARGUMENT_LIST),
@@ -299,7 +299,7 @@ namespace RayGene3D
 
     void Scope::CreateComputeArguments()
     {
-      compute_arguments = core->GetDevice()->CreateResource("spark_compute_arguments",
+      compute_arguments = core->GetDevice()->CreateResource("render_3d_compute_arguments",
         Resource::BufferDesc
         {
           Usage(USAGE_ARGUMENT_LIST),
