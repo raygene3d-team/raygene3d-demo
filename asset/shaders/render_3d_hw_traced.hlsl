@@ -126,7 +126,7 @@ void rgen()
   const float3 color = (diff + spec) * max(0.0, wo.z) * attenuation;
 
   //const float3 color = attenuation;
-  output_texture[uint2(ix, iy)] = float4(color, 1.0);
+  output_texture[uint2(ix, iy)] += float4(color, 1.0);
 }
 
 [shader("miss")]
