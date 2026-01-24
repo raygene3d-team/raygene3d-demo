@@ -65,7 +65,7 @@ namespace RayGene3D
 
       hw_traced_config = hw_traced_pass->CreateConfig("render_3d_hw_traced_config",
         "./asset/shaders/", "render_3d_hw_traced.hlsl",
-        Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_MISS),
+        Config::Compilation(Config::COMPILATION_RGEN | Config::COMPILATION_CHIT | Config::COMPILATION_MISS),
         { defines.data(), defines.size() },
         {},
         {},

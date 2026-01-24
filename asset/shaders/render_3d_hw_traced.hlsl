@@ -46,6 +46,11 @@ struct Payload
   bool occluded;
 };
 
+struct Payload2
+{
+  float dist;
+};
+
 bool OccludeScene(in RayHit rayhit)
 {
   RayDesc ray;
@@ -53,12 +58,31 @@ bool OccludeScene(in RayHit rayhit)
   ray.Direction = rayhit.dir;
   ray.TMin = rayhit.tmin;
   ray.TMax = rayhit.tmax;
+  
+  uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
 
   Payload payload;
   payload.occluded = true;
-  TraceRay(scene_tlas, 0 /*rayFlags*/, 0xFF, 0 /* ray index*/, 0, 0, ray, payload);
+  TraceRay(scene_tlas, flags, 0xFF, 0, 0, 0, ray, payload);
   
   return payload.occluded;
+}
+
+float IntersectScene(in RayHit rayhit)
+{
+  RayDesc ray;
+  ray.Origin = rayhit.org;
+  ray.Direction = rayhit.dir;
+  ray.TMin = rayhit.tmin;
+  ray.TMax = rayhit.tmax;
+  
+  uint flags = RAY_FLAG_CULL_FRONT_FACING_TRIANGLES; //RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
+
+  Payload2 payload;
+  payload.dist = ray.TMax;
+  TraceRay(scene_tlas, flags, 0xFF, 0, 0, 0, ray, payload);
+  
+  return payload.dist;
 }
 
 [shader("raygeneration")]
@@ -68,32 +92,34 @@ void rgen()
   const uint iy = DispatchRaysIndex().y;
 
   const float depth = depth_texture.Load(int3(ix, iy, 0));
-  if (depth == 1.0) return;
+  //if (depth == 1.0) return;
   
   const float rx = 2.0 * (ix + 0.5) / extent_x - 1.0;
   const float ry = 2.0 * (iy + 0.5) / extent_y - 1.0;
 
-  const float4 view_pos = mul(camera_proj_inv, float4(rx, -ry, depth, 1.0));
-  const float3 surface_pos = mul(camera_view_inv, view_pos / view_pos.w).xyz;
+  const float4 screen_pos = mul(camera_proj_inv, float4(rx, -ry, depth, 1.0));
+  const float3 surface_pos = mul(camera_view_inv, float4(screen_pos.xyz / screen_pos.w, 1.0)).xyz;
   
-  const float3 camera_pos = mul(camera_view_inv, float4(0.0, 0.0, 0.0, 1.0)).xyz;
+  const float3 camera_pos = float3(camera_view_inv[0][3], camera_view_inv[1][3], camera_view_inv[2][3]); //mul(camera_view_inv, float4(0.0, 0.0, 0.0, 1.0)).xyz;
   const float camera_dst = length(camera_pos - surface_pos);
   const float3 camera_dir = (camera_pos - surface_pos) / camera_dst;
 
-  const float3 shadow_pos = mul(shadow_view_inv, float4(0.0, 0.0, 0.0, 1.0)).xyz;
+  const float3 shadow_pos = float3(shadow_view_inv[0][3], shadow_view_inv[1][3], shadow_view_inv[2][3]); //mul(shadow_view_inv, float4(0.0, 0.0, 0.0, 1.0)).xyz;
   const float shadow_dst = length(shadow_pos - surface_pos);
-  const float3 shadow_dir = mul(shadow_view_inv, float4(0.0, 0.0, 1.0, 0.0)).xyz;
+  const float3 shadow_dir =-float3(shadow_view_inv[0][2], shadow_view_inv[1][2], shadow_view_inv[2][2]); //mul(shadow_view_inv, float4(0.0, 0.0, 1.0, 0.0)).xyz;
   
   //const float3 surface_pos = mul(camera_view_inv, float4(pos, 1.0)).xyz;
-  const float3 surface_dir = -shadow_dir;
+  const float3 surface_dir = shadow_dir;
+  //const float3 surface_dir = float3(0.0, 1.0, 0.0);
 
   RayHit rayhit = (RayHit) 0;
   rayhit.org = surface_pos;
   rayhit.tmin = RAY_TMIN;
   rayhit.dir = surface_dir;
-  rayhit.tmax = RAY_TMAX;
-
+  rayhit.tmax = shadow_dst;
+  
   const float attenuation = OccludeScene(rayhit) ? 0.0 : 1.0;
+  
   
   const float4 albedo_metallic = gbuffer_0_texture.Load(int3(ix, iy, 0));
   const float4 normal_smoothness = gbuffer_1_texture.Load(int3(ix, iy, 0));
@@ -112,8 +138,8 @@ void rgen()
   const float3 b = normalize(cross(n, t));
   const float3x3 tbn = float3x3(t, b, n);
 
-  const float3 wo = mul(tbn, -shadow_dir);
-  const float3 lo = mul(tbn, -camera_dir);
+  const float3 wo = mul(tbn, shadow_dir);
+  const float3 lo = mul(tbn, camera_dir);
 
   const float3 m = Evaluate_CookTorrance(brdf, lo, wo) * brdf.color;
 
@@ -124,9 +150,13 @@ void rgen()
   const float3 spec = lerp(kDielectricSpec.rgb, m, metallic);
 
   const float3 color = (diff + spec) * max(0.0, wo.z) * attenuation;
-
-  //const float3 color = attenuation;
   output_texture[uint2(ix, iy)] += float4(color, 1.0);
+}
+
+[shader("closesthit")]
+void chit(inout Payload2 payload, in BuiltInTriangleIntersectionAttributes attribs)
+{
+  payload.dist = RayTCurrent();
 }
 
 [shader("miss")]
