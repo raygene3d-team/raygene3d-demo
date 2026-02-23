@@ -86,7 +86,7 @@ VK_BINDING(5) cbuffer constant3 : register(b3)
 VK_BINDING(6) StructuredBuffer<Meshlet> meshlet_buffer;
 VK_BINDING(7) StructuredBuffer<uint> v_index_buffer;
 VK_BINDING(8) StructuredBuffer<Vertex> vertex_buffer;
-VK_BINDING(9) StructuredBuffer<byte> t_index_buffer;
+VK_BINDING(9) ByteAddressBuffer t_index_buffer;
 
 VK_BINDING(10) Texture2DArray<float4> array_aaam : register(t0);
 VK_BINDING(11) Texture2DArray<float4> array_snno : register(t1);
