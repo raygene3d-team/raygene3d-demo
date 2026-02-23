@@ -62,7 +62,7 @@ namespace RayGene3D
       StructureBuffer<Box> bbox_buffer; //b_boxes
 
       StructureBuffer<uint32_t> vidx_buffer;
-      StructureBuffer<uint8_t> tidx_buffer;
+      StructureBuffer<uint32_t> tidx_buffer;
 
       TextureArrayLDR aaam_array; //albedo_metallic
       TextureArrayLDR snno_array; //roughness_normal_occlusion

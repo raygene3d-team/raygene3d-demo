@@ -83,16 +83,17 @@ VK_BINDING(5) cbuffer constant3 : register(b3)
   uint4 uparam_1    : packoffset(c15.x);
 };
 
-VK_BINDING(6) StructuredBuffer<Meshlet> meshlet_buffer;
-VK_BINDING(7) StructuredBuffer<uint> v_index_buffer;
-VK_BINDING(8) StructuredBuffer<Vertex> vertex_buffer;
-VK_BINDING(9) ByteAddressBuffer t_index_buffer;
+VK_BINDING(6)  StructuredBuffer<Meshlet> meshlet_buffer : register(t0);
+VK_BINDING(7)  StructuredBuffer<uint> v_index_buffer : register(t1);
+VK_BINDING(8)  StructuredBuffer<Vertex> vertex_buffer : register(t2);
+VK_BINDING(9)  StructuredBuffer<uint> t_index_buffer : register(t3);
+//VK_BINDING(9) ByteAddressBuffer t_index_buffer;
 
-VK_BINDING(10) Texture2DArray<float4> array_aaam : register(t0);
-VK_BINDING(11) Texture2DArray<float4> array_snno : register(t1);
-VK_BINDING(12) Texture2DArray<float4> array_eeet : register(t2);
+VK_BINDING(10) Texture2DArray<float4> array_aaam : register(t4);
+VK_BINDING(11) Texture2DArray<float4> array_snno : register(t5);
+VK_BINDING(12) Texture2DArray<float4> array_eeet : register(t6);
 
-VK_BINDING(13) TextureCube<float4> reflection_map : register(t3);
+VK_BINDING(13) TextureCube<float4> reflection_map : register(t7);
 //VK_BINDING(10) Texture2DArray<float4> lightmap_items : register(t4);
 
 #define VERT_LIMIT 64
@@ -113,8 +114,8 @@ struct MSOutput
 [NumThreads(GROUP_SIZE, 1, 1)]
 [OutputTopology("triangle")]
 void mesh_main(
-    uint tid : SV_GroupThreadID,
-    uint gid : SV_GroupID,
+    uint3 tid : SV_GroupThreadID,
+    uint3 gid : SV_GroupID,
     out indices uint3 trng_out[TRNG_LIMIT],
     out vertices MSOutput vert_out[VERT_LIMIT]
 )
@@ -146,8 +147,8 @@ void mesh_main(
         vert_out[vidx].w_nrm_u = float4(nrm, u);
         vert_out[vidx].w_tng_v = float4(tgn, v);
 
-        float4 hpos = mul(camera_proj, mul(camera_view, float4(wpos, 1.0)));;
-        vert_out[vidx].pos = float4(hpos.x, -hpos.y, hpos.z, hpos.w);
+        float4 hpos = mul(camera_proj, mul(camera_view, float4(wpos, 1.0)));
+        vert_out[vidx].pos = float4(hpos.x, hpos.y, hpos.z, hpos.w);
       }
     }
   }
@@ -158,10 +159,12 @@ void mesh_main(
       uint tidx = localID + i * GROUP_SIZE;
       if (tidx < meshlet.tidx_count)
       {
-        uint idx0 = t_index_buffer[tidx * 3 + 0 + meshlet.tidx_offset + tidx_offset];
-        uint idx1 = t_index_buffer[tidx * 3 + 1 + meshlet.tidx_offset + tidx_offset];
-        uint idx2 = t_index_buffer[tidx * 3 + 2 + meshlet.tidx_offset + tidx_offset];
-      
+        //uint value = t_index_buffer.Load(meshlet.tidx_offset + tidx_offset + tidx * 4);
+        uint value = t_index_buffer[meshlet.tidx_offset + tidx_offset + tidx];
+        uint idx0 = (value >> 0) & 0x000000FF;
+        uint idx1 = (value >> 8) & 0x000000FF;
+        uint idx2 = (value >>16) & 0x000000FF;
+        
         trng_out[tidx] = uint3(idx0, idx1, idx2);
       }
     }
@@ -220,6 +223,7 @@ struct PSInput
   VK_LOCATION(0) float4 w_pos_d : register0;
   VK_LOCATION(1) float4 w_nrm_u : register1;
   VK_LOCATION(2) float4 w_tng_v : register2;
+  VK_LOCATION(3) float4 pos : SV_Position;
 };
 
 struct PSOutput
@@ -317,6 +321,7 @@ PSOutput ps_main(PSInput input)
   output.target_0 = float4(emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);
   output.target_2 = float4(0.5 * normal + 0.5, roughness);
+  
 
 #ifdef TEST
 #endif
