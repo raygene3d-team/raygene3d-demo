@@ -137,8 +137,11 @@ namespace RayGene3D
         ? Config::Compilation(Config::COMPILATION_MESH | Config::COMPILATION_FRAG)
         : Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG);
 
+      const auto meshlet_shader_name = std::string("render_3d_geom_meshlet") + (scope.core->GetType() == Core::DEVICE_VLK ? ".glsl" : ".hlsl");
+      const auto raster_shader_name = "render_3d_geom_raster.hlsl";
+
       geometry_config = geometry_pass->CreateConfig("render_3d_geometry_config",
-        "./asset/shaders/", use_mesh_pipe ? "render_3d_geom_meshlet.glsl" : "render_3d_geom_raster.hlsl",
+        "./asset/shaders/", use_mesh_pipe ? meshlet_shader_name : raster_shader_name,
         compilation,
         { defines.data(), defines.size() },
         ia_config,
@@ -205,7 +208,7 @@ namespace RayGene3D
 
       const Batch::Sampler samplers[] = {
         { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-        { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_MIRROR, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
+        { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_MIRROR, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
 
       const auto& geometry_screen_data = scope.screen_data->CreateView("render_3d_geometry_screen_data",
         Usage(USAGE_CONSTANT_DATA)

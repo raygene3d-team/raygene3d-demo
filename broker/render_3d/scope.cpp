@@ -86,7 +86,7 @@ namespace RayGene3D
           Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
           1,
           1,
-          FORMAT_R8G8B8A8_UNORM,
+          FORMAT_R8G8B8A8_SRGB,
           prop_extent_x->GetUint(),
           prop_extent_y->GetUint(),
         }
