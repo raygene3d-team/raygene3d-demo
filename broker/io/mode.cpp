@@ -317,10 +317,10 @@ namespace RayGene3D
         //auto meshlets = std::vector<Meshlet>(meshlets_opt.size());
         //auto points = std::vector<Point>(meshlet_trg.size());
         //
-        //
+        std::vector<uint32_t> ext_meshlets_trg;
         //uint32_t upd_triangle_offset = 0;
-        //for (size_t i = 0; i < meshlets_opt.size(); ++i)
-        //{      
+        for (size_t i = 0; i < meshlets_opt.size(); ++i)
+        {      
         //  const auto color = glm::u8vec4
         //  {
         //    rand() % 64 + 63,
@@ -334,12 +334,15 @@ namespace RayGene3D
         //    vertices[j + meshlets_opt[i].vertex_offset] = mesh.vertices[meshlet_vrt[j + meshlets_opt[i].vertex_offset]];
         //  }
 
-        //  
-        //  for (size_t j = 0; j < meshlets_opt[i].triangle_count; ++j)
-        //  {
-        //    const auto knt0 = meshlet_trg[3 * j + 0 + meshlets_opt[i].triangle_offset];
-        //    const auto knt1 = meshlet_trg[3 * j + 1 + meshlets_opt[i].triangle_offset];
-        //    const auto knt2 = meshlet_trg[3 * j + 2 + meshlets_opt[i].triangle_offset];
+          const auto ext_triangle_offset = ext_meshlets_trg.size();
+          ext_meshlets_trg.resize(ext_triangle_offset + meshlets_opt[i].triangle_count);
+          for (size_t j = 0; j < meshlets_opt[i].triangle_count; ++j)
+          {
+            const auto tidx0 = meshlets_trg[3 * j + 0 + meshlets_opt[i].triangle_offset];
+            const auto tidx1 = meshlets_trg[3 * j + 1 + meshlets_opt[i].triangle_offset];
+            const auto tidx2 = meshlets_trg[3 * j + 2 + meshlets_opt[i].triangle_offset];
+
+            ext_meshlets_trg[ext_triangle_offset + j] = glm::packUint4x8(glm::u8vec4(tidx0, tidx1, tidx2, 255));
 
         //    points[3 * j + 0 + meshlets_opt[i].triangle_offset].idx = knt0;
         //    points[3 * j + 1 + meshlets_opt[i].triangle_offset].idx = knt1;
@@ -354,7 +357,7 @@ namespace RayGene3D
         //    vertices[idx0].col = color;
         //    vertices[idx1].col = color;
         //    vertices[idx2].col = color;            
-        //  }
+          }
 
         //  meshlets[i].vrt_offset = meshlets_opt[i].vertex_offset;
         //  meshlets[i].vrt_count = meshlets_opt[i].vertex_count;
@@ -362,21 +365,26 @@ namespace RayGene3D
         //  meshlets[i].pnt_count = meshlets_opt[i].triangle_count * 3;
 
         //  upd_triangle_offset += meshlets_opt[i].triangle_count;
-        //}
+        }
+        size_t ext_triangle_offset = 0;
 
         mesh.meshlets.resize(meshlets_opt.size());
         for (size_t i = 0; i < meshlets_opt.size(); ++i)
         { 
+          
+
           mesh.meshlets[i].vidx_offset = meshlets_opt[i].vertex_offset;
           mesh.meshlets[i].vidx_count = meshlets_opt[i].vertex_count;
-          mesh.meshlets[i].tidx_offset = meshlets_opt[i].triangle_offset;
+          mesh.meshlets[i].tidx_offset = ext_triangle_offset; // meshlets_opt[i].triangle_offset;
           mesh.meshlets[i].tidx_count = meshlets_opt[i].triangle_count;
+
+          ext_triangle_offset += meshlets_opt[i].triangle_count;
 
 
         }
 
         std::swap(mesh.v_indices, meshlets_vrt);
-        std::swap(mesh.t_indices, meshlets_trg);
+        std::swap(mesh.t_indices, ext_meshlets_trg); // meshlets_trg);
 
 
         //std::swap(mesh.meshlets, meshlets);

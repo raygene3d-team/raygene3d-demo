@@ -109,9 +109,9 @@ struct Attribute
 };
 
 
-layout(set = 0, binding = 0) uniform sampler sampler0;
+//layout(set = 0, binding = 0) uniform sampler sampler0;
 
-layout(std140, set = 0, binding = 1) uniform Screen
+layout(std140, set = 0, binding = 0) uniform Screen
 {
   uint extent_x;
   uint extent_y;
@@ -119,7 +119,7 @@ layout(std140, set = 0, binding = 1) uniform Screen
   uint rnd_seed;
 } screen;
 
-layout(std140, set = 0, binding = 2) uniform Camera
+layout(std140, set = 0, binding = 1) uniform Camera
 {
   mat4 camera_view;
   mat4 camera_proj;
@@ -127,7 +127,7 @@ layout(std140, set = 0, binding = 2) uniform Camera
   mat4 camera_proj_inv;
 } camera;
 
-layout(std140, set = 0, binding = 3) uniform Shadow
+layout(std140, set = 0, binding = 2) uniform Shadow
 {
   mat4 shadow_view;
   mat4 shadow_proj;
@@ -135,11 +135,12 @@ layout(std140, set = 0, binding = 3) uniform Shadow
   mat4 shadow_proj_inv;
 } shadow;
 
-layout(set = 0, binding = 4) uniform texture2D gbuffer_0_texture;
-layout(set = 0, binding = 5) uniform texture2D gbuffer_1_texture;
-layout(set = 0, binding = 6) uniform texture2D depth_texture;
+layout(set = 0, binding = 3) uniform texture2D gbuffer_0_texture;
+layout(set = 0, binding = 4) uniform texture2D gbuffer_1_texture;
+layout(set = 0, binding = 5) uniform texture2D depth_texture;
+layout(set = 0, binding = 6) uniform accelerationStructureEXT tlas;
 layout(set = 0, binding = 7, rgba32f) uniform image2D color_texture;
-layout(set = 0, binding = 8) uniform accelerationStructureEXT tlas;
+
 
 
 #ifdef RGEN

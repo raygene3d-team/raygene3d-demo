@@ -334,11 +334,11 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreateConfig(uint32_t level)
   {
-    std::fstream shader_fs;
-    shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
-    std::stringstream shader_ss;
-    shader_ss << shader_fs.rdbuf();
-    shader_fs.close();
+    //std::fstream shader_fs;
+    //shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
+    //std::stringstream shader_ss;
+    //shader_ss << shader_fs.rdbuf();
+    //shader_fs.close();
 
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -383,7 +383,7 @@ namespace RayGene3D
     };
 
     configs[level] = passes[level]->CreateConfig("environment_reflection_config_" + std::to_string(level),
-      shader_ss.str(),
+      "./asset/shaders/", "render_3d_reflection_probe.hlsl",
       Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_GEOM | Config::COMPILATION_FRAG),
       { defines.data(), defines.size() },
       ia_config,

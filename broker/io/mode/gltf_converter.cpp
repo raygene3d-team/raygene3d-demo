@@ -281,8 +281,8 @@ namespace RayGene3D
         {
           const auto value = glm::u8vec4(
             key[0] == -1 ? 000u : texture_sources[key[0]].GetItem<glm::u8vec4>(i).g,
-            key[1] == -1 ? 000u : texture_sources[key[1]].GetItem<glm::u8vec4>(i).r,
-            key[2] == -1 ? 000u : texture_sources[key[2]].GetItem<glm::u8vec4>(i).g,
+            key[1] == -1 ? 127u : texture_sources[key[1]].GetItem<glm::u8vec4>(i).r,
+            key[2] == -1 ? 127u : texture_sources[key[2]].GetItem<glm::u8vec4>(i).g,
             key[3] == -1 ? 255u : texture_sources[key[3]].GetItem<glm::u8vec4>(i).b);
           raw.SetItem(value, i);
         }

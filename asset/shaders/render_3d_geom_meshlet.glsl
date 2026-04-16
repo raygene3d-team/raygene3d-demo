@@ -133,7 +133,7 @@ layout(std140, set = 0, binding = 5) uniform instance_data {Instance instance;};
 layout(std430, set = 0, binding = 6) buffer readonly meshlet_buffer {Meshlet meshlets[];};
 layout(std430, set = 0, binding = 7) buffer readonly v_index_buffer {uint v_indices[];};
 layout(std430, set = 0, binding = 8) buffer readonly vertex_buffer {Vertex vertices[];};
-layout(std430, set = 0, binding = 9) buffer readonly t_index_buffer {uint8_t t_indices[];};
+layout(std430, set = 0, binding = 9) buffer readonly t_index_buffer {uint t_indices[];};
 
 layout(set = 0, binding = 10) uniform texture2DArray aaam_array;
 layout(set = 0, binding = 11) uniform texture2DArray snno_array;
@@ -204,9 +204,13 @@ void main()
     uint tidx = localID + i * GROUP_SIZE;
     if(tidx < meshlet.tidx_count)
     {
-      uint idx0 = t_indices[tidx * 3 + 0 + meshlet.tidx_offset + instance.tidx_offset];
-      uint idx1 = t_indices[tidx * 3 + 1 + meshlet.tidx_offset + instance.tidx_offset];
-      uint idx2 = t_indices[tidx * 3 + 2 + meshlet.tidx_offset + instance.tidx_offset];
+      uint idx = t_indices[tidx + meshlet.tidx_offset + instance.tidx_offset];
+      uint idx0 = (idx >> 0) & 0x000000FF;
+      uint idx1 = (idx >> 8) & 0x000000FF;
+      uint idx2 = (idx >>16) & 0x000000FF;
+      //uint idx0 = t_indices[0 + 4 * tidx + meshlet.tidx_offset + instance.tidx_offset];
+      //uint idx1 = t_indices[1 + 4 * tidx + meshlet.tidx_offset + instance.tidx_offset];
+      //uint idx2 = t_indices[2 + 4 * tidx + meshlet.tidx_offset + instance.tidx_offset];
       
       gl_PrimitiveTriangleIndicesEXT[tidx] = uvec3(idx0, idx1, idx2);
     }

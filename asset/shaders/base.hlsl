@@ -33,6 +33,14 @@ struct Primitive
   uint idx2;
 };
 
+struct Meshlet
+{
+  uint vidx_offset;
+  uint vidx_count;
+  uint tidx_offset;
+  uint tidx_count;
+};
+
 struct Instance
 {
   float4x3 transform;

@@ -186,7 +186,7 @@ namespace RayGene3D
   }
 
   Render3DBroker::Render3DBroker(Wrap& wrap)
-    : Broker("spark_broker", wrap)
+    : Broker("render_3d_broker", wrap)
     , scope(wrap.GetCore(), wrap.GetUtil())
   {
     Update();

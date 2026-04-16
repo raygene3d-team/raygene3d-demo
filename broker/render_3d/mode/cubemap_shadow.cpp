@@ -39,14 +39,14 @@ namespace RayGene3D
       const auto size_y = scope.prop_extent_y->GetUint();
       const auto layers = 1u;
 
-      auto shadowed_color_target = scope.color_target->CreateView("spark_shadowed_color_target",
+      auto shadowed_color_target = scope.color_target->CreateView("render_3d_shadowed_color_target",
         Usage(USAGE_RENDER_TARGET)
       );
       const Pass::RTAttachment rt_attachments[] = {
         shadowed_color_target, std::nullopt,
       };
 
-      shadowed_pass = scope.core->GetDevice()->CreatePass("spark_shadowed_pass",
+      shadowed_pass = scope.core->GetDevice()->CreatePass("render_3d_shadowed_pass",
         Pass::TYPE_GRAPHIC,
         size_x,
         size_y,
@@ -60,11 +60,11 @@ namespace RayGene3D
 
     void CubemapShadow::CreateShadowedConfig()
     {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      //shader_fs.open("./asset/shaders/spark_shadowed.hlsl", std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -102,8 +102,8 @@ namespace RayGene3D
         }
       };
 
-      shadowed_config = shadowed_pass->CreateConfig("spark_shadowed_config",
-        shader_ss.str(),
+      shadowed_config = shadowed_pass->CreateConfig("render_3d_shadowed_config",
+        "./asset/shaders/", "render_3d_shadowed.hlsl",
         Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
         { defines.data(), defines.size() },
         ia_Config,
@@ -116,23 +116,23 @@ namespace RayGene3D
 
     void CubemapShadow::CreateShadowedBatch()
     {
-      const auto& shadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_shadowed_screen_quad_vertices",
+      const auto& shadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("render_3d_shadowed_screen_quad_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
-      const auto& shadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_shadowed_screen_quad_triangles",
+      const auto& shadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("render_3d_shadowed_screen_quad_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       const Batch::Entity entities[] = {
         {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u } }
       };
 
-      const auto& shadowed_screen_data = scope.screen_data->CreateView("spark_shadowed_screen_data",
+      const auto& shadowed_screen_data = scope.screen_data->CreateView("render_3d_shadowed_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      const auto& shadowed_camera_data = scope.camera_data->CreateView("spark_shadowed_camera_data",
+      const auto& shadowed_camera_data = scope.camera_data->CreateView("render_3d_shadowed_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      const auto& shadowed_shadow_data = scope.shadow_data->CreateView("spark_shadowed_shadow_data",
+      const auto& shadowed_shadow_data = scope.shadow_data->CreateView("render_3d_shadowed_shadow_data",
         Usage(USAGE_CONSTANT_DATA)
       );
       const std::shared_ptr<View> ub_views[] = {
@@ -141,16 +141,16 @@ namespace RayGene3D
         shadowed_shadow_data
       };
 
-      const auto& shadowed_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_shadowed_gbuffer_0_texture",
+      const auto& shadowed_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("render_3d_shadowed_gbuffer_0_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& shadowed_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_shadowed_gbuffer_1_texture",
+      const auto& shadowed_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("render_3d_shadowed_gbuffer_1_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& shadowed_depth_texture = scope.depth_target->CreateView("spark_shadowed_depth_texture",
+      const auto& shadowed_depth_texture = scope.depth_target->CreateView("render_3d_shadowed_depth_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& shadowed_shadow_map = scope.shadow_map->CreateView("spark_shadowed_shadow_map",
+      const auto& shadowed_shadow_map = scope.shadow_map->CreateView("render_3d_shadowed_shadow_map",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
@@ -164,7 +164,7 @@ namespace RayGene3D
         { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_CLAMP, Batch::Sampler::COMPARISON_LESS },
       };
 
-      shadowed_batch = shadowed_config->CreateBatch("spark_shadowed_batch",
+      shadowed_batch = shadowed_config->CreateBatch("render_3d_shadowed_batch",
         { entities, std::size(entities) },
         { samplers, std::size(samplers) },
         { ub_views, std::size(ub_views) },
@@ -179,7 +179,7 @@ namespace RayGene3D
       const auto size_y = scope.shadow_resolution;
       const auto layers = 1u;
 
-      const auto& shadowmap_shadow_map = scope.shadow_map->CreateView("spark_shadowmap_shadow_map",
+      const auto& shadowmap_shadow_map = scope.shadow_map->CreateView("render_3d_shadowmap_shadow_map",
         Usage(USAGE_DEPTH_STENCIL),
         { 0u, uint32_t(-1) }
       );
@@ -188,7 +188,7 @@ namespace RayGene3D
         { shadowmap_shadow_map, { 1.0f, std::nullopt }},
       };
 
-      shadowmap_pass = scope.core->GetDevice()->CreatePass("spark_shadowmap_pass",
+      shadowmap_pass = scope.core->GetDevice()->CreatePass("render_3d_shadowmap_pass",
         Pass::TYPE_GRAPHIC,
         size_x,
         size_y,
@@ -203,11 +203,11 @@ namespace RayGene3D
 
     void CubemapShadow::CreateShadowmapConfig()
     {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      //shader_fs.open("./asset/shaders/spark_shadowmap.hlsl", std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       const Config::IAState ia_Config =
       {
@@ -242,8 +242,8 @@ namespace RayGene3D
         }
       };
 
-      shadowmap_config = shadowmap_pass->CreateConfig("spark_shadowmap_config",
-        shader_ss.str(),
+      shadowmap_config = shadowmap_pass->CreateConfig("render_3d_shadowmap_config",
+        "./asset/shaders/", "render_3d_shadowmap.hlsl",
         Config::Compilation(Config::COMPILATION_VERT),
         {},
         ia_Config,
@@ -259,15 +259,15 @@ namespace RayGene3D
       auto entities = std::vector<Batch::Entity>(count);
       for (size_t i = 0u; i < count; ++i)
       {
-        const auto& shadowmap_scene_vertices = scope.scene_buffer_vert->CreateView("spark_shadowmap_scene_vertices_" + std::to_string(i),
+        const auto& shadowmap_scene_vertices = scope.scene_buffer_vert->CreateView("render_3d_shadowmap_scene_vertices_" + std::to_string(i),
           Usage(USAGE_VERTEX_ARRAY)
         );
 
-        const auto& shadowmap_scene_triangles = scope.scene_buffer_trng->CreateView("spark_shadowmap_scene_triangles_" + std::to_string(i),
+        const auto& shadowmap_scene_triangles = scope.scene_buffer_trng->CreateView("render_3d_shadowmap_scene_triangles_" + std::to_string(i),
           Usage(USAGE_INDEX_ARRAY)
         );
 
-        const auto& shadowmap_graphic_arguments = scope.graphic_arguments->CreateView("spark_shadowmap_graphic_argument_" + std::to_string(i),
+        const auto& shadowmap_graphic_arguments = scope.graphic_arguments->CreateView("render_3d_shadowmap_graphic_argument_" + std::to_string(i),
           Usage(USAGE_ARGUMENT_LIST),
           { sizeof(Batch::Graphic) * i, sizeof(Batch::Graphic) }
         );
@@ -290,7 +290,7 @@ namespace RayGene3D
         };
       }
 
-      const auto& shadowmap_shadow_data = scope.shadow_data->CreateView("spark_shadowmap_shadow_data",
+      const auto& shadowmap_shadow_data = scope.shadow_data->CreateView("render_3d_shadowmap_shadow_data",
         USAGE_CONSTANT_DATA,
         { 0u, sizeof(Frustum) }
       );
@@ -299,7 +299,7 @@ namespace RayGene3D
         shadowmap_shadow_data,
       };
 
-      shadowmap_batch = shadowmap_config->CreateBatch("spark_shadowmap_batch",
+      shadowmap_batch = shadowmap_config->CreateBatch("render_3d_shadowmap_batch",
         { entities.data(), entities.size() },
         {},
         { ub_views, std::size(ub_views) },

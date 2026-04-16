@@ -76,16 +76,16 @@ namespace RayGene3D
 
     void Mode::CreateGeometryConfig()
     {
-      const auto file = use_mesh_pipe
-        ? "./asset/shaders/spark_geom_meshlet.glsl"
-        : "./asset/shaders/spark_geom_raster.hlsl";
+      //const auto file = use_mesh_pipe
+      //  ? "./asset/shaders/spark_geom_meshlet.glsl"
+      //  : "./asset/shaders/spark_geom_raster.hlsl";
       
-      std::fstream shader_fs;
-      //shader_fs.open();
-      shader_fs.open(file, std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      ////shader_fs.open();
+      //shader_fs.open(file, std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -137,8 +137,11 @@ namespace RayGene3D
         ? Config::Compilation(Config::COMPILATION_MESH | Config::COMPILATION_FRAG)
         : Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG);
 
+      const auto meshlet_shader_name = std::string("render_3d_geom_meshlet") + (scope.core->GetType() == Core::DEVICE_VLK ? ".glsl" : ".hlsl");
+      const auto raster_shader_name = "render_3d_geom_raster.hlsl";
+
       geometry_config = geometry_pass->CreateConfig("render_3d_geometry_config",
-        shader_ss.str(),
+        "./asset/shaders/", use_mesh_pipe ? meshlet_shader_name : raster_shader_name,
         compilation,
         { defines.data(), defines.size() },
         ia_config,
@@ -205,7 +208,7 @@ namespace RayGene3D
 
       const Batch::Sampler samplers[] = {
         { Batch::Sampler::FILTERING_ANISOTROPIC, 16, Batch::Sampler::ADDRESSING_REPEAT, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f },
-        { Batch::Sampler::FILTERING_NEAREST, 1, Batch::Sampler::ADDRESSING_MIRROR, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
+        { Batch::Sampler::FILTERING_LINEAR, 1, Batch::Sampler::ADDRESSING_MIRROR, Batch::Sampler::COMPARISON_NEVER, {0.0f, 0.0f, 0.0f, 0.0f},-FLT_MAX, FLT_MAX, 0.0f } };
 
       const auto& geometry_screen_data = scope.screen_data->CreateView("render_3d_geometry_screen_data",
         Usage(USAGE_CONSTANT_DATA)
@@ -310,11 +313,11 @@ namespace RayGene3D
 
     void Mode::CreateSkyboxConfig()
     {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      //shader_fs.open("./asset/shaders/spark_environment.hlsl", std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       std::pair<std::string, std::string> defines[] =
       {
@@ -357,7 +360,7 @@ namespace RayGene3D
       };
 
       skybox_config = geometry_pass->CreateConfig("render_3d_skybox_config",
-        shader_ss.str(),
+        "./asset/shaders/", "render_3d_environment.hlsl",
         Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
         { defines, std::size(defines) },
         ia_config,
@@ -438,14 +441,14 @@ namespace RayGene3D
 
     void Mode::CreatePresentConfig()
     {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      //shader_fs.open("./asset/shaders/spark_present.hlsl", std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       present_config = present_pass->CreateConfig("render_3d_present_config",
-        shader_ss.str(),
+        "./asset/shaders/", "render_3d_present.hlsl",
         Config::COMPILATION_COMP,
         {},
         {},

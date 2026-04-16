@@ -47,7 +47,7 @@ namespace RayGene3D
 
       std::vector<Meshlet> meshlets;
       std::vector<uint32_t> v_indices;
-      std::vector<uint8_t> t_indices;
+      std::vector<uint32_t> t_indices;
 
       std::vector<Box> boxes;
 

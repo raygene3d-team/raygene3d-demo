@@ -39,14 +39,14 @@ namespace RayGene3D
       const auto size_y = scope.prop_extent_y->GetUint();
       const auto layers = 1u;
 
-      const auto& sw_traced_color_target = scope.color_target->CreateView("spark_sw_traced_color_target",
+      const auto& sw_traced_color_target = scope.color_target->CreateView("render_3d_sw_traced_color_target",
         Usage(USAGE_RENDER_TARGET)
       );
       const Pass::RTAttachment rt_attachments[] = {
         sw_traced_color_target, std::nullopt,
       };
 
-      sw_traced_pass = scope.core->GetDevice()->CreatePass("spark_sw_traced_pass",
+      sw_traced_pass = scope.core->GetDevice()->CreatePass("render_3d_sw_traced_pass",
         Pass::TYPE_GRAPHIC,
         size_x,
         size_y,
@@ -61,11 +61,11 @@ namespace RayGene3D
 
     void SWTracedShadow::CreateSWTracedConfig()
     {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/spark_sw_traced.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      //shader_fs.open("./asset/shaders/spark_sw_traced.hlsl", std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
@@ -103,8 +103,8 @@ namespace RayGene3D
         }
       };
 
-      sw_traced_config = sw_traced_pass->CreateConfig("spark_sw_traced_config",
-        shader_ss.str(),
+      sw_traced_config = sw_traced_pass->CreateConfig("render_3d_sw_traced_config",
+        "./asset/shaders/", "render_3d_sw_traced.hlsl",
         Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG),
         { defines.data(), defines.size() },
         ia_Config,
@@ -116,23 +116,23 @@ namespace RayGene3D
 
     void SWTracedShadow::CreateSWTracedBatch()
     {
-      const auto& shadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("spark_sw_traced_screen_quad_vertices",
+      const auto& shadowed_screen_quad_vertices = scope.screen_quad_vertices->CreateView("render_3d_sw_traced_screen_quad_vertices",
         Usage(USAGE_VERTEX_ARRAY)
       );
-      const auto& shadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("spark_sw_traced_screen_quad_triangles",
+      const auto& shadowed_screen_quad_triangles = scope.screen_quad_triangles->CreateView("render_3d_sw_traced_screen_quad_triangles",
         Usage(USAGE_INDEX_ARRAY)
       );
       const Batch::Entity entities[] = {
         {{shadowed_screen_quad_vertices}, {shadowed_screen_quad_triangles}, nullptr, { 0u, 1u }, { 0u, 4u }, { 0u, 6u }}
       };
 
-      const auto& sw_traced_screen_data = scope.screen_data->CreateView("spark_sw_traced_screen_data",
+      const auto& sw_traced_screen_data = scope.screen_data->CreateView("render_3d_sw_traced_screen_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      const auto& sw_traced_camera_data = scope.camera_data->CreateView("spark_sw_traced_camera_data",
+      const auto& sw_traced_camera_data = scope.camera_data->CreateView("render_3d_sw_traced_camera_data",
         Usage(USAGE_CONSTANT_DATA)
       );
-      const auto& sw_traced_shadow_data = scope.shadow_data->CreateView("spark_sw_traced_shadow_data",
+      const auto& sw_traced_shadow_data = scope.shadow_data->CreateView("render_3d_sw_traced_shadow_data",
         Usage(USAGE_CONSTANT_DATA),
         { 0, sizeof(Frustum) }
       );
@@ -142,19 +142,19 @@ namespace RayGene3D
         sw_traced_shadow_data,
       };
 
-      const auto& sw_traced_trace_t_boxes = scope.trace_buffer_tbox->CreateView("spark_sw_traced_trace_t_boxes",
+      const auto& sw_traced_trace_t_boxes = scope.trace_buffer_tbox->CreateView("render_3d_sw_traced_trace_t_boxes",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& sw_traced_trace_b_boxes = scope.trace_buffer_bbox->CreateView("spark_sw_traced_trace_b_boxes",
+      const auto& sw_traced_trace_b_boxes = scope.trace_buffer_bbox->CreateView("render_3d_sw_traced_trace_b_boxes",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& sw_traced_trace_instances = scope.trace_buffer_inst->CreateView("spark_sw_traced_trace_instances",
+      const auto& sw_traced_trace_instances = scope.trace_buffer_inst->CreateView("render_3d_sw_traced_trace_instances",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& sw_traced_trace_triangles = scope.trace_buffer_trng->CreateView("spark_sw_traced_trace_triangles",
+      const auto& sw_traced_trace_triangles = scope.trace_buffer_trng->CreateView("render_3d_sw_traced_trace_triangles",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& sw_traced_trace_vertices = scope.trace_buffer_vert->CreateView("spark_sw_traced_trace_vertices",
+      const auto& sw_traced_trace_vertices = scope.trace_buffer_vert->CreateView("render_3d_sw_traced_trace_vertices",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> rb_views[] = {
@@ -165,13 +165,13 @@ namespace RayGene3D
         sw_traced_trace_vertices,
       };
 
-      const auto& sw_traced_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("spark_sw_traced_gbuffer_0_texture",
+      const auto& sw_traced_gbuffer_0_texture = scope.gbuffer_0_target->CreateView("render_3d_sw_traced_gbuffer_0_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& sw_traced_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("spark_sw_traced_gbuffer_1_texture",
+      const auto& sw_traced_gbuffer_1_texture = scope.gbuffer_1_target->CreateView("render_3d_sw_traced_gbuffer_1_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
-      const auto& sw_traced_depth_texture = scope.depth_target->CreateView("spark_sw_traced_depth_texture",
+      const auto& sw_traced_depth_texture = scope.depth_target->CreateView("render_3d_sw_traced_depth_texture",
         Usage(USAGE_SHADER_RESOURCE)
       );
       const std::shared_ptr<View> ri_views[] = {
@@ -180,7 +180,7 @@ namespace RayGene3D
         sw_traced_depth_texture,
       };
 
-      sw_traced_batch = sw_traced_config->CreateBatch("spark_sw_traced_batch",
+      sw_traced_batch = sw_traced_config->CreateBatch("render_3d_sw_traced_batch",
         { entities, std::size(entities) },
         {},
         { ub_views, std::size(ub_views) },
