@@ -463,12 +463,18 @@ namespace RayGene3D
       constant_view,
     };
 
-    const auto skybox_view = skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(level),
-      Usage(USAGE_SHADER_RESOURCE),
-      { uint32_t(std::min(0, int32_t(quality) - int32_t(1u))), 1u},
-      { 0u, 6u },
-      View::BIND_CUBEMAP_LAYER
-    );
+
+    const auto skybox_view = level == 0
+      ? skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(level),
+        Usage(USAGE_SHADER_RESOURCE),
+        { 0u, quality }, //{ uint32_t(std::min(0, int32_t(quality) - int32_t(1u))), 1u},
+        { 0u, 6u },
+        View::BIND_CUBEMAP_LAYER)
+      : reflection_map->CreateView("environment_skybox_view_" + std::to_string(level),
+        Usage(USAGE_SHADER_RESOURCE),
+        { 0u, level }, //{ uint32_t(std::min(0, int32_t(quality) - int32_t(1u))), 1u},
+        { 0u, 6u },
+        View::BIND_CUBEMAP_LAYER);
 
 
     const std::shared_ptr<View> ri_views[] = {

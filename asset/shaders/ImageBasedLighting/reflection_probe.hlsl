@@ -23,7 +23,7 @@ float3 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
     float  NdotL, NdotH, LdotH;
 
     {
-            float2 uv = Fibonacci2d(i, sample_count);
+            float2 uv = Hammersley2d(i, sample_count);
       SampleGGXDir(uv, V, tbn, roughness, L, NdotL, NdotH, LdotH);
 
       if (NdotL <= 0) continue;
