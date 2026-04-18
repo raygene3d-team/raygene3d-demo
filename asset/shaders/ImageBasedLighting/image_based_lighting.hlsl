@@ -3,7 +3,7 @@
 
   void SampleGGXDir(float2 u, float3 V, float3x3 local_to_world, float roughness, out float3 L, out float NdotL, out float NdotH, out float VdotH)
   {
-      float cos_theta = sqrt(SafeDiv(1.0 - u.x, 1.0 + (roughness * roughness - 1.0) * u.x));
+    float cos_theta = sqrt(SafeDiv(1.0 - u.x, 1.0 - (1.0 - roughness * roughness) * u.x));
       float phi = TWO_PI * u.y;
 
       float3 local_h = SphericalToCartesian(phi, cos_theta);

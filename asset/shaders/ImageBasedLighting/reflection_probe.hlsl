@@ -8,13 +8,14 @@ float3 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
 {
   float3x3 tbn = GetTBN(N);
 
-#ifndef USE_KARIS_APPROXIMATION
-  float NdotV = 1; // N == V
-  float part_lambda_v = GetSmithJointGGXPartLambdaV(NdotV, roughness);
-#endif
+//#ifndef USE_KARIS_APPROXIMATION
+//  float NdotV = 1; // N == V
+//  float part_lambda_v = GetSmithJointGGXPartLambdaV(NdotV, roughness);
+//#endif
 
   float3 light_int = float3(0.0, 0.0, 0.0);
-  float  cbsdf_int = 0.0;
+  float  cbsdf_int = float3(0.0, 0.0, 0.0);0.0;
+    float3 test = float3(0.0, 0.0, 0.0);
 
   for (uint i = 0; i < sample_count; ++i)
   {
@@ -22,33 +23,36 @@ float3 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
     float  NdotL, NdotH, LdotH;
 
     {
-      float2 uv = Hammersley2d(i, sample_count);
+            float2 uv = Fibonacci2d(i, sample_count);
       SampleGGXDir(uv, V, tbn, roughness, L, NdotL, NdotH, LdotH);
 
       if (NdotL <= 0) continue;
     }
 
     float pdf = 0.25 * D_GGX(NdotH, roughness);
-    float omega_s = rcp(sample_count) * rcp(pdf);
+    float omega_s = 1.0 / (sample_count * pdf);
 
     const float mip_bias = roughness;
     float mip_level = 0.5 * log2(omega_s * inv_omega_p) + mip_bias;
 
-    float3 val = skybox_texture.SampleLevel(sampler0, L, mip_level).rgb;
+        float3 val = skybox_texture.SampleLevel(sampler0, normalize(L), mip_level).rgb;
+        
+        test += L;
 
-#ifndef USE_KARIS_APPROXIMATION
-    float F = 1;
-    float G = V_SmithJointGGX(NdotL, NdotV, roughness, part_lambda_v) * NdotL * NdotV;
-
-    light_int += F * G * val;
-    cbsdf_int += F * G;
-#else
+//#ifndef USE_KARIS_APPROXIMATION
+//    float F = 1;
+//    float G = V_SmithJointGGX(NdotL, NdotV, roughness, part_lambda_v) * NdotL * NdotV;
+//
+//    light_int += F * G * val;
+//    cbsdf_int += F * G;
+//#else
     light_int += NdotL * val;
     cbsdf_int += NdotL;
-#endif
+//#endif
   }
 
-  return light_int / cbsdf_int;
+    return light_int / cbsdf_int;
+
 }
 
 float PerceptualRoughnessToRoughness(float perceptual_roughness)
@@ -110,6 +114,8 @@ uint GetSampleCount(uint mip_level)
   //  case 6:
   //    return 89;
   //}
+  //  
+  //  return 1;
 
-  return 1 << (mip_level);
+    return 4181;
 }

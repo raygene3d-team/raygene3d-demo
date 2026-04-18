@@ -87,7 +87,7 @@ namespace RayGene3D
       return glm::f32vec2(u, v);
     };
 
-    auto cube_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent, extent, 6);   
+    auto cube_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent, extent, 6, quality);   
     for (auto k = 0u; k < 6; ++k)
     {
       for (auto i = 0ull; i < size_t(extent * extent); ++i)
@@ -99,6 +99,26 @@ namespace RayGene3D
 
         cube_texture.Set(k, 0, { pano_texture.Get(0, 0, 2ull * extent * pano_texel.y + pano_texel.x).first, 1 }, i);
       }
+    }
+
+    for (auto k = 0u; k < 6; ++k)
+    {
+        for (auto j = 0u; j < quality - 1; ++j)
+        {            
+            for (auto y = 0ull; y < size_t(extent >> j + 1); ++y)
+            {
+                for (auto x = 0ull; x < size_t(extent >> j + 1); ++x)
+                {
+                    const auto value = glm::f32vec4(0.25f, 0.25f, 0.25f, 0.25f) * (
+                        *cube_texture.Get(k, j, size_t(extent >> j) * (2 * y + 0) + 2 * x + 0).first +
+                        *cube_texture.Get(k, j, size_t(extent >> j) * (2 * y + 0) + 2 * x + 1).first + 
+                        *cube_texture.Get(k, j, size_t(extent >> j) * (2 * y + 1) + 2 * x + 0).first +
+                        *cube_texture.Get(k, j, size_t(extent >> j) * (2 * y + 1) + 2 * x + 1).first);
+
+                    cube_texture.Set(k, j + 1, { &value, 1 }, size_t(extent >> j + 1) * y + x);
+                }
+            }
+        }
     }
 
     prop_tree->GetObjectItem("environment")->SetObjectItem("skybox_cubemap", cube_texture.Export());
