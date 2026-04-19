@@ -14,7 +14,7 @@ float3 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
 //#endif
 
   float3 light_int = float3(0.0, 0.0, 0.0);
-  float  cbsdf_int = float3(0.0, 0.0, 0.0);0.0;
+  float  cbsdf_int = 0.0;
     float3 test = float3(0.0, 0.0, 0.0);
 
   for (uint i = 0; i < sample_count; ++i)
@@ -23,7 +23,7 @@ float3 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
     float  NdotL, NdotH, LdotH;
 
     {
-            float2 uv = Hammersley2d(i, sample_count);
+      float2 uv = Hammersley2d(i, sample_count);
       SampleGGXDir(uv, V, tbn, roughness, L, NdotL, NdotH, LdotH);
 
       if (NdotL <= 0) continue;
@@ -97,25 +97,21 @@ float MipmapLevelToPerceptualRoughness(float mipmap_level, float mipmap_levels_c
 
 uint GetSampleCount(uint mip_level)
 {
-  //switch (mip_level)
-  //{
-  //  case 0:
-  //    return 1;
-  //  case 1:
-  //    return 21;
-  //  case 2:
-  //    return 34;
-  //  case 3:
-  //    return 55;
-  //  case 4:
-  //    return 89;
-  //  case 5:
-  //    return 89;
-  //  case 6:
-  //    return 89;
-  //}
-  //  
-  //  return 1;
-
-    return 4181;
+  switch (mip_level)
+  {
+    default:
+      return 1;
+    case 1:
+      return 21;
+    case 2:
+      return 34;
+    case 3:
+      return 55;
+    case 4:
+      return 89;
+    case 5:
+      return 89;
+    case 6:
+      return 89;
+  }
 }

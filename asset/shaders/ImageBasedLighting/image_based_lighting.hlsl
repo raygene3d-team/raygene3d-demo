@@ -3,10 +3,13 @@
 
   void SampleGGXDir(float2 u, float3 V, float3x3 local_to_world, float roughness, out float3 L, out float NdotL, out float NdotH, out float VdotH)
   {
-    float cos_theta = sqrt(SafeDiv(1.0 - u.x, 1.0 - (1.0 - roughness * roughness) * u.x));
-      float phi = TWO_PI * u.y;
+    float cos_theta = sqrt((1.0 - u.x) / (1.0 - (1.0 - roughness * roughness) * u.x));
+    float sin_theta = sqrt(saturate(1.0 - cos_theta * cos_theta));
+    
+    float sin_phi, cos_phi;
+    sincos(TWO_PI * u.y, sin_phi, cos_phi);
 
-      float3 local_h = SphericalToCartesian(phi, cos_theta);
+    float3 local_h = float3(float2(cos_phi, sin_phi) * sin_theta, cos_theta);
 
       NdotH = cos_theta;
 
@@ -24,8 +27,8 @@
       float a2 = roughness * roughness;
       float s = (NdotH * a2 - NdotH) * NdotH + 1.0;
 
-      return INV_PI * SafeDiv(a2, s * s);
-  }
+    return INV_PI * (a2 / (s * s));
+}
 
   float GetSmithJointGGXPartLambdaV(float NdotV, float roughness)
   {
