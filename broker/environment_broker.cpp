@@ -126,8 +126,6 @@ namespace RayGene3D
     CreateSkyboxCubemap();
     CreateReflectionMap();
 
-    CreateVtxArray();
-    CreateIdxArray();
 
     for (auto i = 0u; i < levels; ++i)
     {
@@ -149,19 +147,6 @@ namespace RayGene3D
     for (auto i = 0u; i < levels; ++i)
     {
       passes[i]->SetEnabled(true);
-    }
-
-    for (auto i = 0u; i < levels; ++i)
-    {
-      auto graphic_arg = reinterpret_cast<Batch::Graphic*>(argument_list[i]->Map());
-
-      graphic_arg[0].idx_count = 4u;
-      graphic_arg[0].ins_count = 6u;
-      graphic_arg[0].idx_offset = 0u;
-      graphic_arg[0].vtx_offset = 0u;
-      graphic_arg[0].ins_offset = 0u;
-
-      argument_list[i]->Unmap();
     }
 
     core->GetDevice()->Use();
@@ -186,52 +171,6 @@ namespace RayGene3D
       DestroyConstantData(i);
       DestroyArgumentList(i);
     }
-
-    DestroyVtxArray();
-    DestroyIdxArray();
-
-    //DestroySkyboxCubemap();
-    //DestroyReflectionMap();
-  }
-
-  void EnvironmentBroker::CreateVtxArray()
-  {
-    static const std::array<glm::f32vec4, 4> quad_vtx = {
-      glm::f32vec4(-1.0f, 1.0f, 0.0f, 0.0f),
-      glm::f32vec4( 1.0f, 1.0f, 1.0f, 0.0f),
-      glm::f32vec4(-1.0f,-1.0f, 0.0f, 1.0f),
-      glm::f32vec4( 1.0f,-1.0f, 1.0f, 1.0f),
-    };
-
-    vtx_array = core->GetDevice()->CreateResource("environment_vtx_array",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_VERTEX_ARRAY),
-        sizeof(glm::f32vec4),
-        quad_vtx.size(),
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { reinterpret_cast<const uint8_t*>(quad_vtx.data()), quad_vtx.size() * sizeof(glm::f32vec4) }
-    );
-  }
-
-  void EnvironmentBroker::CreateIdxArray()
-  {
-    static const std::array<glm::u32vec3, 2> quad_idx = {
-      glm::u32vec3(0u, 1u, 2u),
-      glm::u32vec3(3u, 2u, 1u),
-    };
-
-    idx_array = core->GetDevice()->CreateResource("environment_idx_array",
-      Resource::BufferDesc
-      {
-        Usage(USAGE_INDEX_ARRAY),
-        sizeof(glm::u32vec3),
-        quad_idx.size(),
-      },
-      Resource::Hint(Resource::Hint::HINT_UNKNOWN),
-      { reinterpret_cast<const uint8_t*>(quad_idx.data()), quad_idx.size() * sizeof(glm::u32vec3) }
-    );
   }
 
   void EnvironmentBroker::CreateReflectionMap()
@@ -245,7 +184,7 @@ namespace RayGene3D
     reflection_map = core->GetDevice()->CreateResource("environment_reflection_map",
       Resource::Tex2DDesc
       {
-        Usage(USAGE_RENDER_TARGET | USAGE_SHADER_RESOURCE),
+        Usage(USAGE_UNORDERED_ACCESS | USAGE_SHADER_RESOURCE),
         mipmap,
         layers,
         format,
@@ -326,27 +265,16 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreatePass(uint32_t level)
   {
-    auto environment_reflection_target = reflection_map->CreateView("environment_reflection_target_" + std::to_string(level),
-      Usage(USAGE_RENDER_TARGET),
-      { level, 1u },
-      { 0u, 6u },
-      View::BIND_CUBEMAP_LAYER
-    );
-
-    const Pass::RTAttachment rt_attachments[] = {
-      { environment_reflection_target, std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 0.0f } },
-    };
-
     const auto size_x = 1u << int32_t(levels) - (1 + level);
     const auto size_y = 1u << int32_t(levels) - (1 + level);
-    const auto layers = 6u;
+    const auto layers = 1u;
 
     passes[level] = core->GetDevice()->CreatePass("environment_reflection_pass_" + std::to_string(level),
-      Pass::TYPE_GRAPHIC,
+      Pass::TYPE_COMPUTE,
       size_x,
       size_y,
       layers,
-      { rt_attachments, std::size(rt_attachments) },
+      {},
       {}
     );
   }
@@ -354,99 +282,43 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreateConfig(uint32_t level)
   {
-    //std::fstream shader_fs;
-    //shader_fs.open("./asset/shaders/spark_reflection_probe.hlsl", std::fstream::in);
-    //std::stringstream shader_ss;
-    //shader_ss << shader_fs.rdbuf();
-    //shader_fs.close();
-
     std::vector<std::pair<std::string, std::string>> defines;
     //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-    const Config::IAState ia_config =
-    {
-      Config::TOPOLOGY_TRIANGLELIST,
-      Config::INDEXER_32_BIT,
-      {
-        { 0, 0, 16, FORMAT_R32G32_FLOAT, false },
-        { 0, 8, 16, FORMAT_R32G32_FLOAT, false },
-      }
-    };
-
-    const Config::RCState rc_config =
-    {
-      Config::FILL_SOLID,
-      Config::CULL_NONE,
-      {
-        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
-        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
-        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
-        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
-        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
-        { 0.0f, 0.0f, float(1u << int32_t(levels) - (1 + level)), float(1u << int32_t(levels) - (1 + level)), 0.0f, 1.0f },
-      },
-    };
-
-    const Config::DSState ds_config =
-    {
-      false, //depth_enabled
-      false, //depth_write
-      Config::COMPARISON_ALWAYS //depth_comparison
-    };
-
-    const Config::OMState om_config =
-    {
-      false,
-      {
-        { false, Config::OPERAND_SRC_ALPHA, Config::OPERAND_INV_SRC_ALPHA, Config::OPERATION_ADD, Config::OPERAND_INV_SRC_ALPHA, Config::OPERAND_ZERO, Config::OPERATION_ADD, 0xF },
-      }
-    };
-
     configs[level] = passes[level]->CreateConfig("environment_reflection_config_" + std::to_string(level),
       "./asset/shaders/", "render_3d_reflection_probe.hlsl",
-      Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_GEOM | Config::COMPILATION_FRAG),
+      Config::Compilation(Config::COMPILATION_COMP),
       { defines.data(), defines.size() },
-      ia_config,
-      rc_config,
-      ds_config,
-      om_config
+        {},
+        {},
+        {},
+        {}
     );
   }
 
 
   void EnvironmentBroker::CreateBatch(uint32_t level)
   {
-    const auto vtx_view = vtx_array->CreateView("environment_vtx_view_" + std::to_string(level),
-      Usage(USAGE_VERTEX_ARRAY)
-    );
-    const std::shared_ptr<View> va_views[] = {
-      vtx_view,
-    };
-
-    const auto idx_view = idx_array->CreateView("environment_idx_view_" + std::to_string(level),
-      Usage(USAGE_INDEX_ARRAY)
-    );
-    const std::shared_ptr<View> ia_views[] = {
-      idx_view,
-    };
-
     const auto argument_view = argument_list[level]->CreateView("environment_argument_view_" + std::to_string(level),
       Usage(USAGE_ARGUMENT_LIST)
     );
 
-    const auto& ins_range = Range{ 0u, 6u };
-    const auto& vtx_range = Range{ 0u, 4u };
-    const auto& idx_range = Range{ 0u, 6u };
+    //const auto& ins_range = Range{ 0u, 6u };
+    //const auto& vtx_range = Range{ 0u, 4u };
+    //const auto& idx_range = Range{ 0u, 6u };
+    const auto& grid_x = Range{ 0u, 1u << int32_t(levels) - (1 + level) };
+    const auto& grid_y = Range{ 0u, 1u << int32_t(levels) - (1 + level) };
+    const auto& grid_z = Range{ 0u, 1u };
     const auto& sb_offset = std::nullopt; // std::array<uint32_t, 4>{ 0u, 0u, 0u, 0u };
     const auto& push_data = std::nullopt;
 
     const auto entity = Batch::Entity{
-      { va_views, va_views + std::size(va_views) },
-      { ia_views, ia_views + std::size(ia_views) },
+      {},
+      {},
       nullptr, //argument_view,
-      ins_range,
-      vtx_range,
-      idx_range,
+      grid_x,
+      grid_y,
+      grid_z,
       sb_offset,
       push_data
     };
@@ -464,7 +336,7 @@ namespace RayGene3D
     };
 
 
-    const auto skybox_view = level == 0
+    const auto skybox_ri_view = level == 0
       ? skybox_cubemap->CreateView("environment_skybox_view_" + std::to_string(level),
         Usage(USAGE_SHADER_RESOURCE),
         { 0u, 1u }, //{ uint32_t(std::min(0, int32_t(quality) - int32_t(1u))), 1u},
@@ -478,7 +350,17 @@ namespace RayGene3D
 
 
     const std::shared_ptr<View> ri_views[] = {
-      skybox_view,
+      skybox_ri_view,
+    };
+
+    const auto skybox_wi_view = reflection_map->CreateView("environment_skybox_view_" + std::to_string(level),
+            Usage(USAGE_UNORDERED_ACCESS),
+            { level, 1u }, //{ uint32_t(std::min(0, int32_t(quality) - int32_t(1u))), 1u},
+            { 0u, 6u });
+
+
+    const std::shared_ptr<View> wi_views[] = {
+      skybox_wi_view,
     };
 
     batches[level] = configs[level]->CreateBatch("environment_reflection_batch_" + std::to_string(level),
@@ -487,7 +369,7 @@ namespace RayGene3D
       { ub_views, std::size(ub_views) },
       {},
       { ri_views, std::size(ri_views) },
-      {},
+      { wi_views, std::size(wi_views) },
       {},
       {}
     );
@@ -509,18 +391,6 @@ namespace RayGene3D
   {
     configs[level]->DestroyBatch(batches[level]);
     batches[level].reset();
-  }
-
-  void EnvironmentBroker::DestroyVtxArray()
-  {
-    core->GetDevice()->DestroyResource(vtx_array);
-    vtx_array.reset();
-  }
-
-  void EnvironmentBroker::DestroyIdxArray()
-  {
-    core->GetDevice()->DestroyResource(idx_array);
-    idx_array.reset();
   }
 
   void EnvironmentBroker::DestroySkyboxCubemap()

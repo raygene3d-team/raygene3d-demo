@@ -57,8 +57,8 @@ namespace RayGene3D
     SPtrBatch batches[levels];
 
   protected:
-    SPtrResource vtx_array;
-    SPtrResource idx_array;
+    //SPtrResource vtx_array;
+    //SPtrResource idx_array;
     SPtrResource skybox_cubemap;
     SPtrResource reflection_map;
     SPtrResource constant_data[levels];
@@ -76,8 +76,8 @@ namespace RayGene3D
     void CreateBatch(uint32_t level);
 
   protected:
-    void CreateVtxArray();
-    void CreateIdxArray();
+    //void CreateVtxArray();
+    //void CreateIdxArray();
     void CreateSkyboxCubemap();
     void CreateReflectionMap();
     void CreateConstantData(uint32_t level);
@@ -89,8 +89,8 @@ namespace RayGene3D
     void DestroyBatch(uint32_t level);
 
   protected:
-    void DestroyVtxArray();
-    void DestroyIdxArray();
+    //void DestroyVtxArray();
+    //void DestroyIdxArray();
     void DestroySkyboxCubemap();
     void DestroyReflectionMap();
     void DestroyConstantData(uint32_t level);

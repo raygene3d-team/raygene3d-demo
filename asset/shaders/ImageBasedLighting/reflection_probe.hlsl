@@ -35,7 +35,7 @@ float3 IntegrateReflectionProbe(float3 V, float3 N, float roughness, float inv_o
     const float mip_bias = roughness;
     float mip_level = 0.5 * log2(omega_s * inv_omega_p) + mip_bias;
 
-        float3 val = skybox_texture.SampleLevel(sampler0, normalize(L), mip_level).rgb;
+        float3 val = skybox_ri_texture.SampleLevel(sampler0, normalize(L), mip_level).rgb;
         
         test += L;
 
