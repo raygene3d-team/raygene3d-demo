@@ -60,7 +60,7 @@ float3 SampleLambertBRDF(in float3 color, in float3 wo, in float s0, in float s1
   //wi = float3(cos_phi * sin_theta, sin_phi * sin_theta, cos_theta);
   //pdf = 1.0 / (2.0 * PI);
 
-  const float3 tput = 1.0 / (2.0 * PI) * cos_theta * color; // / pdf;
+  const float3 tput = 1.0 / (2.0 * PI) * cos_theta * color / pdf;
   return tput;
 }
 
@@ -77,11 +77,6 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   
   const uint seed = pixel_id.x | (pixel_id.y << 16);  
   const uint base = rnd_base;
-
-  //const float2 rand = nrand(thread_id.xy / float2(extent_x, extent_y));
-
-  //const uint sample_index = base; //seed * MAX_SAMPLES + base % MAX_SAMPLES;
-  //const uint sample_scramble = seed; //rand * 2.3283064365386963e+10; // random_seed[pixel_index];
   
   uint state = RandomSampler_init(seed, base);
   const float s0 = RandomSampler_sample(state);
@@ -122,18 +117,7 @@ void cs_main(uint3 dispatch_id : SV_DispatchThreadID, uint3 group_id : SV_GroupI
   OccludeScene(rayhit, buffer_tbox, buffer_bbox, buffer_inst, buffer_trng, buffer_vert);
   const float3 tput = rayhit.dist == rayhit.tmax ? float3(1.0, 1.0, 1.0) : float3(0.0, 0.0, 0.0);
   
-  //const float2 duvdx = float2(0.0, 0.0);
-  //const float2 duvdy = float2(0.0, 0.0);
-  //const float3 color = instance.tex0_idx != -1 
-  //  ? texture0_items.SampleGrad(sampler0, float3(tc0, instance.tex0_idx), duvdx, duvdy) 
-  //  : float4(1.0, 1.0, 1.0, 1.0);
-  
-  //float3 wi = float3(0.0, 0.0, 0.0);
-  //float pdf = 1.0;
-  //float3 tput_d = SampleLambertBRDF(color, wo, s0, s1, wi, pdf);
-  
-  //const float2 tc1 = vertex0.tc1 * u + vertex1.tc1 * v + vertex2.tc1 * w;
-  //const float3 col = vertex0.col * u + vertex1.col * v + vertex2.col * w;
+  float res = max(0.0, dot(tbn[2], normalize(float3(0.2, 0.2, -1.0))));
   
   lightmap_accum[pixel_id] += float4(tput, 1.0); //pixel_value;
 }

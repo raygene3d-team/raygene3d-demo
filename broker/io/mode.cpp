@@ -385,60 +385,6 @@ namespace RayGene3D
 
         std::swap(mesh.v_indices, meshlets_vrt);
         std::swap(mesh.t_indices, ext_meshlets_trg); // meshlets_trg);
-
-
-        //std::swap(mesh.meshlets, meshlets);
-        //std::swap(mesh.points, points);
-
-        //std::vector<int> boundary(mesh.vertices.size());
-
-        //for (const auto& meshlet : meshlets_opt)
-        //{
-        //  mesh.meshopt_avg_vertices += meshlet.vertex_count;
-        //  mesh.meshopt_avg_triangles += meshlet.triangle_count;
-        //  mesh.meshopt_not_full += meshlet.triangle_count < trg_limit;
-
-        //  for (uint32_t j = 0; j < meshlet.vertex_count; ++j)
-        //  {
-        //    const auto counter = boundary[meshlets_vrt[meshlet.vertex_offset + j]]++;
-        //    mesh.meshopt_avg_boundary += counter == 2 ? 1 : 0;
-        //  }
-
-        //  std::array<int, vrt_limit> parents;
-        //  for (auto j = 0u; j < meshlet.vertex_count; ++j)
-        //  {
-        //    parents[j] = int(j);
-        //  }
-
-        //  const auto follow = [&parents](int index)
-        //    {
-        //      while (index != parents[index])
-        //      {
-        //        const auto parent = parents[index];
-        //        parents[index] = parents[parent];
-        //        index = parent;
-        //      }
-
-        //      return index;
-        //    };
-
-        //  for (auto j = 0u; j < meshlet.triangle_count * 3; ++j)
-        //  {
-        //    const auto v0 = follow(meshlets_trg[meshlet.triangle_offset + j]);
-        //    const auto v1 = follow(meshlets_trg[meshlet.triangle_offset + j + (j % 3 == 2 ? -2 : 1)]);
-
-        //    parents[v0] = v1;
-        //  }
-
-        //  int roots = 0;
-        //  for (auto j = 0u; j < meshlet.vertex_count; ++j)
-        //  {
-        //    roots += follow(j) == int(j);
-        //  }
-
-        //  assert(roots != 0);
-        //  mesh.meshopt_avg_connected += roots;
-        //}
       }
     }
 
@@ -486,7 +432,7 @@ namespace RayGene3D
 
           vertices[j] = mesh_items[i].vertices[xvertex.xref];
           vertices[j].msk = xvertex.atlasIndex;
-          vertices[j].tc1 = { xvertex.uv[0] / xatlas->width, xvertex.uv[1] / xatlas->height };
+          vertices[j].tc1 = { xvertex.uv[0], xvertex.uv[1] };
         }
         std::swap(mesh_items[i].vertices, vertices);
 

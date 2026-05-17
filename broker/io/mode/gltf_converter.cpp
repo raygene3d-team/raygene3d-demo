@@ -110,7 +110,7 @@ namespace RayGene3D
     }
 
 
-    int CacheTexture(const tinygltf::Model& model, int index, std::unordered_map<int, Raw>& texture_sources, 
+    int static CacheTexture(const tinygltf::Model& model, int index, std::unordered_map<int, Raw>& texture_sources, 
       uint32_t extent_x, uint32_t extent_y, bool srgb)
     {
       if (index == -1) return -1;
@@ -308,7 +308,7 @@ namespace RayGene3D
       }
 
       CalculateTangents();
-      //CalculateAtlas();
+      CalculateAtlas();
       CalculateMeshlets();
       CalculateBoxes();
 

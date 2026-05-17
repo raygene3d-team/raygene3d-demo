@@ -52,16 +52,16 @@ namespace RayGene3D
 
     void SWTracedAtlas::CreateSWTracedConfig()
     {
-      std::fstream shader_fs;
-      shader_fs.open("./asset/shaders/lightmap_sw_traced.hlsl", std::fstream::in);
-      std::stringstream shader_ss;
-      shader_ss << shader_fs.rdbuf();
-      shader_fs.close();
+      //std::fstream shader_fs;
+      //shader_fs.open("./asset/shaders/lightmap_sw_traced.hlsl", std::fstream::in);
+      //std::stringstream shader_ss;
+      //shader_ss << shader_fs.rdbuf();
+      //shader_fs.close();
 
       std::vector<std::pair<std::string, std::string>> defines;
 
       sw_traced_config = sw_traced_pass->CreateConfig("lightmap_sw_traced_config",
-        shader_ss.str(),
+        "./asset/shaders/", "lightmap_sw_traced.hlsl",
         Config::Compilation(Config::COMPILATION_COMP),
         { defines.data(), defines.size() },
         {},

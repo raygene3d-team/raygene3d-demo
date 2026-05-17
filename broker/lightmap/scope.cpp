@@ -63,23 +63,7 @@ namespace RayGene3D
           if (glm::any(glm::lessThan(barycentric, glm::zero<glm::f32vec3>()))
             || glm::any(glm::greaterThan(barycentric, glm::one<glm::f32vec3>())))
           {
-            const auto barycentric_00 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.0f, 0.0f), p0, p1, p2);
-            const auto missed_00 = glm::any(glm::lessThan(barycentric_00, glm::zero<glm::f32vec3>()))
-              || glm::any(glm::greaterThan(barycentric_00, glm::one<glm::f32vec3>()));
-
-            const auto barycentric_01 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(0.0f, 1.0f), p0, p1, p2);
-            const auto missed_01 = glm::any(glm::lessThan(barycentric_01, glm::zero<glm::f32vec3>()))
-              || glm::any(glm::greaterThan(barycentric_01, glm::one<glm::f32vec3>()));
-
-            const auto barycentric_10 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(1.0f, 0.0f), p0, p1, p2);
-            const auto missed_10 = glm::any(glm::lessThan(barycentric_10, glm::zero<glm::f32vec3>()))
-              || glm::any(glm::greaterThan(barycentric_10, glm::one<glm::f32vec3>()));
-
-            const auto barycentric_11 = eval_barycentric_fn(glm::f32vec2(m, n) + glm::f32vec2(1.0f, 1.0f), p0, p1, p2);
-            const auto missed_11 = glm::any(glm::lessThan(barycentric_11, glm::zero<glm::f32vec3>()))
-              || glm::any(glm::greaterThan(barycentric_11, glm::one<glm::f32vec3>()));
-
-            if (missed_00 && missed_01 && missed_10 && missed_11) continue;
+            continue;
           }
 
           const auto u = *reinterpret_cast<const uint32_t*>(&barycentric[0]);
@@ -190,11 +174,11 @@ namespace RayGene3D
             const auto& layer = vtx0.msk;
             const auto& color = vtx0.col;
 
-            const auto p0 = vtx0.tc1 * glm::f32vec2(size_x, size_y);
-            const auto p1 = vtx1.tc1 * glm::f32vec2(size_x, size_y);
-            const auto p2 = vtx2.tc1 * glm::f32vec2(size_x, size_y);
+            const auto p0 = vtx0.tc1;
+            const auto p1 = vtx1.tc1;
+            const auto p2 = vtx2.tc1;
 
-            //RasterizeTriangle(p0, p1, p2, i, j, size_x, size_y, layer, raw);
+            RasterizeTriangle(p0, p1, p2, i, j, size_x, size_y, layer, raw);
           }
         }
       }
@@ -371,9 +355,9 @@ namespace RayGene3D
 
       prop_illumination = util->GetStorage()->GetTree()->GetObjectItem("illumination");
       {
-        prop_atlas_size_x = prop_illumination->GetObjectItem("atlas_size_x");
-        prop_atlas_size_y = prop_illumination->GetObjectItem("atlas_size_y");
-        prop_atlas_layers = prop_illumination->GetObjectItem("atlas_layers");
+        prop_atlas_size_x = prop_illumination->GetObjectItem("quality");
+        prop_atlas_size_y = prop_illumination->GetObjectItem("quality");
+        prop_atlas_layers = prop_illumination->GetObjectItem("limit");
       }
 
       CreateScreenData();

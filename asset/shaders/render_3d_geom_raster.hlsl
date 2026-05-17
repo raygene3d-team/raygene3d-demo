@@ -88,7 +88,7 @@ VK_BINDING(8) Texture2DArray<float4> array_eeet : register(t2);
 
 
 VK_BINDING(9) TextureCube<float4> reflection_map : register(t3);
-//VK_BINDING(10) Texture2DArray<float4> lightmap_items : register(t4);
+VK_BINDING(10) Texture2DArray<float4> lightmap_items : register(t4);
 
 
 
@@ -270,12 +270,12 @@ PSOutput ps_main(PSInput input)
   const float mip = PerceptualRoughnessToMipmapLevel(perceptual_roughness, 6);
   const float3 gi_specular = reflection_map.SampleLevel(sampler1, r, mip).xyz;
     
-  const float3 gi_diffuse = float3(0.0, 0.0, 0.0); // * lightmap_items.Sample(sampler1, float3(input.tc1, input.mask)).xyz;
+  const float3 gi_diffuse = lightmap_items.Sample(sampler1, float3(input.tc1/2048.0, input.mask)).xyz;
     
 
 
 
-  const float3 global_illumination = (gi_diffuse + gi_specular * factor) * occlusion;
+  const float3 global_illumination = gi_diffuse; //(gi_diffuse + gi_specular * factor) * occlusion;
 
   output.target_0 = float4(emission + global_illumination, 1.0);
   output.target_1 = float4(albedo, metallic);

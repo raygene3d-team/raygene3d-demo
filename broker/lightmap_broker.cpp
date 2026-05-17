@@ -90,6 +90,8 @@ namespace RayGene3D
   {
     sw_traced_lightmap = std::unique_ptr<Lightmap::Mode>(new Lightmap::SWTracedAtlas(scope));
     //hw_traced_lightmap = std::unique_ptr<Lightmap::Mode>(new Lightmap::HWTracedAtlas(scope));
+
+    samples_max = 100;
   }
 
   LightmapBroker::~LightmapBroker()

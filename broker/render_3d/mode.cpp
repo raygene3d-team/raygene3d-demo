@@ -257,22 +257,21 @@ namespace RayGene3D
       //const auto& geometry_scene_textures7 = scope.scene_textures7->CreateView("render_3d_geometry_scene_textures7",
       //  Usage(USAGE_SHADER_RESOURCE)
       //);
-      //const auto& geometry_scene_lightmaps = scope.lightmaps_final->CreateView("render_3d_geometry_scene_lightmaps",
-      //  Usage(USAGE_SHADER_RESOURCE)
-      //);
       const auto& geometry_reflection_map = scope.reflection_map->CreateView("render_3d_geometry_reflection_map",
         Usage(USAGE_SHADER_RESOURCE),
         { 0u, size_t(-1) },
         { 0u, size_t(-1) },
         View::BIND_CUBEMAP_LAYER
       );
+      const auto& geometry_scene_lightmaps = scope.lightmaps_final->CreateView("render_3d_geometry_scene_lightmaps",
+        Usage(USAGE_SHADER_RESOURCE)
+      );
       const std::shared_ptr<View> ri_views[] = {
         geometry_scene_array_aaam,
         geometry_scene_array_snno,
         geometry_scene_array_eeet,
-        //geometry_scene_array_eeet,
-        //geometry_scene_lightmaps,
         geometry_reflection_map,
+        geometry_scene_lightmaps
       };
 
       if (use_mesh_pipe)

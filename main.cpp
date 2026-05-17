@@ -152,7 +152,7 @@ namespace RayGene3D
     std::string pipeline_name{ "IA Pipeline" };
 
   protected:
-    //std::shared_ptr<RayGene3D::LightmapBroker> lightmap_broker;
+    std::shared_ptr<RayGene3D::LightmapBroker> lightmap_broker;
     std::shared_ptr<RayGene3D::Render3DBroker> render_3d_broker;
     std::shared_ptr<RayGene3D::RenderUIBroker> render_ui_broker;
 
@@ -543,7 +543,7 @@ namespace RayGene3D
       //  lightmap_broker.reset();
       //}
 
-      //lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
+      lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
       //lightmap_broker->SetBakingMode(LightmapBroker::SW_TRACED_BAKING);
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
@@ -691,7 +691,7 @@ namespace RayGene3D
           change_pipeline = true;
         }
 
-        //lightmap_broker->Use();
+        lightmap_broker->Use();
         render_3d_broker->Use();
         render_ui_broker->Use();
 
@@ -717,7 +717,7 @@ namespace RayGene3D
 
     void Discard()
     {
-      //lightmap_broker.reset();
+      lightmap_broker.reset();
       render_3d_broker.reset();
       render_ui_broker.reset();
 
