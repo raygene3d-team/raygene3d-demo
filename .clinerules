@@ -1,0 +1,40 @@
+# Project Rules: Cross-Platform C++20 + Dear ImGui (SDL3 & GLFW)
+
+## 1. Core Tech Stack & Architecture
+- **Language Standard:** Modern C++20 (`CMAKE_CXX_STANDARD 20`, `CMAKE_CXX_STANDARD_REQUIRED ON`). Prefer RAII, `std::span`, `std::string_view`, `std::filesystem`, `std::unique_ptr`, and `std::expected` (if C++23 enabled) over raw `new`/`delete` or C-style macros.
+- **Target Platforms:** Windows, macOS, Linux (Desktop), and iOS, Android (Mobile).
+- **UI Framework:** Dear ImGui (docking branch) with GPU-accelerated rendering.
+- **Platform Abstraction Layer (SDL3 vs. GLFW):**
+  - Keep all ImGui UI layout and application business logic strictly decoupled from the windowing backend inside `src/app/` and `src/core/`.
+  - **SDL3** is the primary cross-platform backend supporting **all 5 platforms** (Desktop + iOS + Android).
+  - **GLFW** is supported as an optional **Desktop-only** backend (Windows, macOS, Linux) via a CMake option (e.g., `-DUSE_GLFW=ON`). Never include `<GLFW/glfw3.h>` in shared mobile code paths without `#ifdef APP_BACKEND_GLFW` guards.
+
+## 2. Strict SDL3 API Rules (DO NOT Use SDL2 APIs)
+- Always include `<SDL3/SDL.h>` (never `<SDL.h>` or `<SDL2/SDL.h>`).
+- **Entry Point:** Use SDL3's callback architecture (`#define SDL_MAIN_USE_CALLBACKS 1` + `<SDL3/SDL_main.h>`) implementing `SDL_AppInit`, `SDL_AppIterate`, `SDL_AppEvent`, and `SDL_AppQuit` so iOS and Android lifecycles work natively without `main()` blocking loops.
+- **Renamed SDL3 Signatures to Enforce:**
+  - `SDL_Init()` returns `bool` (`true` on success, `false` on failure—NOT `0` on success).
+  - `SDL_CreateWindow(title, w, h, flags)` takes 4 arguments (no `x, y` position arguments).
+  - Event types use `SDL_EVENT_*` (e.g., `SDL_EVENT_QUIT`, `SDL_EVENT_WINDOW_RESIZED`, `SDL_EVENT_KEY_DOWN`) instead of `SDL_QUIT` / `SDL_KEYDOWN`.
+  - Event union fields use `event.type`, `event.key.key`, `event.window.data1`, etc.
+  - Prefer `SDL_GPU` API or `SDL_Renderer` + `ImGui_ImplSDL3` / `ImGui_ImplSDLRenderer3` (or Vulkan/Metal/OpenGL backends) rather than deprecated SDL2 surface APIs.
+
+## 3. Strict GLFW Rules (Desktop Backend)
+- Always include `<GLFW/glfw3.h>` after graphics loader headers (e.g., GLAD/Vulkan) or define `GLFW_INCLUDE_NONE` / `GLFW_INCLUDE_VULKAN` explicitly before including GLFW.
+- Pair GLFW with `ImGui_ImplGlfw` and the active graphics backend (`ImGui_ImplOpenGL3`, `ImGui_ImplVulkan`, or `ImGui_ImplMetal`).
+- Handle High-DPI scaling properly on Windows/Linux/macOS using `glfwGetWindowContentScale()` and `ImGuiStyle::ScaleAllSizes()`.
+- Gate GLFW targets in `CMakeLists.txt` with `if(NOT ANDROID AND NOT IOS AND USE_GLFW)`.
+
+## 4. Dear ImGui & Mobile UX Standards
+- Always enable `ImGuiConfigFlags_NavEnableKeyboard` and `ImGuiConfigFlags_DockingEnable` (on desktop).
+- **Mobile Touch & Safe Areas (SDL3):**
+  - Query `SDL_GetWindowSafeArea(window, &rect)` on every resize/frame to pad root ImGui windows away from iOS/Android notches, status bars, and gesture bars.
+  - When touch devices are active (`SDL_GetNumTouchDevices() > 0`), scale `ImGuiStyle::TouchExtraPadding` and minimum button hitboxes to at least 44x44 logical points.
+  - Trigger `SDL_StartTextInput(window)` when `ImGui::GetIO().WantTextInput` transitions to `true`, and `SDL_StopTextInput(window)` when `false`.
+- **Asset & File Paths:** Never hardcode relative paths like `"assets/font.ttf"`. Resolve asset paths via `SDL_GetBasePath()` / `SDL_GetPrefPath()` (or `std::filesystem` relative to executable on GLFW) so Android APK assets and iOS app bundles load reliably.
+
+## 5. CMake, vcpkg & Build Hygiene
+- Use modern target-based CMake (`target_link_libraries(app PRIVATE ...)`, `target_include_directories`, `target_compile_features(app PRIVATE cxx_std_20)`). Never use global `include_directories()` or `link_libraries()`.
+- Manage dependencies via `vcpkg.json` manifest mode (`sdl3`, `glfw3`, `imgui`).
+- Always generate `compile_commands.json` (`set(CMAKE_EXPORT_COMPILE_COMMANDS ON)`) so `clangd` stays synchronized.
+- When fixing compiler or linker errors, read the full error output first, check `CMakeLists.txt` and `vcpkg.json` features, and verify builds cleanly with `cmake --build` before concluding a task.
