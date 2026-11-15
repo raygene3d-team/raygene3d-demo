@@ -54,10 +54,10 @@ namespace RayGene3D
 
   public:
     void OnCursor(double xpos, double ypos);
-    void OnKeyboard(int key, int scancode, int action, int mods);
-    void OnMouse(int button, int action, int mods);
+    void OnKeyboard(int scancode, bool down);
+    void OnMouse(int button, bool down);
     void OnScroll(double xoffset, double yoffset);
-    void OnChar(unsigned int glyph);
+    void OnChar(const char* text);
 
   public:
     RenderUIBroker(Wrap& wrap);

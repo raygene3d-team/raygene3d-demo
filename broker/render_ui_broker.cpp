@@ -2,6 +2,8 @@
 
 #include <imgui/imgui.h>
 
+#include <SDL3/SDL_scancode.h>
+
 namespace RayGene3D
 {
   const uint32_t RenderUIBroker::sub_limit;
@@ -89,16 +91,22 @@ namespace RayGene3D
     io.MousePos = ImVec2((float)xpos, (float)ypos);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
   }
 
-  void RenderUIBroker::OnKeyboard(int key, int scancode, int action, int mods)
+  void RenderUIBroker::OnKeyboard(int scancode, bool down)
   {
     ImGuiIO& io = ImGui::GetIO();
-    io.KeysDown[key] = action == 1 ? true : false;
+    if (scancode >= 0 && scancode < IM_ARRAYSIZE(io.KeysDown))
+    {
+      io.KeysDown[scancode] = down;
+    }
   }
 
-  void RenderUIBroker::OnMouse(int button, int action, int mods)
+  void RenderUIBroker::OnMouse(int button, bool down)
   {
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseDown[button] = action == 1 ? true : false;
+    if (button >= 0 && button < IM_ARRAYSIZE(io.MouseDown))
+    {
+      io.MouseDown[button] = down;
+    }
   }
 
   void RenderUIBroker::OnScroll(double xoffset, double yoffset)
@@ -107,10 +115,10 @@ namespace RayGene3D
     io.MouseWheel += (float)yoffset;
   }
 
-  void RenderUIBroker::OnChar(unsigned int glyph)
+  void RenderUIBroker::OnChar(const char* text)
   {
     ImGuiIO& io = ImGui::GetIO();
-    io.AddInputCharacter(glyph);
+    io.AddInputCharactersUTF8(text);
   }
 
   RenderUIBroker::RenderUIBroker(Wrap& wrap)
@@ -406,20 +414,20 @@ namespace RayGene3D
     time = std::chrono::high_resolution_clock::now();
 
     ImGuiIO& io = ImGui::GetIO(); // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
-    io.KeyMap[ImGuiKey_Escape] = 256; // GLFW_KEY_ESCAPE             
-    io.KeyMap[ImGuiKey_Enter] = 257; // GLFW_KEY_ENTER              
-    io.KeyMap[ImGuiKey_Tab] = 258; // GLFW_KEY_TAB                
-    io.KeyMap[ImGuiKey_Backspace] = 259; // GLFW_KEY_BACKSPACE          
-    io.KeyMap[ImGuiKey_Insert] = 260; // GLFW_KEY_INSERT             
-    io.KeyMap[ImGuiKey_Delete] = 261; // GLFW_KEY_DELETE             
-    io.KeyMap[ImGuiKey_RightArrow] = 262; // GLFW_KEY_RIGHT              
-    io.KeyMap[ImGuiKey_LeftArrow] = 263; // GLFW_KEY_LEFT               
-    io.KeyMap[ImGuiKey_DownArrow] = 264; // GLFW_KEY_DOWN               
-    io.KeyMap[ImGuiKey_UpArrow] = 265; // GLFW_KEY_UP                 
-    io.KeyMap[ImGuiKey_PageUp] = 266; // GLFW_KEY_PAGE_UP            
-    io.KeyMap[ImGuiKey_PageDown] = 267; // GLFW_KEY_PAGE_DOWN          
-    io.KeyMap[ImGuiKey_Home] = 268; // GLFW_KEY_HOME               
-    io.KeyMap[ImGuiKey_End] = 269; // GLFW_KEY_END                             
+    io.KeyMap[ImGuiKey_Escape] = SDL_SCANCODE_ESCAPE; // SDL_SCANCODE_ESCAPE             
+    io.KeyMap[ImGuiKey_Enter] = SDL_SCANCODE_RETURN; // SDL_SCANCODE_RETURN              
+    io.KeyMap[ImGuiKey_Tab] = SDL_SCANCODE_TAB; // SDL_SCANCODE_TAB                
+    io.KeyMap[ImGuiKey_Backspace] = SDL_SCANCODE_BACKSPACE; // SDL_SCANCODE_BACKSPACE          
+    io.KeyMap[ImGuiKey_Insert] = SDL_SCANCODE_INSERT; // SDL_SCANCODE_INSERT             
+    io.KeyMap[ImGuiKey_Delete] = SDL_SCANCODE_DELETE; // SDL_SCANCODE_DELETE             
+    io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT; // SDL_SCANCODE_RIGHT              
+    io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT; // SDL_SCANCODE_LEFT               
+    io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN; // SDL_SCANCODE_DOWN               
+    io.KeyMap[ImGuiKey_UpArrow] = SDL_SCANCODE_UP; // SDL_SCANCODE_UP                 
+    io.KeyMap[ImGuiKey_PageUp] = SDL_SCANCODE_PAGEUP; // SDL_SCANCODE_PAGEUP            
+    io.KeyMap[ImGuiKey_PageDown] = SDL_SCANCODE_PAGEDOWN; // SDL_SCANCODE_PAGEDOWN          
+    io.KeyMap[ImGuiKey_Home] = SDL_SCANCODE_HOME; // SDL_SCANCODE_HOME               
+    io.KeyMap[ImGuiKey_End] = SDL_SCANCODE_END; // SDL_SCANCODE_END                             
 
     io.RenderDrawListsFn = nullptr;  // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
     io.ImeWindowHandle = nullptr;

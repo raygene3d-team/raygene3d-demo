@@ -54,20 +54,16 @@ constexpr bool def_device_debug{ false };
 
 constexpr char setup_name[] = { "setup.json" };
 
-#define GLFW_INCLUDE_NONE
-#include <glfw/glfw3.h>
+#include <cstdint>
+#include <stdexcept>
 
-#ifdef __linux__
-#define GLFW_EXPOSE_NATIVE_X11
-#elif _WIN32
-#define GLFW_EXPOSE_NATIVE_WIN32
-#elif __OBJC__
-#define GLFW_EXPOSE_NATIVE_COCOA
-#endif
-#include <glfw/glfw3native.h>
+#define SDL_MAIN_USE_CALLBACKS 1
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
 #ifdef __OBJC__
 #import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
 #import <simd/simd.h>
@@ -139,10 +135,10 @@ std::shared_ptr<RayGene3D::Property> LoadSetup(const std::string& setup_name)
 
 namespace RayGene3D
 {
-  class GLFWWrapper
+  class SDLWrapper
   {
   protected:
-    GLFWwindow* glfw{ nullptr };
+    SDL_Window* window{ nullptr };
 
   protected:
     std::unique_ptr<RayGene3D::Wrap> wrap;
@@ -167,9 +163,21 @@ namespace RayGene3D
     std::shared_ptr<RayGene3D::Property> environment_property;
 
   protected:
-    double delta_xpos{ 0.0 };
-    double delta_ypos{ 0.0 };
+    bool ui_enabled{ false };
+    bool change_imgui{ false };
+    bool change_shadow{ false };
+    bool change_pipeline{ false };
+
+  protected:
     double delta_time{ 0.0 };
+    double curr_time{ 0.0 };
+    float delta_xpos{ 0.0f };
+    float delta_ypos{ 0.0f };
+    float curr_xpos{ 0.0f };
+    float curr_ypos{ 0.0f };
+
+    uint32_t frame_counter{ 0u };
+    double frame_period{ 0.0 };
 
     //std::shared_ptr<Property> prop_screen;
 
@@ -190,6 +198,37 @@ namespace RayGene3D
     float camera_roll_speed_{ 0.5f };
     float camera_speed_{ 0.5f };
     float camera_pan_speed_{ 0.005f };
+
+  protected:
+    static double NowSeconds()
+    {
+      return static_cast<double>(SDL_GetTicksNS()) * 1.0e-9;
+    }
+
+    // Layout-dependent key state, equivalent to the former glfwGetKey(GLFW_KEY_*) polling
+    static bool IsKeyDown(SDL_Keycode key)
+    {
+      const bool* keys = SDL_GetKeyboardState(nullptr);
+      const auto scancode = SDL_GetScancodeFromKey(key, nullptr);
+      return keys[scancode];
+    }
+
+    static bool IsMouseButtonDown(Uint8 button)
+    {
+      return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(button)) != 0;
+    }
+
+    // SDL buttons: 1 = left, 2 = middle, 3 = right. ImGui buttons: 0 = left, 1 = right, 2 = middle
+    static int ToImGuiButton(Uint8 button)
+    {
+      switch (button)
+      {
+        case SDL_BUTTON_LEFT: return 0;
+        case SDL_BUTTON_RIGHT: return 1;
+        case SDL_BUTTON_MIDDLE: return 2;
+        default: return -1;
+      }
+    }
 
   public:
     void UpdateCamera()
@@ -219,11 +258,11 @@ namespace RayGene3D
       const auto cam_y = glm::cross(cam_z, cam_x);
       const auto view = glm::mat3x3(cam_x, cam_y, cam_z);
 
-      if (glfwGetMouseButton(glfw, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+      if (IsMouseButtonDown(SDL_BUTTON_MIDDLE))
       {
         auto direction = glm::fvec3{ 0.0f, 0.0f, 0.0f };
-        direction[0] =-1.0 * delta_xpos;
-        direction[1] = 1.0 * delta_ypos;
+        direction[0] =-1.0f * delta_xpos;
+        direction[1] = 1.0f * delta_ypos;
 
         if (glm::any(glm::notEqual(direction, glm::zero<glm::fvec3>())))
         {
@@ -238,12 +277,12 @@ namespace RayGene3D
 
       {
         auto direction = glm::fvec3{ 0.0f, 0.0f, 0.0f };
-        if (glfwGetKey(glfw, GLFW_KEY_A) == GLFW_PRESS) direction[0] =-1.0f;
-        if (glfwGetKey(glfw, GLFW_KEY_D) == GLFW_PRESS) direction[0] = 1.0f;
-        if (glfwGetKey(glfw, GLFW_KEY_R) == GLFW_PRESS) direction[1] = 1.0f;
-        if (glfwGetKey(glfw, GLFW_KEY_F) == GLFW_PRESS) direction[1] =-1.0f;
-        if (glfwGetKey(glfw, GLFW_KEY_W) == GLFW_PRESS) direction[2] = 1.0f;
-        if (glfwGetKey(glfw, GLFW_KEY_S) == GLFW_PRESS) direction[2] =-1.0f;
+        if (IsKeyDown(SDLK_A)) direction[0] =-1.0f;
+        if (IsKeyDown(SDLK_D)) direction[0] = 1.0f;
+        if (IsKeyDown(SDLK_R)) direction[1] = 1.0f;
+        if (IsKeyDown(SDLK_F)) direction[1] =-1.0f;
+        if (IsKeyDown(SDLK_W)) direction[2] = 1.0f;
+        if (IsKeyDown(SDLK_S)) direction[2] =-1.0f;
 
         if (glm::any(glm::notEqual(direction, glm::zero<glm::fvec3>())))
         {
@@ -256,12 +295,12 @@ namespace RayGene3D
         }
       }
 
-      if (glfwGetMouseButton(glfw, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+      if (IsMouseButtonDown(SDL_BUTTON_LEFT))
       {
-        if (delta_xpos != 0.0 || delta_ypos != 0.0)
+        if (delta_xpos != 0.0f || delta_ypos != 0.0f)
         {
-          const float angle_hor = -1.0 * camera_rotation_speed_ * delta_xpos;
-          const float angle_ver = -1.0 * camera_rotation_speed_ * delta_ypos;
+          const float angle_hor = -1.0f * camera_rotation_speed_ * delta_xpos;
+          const float angle_ver = -1.0f * camera_rotation_speed_ * delta_ypos;
 
           lookat = lookat - eye;
           lookat = glm::rotate(lookat, angle_ver, cam_x);
@@ -275,8 +314,8 @@ namespace RayGene3D
       {
         float rotation_sign{ 0.0f };
 
-        if (glfwGetKey(glfw, GLFW_KEY_E) == GLFW_PRESS) rotation_sign = 1.0f;
-        if (glfwGetKey(glfw, GLFW_KEY_Q) == GLFW_PRESS) rotation_sign =-1.0f;
+        if (IsKeyDown(SDLK_E)) rotation_sign = 1.0f;
+        if (IsKeyDown(SDLK_Q)) rotation_sign =-1.0f;
 
         if (rotation_sign != 0.0f)
         {
@@ -287,11 +326,6 @@ namespace RayGene3D
       }
 
       ++counter;
-      if (counter == 1)
-      {
-        //BLAST_LOG("eye = [%5.3f, %5.3f, %5.3f]; lookat = [%5.3f, %5.3f, %5.3f]; up = [%5.3f, %5.3f, %5.3f]",
-        //  eye.x, eye.y, eye.z, lookat.x, lookat.y, lookat.z, up.x, up.y, up.z);
-      }
 
       prop_eye->GetArrayItem(0)->SetReal(eye.x);
       prop_eye->GetArrayItem(1)->SetReal(eye.y);
@@ -304,10 +338,9 @@ namespace RayGene3D
       prop_up->GetArrayItem(0)->SetReal(up.x);
       prop_up->GetArrayItem(1)->SetReal(up.y);
       prop_up->GetArrayItem(2)->SetReal(up.z);
-      
+
       prop_counter->SetUint(counter);
     }
-
 
   public:
     void Initialize()
@@ -329,20 +362,36 @@ namespace RayGene3D
       const auto extent_x = prop_extent_x->GetUint();
       const auto extent_y = prop_extent_y->GetUint();
 
-      glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-      glfw = glfwCreateWindow(extent_x, extent_y, app_name, nullptr, nullptr);
+#ifdef __linux__
+      // The Vulkan surface path is Xlib-only, so force X11 when SDL3 would otherwise pick Wayland
+      SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11");
+#endif
+
+      if (!SDL_Init(SDL_INIT_VIDEO))
+      {
+        throw std::runtime_error(std::string("SDL_Init failed: ") + SDL_GetError());
+      }
+
+      window = SDL_CreateWindow(app_name, int(extent_x), int(extent_y), 0);
+      if (!window)
+      {
+        throw std::runtime_error(std::string("SDL_CreateWindow failed: ") + SDL_GetError());
+      }
+
+      const auto window_props = SDL_GetWindowProperties(window);
 
       void* window_handle = nullptr;
       void* display_handle = nullptr;
 #ifdef __linux__
-      window_handle = reinterpret_cast<void*>(glfwGetX11Window(glfw));
-      display_handle = glfwGetX11Display();
+      window_handle = reinterpret_cast<void*>(static_cast<uintptr_t>(
+        SDL_GetNumberProperty(window_props, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0)));
+      display_handle = SDL_GetPointerProperty(window_props, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
 #elif _WIN32
-      window_handle = glfwGetWin32Window(glfw);
-      display_handle = GetModuleHandle(nullptr);
+      window_handle = SDL_GetPointerProperty(window_props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+      display_handle = SDL_GetPointerProperty(window_props, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, nullptr);
 #elif __OBJC__
       id<MTLDevice> dev = MTLCreateSystemDefaultDevice();
-      NSWindow* nswin = glfwGetCocoaWindow(glfw);
+      NSWindow* nswin = (__bridge NSWindow*)SDL_GetPointerProperty(window_props, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
       CAMetalLayer* layer = [CAMetalLayer layer];
       layer.device = dev;
       layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
@@ -391,9 +440,7 @@ namespace RayGene3D
         );
         wrap->GetCore()->AddView(backbuffer_ua_view);
       }
-      
 
-      
       const auto storage = wrap->GetUtil()->GetStorage().get();
 
       auto tree_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
@@ -438,7 +485,6 @@ namespace RayGene3D
         }
       }
       tree_property->SetObjectItem("scene", scene_property);
-
 
       camera_property = std::shared_ptr<RayGene3D::Property>(new RayGene3D::Property(RayGene3D::Property::TYPE_OBJECT));
       {
@@ -493,26 +539,6 @@ namespace RayGene3D
 
       tree_property->SetObjectItem("illumination", config_property->GetObjectItem("illumination"));
 
-      //{
-      //  auto xatlas_broker = std::shared_ptr<RayGene3D::XAtlasBroker>(new RayGene3D::XAtlasBroker(*wrap));
-
-      //  xatlas_broker->Initialize();
-      //  xatlas_broker->Use();
-      //  xatlas_broker->Discard();
-
-      //  xatlas_broker.reset();
-      //}
-
-      //{
-      //  auto trace_broker = std::shared_ptr<RayGene3D::TraceBroker>(new RayGene3D::TraceBroker(*wrap));
-
-      //  trace_broker->Initialize();
-      //  trace_broker->Use();
-      //  trace_broker->Discard();
-
-      //  trace_broker.reset();
-      //}
-
       {
         auto scene_broker = std::shared_ptr<RayGene3D::SceneBroker>(new RayGene3D::SceneBroker(*wrap));
 
@@ -533,239 +559,288 @@ namespace RayGene3D
         environment_broker.reset();
       }
 
-      //{
-      //  auto lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
-
-      //  lightmap_broker->Initialize();
-      //  lightmap_broker->Use();
-      //  lightmap_broker->Discard();
-
-      //  lightmap_broker.reset();
-      //}
-
       lightmap_broker = std::shared_ptr<RayGene3D::LightmapBroker>(new RayGene3D::LightmapBroker(*wrap));
-      //lightmap_broker->SetBakingMode(LightmapBroker::SW_TRACED_BAKING);
 
       render_3d_broker = std::shared_ptr<RayGene3D::Render3DBroker>(new RayGene3D::Render3DBroker(*wrap));
-      //render_3d_broker->SetShadowMode(Render3DBroker::NO_SHADOW);
 
       render_ui_broker = std::shared_ptr<RayGene3D::RenderUIBroker>(new RayGene3D::RenderUIBroker(*wrap));
-      //render_ui_broker->SetShowTestWindow(false);
     }
 
-    void Use()
+  public:
+    // Called from SDL_AppEvent for every SDL event. Returns false when the app should quit.
+    bool HandleEvent(const SDL_Event& event)
     {
-      auto frame_counter{ 0u };
-      auto frame_period{ 0.0 };
-     
-      auto change_imgui{ false };
-      auto change_shadow{ false };
-      auto change_pipeline{ false };
-
-      auto curr_time = glfwGetTime();
-      auto curr_xpos{ 0.0 };
-      auto curr_ypos{ 0.0 };
-      glfwGetCursorPos(glfw, &curr_xpos, &curr_ypos);
-
-      while (!glfwWindowShouldClose(glfw))
+      switch (event.type)
       {
-        const auto last_time = curr_time;
-        curr_time = glfwGetTime();
-        delta_time = curr_time - last_time;
+        case SDL_EVENT_QUIT:
+          return false;
 
-        const auto last_xpos = curr_xpos;
-        const auto last_ypos = curr_ypos;
-        glfwGetCursorPos(glfw, &curr_xpos, &curr_ypos);
-        delta_xpos = curr_xpos - last_xpos;
-        delta_ypos = curr_ypos - last_ypos;
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+          if (event.window.windowID == SDL_GetWindowID(window)) return false;
+          break;
 
-        auto counter = prop_counter->GetUint();
-        counter += 1;
-        prop_counter->SetUint(counter);
-
-        glfwPollEvents();
-
-        if (glfwGetKey(glfw, GLFW_KEY_F1) == GLFW_RELEASE && change_imgui)
-        {
-          auto enabled = render_ui_broker->GetShowTestWindow();
-          enabled = !enabled;
-          render_ui_broker->SetShowTestWindow(enabled);
-
-          if (enabled)
+        case SDL_EVENT_MOUSE_MOTION:
+          if (ui_enabled)
           {
-            glfwSetWindowUserPointer(glfw, this);
-
-            glfwSetCursorPosCallback(glfw, [](GLFWwindow* window, double xpos, double ypos)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnCursor(xpos, ypos); }
-            );
-            glfwSetKeyCallback(glfw, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnKeyboard(key, scancode, action, mods); }
-            );
-            glfwSetMouseButtonCallback(glfw, [](GLFWwindow* window, int button, int action, int mods)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnMouse(button, action, mods); }
-            );
-            glfwSetScrollCallback(glfw, [](GLFWwindow* window, double xoffset, double yoffset)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnScroll(xoffset, yoffset); }
-            );
-            glfwSetCharCallback(glfw, [](GLFWwindow* window, unsigned int glyph)
-              { reinterpret_cast<GLFWWrapper*>(glfwGetWindowUserPointer(window))->render_ui_broker->OnChar(glyph); }
-            );
+            render_ui_broker->OnCursor(event.motion.x, event.motion.y);
           }
-          else
+          break;
+
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+          if (ui_enabled)
           {
-            glfwSetWindowUserPointer(glfw, nullptr);
-
-            glfwSetCursorPosCallback(glfw, nullptr);
-            glfwSetKeyCallback(glfw, nullptr);
-            glfwSetMouseButtonCallback(glfw, nullptr);
-            glfwSetScrollCallback(glfw, nullptr);
-            glfwSetCharCallback(glfw, nullptr);
+            const auto button = ToImGuiButton(event.button.button);
+            if (button >= 0)
+            {
+              render_ui_broker->OnMouse(button, event.type == SDL_EVENT_MOUSE_BUTTON_DOWN);
+            }
           }
+          break;
 
-          change_imgui = false;
-        }
-
-        if (glfwGetKey(glfw, GLFW_KEY_F1) == GLFW_PRESS && !change_imgui)
-        {
-          change_imgui = true;
-        }
-
-        if (!render_ui_broker->GetShowTestWindow())
-        {
-          UpdateCamera();
-        }
-
-        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_RELEASE && change_shadow)
-        {
-          auto shadow_type = render_3d_broker->GetShadowType();
-          if (shadow_type == Render3DBroker::NO_SHADOW)
+        case SDL_EVENT_MOUSE_WHEEL:
+          if (ui_enabled)
           {
-            shadow_type = Render3DBroker::CUBEMAP_SHADOW;
-            shadow_name = "Cubemap Shadow";
+            render_ui_broker->OnScroll(event.wheel.x, event.wheel.y);
           }
-          else if (shadow_type == Render3DBroker::CUBEMAP_SHADOW)
-          {
-            shadow_type = Render3DBroker::SW_TRACED_SHADOW;
-            shadow_name = "SW Traced Shadow";
-          }
-          else if (shadow_type == Render3DBroker::SW_TRACED_SHADOW)
-          {
-            shadow_type = Render3DBroker::HW_TRACED_SHADOW;
-            shadow_name = "HW Traced Shadow";
-          }
-          else if (shadow_type == Render3DBroker::HW_TRACED_SHADOW)
-          {
-            shadow_type = Render3DBroker::NO_SHADOW;
-            shadow_name = "No Shadow";
-          }
-          render_3d_broker->SetShadowType(shadow_type);
-          render_3d_broker->Update();
-          change_shadow = false;
-        }
+          break;
 
-        if (glfwGetKey(glfw, GLFW_KEY_F2) == GLFW_PRESS && !change_shadow)
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
+          if (ui_enabled)
+          {
+            render_ui_broker->OnKeyboard(int(event.key.scancode), event.type == SDL_EVENT_KEY_DOWN);
+          }
+          break;
+
+        case SDL_EVENT_TEXT_INPUT:
+          if (ui_enabled)
+          {
+            render_ui_broker->OnChar(event.text.text);
+          }
+          break;
+
+        default:
+          break;
+      }
+
+      return true;
+    }
+
+  public:
+    // Per-frame update, the body of the former GLFW while loop
+    void Iterate()
+    {
+      const auto last_time = curr_time;
+      curr_time = NowSeconds();
+      delta_time = curr_time - last_time;
+
+      const auto last_xpos = curr_xpos;
+      const auto last_ypos = curr_ypos;
+      SDL_GetMouseState(&curr_xpos, &curr_ypos);
+      delta_xpos = curr_xpos - last_xpos;
+      delta_ypos = curr_ypos - last_ypos;
+
+      auto counter = prop_counter->GetUint();
+      counter += 1;
+      prop_counter->SetUint(counter);
+
+      const bool f1_down = IsKeyDown(SDLK_F1);
+      if (!f1_down && change_imgui)
+      {
+        auto enabled = render_ui_broker->GetShowTestWindow();
+        enabled = !enabled;
+        render_ui_broker->SetShowTestWindow(enabled);
+        ui_enabled = enabled;
+
+        change_imgui = false;
+      }
+
+      if (f1_down && !change_imgui)
+      {
+        change_imgui = true;
+      }
+
+      if (!render_ui_broker->GetShowTestWindow())
+      {
+        UpdateCamera();
+      }
+
+      const bool f2_down = IsKeyDown(SDLK_F2);
+      if (!f2_down && change_shadow)
+      {
+        auto shadow_type = render_3d_broker->GetShadowType();
+        if (shadow_type == Render3DBroker::NO_SHADOW)
         {
-          change_shadow = true;
+          shadow_type = Render3DBroker::CUBEMAP_SHADOW;
+          shadow_name = "Cubemap Shadow";
         }
-
-        if (glfwGetKey(glfw, GLFW_KEY_F3) == GLFW_RELEASE && change_pipeline)
+        else if (shadow_type == Render3DBroker::CUBEMAP_SHADOW)
         {
-          auto pipeline_type = render_3d_broker->GetPipelineType();
-          if (pipeline_type == Render3DBroker::IA_PIPELINE)
-          {
-            pipeline_type = Render3DBroker::MESH_PIPELINE;
-            pipeline_name = "Mesh Pipeline";
-          }
-          else if (pipeline_type == Render3DBroker::MESH_PIPELINE)
-          {
-            pipeline_type = Render3DBroker::IA_PIPELINE;
-            pipeline_name = "IA Pipeline";
-          }
-          render_3d_broker->SetPipelineType(pipeline_type);
-          render_3d_broker->Update();
-          change_pipeline = false;
+          shadow_type = Render3DBroker::SW_TRACED_SHADOW;
+          shadow_name = "SW Traced Shadow";
         }
-
-        if (glfwGetKey(glfw, GLFW_KEY_F3) == GLFW_PRESS && !change_pipeline)
+        else if (shadow_type == Render3DBroker::SW_TRACED_SHADOW)
         {
-          change_pipeline = true;
+          shadow_type = Render3DBroker::HW_TRACED_SHADOW;
+          shadow_name = "HW Traced Shadow";
         }
-
-        lightmap_broker->Use();
-        render_3d_broker->Use();
-        render_ui_broker->Use();
-
-        wrap->Use();
-
-        frame_counter += 1;
-        frame_period += delta_time;
-
-        if (frame_period > 1.0)
+        else if (shadow_type == Render3DBroker::HW_TRACED_SHADOW)
         {
-          const auto frame_rate = frame_counter / frame_period;
-          const auto& adapter_name = wrap->GetCore()->GetDevice()->GetName();
-
-          std::stringstream ss;
-          ss << app_name << " [" << shadow_name << "] [" << pipeline_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
-          glfwSetWindowTitle(glfw, ss.str().c_str());
-
-          frame_counter = 0;
-          frame_period = 0.0;
+          shadow_type = Render3DBroker::NO_SHADOW;
+          shadow_name = "No Shadow";
         }
+        render_3d_broker->SetShadowType(shadow_type);
+        render_3d_broker->Update();
+        change_shadow = false;
+      }
+
+      if (f2_down && !change_shadow)
+      {
+        change_shadow = true;
+      }
+
+      const bool f3_down = IsKeyDown(SDLK_F3);
+      if (!f3_down && change_pipeline)
+      {
+        auto pipeline_type = render_3d_broker->GetPipelineType();
+        if (pipeline_type == Render3DBroker::IA_PIPELINE)
+        {
+          pipeline_type = Render3DBroker::MESH_PIPELINE;
+          pipeline_name = "Mesh Pipeline";
+        }
+        else if (pipeline_type == Render3DBroker::MESH_PIPELINE)
+        {
+          pipeline_type = Render3DBroker::IA_PIPELINE;
+          pipeline_name = "IA Pipeline";
+        }
+        render_3d_broker->SetPipelineType(pipeline_type);
+        render_3d_broker->Update();
+        change_pipeline = false;
+      }
+
+      if (f3_down && !change_pipeline)
+      {
+        change_pipeline = true;
+      }
+
+      lightmap_broker->Use();
+      render_3d_broker->Use();
+      render_ui_broker->Use();
+
+      wrap->Use();
+
+      frame_counter += 1;
+      frame_period += delta_time;
+
+      if (frame_period > 1.0)
+      {
+        const auto frame_rate = frame_counter / frame_period;
+        const auto& adapter_name = wrap->GetCore()->GetDevice()->GetName();
+
+        std::stringstream ss;
+        ss << app_name << " [" << shadow_name << "] [" << pipeline_name << "] " << ": " << std::fixed << std::setprecision(1) << frame_rate << " FPS on " << adapter_name;
+        SDL_SetWindowTitle(window, ss.str().c_str());
+
+        frame_counter = 0;
+        frame_period = 0.0;
       }
     }
 
+  public:
     void Discard()
     {
       lightmap_broker.reset();
       render_3d_broker.reset();
       render_ui_broker.reset();
 
-      const auto device = wrap->GetCore()->GetDevice().get();
-      const auto backbuffer_resource = device->GetScreen();
-      device->DestroyResource(backbuffer_resource);
+      if (wrap)
+      {
+        const auto device = wrap->GetCore()->GetDevice().get();
+        const auto backbuffer_resource = device->GetScreen();
+        device->DestroyResource(backbuffer_resource);
 
-      wrap->Discard();
+        wrap->Discard();
+      }
 
-      glfwDestroyWindow(glfw);
+      if (window)
+      {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+      }
     }
 
   public:
-    GLFWWrapper()
+    SDLWrapper()
     {
-      glfwInit();
-
-      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
+      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_D11, RayGene3D::Util::STORAGE_LOCAL));
     }
 
-    ~GLFWWrapper()
+    ~SDLWrapper()
     {
       wrap.reset();
 
-      glfwTerminate();
+      SDL_Quit();
     }
   };
 }
 
-int main(int argc, char** argv)
+namespace
 {
-  //LogSystem::Init();
+  // Owned by SDL_AppInit/SDL_AppQuit; created on the main thread as the callbacks run there
+  RayGene3D::SDLWrapper* g_app{ nullptr };
+}
 
+SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv)
+{
   FILE* file = fopen("blast3d.log", "w");
   if (file) { fclose(file); }
 
   try
   {
-    RayGene3D::GLFWWrapper wrapper;
+    g_app = new RayGene3D::SDLWrapper();
+    g_app->Initialize();
 
-    wrapper.Initialize();
-    wrapper.Use();
-    wrapper.Discard();
+    *appstate = g_app;
+    return SDL_APP_CONTINUE;
   }
-  catch (std::exception e)
+  catch (const std::exception& e)
   {
-    const auto exception_message = e.what();
-    //MessageBox(nullptr, exception_message, application_name, 0);
-    BLAST_LOG(exception_message);
+    BLAST_LOG(e.what());
+    return SDL_APP_FAILURE;
   }
+}
+
+SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
+{
+  auto* app = static_cast<RayGene3D::SDLWrapper*>(appstate);
+  return app->HandleEvent(*event) ? SDL_APP_CONTINUE : SDL_APP_SUCCESS;
+}
+
+SDL_AppResult SDL_AppIterate(void* appstate)
+{
+  auto* app = static_cast<RayGene3D::SDLWrapper*>(appstate);
+
+  try
+  {
+    app->Iterate();
+    return SDL_APP_CONTINUE;
+  }
+  catch (const std::exception& e)
+  {
+    BLAST_LOG(e.what());
+    return SDL_APP_FAILURE;
+  }
+}
+
+void SDL_AppQuit(void* appstate, SDL_AppResult result)
+{
+  auto* app = static_cast<RayGene3D::SDLWrapper*>(appstate);
+  if (app)
+  {
+    app->Discard();
+  }
+
+  delete app;
+  g_app = nullptr;
 }
