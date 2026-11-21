@@ -144,8 +144,8 @@ namespace RayGene3D
       std::string err, warn;
       BLAST_ASSERT(gltf_context.LoadASCIIFromFile(&gltf_model, &err, &warn, (scope.path_name + scope.file_name).c_str()));
 
-      auto extent_x = 1u << scope.texture_level - 1;
-      auto extent_y = 1u << scope.texture_level - 1;
+      auto extent_x = 1u << (scope.texture_level - 1);
+      auto extent_y = 1u << (scope.texture_level - 1);
 
       ParseNode(gltf_model, gltf_model.scenes[0].nodes[0], mesh_transforms, glm::identity<glm::f32mat4x4>());
 

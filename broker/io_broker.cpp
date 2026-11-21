@@ -37,6 +37,7 @@ namespace RayGene3D
   {
     switch (operation)
     {
+      case NO_OPERATTION: break;
     case SAVE_OPERATION:
     {
     } break;

@@ -470,8 +470,8 @@ namespace RayGene3D
         const auto environment_name = config_property->GetObjectItem("environment")->GetObjectItem("path")->GetString();
         const auto environment_quality = config_property->GetObjectItem("environment")->GetObjectItem("quality")->GetUint();
 
-        const auto extent_x = 1u << int32_t(environment_quality) - 1;
-        const auto extent_y = 1u << int32_t(environment_quality) - 2;
+        const auto extent_x = 1u << (int32_t(environment_quality) - 1);
+        const auto extent_y = 1u << (int32_t(environment_quality) - 2);
         auto environment_array = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, extent_x, extent_y, 1);
         environment_array.Load((environment_path + environment_name).c_str(), 0);
 
@@ -735,7 +735,11 @@ namespace RayGene3D
     {
       glfwInit();
 
+#ifdef __APPLE__
+      wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_MTL, RayGene3D::Util::STORAGE_LOCAL));
+#else
       wrap = std::unique_ptr<RayGene3D::Wrap>(new RayGene3D::Wrap(RayGene3D::Core::DEVICE_VLK, RayGene3D::Util::STORAGE_LOCAL));
+#endif
     }
 
     ~GLFWWrapper()

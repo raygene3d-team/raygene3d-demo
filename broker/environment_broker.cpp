@@ -40,7 +40,7 @@ namespace RayGene3D
     quality = prop_environment->GetObjectItem("quality")->GetUint();
 
     const auto mipmap = std::max(quality, levels);
-    const auto extent = 1u << int32_t(quality) - 1;
+    const auto extent = 1u << (int32_t(quality) - 1);
 
     auto pano_texture = TextureArrayHDR(FORMAT_R32G32B32A32_FLOAT, 2 * extent, extent, 1);
     pano_texture.Load(path.c_str(), 0);
@@ -178,8 +178,8 @@ namespace RayGene3D
     const auto format = FORMAT_R16G16B16A16_FLOAT;
     const auto layers = 6u;
     const auto mipmap = levels;
-    const auto size_x = 1u << int32_t(levels) - 1;
-    const auto size_y = 1u << int32_t(levels) - 1;
+    const auto size_x = 1u << (int32_t(levels) - 1);
+    const auto size_y = 1u << (int32_t(levels) - 1);
 
     reflection_map = core->GetDevice()->CreateResource("environment_reflection_map",
       Resource::Tex2DDesc
@@ -225,7 +225,7 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreateConstantData(uint32_t level)
   {
-    const auto constant = glm::u32vec4{ level, 1u << int32_t(levels) - (1 + level), 0u, 0u };
+    const auto constant = glm::u32vec4{ level, 1u << (int32_t(levels) - (1 + level)), 0u, 0u };
     
     const auto data = reinterpret_cast<const uint8_t*>(&constant);
     const auto count = 1u;
@@ -265,8 +265,8 @@ namespace RayGene3D
 
   void EnvironmentBroker::CreatePass(uint32_t level)
   {
-    const auto size_x = 1u << int32_t(levels) - (1 + level);
-    const auto size_y = 1u << int32_t(levels) - (1 + level);
+    const auto size_x = 1u << (int32_t(levels) - (1 + level));
+    const auto size_y = 1u << (int32_t(levels) - (1 + level));
     const auto layers = 1u;
 
     passes[level] = core->GetDevice()->CreatePass("environment_reflection_pass_" + std::to_string(level),
@@ -306,8 +306,8 @@ namespace RayGene3D
     //const auto& ins_range = Range{ 0u, 6u };
     //const auto& vtx_range = Range{ 0u, 4u };
     //const auto& idx_range = Range{ 0u, 6u };
-    const auto& grid_x = Range{ 0u, 1u << int32_t(levels) - (1 + level) };
-    const auto& grid_y = Range{ 0u, 1u << int32_t(levels) - (1 + level) };
+    const auto& grid_x = Range{ 0u, 1u << (int32_t(levels) - (1 + level)) };
+    const auto& grid_y = Range{ 0u, 1u << (int32_t(levels) - (1 + level)) };
     const auto& grid_z = Range{ 0u, 1u };
     const auto& sb_offset = std::nullopt; // std::array<uint32_t, 4>{ 0u, 0u, 0u, 0u };
     const auto& push_data = std::nullopt;

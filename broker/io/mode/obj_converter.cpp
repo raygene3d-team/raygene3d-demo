@@ -60,8 +60,8 @@ namespace RayGene3D
         int32_t src_channels = 0;
         unsigned char* src_data = stbi_load((path + name).c_str(), &src_extent_x, &src_extent_y, &src_channels, STBI_default);
 
-        auto dst_extent_x = 1u << level - 1;
-        auto dst_extent_y = 1u << level - 1;
+        auto dst_extent_x = 1u << (level - 1);
+        auto dst_extent_y = 1u << (level - 1);
         auto dst_channels = 4;
         auto raw = Raw(sizeof(glm::u8vec4) * dst_extent_x * dst_extent_y);
         auto dst_data = reinterpret_cast<uint8_t*>(raw.AccessBytes().first);
