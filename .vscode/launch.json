@@ -4,12 +4,14 @@
     {
       "name": "Debug raygene3d-demo",
       "request": "launch",
-      "program": "${command:cmake.launchTargetPath}",
+      "program": "${workspaceFolder}/bin/raygene3d-demo",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
+      "preLaunchTask": "build raygene3d-demo (Debug)",
       "windows": {
         "type": "cppvsdbg",
+        "program": "${workspaceFolder}/bin/raygene3d-demo.exe",
         "console": "integratedTerminal"
       },
       "linux": {
@@ -25,8 +27,12 @@
         ]
       },
       "osx": {
-        "type": "lldb"
+        "type": "cppdbg",
+        "MIMode": "lldb",
+        "externalConsole": false,
+        "miDebuggerPath": "${env:HOME}/.vscode/extensions/ms-vscode.cpptools-1.35.6-darwin-arm64/debugAdapters/lldb-mi/bin/lldb-mi"
       }
     }
   ]
 }
+
