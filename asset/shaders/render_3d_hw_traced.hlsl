@@ -39,7 +39,7 @@ VK_BINDING(3) Texture2D<float4> gbuffer_0_texture : register(t0);
 VK_BINDING(4) Texture2D<float4> gbuffer_1_texture : register(t1);
 VK_BINDING(5) Texture2D<float> depth_texture : register(t2);
 VK_BINDING(6) RaytracingAccelerationStructure scene_tlas : register(t3);
-VK_BINDING(6) RWTexture2D<float4> output_texture : register(u0);
+VK_BINDING(7) RWTexture2D<float4> output_texture : register(u0);
 
 struct Payload
 {

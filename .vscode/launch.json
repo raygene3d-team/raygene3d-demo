@@ -11,7 +11,7 @@
       "preLaunchTask": "build raygene3d-demo (Debug)",
       "windows": {
         "type": "cppvsdbg",
-        "program": "${workspaceFolder}/bin/raygene3d-demo.exe",
+        "program": "${workspaceFolder}/bin/Debug/raygene3d-demo.exe",
         "console": "integratedTerminal"
       },
       "linux": {

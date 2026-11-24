@@ -137,7 +137,7 @@ namespace RayGene3D
         ? Config::Compilation(Config::COMPILATION_MESH | Config::COMPILATION_FRAG)
         : Config::Compilation(Config::COMPILATION_VERT | Config::COMPILATION_FRAG);
 
-      const auto meshlet_shader_name = std::string("render_3d_geom_meshlet") + (scope.core->GetType() == Core::DEVICE_VLK ? ".glsl" : ".hlsl");
+      const auto meshlet_shader_name = std::string("render_3d_geom_meshlet.hlsl");
       const auto raster_shader_name = "render_3d_geom_raster.hlsl";
 
       geometry_config = geometry_pass->CreateConfig("render_3d_geometry_config",

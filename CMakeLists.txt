@@ -163,6 +163,14 @@ target_link_libraries(${NAME}-demo PRIVATE
   ${NAME}-core
 )
 
+# DXC runtime (dxcompiler.dll) must sit next to the executable on Windows for in-process Vulkan shader compilation.
+if(WIN32 AND RAYGENE_DXC_DLL)
+  add_custom_command(TARGET ${NAME}-demo POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${RAYGENE_DXC_DLL}" "$<TARGET_FILE_DIR:${NAME}-demo>"
+    VERBATIM
+  )
+endif()
+
 set(GLFW_LIB_DIR ${THIRDPARTY_DIR}/glfw/lib)
 
 if(WIN32)

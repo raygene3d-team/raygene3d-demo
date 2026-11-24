@@ -100,8 +100,8 @@ VK_BINDING(13) TextureCube<float4> reflection_map : register(t7);
 #define TRNG_LIMIT 128
 #define GROUP_SIZE 32
 
-const uint VERT_ITERATIONS = (VERT_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
-const uint TRNG_ITERATIONS = (TRNG_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
+static const uint VERT_ITERATIONS = (VERT_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
+static const uint TRNG_ITERATIONS = (TRNG_LIMIT + GROUP_SIZE - 1) / GROUP_SIZE;
 
 struct MSOutput
 {

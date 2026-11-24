@@ -63,7 +63,7 @@ namespace RayGene3D
       std::vector<std::pair<std::string, std::string>> defines;
       //defines.push_back({ "NORMAL_ENCODING_ALGORITHM", normal_encoding_method });
 
-      const auto hw_traced_shader_name = std::string("render_3d_hw_traced") + (scope.core->GetType() == Core::DEVICE_VLK ? ".glsl" : ".hlsl");
+      const auto hw_traced_shader_name = std::string("render_3d_hw_traced.hlsl");
 
 
       hw_traced_config = hw_traced_pass->CreateConfig("render_3d_hw_traced_config",
